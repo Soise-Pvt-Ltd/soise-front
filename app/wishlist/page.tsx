@@ -1,7 +1,14 @@
-export default function wishlistPage() {
-  return (
-    <>
-      <h1>Wishlist Page</h1>
-    </>
-  );
+import WishlistClient from './WishlistClient';
+export default async function WishlistPage() {
+  const res = await fetch('https://dummyjson.com/products', {
+    next: { revalidate: 3600 },
+  });
+
+  if (!res.ok) {
+    return <h1>Failed to load wishlist.</h1>;
+  }
+
+  const data = await res.json();
+
+  return <WishlistClient products={data.products} />;
 }
