@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { InfoIcon, CalenderIcon } from '@/components/icons';
 import Nav from '@/components/nav';
 import Footer from '@/components/footer';
-import Link from 'next/link';
+import Image from 'next/image';
 
 interface Order {
   id: string | number;
@@ -24,6 +24,54 @@ export default function OrderHistoryClient({
   const router = useRouter();
   const [pending, setPending] = useState(true);
   const [completed, setCompleted] = useState(false);
+
+  const order_history = [
+    {
+      name: 'Street hoodie',
+      color: 'black',
+      size: 'M',
+      quantity: 1,
+      price: 59,
+      image: '/hoodie.png',
+      date: '2023/10/26',
+    },
+    {
+      name: 'Cross Denim',
+      color: 'blue',
+      size: 'L',
+      quantity: 2,
+      price: 99,
+      image: '/crossdenim.png',
+      date: '2023/10/25',
+    },
+    {
+      name: 'Bally Bomber',
+      color: 'Green',
+      size: 'XL',
+      quantity: 1,
+      price: 120,
+      image: '/ballybomber.png',
+      date: '2023/10/24',
+    },
+    {
+      name: 'Get the Bread Tee',
+      color: 'White',
+      size: 'M',
+      quantity: 3,
+      price: 45,
+      image: '/getthebreadtee.png',
+      date: '2023/10/23',
+    },
+    {
+      name: 'Stripe Hoodie',
+      color: 'Black/White',
+      size: 'S',
+      quantity: 1,
+      price: 65,
+      image: '/stripehoodie.png',
+      date: '2023/10/22',
+    },
+  ];
 
   return (
     <>
@@ -90,10 +138,65 @@ export default function OrderHistoryClient({
               </div>
             </>
           )}
-          {completed && <div></div>}
+          {completed && (
+            <div className="mt-[24px] space-y-[24px]">
+              {order_history.length > 0 ? (
+                order_history.map((item, index) => (
+                  <OrderHistoryItem key={index} item={item} />
+                ))
+              ) : (
+                <div className="flex-col items-center justify-center text-center text-xl text-[#8E8E93]">
+                  Your bag is empty
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <Footer />
     </>
+  );
+}
+
+function OrderHistoryItem({ item }: any) {
+  return (
+    <div className="h-[120px]">
+      <div className="flex w-full gap-x-[16px]">
+        <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
+          <div className="flex justify-between">
+            <div></div>
+            <div className="z-10 m-[8px] flex h-[18px] w-[18px] items-center justify-center rounded-[4px] bg-[#121212] text-center text-[12px] text-white">
+              {item.quantity}
+            </div>
+          </div>
+          {/* <Image
+            src={null}
+            alt={item.name}
+            fill
+            style={{ objectFit: 'cover' }}
+            className="rounded-[6px]"
+          /> */}
+        </div>
+        <div className="w-full py-[3px]">
+          <div className="mb-[16px] flex items-center justify-between">
+            <div className="flex-wrap truncate font-medium uppercase">
+              {item.name}
+            </div>
+            <div className="font-medium">${item.price}</div>
+          </div>
+          <div className="text-[#8E8E93]">
+            <div className="flex items-center gap-x-1">
+              Color: <span className="uppercase">{item.color}</span>
+            </div>
+            <div className="flex items-center gap-x-1">
+              Size: <span className="uppercase">{item.size}</span>
+            </div>
+            <div className="flex items-center gap-x-1">
+              Date: <span className="uppercase">{item.date}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
