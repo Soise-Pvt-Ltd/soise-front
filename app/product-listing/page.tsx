@@ -1,10 +1,10 @@
-import ProductListingClient from "./ProductListingClient";
+import ProductListingClient from './ProductListingClient';
 
 // This is the default export, the Server Component.
 // It runs on the server to fetch data.
 export default async function ProductListingPage() {
   // Fetch data on the server. This code won't be sent to the client.
-  const res = await fetch('https://dummyjson.com/products?limit=12', {
+  const res = await fetch('https://dummyjson.com/products', {
     // Revalidate the data every hour to keep it fresh
     next: { revalidate: 3600 },
   });

@@ -8,13 +8,13 @@ export default function UserPage() {
       <div className="profile mx-auto space-y-[38px] px-[16px] md:max-w-xl">
         <div>
           <h1 className="text-[16px] uppercase">Account Management</h1>
-          <div className="mt-[24px] mb-[18px] space-y-[7px]">
+          <div className="mt-[24px] mb-[18px] space-y-[10px]">
             <div>
               <label>Old passsword</label>
               <input
                 type="password"
                 className="form-input grey"
-                placeholder="********"
+                placeholder="✱✱✱✱✱✱✱✱"
               />
             </div>
             <div>
@@ -22,7 +22,7 @@ export default function UserPage() {
               <input
                 type="password"
                 className="form-input grey"
-                placeholder="********"
+                placeholder="✱✱✱✱✱✱✱✱"
               />
             </div>
           </div>
@@ -31,7 +31,7 @@ export default function UserPage() {
 
         <div>
           <h1 className="text-[16px] uppercase">Profile Information</h1>
-          <div className="mt-[24px] mb-[18px] space-y-[7px]">
+          <div className="mt-[24px] mb-[18px] space-y-[10px]">
             <div>
               <label>Username</label>
               <input
@@ -78,7 +78,7 @@ export default function UserPage() {
 
         <div>
           <h1 className="text-[16px] uppercase">Delivery</h1>
-          <div className="mt-[24px] mb-[18px] space-y-[7px]">
+          <div className="mt-[24px] mb-[18px] space-y-[10px]">
             <select className="form-select grey">
               <option>Nigeria</option>
             </select>

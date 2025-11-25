@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   MenuIcon,
   BagIcon,
@@ -15,6 +16,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Nav() {
+  const router = useRouter();
   const [openMenu, setOpenMenu] = useState<null | 'menu' | 'search' | 'bag'>(
     null,
   );
@@ -84,6 +86,30 @@ export default function Nav() {
       price: 99,
       image: '/crossdenim.png',
     },
+    {
+      name: 'Bally Bomber',
+      color: 'Green',
+      size: 'XL',
+      quantity: 1,
+      price: 120,
+      image: '/ballybomber.png',
+    },
+    {
+      name: 'Get the Bread Tee',
+      color: 'White',
+      size: 'M',
+      quantity: 3,
+      price: 45,
+      image: '/getthebreadtee.png',
+    },
+    {
+      name: 'Stripe Hoodie',
+      color: 'Black/White',
+      size: 'S',
+      quantity: 1,
+      price: 65,
+      image: '/stripehoodie.png',
+    },
   ];
 
   return (
@@ -121,7 +147,12 @@ export default function Nav() {
             <BagIcon />
           </button>
 
-          <UserIcon />
+          <button
+            onClick={() => router.push('/auth')}
+            className="hover:cursor-pointer"
+          >
+            <UserIcon />
+          </button>
         </div>
       </div>
 
@@ -169,7 +200,7 @@ export default function Nav() {
               <input
                 type="text"
                 placeholder="Search by keyword"
-                className="form-text w-full pr-16 !text-[13px]"
+                className="form-input w-full pr-16 !text-[13px]"
               />
               <button className="absolute top-1/2 right-[16px] -translate-y-1/2 !text-[13px] font-medium text-black">
                 Search
@@ -193,8 +224,8 @@ export default function Nav() {
       {/* 3. Bag Panel */}
       {openMenu === 'bag' && (
         <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
-          <div className="flex h-full flex-col justify-between px-[24px]">
-            <div className="overflow-y-auto">
+          <div className="flex h-full flex-col px-[24px]">
+            <div className="scrollbar-hide overflow-y-auto">
               {bag_items.length > 0 ? (
                 bag_items.map((item, index) => (
                   <BagItem key={index} item={item} />
@@ -205,18 +236,17 @@ export default function Nav() {
                 </div>
               )}
             </div>
-            <div className="pt-[32px]">
+
+            <div className="mt-auto pt-[32px]">
               <div className="flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
-                <div>Subtotal: </div>
+                <div>Subtotal:</div>
                 <div>$218.00</div>
               </div>
               <div className="mt-[7.5px] flex justify-between !text-[14px] font-medium text-[#121212] uppercase">
-                <div>Total: </div>
+                <div>Total:</div>
                 <div>$218.00</div>
               </div>
-              <div>
-                <button className="btn_outline">Checkout</button>
-              </div>
+              <button className="btn_outline mt-4">Checkout</button>
             </div>
           </div>
         </FullscreenPanel>
@@ -231,7 +261,7 @@ function FullscreenPanel({ children, onClose, openMenu }: any) {
     <div className="text-primary fixed inset-0 z-50 flex min-h-screen w-full flex-col bg-white">
       {/* Panel Header */}
       <div className="flex justify-between px-[24px] pt-[70px] pb-[64px]">
-        <div className="text-22px font-[var(--font-display)]">
+        <div className="font-display text-[22px]">
           {openMenu === 'bag' && 'Shopping Bag'}
         </div>
         <button onClick={onClose} className="cursor-pointer">

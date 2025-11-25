@@ -1,22 +1,22 @@
-import type { Metadata } from "next";
-import { Poppins, Molle } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { Poppins, Molle } from 'next/font/google';
+import './globals.css';
 
 const body_font = Poppins({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-body",
+  subsets: ['latin'],
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  variable: '--font-body',
 });
 
 const display_font = Molle({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-display",
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-display',
 });
 
 export const metadata: Metadata = {
-  title: "Sosie",
-  description: "Next gen e-commerce clothing store",
+  title: 'SOSIE',
+  description: 'Next gen e-commerce clothing store',
 };
 
 export default function RootLayout({
@@ -29,7 +29,9 @@ export default function RootLayout({
       lang="en"
       className={`${body_font.variable} ${display_font.variable}`}
     >
-      <body className="font-body antialiased">{children}</body>
+      <body className="font-body 4xl:mx-auto 4xl:max-w-screen-4x mx-auto max-w-screen-2xl antialiased">
+        {children}
+      </body>
     </html>
   );
 }

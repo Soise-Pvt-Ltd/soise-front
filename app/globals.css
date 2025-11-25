@@ -14,7 +14,7 @@ input[type='text'].form-input.grey,
 .form-select.grey,
 input[type='password'].form-input.grey,
 input[type='number'].form-input.grey {
-  @apply h-[53px] w-full rounded-[10px] border border-transparent bg-[#EAEAEA] focus:border focus:border-[#121212] focus:ring-0 focus:outline-none;
+  @apply h-[53px] w-full rounded-[10px] border border-transparent bg-[#EAEAEA] focus:border focus:border-[#121212]/30 focus:ring-0 focus:outline-none;
 }
 
 .profile label {
@@ -31,4 +31,12 @@ input[type='number'].form-input.grey {
 
 .btn_outline {
   @apply mt-[12px] h-[53px] w-full cursor-pointer rounded-[10px] border border-[#121212] text-[15px] font-bold uppercase transition-colors duration-300;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
