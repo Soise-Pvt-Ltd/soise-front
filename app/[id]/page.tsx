@@ -6,17 +6,33 @@ export default async function ProductPage({
   params: Promise<{ id: string }>;
 }) {
   const params = await paramsPromise;
-  console.log(params.id);
 
   const res = await fetch(`https://dummyjson.com/products/${params.id}`, {
-    // Example of revalidating data every hour
     next: { revalidate: 3600 },
   });
 
   if (!res.ok) {
-    return <ProductPageClient product={null} />;
+    return <ProductPageClient product={null} recommendedProducts={[]} />;
   }
   const product = await res.json();
 
-  return <ProductPageClient product={product} />;
+  const recommendedRes = await fetch(
+    `https://dummyjson.com/products/category/${product.category}`,
+    {
+      next: { revalidate: 3600 },
+    },
+  );
+
+  let recommendedProducts = null;
+  if (recommendedRes.ok) {
+    const recommendedData = await recommendedRes.json();
+    recommendedProducts = recommendedData.products;
+  }
+
+  return (
+    <ProductPageClient
+      product={product}
+      recommendedProducts={recommendedProducts}
+    />
+  );
 }

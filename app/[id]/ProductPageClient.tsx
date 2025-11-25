@@ -18,8 +18,10 @@ export interface ProductDetail {
 
 export default function ProductPageClient({
   product,
+  recommendedProducts,
 }: {
   product: ProductDetail | null;
+  recommendedProducts: ProductDetail[];
 }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -36,13 +38,6 @@ export default function ProductPageClient({
 
   const color = ['#2A2A2A', '#33567A', '#33567A'];
   const size = ['s', 'm', 'l', 'xl', 'xxl'];
-
-  const items = [
-    { title: 'Nike Air Max', price: Math.random() * 200, tag: 'Hot' },
-    { title: 'Adidas Runner', price: Math.random() * 200 },
-    { title: 'Puma X90', price: Math.random() * 200, tag: 'New' },
-    { title: 'Jordan 4 Retro', price: Math.random() * 200 },
-  ];
 
   return (
     <>
@@ -137,7 +132,7 @@ export default function ProductPageClient({
           <div className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]">
             recommended products
           </div>
-          <SwiperCarouselClient items={items} />
+          <SwiperCarouselClient items={recommendedProducts} />
         </div>
       </div>
 
