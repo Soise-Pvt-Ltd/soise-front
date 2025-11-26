@@ -177,7 +177,10 @@ export default function Nav() {
           </button>
         </div>
 
-        <div className="font-display text-[29px] tracking-[0.2em] uppercase">
+        <div
+          className="font-display cursor-pointer text-[29px] tracking-[0.2em] uppercase"
+          onClick={() => router.push('/')}
+        >
           soise
         </div>
 

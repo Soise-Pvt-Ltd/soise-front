@@ -15,7 +15,7 @@ const display_font = Molle({
 });
 
 export const metadata: Metadata = {
-  title: 'SOSIE',
+  title: 'SOISE',
   description: 'Next gen e-commerce clothing store',
 };
 

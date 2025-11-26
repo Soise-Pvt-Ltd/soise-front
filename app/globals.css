@@ -6,15 +6,18 @@
   --font-display: var(--font-display);
 }
 
-input[type='text'].form-input {
-  @apply h-[40px] rounded-[10px] border-[#AEAEB2];
+input[type='text'].solid,
+select.solid,
+input[type='password'].solid,
+input[type='number'].solid {
+  @apply h-[53px] w-full rounded-[10px] border border-transparent bg-[#EAEAEA] px-[16px] focus:border-2 focus:border-[#AEAEB2] focus:ring-0 focus:outline-none;
 }
 
-input[type='text'].form-input.grey,
-.form-select.grey,
-input[type='password'].form-input.grey,
-input[type='number'].form-input.grey {
-  @apply h-[53px] w-full rounded-[10px] border border-transparent bg-[#EAEAEA] focus:border focus:border-[#121212]/30 focus:ring-0 focus:outline-none;
+input[type='text'].outlined,
+select.outlined,
+input[type='password'].outlined,
+input[type='number'].outlined {
+  @apply h-[53px] w-full rounded-[10px] border border-[#AEAEB2] bg-transparent px-[16px] focus:border-2 focus:ring-0 focus:outline-none;
 }
 
 .profile label {

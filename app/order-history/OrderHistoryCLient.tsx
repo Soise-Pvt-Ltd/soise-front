@@ -146,7 +146,7 @@ export default function OrderHistoryClient({
                 ))
               ) : (
                 <div className="flex-col items-center justify-center text-center text-xl text-[#8E8E93]">
-                  Your bag is empty
+                  Order history is empty
                 </div>
               )}
             </div>

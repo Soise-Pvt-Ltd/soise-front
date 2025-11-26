@@ -38,7 +38,7 @@ export default function Footer() {
             <div className="relative flex items-center">
               <input
                 type="text"
-                className="form-input w-full pr-[42px]"
+                className="h-[40px] w-full rounded-[10px] border border-[#AEAEB2] pr-[42px] pl-[10px]"
                 placeholder="EMAIL"
               />
               <button className="absolute top-1/2 right-[6px] flex size-[30px] -translate-y-1/2 items-center justify-center rounded-md bg-[#121212]">
