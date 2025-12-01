@@ -47,6 +47,48 @@ export default function RequestPayoutPage() {
             </div>
           </div>
         </div>
+        <div className="profile mt-[36px] space-y-[36px]">
+          <div>
+            <label htmlFor="amount_to_withdraw">Amount to withdraw</label>
+            <input
+              id="amount_to_withdraw"
+              type="number"
+              className="solid"
+              placeholder="N 1,000"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="funds_destination">Funds Destination</label>
+            <select id="funds_destination" className="solid">
+              <option value="">Select destination</option>
+              <option value="bank1">Bank 1</option>
+              <option value="bank2">Bank 2</option>
+              <option value="bank3">Bank 3</option>
+            </select>
+          </div>
+
+          <div>
+            <div>
+              <label htmlFor="acount_number">
+                Enter the OTP sent to your email
+              </label>
+              <input
+                id="account_number"
+                type="number"
+                className="solid"
+                placeholder="Enter OTP"
+              />
+            </div>
+            <div className="mt-[16px] w-fit cursor-pointer rounded-full bg-[#B3D5EB] p-[10px] text-[12px] text-[#0072BB]">
+              Tap here to Generate OTP
+            </div>
+          </div>
+        </div>
+
+        <button className="btn_creators_solid mt-[116px] mb-[64px]">
+          Withdraw
+        </button>
       </div>
     </div>
   );

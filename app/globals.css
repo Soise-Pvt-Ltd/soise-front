@@ -33,11 +33,15 @@ input[type='number'].outlined {
 }
 
 .btn_black {
-  @apply h-[53px] w-full cursor-pointer rounded-[10px] bg-[#121212] text-[15px] font-bold text-white uppercase;
+  @apply h-[53px] w-full cursor-pointer rounded-[10px] bg-[#121212] text-[13px] font-bold text-white uppercase;
 }
 
 .btn_outline {
-  @apply mt-[12px] h-[53px] w-full cursor-pointer rounded-[10px] border border-[#121212] text-[15px] font-bold uppercase transition-colors duration-300;
+  @apply mt-[12px] h-[53px] w-full cursor-pointer rounded-[10px] border border-[#121212] text-[13px] font-bold uppercase transition-colors duration-300;
+}
+
+.btn_creators_solid {
+  @apply h-[53px] w-full cursor-pointer rounded-[10px] bg-[#0072BB] text-[13px] font-bold text-white uppercase;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
