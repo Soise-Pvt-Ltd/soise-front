@@ -6,22 +6,52 @@ import Footer from '@/components/footer';
 import { FilterIcon } from '@/components/icons';
 import Link from 'next/link';
 import { useState } from 'react';
+
+interface Media {
+  url: string;
+  alt_text: string;
+  variants: {
+    thumbnail: string;
+    small: string;
+    medium: string;
+    large: string;
+  };
+}
+
+interface SampleVariant {
+  media: Media[] | null;
+}
+
+interface Collection {
+  id: string;
+  name: string;
+}
+
 interface Product {
   id: string | number;
-  title: string;
-  price: number;
-  thumbnail: string;
-  category: string;
+  name: string;
+  slug: string;
+  base_price: number;
+  material?: string;
+  sample_variants?: SampleVariant[];
+  title?: string; // For alt text
+  collection: Collection | null;
 }
 interface ProductListingClientProps {
   products: Product[];
 }
+
 export default function ProductListingClient({
   products,
 }: ProductListingClientProps) {
   // Assuming products is an array of product objects, we can get unique categories.
   const categories = products?.length
-    ? ['All', ...new Set(products.map((p: Product) => p.category))]
+    ? [
+        'All',
+        ...new Set(
+          products.filter((p) => p.collection).map((p) => p.collection!.name),
+        ),
+      ]
     : [];
 
   const [activeCategory, setActiveCategory] = useState<string>(categories[0]);
@@ -29,7 +59,9 @@ export default function ProductListingClient({
   const filteredProducts =
     activeCategory === 'All'
       ? products
-      : products.filter((product) => product.category === activeCategory);
+      : products.filter(
+          (product) => product.collection?.name === activeCategory,
+        );
 
   return (
     <>
@@ -63,32 +95,39 @@ export default function ProductListingClient({
         </div>
         <div className="pb-[50px]">
           <div className="grid grid-cols-1 grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4">
-            {filteredProducts.map((product: Product) => (
+            {filteredProducts?.map((product: Product) => (
               <div key={product.id}>
                 <Link
-                  href={`/${product.id}`}
+                  href={`/${product.slug}`}
                   className="text-inherit no-underline"
                 >
-                  <div className="h-[244px] w-full bg-[#F5F5F5] p-[10px]">
+                  <div className="flex h-[244px] w-full flex-col justify-between bg-[#F5F5F5] p-[10px]">
                     <div className="flex items-center justify-between">
                       <div className="text-[14px] font-medium uppercase">
                         {'New'}
                       </div>
                       <LikeIcon />
                     </div>
-                    <img
-                      src={product.thumbnail}
-                      alt={product.title}
-                      className="mx-auto h-40 w-auto object-contain"
-                    />
+                    <div className="flex h-full items-center justify-center">
+                      {product.sample_variants &&
+                        product.sample_variants.length > 0 &&
+                        product.sample_variants[0].media &&
+                        product.sample_variants[0].media.length > 0 && (
+                          <img
+                            src={product.sample_variants[0].media[0].url}
+                            alt={product.title || product.name}
+                            className="mx-auto h-40 w-auto object-contain"
+                          />
+                        )}
+                    </div>
                   </div>
                 </Link>
                 <div className="mt-[10px] flex items-center justify-between px-[7.5px] text-[14px] md:text-base">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate uppercase">{product.title}</p>
+                    <p className="truncate uppercase">{product.name}</p>
                   </div>
                   <div className="flex-shrink-0 pl-2 font-medium">
-                    ${product.price.toFixed(0)}
+                    ${product.base_price.toFixed(2)}
                   </div>
                 </div>
               </div>

@@ -9,74 +9,37 @@ import Footer from '@/components/footer';
 import Image from 'next/image';
 
 interface Order {
-  id: string | number;
-  title: string;
-  price: number;
-  thumbnail: string;
+  id: string;
+  created_at: string;
+  total: number;
+  status: string;
+  items: {
+    id: string;
+    line_total: number;
+    quantity: number;
+    unit_price: number;
+    variant: string; // This might contain more info to get product details
+  }[];
 }
+
 interface OrderHistoryClientProps {
-  products: Order[];
+  orders: Order[];
 }
 
 export default function OrderHistoryClient({
-  products: order,
+  orders,
 }: OrderHistoryClientProps) {
   const router = useRouter();
   const [pending, setPending] = useState(true);
   const [completed, setCompleted] = useState(false);
 
-  const order_history = [
-    {
-      name: 'Street hoodie',
-      color: 'black',
-      size: 'M',
-      quantity: 1,
-      price: 59,
-      image: '/hoodie.png',
-      date: '2023/10/26',
-    },
-    {
-      name: 'Cross Denim',
-      color: 'blue',
-      size: 'L',
-      quantity: 2,
-      price: 99,
-      image: '/crossdenim.png',
-      date: '2023/10/25',
-    },
-    {
-      name: 'Bally Bomber',
-      color: 'Green',
-      size: 'XL',
-      quantity: 1,
-      price: 120,
-      image: '/ballybomber.png',
-      date: '2023/10/24',
-    },
-    {
-      name: 'Get the Bread Tee',
-      color: 'White',
-      size: 'M',
-      quantity: 3,
-      price: 45,
-      image: '/getthebreadtee.png',
-      date: '2023/10/23',
-    },
-    {
-      name: 'Stripe Hoodie',
-      color: 'Black/White',
-      size: 'S',
-      quantity: 1,
-      price: 65,
-      image: '/stripehoodie.png',
-      date: '2023/10/22',
-    },
-  ];
+  const pendingOrders = orders.filter((order) => order.status !== 'paid');
+  const completedOrders = orders.filter((order) => order.status === 'paid');
 
   return (
     <>
       <Nav />
-      <div className="mx-auto md:max-w-7xl">
+      <div className="mx-auto px-[16px] md:max-w-7xl">
         <div className="pb-[50px]">
           <div className="flex justify-between pt-[12px] pb-[36px]">
             <div className="font-display text-[22px]">Order History</div>
@@ -114,35 +77,36 @@ export default function OrderHistoryClient({
           </div>
           {pending && (
             <>
-              <div className="flex min-h-screen items-center justify-center">
-                <div className="flex w-[208px] flex-col items-center text-center">
-                  <CalenderIcon />
-                  <div className="mt-[20px] gap-y-[16px]">
-                    <p className="text-[16px] font-semibold">
-                      No pending orders
-                    </p>
-                    <p className="text-[14px] text-[#8E8E93]">
-                      You currently have no pending orders.
-                    </p>
-                  </div>
+              {pendingOrders.length > 0 ? (
+                <div className="mt-[24px] space-y-[24px]">
+                  {pendingOrders.map((order) => (
+                    <OrderHistoryItem key={order.id} item={order} />
+                  ))}
                 </div>
-              </div>
-
-              <div className="flex items-center justify-center">
-                <button
-                  className="btn_black md:!w-fit md:!px-10"
-                  onClick={() => router.push('/product-listing')}
-                >
-                  Explore collection
-                </button>
-              </div>
+              ) : (
+                <>
+                  <div className="mt-[80px] mb-[164px] flex items-center justify-center">
+                    <div className="flex w-[208px] flex-col items-center text-center">
+                      <CalenderIcon />
+                      <div className="mt-[20px] gap-y-[16px]">
+                        <p className="text-[16px] font-semibold">
+                          No pending orders
+                        </p>
+                        <p className="text-[14px] text-[#8E8E93]">
+                          You currently have no pending orders.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
           {completed && (
             <div className="mt-[24px] space-y-[24px]">
-              {order_history.length > 0 ? (
-                order_history.map((item, index) => (
-                  <OrderHistoryItem key={index} item={item} />
+              {completedOrders.length > 0 ? (
+                completedOrders.map((order) => (
+                  <OrderHistoryItem key={order.id} item={order} />
                 ))
               ) : (
                 <div className="flex-col items-center justify-center text-center text-xl text-[#8E8E93]">
@@ -158,15 +122,19 @@ export default function OrderHistoryClient({
   );
 }
 
-function OrderHistoryItem({ item }: any) {
+function OrderHistoryItem({ item }: { item: Order }) {
+  const totalQuantity = item.items.reduce(
+    (sum, current) => sum + current.quantity,
+    0,
+  );
   return (
     <div className="h-[120px]">
       <div className="flex w-full gap-x-[16px]">
         <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
           <div className="flex justify-between">
             <div></div>
-            <div className="z-10 m-[8px] flex h-[18px] w-[18px] items-center justify-center rounded-[4px] bg-[#121212] text-center text-[12px] text-white">
-              {item.quantity}
+            <div className="z-10 m-[8px] flex h-[18px] min-w-[18px] items-center justify-center rounded-[4px] bg-[#121212] px-1 text-center text-[12px] text-white">
+              {totalQuantity}
             </div>
           </div>
           {/* <Image
@@ -180,19 +148,19 @@ function OrderHistoryItem({ item }: any) {
         <div className="w-full py-[3px]">
           <div className="mb-[16px] flex items-center justify-between">
             <div className="flex-wrap truncate font-medium uppercase">
-              {item.name}
+              Order #{item.id.substring(0, 7)}
             </div>
-            <div className="font-medium">${item.price}</div>
+            <div className="font-medium">${item.total.toFixed(2)}</div>
           </div>
           <div className="text-[#8E8E93]">
             <div className="flex items-center gap-x-1">
-              Color: <span className="uppercase">{item.color}</span>
+              Status: <span className="uppercase">{item.status}</span>
             </div>
             <div className="flex items-center gap-x-1">
-              Size: <span className="uppercase">{item.size}</span>
-            </div>
-            <div className="flex items-center gap-x-1">
-              Date: <span className="uppercase">{item.date}</span>
+              Date:{' '}
+              <span className="uppercase">
+                {new Date(item.created_at).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>

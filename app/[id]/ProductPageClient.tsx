@@ -4,43 +4,134 @@ import { useState, useMemo } from 'react';
 import Nav from '@/components/nav';
 import Footer from '@/components/footer';
 
-import { LikeIcon } from '@/components/icons';
+import { MinusIcon, PlusIcon, LikeIcon } from '@/components/icons';
 import SwiperCarouselClient from '@/components/caurosel';
+import { toast, Toaster } from 'sonner';
 
-export interface ProductDetail {
-  id: number;
-  title: string;
-  category: string;
-  description: string;
+interface Media {
+  url: string;
+  alt_text: string;
+  variants: {
+    thumbnail: string;
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+}
+
+interface SampleVariant {
+  id: string;
+  color: string;
+  size: string;
   price: number;
-  images: string[];
+  media: Media[] | null;
+}
+
+interface Collection {
+  id: string;
+  name: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  collection: Collection | null;
+  description: string;
+  base_price: number;
+  sample_variants?: SampleVariant[];
 }
 
 export default function ProductPageClient({
   product,
   recommendedProducts,
 }: {
-  product: ProductDetail | null;
-  recommendedProducts: ProductDetail[];
+  product: Product | null;
+  recommendedProducts: Product[];
 }) {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   const mainImage = useMemo(() => {
     if (selectedImage) return selectedImage;
-    if (product?.images?.length) return product.images[0];
-    return '';
-  }, [selectedImage, product?.images]);
+    if (
+      product?.sample_variants &&
+      product.sample_variants[0]?.media &&
+      product.sample_variants[0].media[0]
+    ) {
+      return product.sample_variants[0].media[0].variants.large;
+    }
+    return '/placeholder.png'; // Fallback image
+  }, [selectedImage]);
 
   if (!product) {
     return <div>Product not found.</div>;
   }
 
-  const color = ['#2A2A2A', '#33567A', '#33567A'];
-  const size = ['s', 'm', 'l', 'xl', 'xxl'];
+  const availableColors = useMemo(
+    () =>
+      product.sample_variants
+        ? [...new Set(product.sample_variants.map((v) => v.color))]
+        : [],
+    [product.sample_variants],
+  );
+  const availableSizes = useMemo(
+    () =>
+      product.sample_variants
+        ? [...new Set(product.sample_variants.map((v) => v.size))]
+        : [],
+    [product.sample_variants],
+  );
+
+  const addToCart = async () => {
+    if (!selectedColor || !selectedSize) {
+      toast.error('Please select a color and size.');
+      return;
+    }
+
+    const selectedVariant = product.sample_variants?.find(
+      (variant) =>
+        variant.color === selectedColor && variant.size === selectedSize,
+    );
+
+    if (!selectedVariant) {
+      toast.error('This combination is not available.');
+      return;
+    }
+
+    try {
+      console.log(selectedVariant.id, quantity);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/cart/items`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            variant_id: selectedVariant.id,
+            quantity: quantity,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to add item to cart.');
+      }
+
+      // const result = await response.json();
+      toast.success('Added to bag!');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error(
+        error instanceof Error ? error.message : 'An unknown error occurred.',
+      );
+    }
+  };
 
   return (
     <>
+      <Toaster position="bottom-center" richColors />
       <Nav />
       <div className="mx-auto md:max-w-7xl">
         <div>
@@ -52,11 +143,13 @@ export default function ProductPageClient({
                   <div></div>
                   <LikeIcon />
                 </div>
-                <img
-                  src={mainImage}
-                  alt={product.title}
-                  className="mx-auto h-80 w-auto object-contain"
-                />
+                <div className="flex flex-grow items-center justify-center">
+                  <img
+                    src={mainImage}
+                    alt={product.name}
+                    className="h-96 w-auto object-contain"
+                  />
+                </div>
               </div>
               {/* <div className="flex space-x-2 overflow-x-auto">
               {product.images.map((image, index) => (
@@ -72,67 +165,103 @@ export default function ProductPageClient({
             </div>
 
             {/* Product Details Section */}
-            <div className="md:col-span-2">
+            <div className="px-[16px] md:col-span-2">
               <div className="pb-[20px] text-[14px] uppercase">
-                <span className="font-semibold">{product.category}/ </span>
-                <span className="text-[#AEAEB2]">{product.title}</span>
+                <span className="font-semibold">
+                  {product.collection?.name}/{' '}
+                </span>
+                <span className="text-[#AEAEB2]">{product.name}</span>
               </div>
               <div className="flex items-center justify-between text-[16px]">
-                <h1 className="font-bold uppercase">{product.title}</h1>
-                <p className="text-[14px] font-medium">${product.price}</p>
+                <h1 className="font-bold uppercase">{product.name}</h1>
+                <p className="text-[14px] font-medium">${product.base_price}</p>
               </div>
-              <div className="mt-[24px]">
-                <div className="mb-[30px]">
-                  <div className="mb-[16px] text-[11px] text-[#AEAEB2] uppercase">
-                    Select color
-                  </div>
-                  <div className="flex gap-x-[8px]">
-                    {color.map((color, index) => (
-                      <div
-                        style={{ backgroundColor: color }}
-                        className="size-[44px] cursor-pointer"
-                        key={index}
-                      ></div>
-                    ))}
+              <div className="mt-[24px] space-y-[24px]">
+                <div>
+                  <div>
+                    <div className="mb-[16px] text-[11px] text-[#AEAEB2] uppercase">
+                      Select color
+                    </div>
+                    <div className="flex flex-wrap gap-[8px]">
+                      {availableColors.map((color, index) => (
+                        <div
+                          onClick={() => setSelectedColor(color)}
+                          style={{ backgroundColor: color }}
+                          className={`size-[44px] cursor-pointer transition-all ${selectedColor === color ? 'ring-2 ring-black ring-offset-2' : ''}`}
+                          key={index}
+                        ></div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
+                <div className="grid grid-cols-2">
+                  <div>
+                    <div className="mb-[16px] text-[11px] text-[#AEAEB2] uppercase">
+                      Select size
+                    </div>
+                    <div className="flex flex-wrap gap-[8px] uppercase">
+                      {availableSizes.map((size, index) => (
+                        <div
+                          onClick={() => setSelectedSize(size)}
+                          key={index}
+                          className={`flex h-[40px] w-[54px] cursor-pointer items-center justify-center border-1 bg-[#F5F5F5] text-[11px] transition-colors ${selectedSize === size ? 'border-2' : 'border-[#8E8E93] bg-[#F5F5F5]'}`}
+                        >
+                          {size}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <div className="mb-[16px] text-[11px] text-[#AEAEB2] uppercase">
-                    Select size
+                    Select Qty
                   </div>
-                  <div className="flex flex-wrap gap-[8px] uppercase">
-                    {size.map((size, index) => (
-                      <div
-                        className="flex h-[40px] w-[54px] cursor-pointer items-center justify-center border-1 border-[#8E8E93] bg-[#F5F5F5] text-[11px]"
-                        key={index}
-                      >
-                        {size}
-                      </div>
-                    ))}
+
+                  <div className="flex h-[36px] w-[96px] items-center justify-between rounded-[4px] border border-[#AEAEB2] p-[6px]">
+                    <button
+                      onClick={() =>
+                        setQuantity((prev) => Math.max(1, prev - 1))
+                      }
+                      className="cursor-pointer p-1"
+                    >
+                      <MinusIcon />
+                    </button>
+                    <div className="text-center">{quantity}</div>
+                    <button
+                      onClick={() => setQuantity((prev) => prev + 1)}
+                      className="cursor-pointer p-1"
+                    >
+                      <PlusIcon />
+                    </button>
                   </div>
                 </div>
               </div>
-              <button className="btn_black !mt-[36px] !mb-[56px]">
+              <button
+                className="btn_black !mt-[36px] !mb-[56px]"
+                onClick={addToCart}
+              >
                 Add to bag
               </button>
-              <div>
-                <div className="mb-[24px] text-[16px] font-bold uppercase">
-                  Description
-                </div>
-                <div className="text-[13px] font-medium">
-                  {product.description}
-                </div>
-              </div>
             </div>
           </div>
           <div></div>
         </div>
-        <div>
+        <div className="mt-[56px] px-[16px]">
+          <div>
+            <div className="mb-[24px] text-[16px] font-bold uppercase">
+              Description
+            </div>
+            <div className="text-[13px] font-medium">{product.description}</div>
+          </div>
           <div className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]">
             recommended products
           </div>
-          <SwiperCarouselClient items={recommendedProducts} />
+          {recommendedProducts.length > 0 ? (
+            <SwiperCarouselClient items={recommendedProducts} />
+          ) : (
+            <p className="text-[#AEAEB2]">no recommended product</p>
+          )}
         </div>
       </div>
 

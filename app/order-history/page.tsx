@@ -1,15 +1,20 @@
 import OrderHistoryClient from './OrderHistoryCLient';
 
 export default async function OrderHistoryPage() {
-  const res = await fetch('https://dummyjson.com/products', {
-    next: { revalidate: 3600 },
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${process.env.NEXT_PUBLIC_ACCESS_TOKEN}`,
+    },
+    cache: 'no-store',
   });
 
   if (!res.ok) {
-    return <h1>Failed to load orders.</h1>;
+    throw new Error('Failed to fetch orders');
   }
 
   const data = await res.json();
+  console.log(data);
 
-  return <OrderHistoryClient products={data.products} />;
+  return <OrderHistoryClient orders={data.data} />;
 }

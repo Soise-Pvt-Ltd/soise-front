@@ -1,443 +1,62 @@
-'use client';
+import NavClient from './navClient';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  MenuIcon,
-  BagIcon,
-  UserIcon,
-  SearchIcon,
-  CloseIcon,
-  ArrowUpRightIcon,
-  MinusIcon,
-  PlusIcon,
-} from './icons';
-import Link from 'next/link';
-import Image from 'next/image';
-
-export default function Nav() {
-  const router = useRouter();
-  const [openMenu, setOpenMenu] = useState<
-    null | 'menu' | 'search' | 'bag' | 'wishlist'
-  >(null);
-
-  const trending_searches = [
-    'Soise',
-    'Street Soise',
-    'The Bally Bomber',
-    'Cross Denim',
-    'Stripe Hoodie',
-    'Get the Bread Tea',
-  ];
-
-  const menu_1 = [
-    {
-      name: 'T-shirts',
-      href: '',
-    },
-    {
-      name: 'Outerwear',
-      href: '',
-    },
-    {
-      name: 'Bottoms',
-      href: '',
-    },
-    {
-      name: 'Accessories',
-      href: '',
-    },
-    {
-      name: 'Wishlist',
-      href: '/wishlist',
-    },
-  ];
-
-  const menu_2 = [
-    {
-      name: 'Order History',
-      href: '',
-    },
-    {
-      name: 'Creator Experience',
-      href: '',
-      icon: <ArrowUpRightIcon />,
-    },
-    {
-      name: 'Sign In',
-      href: '/signin',
-    },
-  ];
-
-  const bag_items = [
-    {
-      name: 'Street hoodie',
-      color: 'black',
-      size: 'M',
-      quantity: 1,
-      price: 59,
-      image: '/hoodie.png',
-    },
-    {
-      name: 'Cross Denim',
-      color: 'blue',
-      size: 'L',
-      quantity: 2,
-      price: 99,
-      image: '/crossdenim.png',
-    },
-    {
-      name: 'Bally Bomber',
-      color: 'Green',
-      size: 'XL',
-      quantity: 1,
-      price: 120,
-      image: '/ballybomber.png',
-    },
-    {
-      name: 'Get the Bread Tee',
-      color: 'White',
-      size: 'M',
-      quantity: 3,
-      price: 45,
-      image: '/getthebreadtee.png',
-    },
-    {
-      name: 'Stripe Hoodie',
-      color: 'Black/White',
-      size: 'S',
-      quantity: 1,
-      price: 65,
-      image: '/stripehoodie.png',
-    },
-  ];
-
-  const wishlist_items = [
-    {
-      name: 'Street hoodie',
-      color: 'black',
-      size: 'M',
-      quantity: 1,
-      price: 59,
-      image: '/hoodie.png',
-    },
-    {
-      name: 'Cross Denim',
-      color: 'blue',
-      size: 'L',
-      quantity: 2,
-      price: 99,
-      image: '/crossdenim.png',
-    },
-    {
-      name: 'Bally Bomber',
-      color: 'Green',
-      size: 'XL',
-      quantity: 1,
-      price: 120,
-      image: '/ballybomber.png',
-    },
-    {
-      name: 'Get the Bread Tee',
-      color: 'White',
-      size: 'M',
-      quantity: 3,
-      price: 45,
-      image: '/getthebreadtee.png',
-    },
-    {
-      name: 'Stripe Hoodie',
-      color: 'Black/White',
-      size: 'S',
-      quantity: 1,
-      price: 65,
-      image: '/stripehoodie.png',
-    },
-  ];
-
-  return (
-    <>
-      {/* Top Navbar */}
-      <div className="flex items-center justify-between px-[20px] pt-[65px] pb-[40px] md:px-[40px]">
-        <div className="flex items-center gap-x-[18px]">
-          {/* Menu Open */}
-          <button
-            onClick={() => setOpenMenu('menu')}
-            className="hover:cursor-pointer"
-          >
-            <MenuIcon />
-          </button>
-
-          {/* Search Open */}
-          <button
-            onClick={() => setOpenMenu('search')}
-            className="hover:cursor-pointer"
-          >
-            <SearchIcon />
-          </button>
-        </div>
-
-        <div
-          className="font-display cursor-pointer text-[29px] tracking-[0.2em] uppercase"
-          onClick={() => router.push('/')}
-        >
-          soise
-        </div>
-
-        <div className="flex items-center gap-x-[18px]">
-          {/* Bag Open */}
-          <button
-            onClick={() => setOpenMenu('bag')}
-            className="hover:cursor-pointer"
-          >
-            <BagIcon />
-          </button>
-
-          <button
-            onClick={() => router.push('/auth')}
-            className="hover:cursor-pointer"
-          >
-            <UserIcon />
-          </button>
-        </div>
-      </div>
-
-      {/* ---------------- FULLSCREEN PANELS ---------------- */}
-
-      {/* 1. Mobile Menu Panel */}
-      {openMenu === 'menu' && (
-        <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
-          <>
-            <div className="space-y-[36px] px-[24px] !text-[13px] !font-medium text-[#121212] uppercase">
-              {menu_1.map((item, index) =>
-                item.name === 'Wishlist' ? (
-                  <div key={index}>
-                    <button
-                      onClick={() => setOpenMenu('wishlist')}
-                      className="hover:cursor-pointer"
-                    >
-                      {item.name}
-                    </button>
-                  </div>
-                ) : (
-                  <div key={index}>
-                    <Link href={item.href} className="hover:cursor-pointer">
-                      {item.name}
-                    </Link>
-                  </div>
-                ),
-              )}
-            </div>
-            <div className="mt-[112px] border-y border-[#AEAEB2] pb-[112px] text-[#121212]">
-              <div className="space-y-[43px] px-[24px] pt-[40px]">
-                {menu_2.map((item, index) => (
-                  <div key={index}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center gap-2 hover:cursor-pointer"
-                    >
-                      {item.name} {item.icon}
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="px-[24px] pt-[40px] text-[13px] text-[#121212]">
-              Country / Region: NG / English
-            </div>
-          </>
-        </FullscreenPanel>
-      )}
-
-      {/* 2. Search Panel */}
-      {openMenu === 'search' && (
-        <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
-          <div className="px-[24px]">
-            <div className="relative w-full">
-              <input
-                type="text"
-                placeholder="Search by keyword"
-                className="form-input w-full pr-16 !text-[13px]"
-              />
-              <button className="absolute top-1/2 right-[16px] -translate-y-1/2 !text-[13px] font-medium text-black">
-                Search
-              </button>
-            </div>
-
-            <div className="mt-[36px] space-y-[24px] text-[13px]">
-              <div className="font-medium text-[#121212]">
-                Trending Searches
-              </div>
-              <div className="space-y-[16px] text-[#8E8E93]">
-                {trending_searches.map((item, index) => (
-                  <div key={index}>{item}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </FullscreenPanel>
-      )}
-
-      {/* 3. Bag Panel */}
-      {openMenu === 'bag' && (
-        <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
-          <div className="flex h-full flex-col px-[24px]">
-            <div className="scrollbar-hide overflow-y-auto">
-              {bag_items.length > 0 ? (
-                bag_items.map((item, index) => (
-                  <BagItem key={index} item={item} />
-                ))
-              ) : (
-                <div className="flex-col items-center justify-center text-center text-xl text-[#8E8E93]">
-                  Your bag is empty
-                </div>
-              )}
-            </div>
-
-            <div className="mt-auto pt-[32px]">
-              <div className="flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
-                <div>Subtotal:</div>
-                <div>$218.00</div>
-              </div>
-              <div className="mt-[7.5px] flex justify-between !text-[14px] font-medium text-[#121212] uppercase">
-                <div>Total:</div>
-                <div>$218.00</div>
-              </div>
-              <button className="btn_outline mt-4">Checkout</button>
-            </div>
-          </div>
-        </FullscreenPanel>
-      )}
-
-      {/* 4. Wishlist */}
-      {openMenu === 'wishlist' && (
-        <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
-          <div className="flex h-full flex-col px-[24px]">
-            <div className="scrollbar-hide overflow-y-auto">
-              {wishlist_items.length > 0 ? (
-                wishlist_items.map((item, index) => (
-                  <WishlistItem key={index} item={item} />
-                ))
-              ) : (
-                <div className="flex-col items-center justify-center text-center text-xl text-[#8E8E93]">
-                  Your wishlist is empty
-                </div>
-              )}
-            </div>
-
-            <div className="mt-auto pt-[32px]">
-              <div className="text-center uppercase">
-                <div>{wishlist_items.length} items in wishlist</div>
-              </div>
-
-              <button
-                className="btn_outline mt-[24px]"
-                onClick={() => router.push('/wishlist')}
-              >
-                view wishlist
-              </button>
-            </div>
-          </div>
-        </FullscreenPanel>
-      )}
-    </>
-  );
+// Define types for the data we're fetching to make the code safer and easier to understand.
+interface CartItem {
+  id: string;
+  quantity: number;
+  variant: string; // This is the variant ID
 }
 
-/* ---------------- COMPONENT: Fullscreen Wrapper ---------------- */
-function FullscreenPanel({ children, onClose, openMenu }: any) {
-  return (
-    <div className="text-primary fixed inset-0 z-50 flex min-h-screen w-full flex-col bg-white">
-      {/* Panel Header */}
-      <div className="flex justify-between px-[24px] pt-[70px] pb-[64px]">
-        <div className="font-display text-[22px]">
-          {(openMenu === 'bag' && 'Shopping Bag') ||
-            (openMenu === 'wishlist' && 'Wishlist')}
-        </div>
-        <button onClick={onClose} className="cursor-pointer">
-          <CloseIcon />
-        </button>
-      </div>
-
-      {/* Scrollable Content */}
-      <div className="flex-grow overflow-y-auto pb-[24px]">{children}</div>
-    </div>
-  );
+interface ProductVariant {
+  id: string;
+  price: number;
+  color: string;
+  size: string;
+  media: { url: string; alt_text: string }[];
+  product: string;
+  [key: string]: any;
 }
 
-function BagItem({ item }: any) {
-  return (
-    <div className="mb-[24px] flex h-[120px] justify-between">
-      <div className="flex gap-x-[16px]">
-        <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            style={{ objectFit: 'cover' }}
-            className="rounded-[6px]"
-          />
-        </div>
-        <div className="flex w-[105px] flex-col justify-between py-[3px] text-[14px]">
-          <div className="flex-wrap font-medium uppercase">{item.name}</div>
-          <div className="text-[#8E8E93]">
-            <div>
-              Color: <span className="uppercase">{item.color}</span>
-            </div>
-            <div>
-              Size: <span className="uppercase">{item.size}</span>
-            </div>
-          </div>
-          <div className="flex h-[36px] w-[96px] items-center justify-between rounded-[4px] border border-[#AEAEB2] p-[6px]">
-            <MinusIcon />
-            <div className="font-medium text-[#121212]">{item.quantity}</div>
-            <PlusIcon />
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
-        <div>${item.price}</div>
-        <div className="cursor-pointer uppercase underline hover:no-underline">
-          Remove
-        </div>
-      </div>
-    </div>
-  );
+interface Product {
+  id: string;
+  sample_variants: ProductVariant[];
+  // Add other product properties
+  [key: string]: any;
 }
 
-function WishlistItem({ item }: any) {
-  return (
-    <div className="mb-[24px] flex h-[120px] justify-between">
-      <div className="flex gap-x-[16px]">
-        <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            style={{ objectFit: 'cover' }}
-            className="rounded-[6px]"
-          />
-        </div>
-        <div className="flex w-[105px] flex-col py-[3px] text-[14px]">
-          <div className="flex-wrap pb-[16px] font-medium uppercase">
-            {item.name}
-          </div>
-          <div className="text-[#8E8E93]">
-            <div>
-              Color: <span className="uppercase">{item.color}</span>
-            </div>
-            <div>
-              Size: <span className="uppercase">{item.size}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
-        <div>${item.price}</div>
-        <div className="cursor-pointer uppercase underline hover:no-underline">
-          Remove
-        </div>
-      </div>
-    </div>
-  );
+interface EnrichedCartItem extends CartItem {
+  variantDetails?: ProductVariant;
+}
+
+export default async function Nav() {
+  try {
+    const [cartRes, productsRes] = await Promise.all([
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cart`),
+      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/products`),
+    ]);
+
+    if (!cartRes.ok) throw new Error('Failed to load cart');
+    if (!productsRes.ok) throw new Error('Failed to load products');
+
+    const cartData: { data: CartItem[] } = await cartRes.json();
+    const productsData: { data: Product[] } = await productsRes.json();
+
+    const variantsMap = new Map<string, ProductVariant>();
+    productsData.data.forEach((product) => {
+      product.sample_variants.forEach((variant) => {
+        variantsMap.set(variant.id, variant);
+      });
+    });
+
+    const enrichedCart: EnrichedCartItem[] = cartData.data.map((item) => ({
+      ...item,
+      variantDetails: variantsMap.get(item.variant),
+    }));
+
+    return <NavClient cart={enrichedCart} />;
+  } catch (error) {
+    console.error(error);
+    // In a real app, you might want a more user-friendly error component here.
+    return <h1>Something went wrong</h1>;
+  }
 }

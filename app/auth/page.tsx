@@ -42,7 +42,7 @@ export default function AuthPage() {
                 </div>
                 <input
                   type="text"
-                  className="form-input grey"
+                  className="solid"
                   placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -65,11 +65,7 @@ export default function AuthPage() {
                   Enter account password
                 </div>
               </div>
-              <input
-                type="password"
-                className="form-input grey"
-                placeholder="Password"
-              />
+              <input type="password" className="solid" placeholder="Password" />
               <button className="btn_black !my-[36px]" onClick={handleContinue}>
                 Continue
               </button>
@@ -86,7 +82,7 @@ export default function AuthPage() {
               </div>
               <input
                 type="number"
-                className="form-input grey"
+                className="solid"
                 placeholder="6-Digit Code"
               />
               <button className="btn_black !my-[36px]">Submit</button>

@@ -6,6 +6,10 @@
   --font-display: var(--font-display);
 }
 
+.body {
+  @apply !text-[#121212];
+}
+
 input[type='text'].solid,
 select.solid,
 input[type='password'].solid,

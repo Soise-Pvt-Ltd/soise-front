@@ -36,10 +36,10 @@ export default function WishlistClient({
     <>
       <Nav />
       <div className="mx-auto md:max-w-7xl">
-        <div className="pb-[33px]">
-          <div className="px-[18px] md:px-0">
+        <div className="pb-[35px]">
+          <div className="px-[16px]">
             <div className="font-display text-[22px] capitalize">Wishlist</div>
-            <div className="mb-[16px] flex items-center gap-y-[24px]">
+            <div className="mb-[16px] flex items-center pt-[20px]">
               <FilterIcon />
               <span className="ml-2 font-medium uppercase">Filters</span>
             </div>

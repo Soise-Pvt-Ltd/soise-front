@@ -1,15 +1,17 @@
 import ProductListingClient from './ProductListingClient';
 
 export default async function ProductListingPage() {
-  const res = await fetch('https://dummyjson.com/products', {
-    next: { revalidate: 3600 },
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/products`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      // Authorization: `Bearer ${process.env.API_KEY}`,
+    },
   });
 
-  if (!res.ok) {
-    return <h1>Failed to load products.</h1>;
-  }
+  if (!res.ok) throw new Error('Failed to fetch products');
 
-  const data = await res.json();
+  const product = await res.json();
 
-  return <ProductListingClient products={data.products} />;
+  return <ProductListingClient products={product.data} />;
 }

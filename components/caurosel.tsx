@@ -1,18 +1,11 @@
-"use client";
+'use client';
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import { LikeIcon } from "./icons";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
+import { LikeIcon } from './icons';
+import Link from 'next/link';
 
-interface SwiperCarouselProps {
-  items: {
-    title: string;
-    price?: number;
-    tag?: string;
-  }[];
-}
-
-export default function SwiperCarouselClient({ items }: SwiperCarouselProps) {
+export default function SwiperCarouselClient({ items }: any) {
   return (
     <div>
       <Swiper
@@ -23,22 +16,27 @@ export default function SwiperCarouselClient({ items }: SwiperCarouselProps) {
           1024: { slidesPerView: 3.2, spaceBetween: 20 },
         }}
       >
-        {items.map((item, index) => (
+        {items.map((item: any, index: number) => (
           <SwiperSlide key={index}>
-            <div className="h-[357px] w-full rounded-[10px] bg-[#F5F5F5] p-[10px]">
-              <div className="flex justify-between items-center">
-                <div className="uppercase text-[14px] font-medium">
-                  {item.tag || "New"}
+            <Link href={`/${item.id}`}>
+              <div className="h-[357px] w-full rounded-[10px] bg-[#F5F5F5] p-[10px]">
+                <div className="flex items-center justify-between">
+                  <div className="text-[14px] font-medium uppercase">
+                    {item.tag || 'New'}
+                  </div>
+                  <LikeIcon />
                 </div>
-                <LikeIcon />
+                <img
+                  src={item.thumbnail}
+                  alt={item.title}
+                  className="mx-auto h-full w-auto object-contain pt-[44px] pb-[46px]"
+                />
               </div>
-            </div>
+            </Link>
 
-            <div className="flex justify-between items-center px-[10px] mt-[10px] text-[14px] md:text-base">
-              <div className="flex-wrap uppercase">{item.title}</div>
-              <div className="font-medium pl-20">
-                ${item.price?.toFixed(2)}
-              </div>
+            <div className="mt-[10px] flex items-center justify-between px-[10px] text-[14px] md:text-base">
+              <div className="flex-wrap truncate uppercase">{item.title}</div>
+              <div className="pl-20 font-medium">${item.price?.toFixed(2)}</div>
             </div>
           </SwiperSlide>
         ))}

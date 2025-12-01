@@ -5,7 +5,7 @@ export default function UserPage() {
   return (
     <>
       <Nav />
-      <div className="profile mx-auto space-y-[38px] md:max-w-7xl">
+      <div className="profile mx-auto space-y-[38px] px-[16px] md:max-w-7xl">
         <div>
           <h1 className="text-[16px] uppercase">Account Management</h1>
           <div className="mt-[24px] mb-[18px] space-y-[10px]">

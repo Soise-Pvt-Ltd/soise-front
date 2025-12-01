@@ -1,32 +1,42 @@
 import ProductPageClient from './ProductPageClient';
+import { notFound } from 'next/navigation';
 
-export default async function ProductPage({
-  params: paramsPromise,
-}: {
+export default async function ProductPage(props: {
   params: Promise<{ id: string }>;
 }) {
-  const params = await paramsPromise;
+  const { id: slug } = await props.params; // ✅ FIX: await params
 
-  const res = await fetch(`https://dummyjson.com/products/${params.id}`, {
-    next: { revalidate: 3600 },
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/products`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 
   if (!res.ok) {
-    return <ProductPageClient product={null} recommendedProducts={[]} />;
+    throw new Error('Failed to fetch products');
   }
-  const product = await res.json();
 
-  const recommendedRes = await fetch(
-    `https://dummyjson.com/products/category/${product.category}`,
-    {
-      next: { revalidate: 3600 },
-    },
+  const productData = await res.json();
+  const allProducts = productData.data;
+
+  const product = allProducts.find(
+    (p: { slug: string }) => String(p.slug) === String(slug),
   );
 
-  let recommendedProducts = null;
-  if (recommendedRes.ok) {
-    const recommendedData = await recommendedRes.json();
-    recommendedProducts = recommendedData.products;
+  if (!product) {
+    notFound();
+  }
+
+  let recommendedProducts = [];
+
+  if (product.collection) {
+    recommendedProducts = allProducts.filter(
+      (p: { collection: { name: string } | null; slug: string }) =>
+        p.collection &&
+        p.collection.name === product.collection.name &&
+        p.slug !== product.slug,
+    );
   }
 
   return (
