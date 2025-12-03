@@ -173,7 +173,7 @@ export default function dashboardPage() {
               <Doughnut data={doughnutData} options={doughnutOptions} />
             </div>
           </div>
-          <div className="rounded-2xl bg-white">
+          <div className="rounded-2xl bg-white p-[12px]">
             <ReferralCode code="CREATOR2024" />
           </div>
 

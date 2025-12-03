@@ -19,7 +19,7 @@ export default function RequestPayoutPage() {
       <div className="mx-auto flex flex-col gap-[16px] px-[16px] py-[24px] md:max-w-7xl md:px-0">
         <div className="flex items-center gap-x-2">
           <ArrowLeftIcon />{' '}
-          <span className="font-bold uppercase">My profile</span>
+          <span className="font-bold uppercase">Request payout</span>
         </div>
         <div className="space-y-[30px] rounded-[10px] bg-[#B3D5EB] px-[16px] py-[24px] text-sm">
           <div className="flex items-center justify-between">
@@ -80,7 +80,7 @@ export default function RequestPayoutPage() {
                 placeholder="Enter OTP"
               />
             </div>
-            <div className="mt-[16px] w-fit cursor-pointer rounded-full bg-[#B3D5EB] p-[10px] text-[12px] text-[#0072BB]">
+            <div className="mt-[16px] w-fit cursor-pointer rounded-full bg-[#B3D5EB] p-[10px] text-[10px] text-[#0072BB] md:text-[12px]">
               Tap here to Generate OTP
             </div>
           </div>

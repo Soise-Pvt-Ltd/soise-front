@@ -39,7 +39,7 @@ export default function ReferralCode({ code }: ReferralCodeProps) {
   };
 
   return (
-    <div className="p-[12px]">
+    <div>
       <p className="mb-[16px] text-[#8E8E93]">Creator code</p>
 
       <div className="flex items-center gap-x-[17px]">

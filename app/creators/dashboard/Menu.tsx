@@ -52,9 +52,9 @@ export default function Menu({
 
   return (
     <FullscreenPanel onClose={onClose}>
-      <div className="flex h-full flex-col justify-end">
+      <div className="flex h-full flex-col justify-between">
         {showMenuItems && (
-          <div className="flex-grow space-y-[36px] px-[24px] !text-[13px] !font-medium text-[#121212] uppercase">
+          <div className="space-y-[36px] px-[24px] !text-[13px] !font-medium text-[#121212] uppercase">
             {menu_1.map((item, index) => (
               <div key={index}>
                 <Link href={item.href} className="hover:cursor-pointer">
@@ -64,7 +64,7 @@ export default function Menu({
             ))}
           </div>
         )}
-        <div className="px-[24px] pt-[40px] text-[13px] text-[#121212]">
+        <div className="px-[24px] pb-4 text-[13px] text-[#121212]">
           Country / Region: NG / English
         </div>
       </div>

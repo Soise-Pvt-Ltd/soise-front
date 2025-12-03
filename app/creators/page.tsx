@@ -24,7 +24,7 @@ export default function CreatorsApplication() {
           </div>
         </div>
         <div className="mt-[24px]">
-          <h1 className="text-[16px] uppercase">Account Management</h1>
+          <h1 className="text-[16px] uppercase">Creators Application</h1>
           <div className="mt-[24px] mb-[18px] space-y-[16px]">
             <div>
               <label>First Name</label>
@@ -65,7 +65,7 @@ export default function CreatorsApplication() {
             </div>
           </div>
 
-          <button className="btn_black mt-[40px]">Save Password</button>
+          <button className="btn_black mt-[40px]">Submit</button>
         </div>
       </div>
       <Menu

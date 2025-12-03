@@ -47,7 +47,7 @@ export default function OnBoardingPage() {
           </div>
         )}
         {step === 2 && (
-          <div className="mt-[112px]">
+          <div className="">
             <h1 className="text-[16px] uppercase">Payment Information</h1>
             <div className="mt-[24px] flex flex-col gap-y-6">
               <div>
@@ -99,7 +99,7 @@ export default function OnBoardingPage() {
             </div>
             <ReferralCode code="SOI238" />
             <div className="text-center">
-              <button className="btn_black mt-[40px]">Next</button>
+              <button className="btn_creators_solid mt-[40px]">Next</button>
             </div>
           </>
         )}
