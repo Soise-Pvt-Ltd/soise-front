@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^10.1.0",
+    "@preline/tabs": "^3.2.3",
     "@tanstack/react-table": "^8.21.3",
     "next": "16.0.3",
     "react": "19.2.0",

@@ -375,7 +375,7 @@ const AllProductsTable = () => {
           value={globalFilter ?? ''}
           onChange={(e) => setGlobalFilter(e.target.value)}
           placeholder="Search products..."
-          className="rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] focus:ring-0 md:w-[245px]"
+          className="h-[36px] rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] focus:ring-0 md:w-[245px]"
         />
       </div>
       <div className="overflow-x-auto">

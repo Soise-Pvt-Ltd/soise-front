@@ -6,10 +6,6 @@ import { ArrowLeftIcon } from '@/components/icons';
 import { useDropzone } from 'react-dropzone';
 import {
   AdminUploadIcon,
-  AdminCheckCircleIcon,
-  AdminDocumentIcon,
-  AdminFolderIcon,
-  AdminLightningIcon,
   AdminSoundLevelsIcon,
   AdminPlusCircleIcon,
 } from '@/components/icons';
@@ -20,6 +16,10 @@ interface MyFile extends File {
 }
 
 export default function ProductsPage() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('Today');
+
+  const periodOptions = ['Today', 'Weekly', 'Monthly'];
   const [activeTab, setActiveTab] = useState<
     'all' | 'active' | 'draft' | 'archived'
   >('all');
@@ -133,6 +133,7 @@ export default function ProductsPage() {
     // console.log('New Variant Saved:', newVariant);
     // setVariants((prev) => [...prev, newVariant]);
   };
+
   return (
     <GridContainer>
       <>
@@ -162,48 +163,71 @@ export default function ProductsPage() {
 
         {!showAddProduct && (
           <div className="">
-            <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] py-[24px] text-[#121212]">
-              <div className="flex flex-col items-center justify-between sm:flex-row">
-                <div className="flex items-center gap-x-[24px] text-[14px]">
+            <div className="relative rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] text-[#121212]">
+              <div className="scrollbar-hide flex flex-col-reverse items-start justify-between gap-4 overflow-visible sm:flex-row sm:items-center">
+                <div className="flex items-center gap-8">
                   {[
                     {
                       id: 'all',
                       label: 'All',
-                      // Icon: AdminCheckCircleIcon,
                     },
                     {
                       id: 'active',
                       label: 'Active',
-                      // Icon: AdminLightningIcon,
                     },
-                    { id: 'draft', label: 'Draft', Icon: AdminDocumentIcon },
+                    { id: 'draft', label: 'Draft' },
                     {
                       id: 'archived',
                       label: 'Archived',
-                      // Icon: AdminFolderIcon,
                     },
-                  ].map(({ id, label, Icon }) => {
-                    const isActive = activeTab === id && !showAddProduct;
-                    const color = isActive ? '#121212' : '#C8C8CA';
+                  ].map(({ id, label }: any) => {
+                    const isActive = activeTab === id;
                     return (
                       <button
                         key={id}
-                        onClick={() => {
-                          setActiveTab(id as typeof activeTab);
-                          setShowAddProduct(false);
-                        }}
-                        className={`flex items-center gap-x-2 capitalize transition-colors hover:cursor-pointer ${isActive ? 'text-[#121212]' : 'text-[#C8C8CA]'}`}
+                        onClick={() => setActiveTab(id)}
+                        className={`relative cursor-pointer pb-4 text-[14px] transition-all duration-200 ease-in-out ${
+                          isActive
+                            ? 'text-gray-900'
+                            : 'text-gray-400 hover:text-gray-600'
+                        }`}
                       >
-                        {/* <Icon color={color} /> */}
-                        <span>{label}</span>
+                        {label}
+                        {isActive && (
+                          <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[4px]" />
+                        )}
                       </button>
                     );
                   })}
                 </div>
-                <div className="flex items-center gap-x-[16px]">
-                  <button className="btn_admin_outline flex items-center gap-x-[2px]">
-                    <AdminSoundLevelsIcon /> Weekly
-                  </button>
+                <div className="flex items-center gap-x-[16px] pb-4">
+                  <div className="relative flex items-center">
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="btn_admin_outline flex items-center gap-x-[2px]"
+                    >
+                      <AdminSoundLevelsIcon />
+                      {selectedPeriod}
+                    </button>
+                    {isDropdownOpen && (
+                      <div className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
+                        <div className="py-1">
+                          {periodOptions.map((option) => (
+                            <button
+                              key={option}
+                              onClick={() => {
+                                setSelectedPeriod(option);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                            >
+                              {option}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setShowAddProduct(true)}
                     className="btn_admin_outline flex items-center gap-x-[2px]"
@@ -217,7 +241,7 @@ export default function ProductsPage() {
 
             <div
               id="product_display"
-              className="rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen"
+              className="z-10 rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen"
             >
               {activeTab === 'all' && (
                 <div>Displaying All products section.</div>

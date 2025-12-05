@@ -6,7 +6,10 @@ import { AdminSoundLevelsIcon } from '@/components/icons';
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState('All');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('Daily');
 
+  const periodOptions = ['Daily', 'Weekly', 'Monthly'];
   const tabs = [
     { id: 'All', label: 'All' },
     { id: 'Delivered', label: 'Delivered' },
@@ -37,10 +40,9 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="">
+      <>
         <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] text-[#121212]">
-          <div className="flex items-center justify-between sm:flex-row">
-            {/* Tabs */}
+          <div className="scrollbar-hide relative flex flex-col-reverse items-start justify-between gap-4 overflow-visible sm:flex-row sm:items-center">
             <div className="flex items-center gap-8">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -56,26 +58,45 @@ export default function OrdersPage() {
                   >
                     {tab.label}
                     {isActive && (
-                      <span className="absolute -bottom-[1px] left-0 z-10 h-[2px] w-full rounded-t-sm bg-gray-900" />
+                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[4px]" />
                     )}
                   </button>
                 );
               })}
             </div>
-
-            {/* Button */}
-            <div className="flex items-center">
-              <button className="btn_admin_outline flex items-center gap-x-[2px]">
+            <div className="relative flex items-center pb-4">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="btn_admin_outline flex items-center gap-x-[2px]"
+              >
                 <AdminSoundLevelsIcon />
-                Daily
+                {selectedPeriod}
               </button>
+              {isDropdownOpen && (
+                <div className="ring-opacity-6 absolute top-full right-0 z-10 -mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
+                  <div className="py-1">
+                    {periodOptions.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => {
+                          setSelectedPeriod(option);
+                          setIsDropdownOpen(false);
+                        }}
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
         <div className="rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen">
           {renderContent()}
         </div>
-      </div>
+      </>
     </GridContainer>
   );
 }
