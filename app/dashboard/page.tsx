@@ -170,7 +170,7 @@ export default function DashboardPage() {
   };
   return (
     <GridContainer>
-      <main className="py-[22px] !text-[#35373C]">
+      <main className="mt-[22px] !text-[#35373C]">
         {/* First layer */}
         <div className="grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-3 lg:grid-cols-4 lg:space-y-0">
           {/* 1st grid */}
@@ -238,7 +238,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Second layer */}
-        <div className="mt-[38px] mb-[25px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-6 md:space-y-0">
+        <div className="my-[38px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-6 md:space-y-0">
           <div className="rounded-[20px] bg-white px-[24px] py-[30px] md:col-span-4">
             <div>
               <p className="text-[14px] font-medium text-[#AFB1B0]">
@@ -272,11 +272,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Third layer */}
-        <div className="mt-[38px] mb-[25px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-5 md:space-y-0">
+        <div className="mt-[38px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-5 md:space-y-0">
           <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[30px] md:col-span-2">
             <div className="text-[18px] font-medium">Latest Orders</div>
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[300px] text-left text-[14px]">
+              <table className="w-full min-w-[300px] text-left !text-[13px]">
                 <thead>
                   <tr className="text-[#AFB1B0]">
                     <th className="pb-2 font-normal">Customer</th>
@@ -379,7 +379,7 @@ const AllProductsTable = () => {
         />
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[500px] text-left text-[14px]">
+        <table className="w-full min-w-[500px] text-left !text-[13px]">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className="text-[#AFB1B0]">

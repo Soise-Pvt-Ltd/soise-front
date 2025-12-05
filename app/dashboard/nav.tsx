@@ -44,7 +44,7 @@ const Nav = () => {
             linkname={'Users'}
           />
           <Links
-            path={'/dashboard/ceators'}
+            path={'/dashboard/creators'}
             svg={<AdminCreatorsIcon />}
             linkname={'Creators'}
           />
