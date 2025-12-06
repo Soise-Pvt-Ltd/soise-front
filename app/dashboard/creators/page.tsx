@@ -1,13 +1,115 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GridContainer from '../gridContainer';
-import { AdminSoundLevelsIcon } from '@/components/icons';
+import {
+  AdminSoundLevelsIcon,
+  AdminMoreVerticalIcon,
+  AdminBadge1,
+  AdminBadge2,
+  AdminBadge3,
+} from '@/components/icons';
+import { faker } from '@faker-js/faker';
+
+type Creator = {
+  id: string;
+  name: string;
+  avatar: string;
+  tier: 'tier 1' | 'tier 2' | 'tier 3';
+  email: string;
+  salesGenerated: string;
+};
 
 export default function CreatorsPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState('Today');
+  const [creators, setCreators] = useState<Creator[]>([]);
 
   const periodOptions = ['Today', 'Weekly', 'Monthly'];
+
+  useEffect(() => {
+    const newCreators: Creator[] = Array.from({ length: 10 }, () => {
+      return {
+        id: faker.string.uuid(),
+        name: faker.person.fullName(),
+        avatar: faker.image.avatar(),
+        tier: faker.helpers.arrayElement(['tier 1', 'tier 2', 'tier 3']),
+        email: faker.internet.email(),
+        salesGenerated: faker.finance.amount(),
+      };
+    });
+    setCreators(newCreators);
+  }, []);
+
+  const renderContent = () => (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-left text-[13px]">
+        <thead>
+          <tr>
+            <th scope="col" className="thead truncate">
+              Creator
+            </th>
+            <th scope="col" className="thead">
+              Tier
+            </th>
+            <th scope="col" className="thead">
+              Email
+            </th>
+            <th scope="col" className="thead">
+              Sales Generated
+            </th>
+            <th scope="col" className="thead">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {creators.map((creator) => (
+            <tr key={creator.id}>
+              <td className="td">
+                <div className="flex items-center gap-x-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={creator.avatar}
+                    alt={creator.name}
+                    className="size-8 rounded-full object-cover"
+                  />
+                  <span>{creator.name}</span>
+                </div>
+              </td>
+              <td className="td">
+                <div className="flex items-center gap-x-1.5">
+                  <span
+                    style={{
+                      color:
+                        creator.tier === 'tier 1'
+                          ? '#CD7F32'
+                          : creator.tier === 'tier 2'
+                            ? '#C0C0C0'
+                            : '#FFEB80',
+                    }}
+                    className="capitalize"
+                  >
+                    {creator.tier}
+                  </span>
+                  {creator.tier === 'tier 1' && <AdminBadge1 />}
+                  {creator.tier === 'tier 2' && <AdminBadge2 />}
+                  {creator.tier === 'tier 3' && <AdminBadge3 />}
+                </div>
+              </td>
+              <td className="td">{creator.email}</td>
+              <td className="td">₦{creator.salesGenerated}</td>
+              <td className="td">
+                <button className="flex size-[25px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5]">
+                  <AdminMoreVerticalIcon />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   return (
     <GridContainer>
       <div className="px-[16px]">
@@ -18,7 +120,7 @@ export default function CreatorsPage() {
 
       <div className="">
         <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] py-[24px] text-[#121212]">
-          <div className="flex flex-col items-center justify-between sm:flex-row">
+          <div className="flex flex-row items-center justify-between">
             <div>
               {' '}
               <input
@@ -57,7 +159,18 @@ export default function CreatorsPage() {
             </div>
           </div>
         </div>
-        <div className="rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen"></div>
+
+        {creators.length > 0 ? (
+          <div className="h-full rounded-b-[20px] bg-white px-[24px]">
+            {renderContent()}
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen">
+            <span className="text-base text-gray-500">
+              There are no creators to display.
+            </span>
+          </div>
+        )}
       </div>
     </GridContainer>
   );

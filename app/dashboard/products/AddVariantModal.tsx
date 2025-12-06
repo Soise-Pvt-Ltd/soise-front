@@ -116,32 +116,56 @@ export default function AddVariantModal({
       role="dialog"
       aria-modal="true"
     >
-      <div className="relative w-full max-w-4xl rounded-2xl bg-white p-8 shadow-xl">
-        <div className="">
-          <h2 id="modal-title" className="text-[20px] font-medium capitalize">
-            Add product variants
-          </h2>
-        </div>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 rounded-full p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
-          aria-label="Close modal"
-        >
-          <svg
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <div className="relative flex h-full w-full max-w-4xl flex-col rounded-2xl bg-white px-8 pt-6 pb-8 shadow-xl md:max-h-[90vh]">
+        <div className="pb-0">
+          <div className="">
+            <h2 id="modal-title" className="text-[20px] font-medium capitalize">
+              Add product variants
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-6 rounded-full p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800"
+            aria-label="Close modal"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-        <div className="mt-6">
+            <svg
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        {/* Horizontal Line */}
+        <div className="mx-[-2rem] my-6 border-t border-gray-200"></div>
+
+        <div id="modal_body" className="scrollbar-hide flex-1 overflow-y-auto">
+          <div className="mb-[24px]">
+            <div className="mb-[16px] text-[15px] font-medium">
+              Product detail
+            </div>
+            <div className="space-y-[16px] text-[13px]">
+              <div className="font-medium">Street hoodie</div>
+              <div>
+                <ul className="flex items-center space-x-[8px] text-[13px] text-[#8E8E93]">
+                  <li>• Body 100% cotton.</li>
+                  <li>• Metal zip front closure.</li>
+                  <li>• Body 100% cotton.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div className="mb-4 flex items-center justify-between text-[15px] font-medium">
+            <div>Variant</div>
+            <div>+ Add Variant</div>
+          </div>
           <div className="rounded-[10px] border border-[#AEAEB266]/40 p-[30px]">
             <div className="gid-cols-1 grid gap-[16px] md:grid-cols-2">
               <div>

@@ -1,8 +1,22 @@
 'use client';
 
+import { faker } from '@faker-js/faker';
 import GridContainer from '../gridContainer';
-import { useState } from 'react';
-import { AdminSoundLevelsIcon } from '@/components/icons';
+import { useEffect, useState } from 'react';
+import {
+  AdminMoreVerticalIcon,
+  AdminSoundLevelsIcon,
+} from '@/components/icons';
+
+type OrderStatus = 'Delivered' | 'Pending' | 'Failed';
+
+type Order = {
+  id: string;
+  name: string;
+  address: string;
+  date: string;
+  status: OrderStatus;
+};
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState('All');
@@ -17,10 +31,71 @@ export default function OrdersPage() {
     { id: 'Failed', label: 'Failed' },
   ];
 
+  const newOrders: Order[] = Array.from({ length: 10 }, () => {
+    const date = faker.date.recent();
+    return {
+      id: `ORD-${faker.string.alphanumeric(8).toUpperCase()}`,
+      name: faker.person.fullName(),
+      address: faker.location.streetAddress(true),
+      date: `${date.getDate()} ${date.toLocaleString('en-US', {
+        month: 'short',
+      })} ${date.getFullYear()}`,
+      status: faker.helpers.arrayElement(['Delivered', 'Pending', 'Failed']),
+    };
+  });
+
+  const statusClasses: Record<OrderStatus, string> = {
+    Delivered:
+      'bg-[#CCEAD6] text-[#32AC5B] border border-[#CCEAD6] rounded-full',
+    Pending: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
+    Failed: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'All':
-        return <div></div>;
+        return (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-[13px]">
+              <thead>
+                <tr>
+                  <th scope="col" className="thead truncate">
+                    Name
+                  </th>
+                  <th scope="col" className="thead">
+                    Address
+                  </th>
+                  <th scope="col" className="thead">
+                    Order ID
+                  </th>
+                  <th scope="col" className="thead">
+                    Date
+                  </th>
+                  <th scope="col" className="thead">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {newOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td className="td">{order.name}</td>
+                    <td className="td">{order.address}</td>
+                    <td className="td">{order.id}</td>
+                    <td className="td">{order.date}</td>
+                    <td className="td">
+                      <span
+                        className={`px-2 py-1 ${statusClasses[order.status]}`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
       case 'Delivered':
         return <div></div>;
       case 'Pending':
@@ -58,7 +133,7 @@ export default function OrdersPage() {
                   >
                     {tab.label}
                     {isActive && (
-                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[4px]" />
+                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[5px]" />
                     )}
                   </button>
                 );
@@ -93,9 +168,17 @@ export default function OrdersPage() {
             </div>
           </div>
         </div>
-        <div className="rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen">
-          {renderContent()}
-        </div>
+        {newOrders.length > 0 ? (
+          <div className="h-full rounded-b-[20px] bg-white px-[24px]">
+            {renderContent()}
+          </div>
+        ) : (
+          <div className="flex h-full items-center justify-center rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen">
+            <span className="text-base text-gray-500">
+              There are no orders to display.
+            </span>
+          </div>
+        )}
       </>
     </GridContainer>
   );

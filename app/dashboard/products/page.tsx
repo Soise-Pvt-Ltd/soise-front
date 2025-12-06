@@ -1,19 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { faker } from '@faker-js/faker';
 import GridContainer from '../gridContainer';
-import { ArrowLeftIcon } from '@/components/icons';
 import { useDropzone } from 'react-dropzone';
 import {
+  ArrowLeftIcon,
   AdminUploadIcon,
   AdminSoundLevelsIcon,
   AdminPlusCircleIcon,
+  AdminMoreVerticalIcon,
+  AdminEditIcon,
 } from '@/components/icons';
 
 import AddVariantModal from './AddVariantModal';
 interface MyFile extends File {
   preview: string;
 }
+
+type Product = {
+  id: string;
+  name: string;
+  image: string;
+  status: 'live' | 'draft';
+  inventory: number;
+  outOfStock: number;
+};
 
 export default function ProductsPage() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -25,6 +37,7 @@ export default function ProductsPage() {
   >('all');
   const [showAddProduct, setShowAddProduct] = useState(false);
 
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLive, setIsLive] = useState(false);
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [variants, setVariants] = useState([]); // To store saved variants
@@ -63,6 +76,22 @@ export default function ProductsPage() {
   useEffect(() => {
     // Make sure to revoke the data uris to avoid memory leaks, will run on unmount
     return () => files.forEach((file) => URL.revokeObjectURL(file.preview));
+  }, [files]);
+
+  useEffect(() => {
+    const newProducts: Product[] = Array.from({ length: 8 }, () => ({
+      id: faker.string.uuid(),
+      name: faker.commerce.productName(),
+      image: faker.image.urlLoremFlickr({
+        category: 'fashion',
+        width: 128,
+        height: 128,
+      }),
+      status: faker.helpers.arrayElement(['live', 'draft']),
+      inventory: faker.number.int({ min: 0, max: 200 }),
+      outOfStock: faker.number.int({ min: 0, max: 50 }),
+    }));
+    setProducts(newProducts);
   }, [files]);
 
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]); // Changed to an array
@@ -141,7 +170,7 @@ export default function ProductsPage() {
           {showAddProduct ? (
             <div className="flex items-center justify-between py-[22px]">
               <div
-                className="hover: flex cursor-pointer items-center gap-x-2 hover:underline"
+                className="hover: flex cursor-pointer items-center gap-x-2"
                 onClick={() => setShowAddProduct(false)}
               >
                 <ArrowLeftIcon />{' '}
@@ -149,7 +178,7 @@ export default function ProductsPage() {
               </div>
               <button
                 onClick={() => setIsVariantModalOpen(true)}
-                className="cursor-pointer hover:underline"
+                className="cursor-pointer"
               >
                 + Add Variant
               </button>
@@ -194,7 +223,7 @@ export default function ProductsPage() {
                       >
                         {label}
                         {isActive && (
-                          <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[4px]" />
+                          <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[5px]" />
                         )}
                       </button>
                     );
@@ -241,10 +270,67 @@ export default function ProductsPage() {
 
             <div
               id="product_display"
-              className="z-10 rounded-b-[20px] bg-white px-[24px] py-[30px] md:h-screen"
+              className="z-10 rounded-b-[20px] bg-white px-[24px]"
             >
               {activeTab === 'all' && (
-                <div>Displaying All products section.</div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-left text-[13px]">
+                    <thead>
+                      <tr>
+                        <th scope="col" className="thead truncate">
+                          Product
+                        </th>
+                        <th scope="col" className="thead">
+                          Status
+                        </th>
+                        <th scope="col" className="thead">
+                          Inventory
+                        </th>
+                        <th scope="col" className="thead">
+                          Out of Stock
+                        </th>
+                        <th scope="col" className="thead">
+                          Manage
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((product) => (
+                        <tr key={product.id}>
+                          <td className="td">
+                            <div className="flex items-center gap-x-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                className="size-8 rounded-md object-cover"
+                              />
+                              <span>{product.name}</span>
+                            </div>
+                          </td>
+                          <td className="td">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                                product.status === 'live'
+                                  ? 'bg-[#CCEAD6] text-[#32AC5B]'
+                                  : 'bg-[#F5F1CC] text-[#D8C732]'
+                              }`}
+                            >
+                              {product.status}
+                            </span>
+                          </td>
+                          <td className="td">{product.inventory}</td>
+                          <td className="td">{product.outOfStock}</td>
+                          <td className="td">
+                            <button className="flex size-[25px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5]">
+                              <AdminEditIcon />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
               {activeTab === 'active' && (
                 <div>Displaying Active products section.</div>

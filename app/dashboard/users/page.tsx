@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { AdminSoundLevelsIcon } from '@/components/icons';
+import {
+  AdminSoundLevelsIcon,
+  AdminMoreVerticalIcon,
+} from '@/components/icons';
 import GridContainer from '../gridContainer';
 import { faker } from '@faker-js/faker';
 
@@ -11,10 +14,12 @@ export default function UsersPage() {
 
   const periodOptions = ['Today', 'Weekly', 'Monthly'];
   const users = Array.from({ length: 10 }, () => ({
-    name: faker.person.fullName(),
-    phoneNumber: faker.phone.number(),
+    // name: faker.person.fullName(),
+    // phoneNumber: faker.phone.number(),
+    name: 'Samuel Okoro',
+    phoneNumber: '0987654312',
     email: faker.internet.email(),
-    orderNumber: faker.string.alphanumeric(8).toUpperCase(),
+    numberOfOrders: faker.number.int({ min: 1, max: 100 }),
   }));
 
   return (
@@ -27,7 +32,7 @@ export default function UsersPage() {
 
       <div className="">
         <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] py-[24px] text-[#121212]">
-          <div className="flex flex-col items-center justify-between sm:flex-row">
+          <div className="flex items-center justify-between">
             <div>
               {' '}
               <input
@@ -65,65 +70,39 @@ export default function UsersPage() {
             </div>
           </div>
         </div>
-        <div className="rounded-b-[20px] bg-white px-[24px] py-[30px]">
+        <div className="rounded-b-[20px] bg-white px-[24px]">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full text-[13px]">
+              <thead>
                 <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-                  >
+                  <th scope="col" className="thead">
                     Name
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-                  >
+                  <th scope="col" className="thead">
                     Phone Number
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-                  >
+                  <th scope="col" className="thead">
                     Email
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-                  >
-                    Order Number
+                  <th scope="col" className="thead">
+                    No. of Orders
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-                  >
+                  <th scope="col" className="thead">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody>
                 {users.map((user) => (
                   <tr key={user.email}>
-                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
-                      {user.name}
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-                      {user.phoneNumber}
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-                      {user.email}
-                    </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
-                      {user.orderNumber}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                      <a
-                        href="#"
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        View
-                      </a>
+                    <td className="td">{user.name}</td>
+                    <td className="td">{user.phoneNumber}</td>
+                    <td className="td">{user.email}</td>
+                    <td className="td">{user.numberOfOrders}</td>
+                    <td className="td">
+                      <button className="flex size-[25px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5]">
+                        <AdminMoreVerticalIcon />
+                      </button>
                     </td>
                   </tr>
                 ))}

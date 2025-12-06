@@ -1,15 +1,6 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import GridContainer from './gridContainer';
-import { AdminMoreHorizontalIcon } from '@/components/icons';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  getFilteredRowModel,
-  ColumnDef,
-} from '@tanstack/react-table';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -22,6 +13,8 @@ import {
   Title,
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
+import GridContainer from './gridContainer';
+import { AdminMoreHorizontalIcon, AdminEditIcon } from '@/components/icons';
 import { faker } from '@faker-js/faker';
 
 ChartJS.register(
@@ -35,6 +28,7 @@ ChartJS.register(
 );
 
 type Product = {
+  image: string;
   name: string;
   price: number;
   totalSales: number;
@@ -163,10 +157,10 @@ export default function DashboardPage() {
 
   const statusClasses: Record<OrderStatus, string> = {
     completed:
-      'bg-[#EAF9F0] text-[#52B47D] border border-[#BEE5CF] rounded-[4px]',
+      'bg-[#CCEAD6] text-[#32AC5B] border border-[#CCEAD6] rounded-full',
     abandoned:
-      'bg-[#FEF6E9] text-[#F3A027] border border-[#FCDDB3] rounded-[4px]',
-    failed: 'bg-[#FDEBEB] text-[#E55C5C] border border-[#F8CACA] rounded-[4px]',
+      'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
+    failed: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
   };
   return (
     <GridContainer>
@@ -288,7 +282,7 @@ export default function DashboardPage() {
                 <tbody>
                   {latestOrders.map((order, index) => (
                     <tr key={index} className="border-t border-[#F6F6F6]">
-                      <td className="py-3">{order.customer}</td>
+                      <td className="py-3 text-wrap">{order.customer}</td>
                       <td className="py-3">
                         <span
                           className={`px-2 py-1 text-xs font-medium ${statusClasses[order.status]}`}
@@ -319,52 +313,23 @@ export default function DashboardPage() {
 const AllProductsTable = () => {
   const [globalFilter, setGlobalFilter] = useState('');
 
-  const products = useMemo(
+  const products: Product[] = useMemo(
     () =>
       Array.from({ length: 8 }, () => ({
+        image: faker.image.urlLoremFlickr({
+          category: 'product',
+          width: 40,
+          height: 40,
+        }),
         name: faker.commerce.productName(),
         price: parseFloat(faker.commerce.price()),
-        totalSales: faker.number.int({ min: 100, max: 5000 }),
+        totalSales: faker.number.int({ min: 0, max: 100 }),
       })),
     [],
   );
-
-  const columns = useMemo<ColumnDef<Product>[]>(
-    () => [
-      { accessorKey: 'name', header: 'Product Name' },
-      {
-        accessorKey: 'price',
-        header: 'Price',
-        cell: (info) => `$${info.getValue<number>().toFixed(2)}`,
-      },
-      {
-        accessorKey: 'totalSales',
-        header: 'Total Sales',
-        cell: (info) => `$${info.getValue<number>().toLocaleString('en-US')}`,
-      },
-      {
-        id: 'edit',
-        header: 'Edit',
-        cell: () => (
-          <button className="cursor-pointer">
-            <AdminMoreHorizontalIcon color="#121212" />
-          </button>
-        ),
-      },
-    ],
-    [],
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(globalFilter.toLowerCase()),
   );
-
-  const table = useReactTable({
-    data: products,
-    columns,
-    state: {
-      globalFilter,
-    },
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
 
   return (
     <>
@@ -372,36 +337,50 @@ const AllProductsTable = () => {
         <div className="text-[18px] font-medium">All Products</div>
         <input
           type="text"
-          value={globalFilter ?? ''}
+          value={globalFilter}
           onChange={(e) => setGlobalFilter(e.target.value)}
           placeholder="Search products..."
           className="h-[36px] rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] focus:ring-0 md:w-[245px]"
         />
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[500px] text-left !text-[13px]">
+      <div className="scrollbar-hide overflow-x-auto">
+        <table className="w-full min-w-[600px] text-left !text-[13px]">
           <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="text-[#AFB1B0]">
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="pb-2 font-normal">
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
+            <tr className="text-[#AFB1B0]">
+              <th className="pb-2 font-normal">Product Name</th>
+              <th className="pb-2 font-normal">Price</th>
+              <th className="pb-2 font-normal">Total Sales</th>
+              <th className="pb-2 font-normal">Edit</th>
+            </tr>
           </thead>
           <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-t border-[#F6F6F6]">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="py-3 pr-2">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+            {filteredProducts.map((product) => (
+              <tr key={product.name} className="border-t border-[#F6F6F6]">
+                <td className="py-3 pr-2">
+                  <div className="flex items-center gap-x-2">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-10 w-10 rounded-md object-cover"
+                    />
+                    <span>{product.name}</span>
+                  </div>
+                </td>
+                <td className="py-3 pr-2">
+                  <div className="h-[25px] w-fit rounded-[6px] bg-[#C0CBF2] px-2 py-1 text-[#0072BB]">
+                    ₦{product.price.toFixed(2)}
+                  </div>
+                </td>
+                <td className="py-3 pr-2">
+                  <div className="h-[25px] w-fit rounded-[6px] bg-[#C0CBF2] px-2 py-1 text-[#0072BB]">
+                    {product.totalSales}
+                  </div>
+                </td>
+                <td className="py-3 pr-2">
+                  <button className="h-[25px] w-fit cursor-pointer rounded-[6px] bg-[#C0CBF2] px-2 py-1 text-[#0072BB]">
+                    <AdminEditIcon color="#0072BB" />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

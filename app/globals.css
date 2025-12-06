@@ -57,7 +57,7 @@ input[type='number'].adminsolid,
 }
 
 .btn_admin_outline {
-  @apply cursor-pointer rounded-[6px] border-2 border-[#F6F6F6] px-2 py-1 text-[13px] text-[#AFB1B0] outline-none;
+  @apply !h-[36px] cursor-pointer rounded-[6px] border-2 border-[#F6F6F6] px-2 text-[13px] text-[#AFB1B0] outline-none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -66,4 +66,12 @@ input[type='number'].adminsolid,
 .scrollbar-hide {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
+}
+
+.thead {
+  @apply py-3 pr-3 text-left text-[13px] font-medium tracking-wider text-[#AFB1B0] uppercase;
+}
+
+.td {
+  @apply py-6 pr-3 text-[13px] whitespace-nowrap text-[#35373C];
 }
