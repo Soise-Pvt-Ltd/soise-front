@@ -267,7 +267,7 @@ export default function DashboardPage() {
 
         {/* Third layer */}
         <div className="mt-[38px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-5 md:space-y-0">
-          <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[30px] md:col-span-2">
+          <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[27px] md:col-span-2">
             <div className="text-[18px] font-medium">Latest Orders</div>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[300px] text-left !text-[13px]">
@@ -301,7 +301,7 @@ export default function DashboardPage() {
               </table>
             </div>
           </div>
-          <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[30px] md:col-span-3">
+          <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[27px] md:col-span-3">
             <AllProductsTable />
           </div>
         </div>
