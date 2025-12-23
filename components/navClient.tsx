@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   MenuIcon,
@@ -14,6 +14,7 @@ import {
 } from './icons';
 import Link from 'next/link';
 import Image from 'next/image';
+import axios from 'axios';
 
 interface ProductVariant {
   id: string;
@@ -25,18 +26,72 @@ interface ProductVariant {
   [key: string]: any;
 }
 
+interface CartItem {
+  id: string;
+  quantity: number;
+  variant: string; // This is the variant ID
+}
+
 interface EnrichedCartItem {
   id: string;
   quantity: number;
   variant: string;
   variantDetails?: ProductVariant;
 }
+interface NavClientProps {
+  variantsMap: Map<string, ProductVariant>;
+  isLoggedIn: boolean;
+}
 
-export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
+export default function NavClient({
+  variantsMap,
+  isLoggedIn: initialIsLoggedIn,
+}: NavClientProps) {
   const router = useRouter();
+  const [cart, setCart] = useState<EnrichedCartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
   const [openMenu, setOpenMenu] = useState<
-    null | 'menu' | 'search' | 'bag' | 'wishlist'
+    null | 'menu' | 'search' | 'bag' | 'wishlist' | 'user'
   >(null);
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      setLoading(true);
+      try {
+        // 1. Fetch Cart via our new Proxy (which handles the token server-side)
+        const sessionId = sessionStorage.getItem('session_id');
+
+        // We pass session_id as a fallback for guests.
+        // The proxy will prioritize the accessToken cookie if it exists.
+        const cartRes = await axios.get<{ data: CartItem[] }>('/api/cart', {
+          params: {
+            session_id: sessionId,
+          },
+        });
+
+        if (cartRes) {
+          const enrichedCart: EnrichedCartItem[] = cartRes.data.data.map(
+            (item) => ({
+              ...item,
+              variantDetails: variantsMap.get(item.variant),
+            }),
+          );
+          setCart(enrichedCart);
+        } else {
+          // If no token or session ID, the cart is empty.
+          setCart([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch cart:', error);
+        setCart([]); // Set cart to empty on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCart();
+  }, []);
 
   const trending_searches = [
     'Soise',
@@ -66,11 +121,18 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
     },
   ];
 
+  const handleLogout = async () => {
+    await axios.delete('/api/checkstatus'); // Clears the httpOnly cookie
+    setIsLoggedIn(false);
+    setOpenMenu(null);
+    router.push('/');
+  };
+
   const menu_2 = [
-    {
-      name: 'Wishlist',
-      href: '/wishlist',
-    },
+    // {
+    //   name: 'Wishlist',
+    //   href: '/wishlist',
+    // },
     {
       name: 'Order History',
       href: '/order-history',
@@ -81,8 +143,9 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
       icon: <ArrowUpRightIcon />,
     },
     {
-      name: 'Sign In',
-      href: '/auth',
+      name: isLoggedIn ? 'Logout' : 'Sign In',
+      href: isLoggedIn ? '' : '/signin',
+      action: isLoggedIn ? handleLogout : undefined,
     },
   ];
 
@@ -91,48 +154,48 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
     0,
   );
 
-  const wishlist_items = [
-    {
-      name: 'Street hoodie',
-      color: 'black',
-      size: 'M',
-      quantity: 1,
-      price: 59,
-      image: '/hoodie.png',
-    },
-    {
-      name: 'Cross Denim',
-      color: 'blue',
-      size: 'L',
-      quantity: 2,
-      price: 99,
-      image: '/crossdenim.png',
-    },
-    {
-      name: 'Bally Bomber',
-      color: 'Green',
-      size: 'XL',
-      quantity: 1,
-      price: 120,
-      image: '/ballybomber.png',
-    },
-    {
-      name: 'Get the Bread Tee',
-      color: 'White',
-      size: 'M',
-      quantity: 3,
-      price: 45,
-      image: '/getthebreadtee.png',
-    },
-    {
-      name: 'Stripe Hoodie',
-      color: 'Black/White',
-      size: 'S',
-      quantity: 1,
-      price: 65,
-      image: '/stripehoodie.png',
-    },
-  ];
+  // const wishlist_items = [
+  //   {
+  //     name: 'Street hoodie',
+  //     color: 'black',
+  //     size: 'M',
+  //     quantity: 1,
+  //     price: 59,
+  //     image: '/hoodie.png',
+  //   },
+  //   {
+  //     name: 'Cross Denim',
+  //     color: 'blue',
+  //     size: 'L',
+  //     quantity: 2,
+  //     price: 99,
+  //     image: '/crossdenim.png',
+  //   },
+  //   {
+  //     name: 'Bally Bomber',
+  //     color: 'Green',
+  //     size: 'XL',
+  //     quantity: 1,
+  //     price: 120,
+  //     image: '/ballybomber.png',
+  //   },
+  //   {
+  //     name: 'Get the Bread Tee',
+  //     color: 'White',
+  //     size: 'M',
+  //     quantity: 3,
+  //     price: 45,
+  //     image: '/getthebreadtee.png',
+  //   },
+  //   {
+  //     name: 'Stripe Hoodie',
+  //     color: 'Black/White',
+  //     size: 'S',
+  //     quantity: 1,
+  //     price: 65,
+  //     image: '/stripehoodie.png',
+  //   },
+  // ];
 
   return (
     <>
@@ -156,11 +219,8 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
           </button>
         </div>
 
-        <div
-          className="font-display cursor-pointer text-[29px] tracking-[0.2em] uppercase"
-          onClick={() => router.push('/')}
-        >
-          soise
+        <div className="cursor-pointer" onClick={() => router.push('/')}>
+          <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
         </div>
 
         <div className="flex items-center gap-x-[18px]">
@@ -173,7 +233,7 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
           </button>
 
           <button
-            onClick={() => router.push('/auth')}
+            onClick={() => setOpenMenu('user')}
             className="hover:cursor-pointer"
           >
             <UserIcon />
@@ -186,7 +246,7 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
       {/* 1. Mobile Menu Panel */}
       {openMenu === 'menu' && (
         <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
-          <>
+          <div className="flex min-h-full flex-col">
             <div className="space-y-[36px] px-[24px] !text-[13px] !font-medium text-[#121212] uppercase">
               {menu_1.map((item, index) =>
                 item.name === 'Wishlist' ? (
@@ -207,24 +267,10 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
                 ),
               )}
             </div>
-            <div className="mt-[112px] border-y border-[#AEAEB2] pb-[112px] text-[#121212]">
-              <div className="space-y-[43px] px-[24px] pt-[40px]">
-                {menu_2.map((item, index) => (
-                  <div key={index}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center gap-2 hover:cursor-pointer"
-                    >
-                      {item.name} {item.icon}
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="px-[24px] pt-[40px] text-[13px] text-[#121212]">
+            <div className="mt-auto px-[24px] pt-[40px] text-[13px] text-[#121212]">
               Country / Region: NG / English
             </div>
-          </>
+          </div>
         </FullscreenPanel>
       )}
 
@@ -287,7 +333,7 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
       )}
 
       {/* 4. Wishlist */}
-      {openMenu === 'wishlist' && (
+      {/* {openMenu === 'wishlist' && (
         <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
           <div className="flex h-full flex-col px-[24px]">
             <div className="scrollbar-hide overflow-y-auto">
@@ -314,6 +360,33 @@ export default function NavClient({ cart }: { cart: EnrichedCartItem[] }) {
                 view wishlist
               </button>
             </div>
+          </div>
+        </FullscreenPanel>
+      )} */}
+
+      {/* 5. User Panel */}
+      {openMenu === 'user' && (
+        <FullscreenPanel openMenu={openMenu} onClose={() => setOpenMenu(null)}>
+          <div className="space-y-[43px] px-[24px] text-[#121212]">
+            {menu_2.map((item, index) => (
+              <div key={index}>
+                {item.action ? (
+                  <button
+                    onClick={item.action}
+                    className="flex items-center gap-2 hover:cursor-pointer"
+                  >
+                    {item.name} {item.icon}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className="flex items-center gap-2 hover:cursor-pointer"
+                  >
+                    {item.name} {item.icon}
+                  </Link>
+                )}
+              </div>
+            ))}
           </div>
         </FullscreenPanel>
       )}
@@ -344,7 +417,7 @@ function FullscreenPanel({ children, onClose, openMenu }: any) {
 
 function BagItem({ item }: { item: EnrichedCartItem }) {
   // Fallback values for when variant details are not available
-  const name = item.variantDetails?.name ?? 'Product Name Missing';
+  const name = item.variantDetails?.product_name ?? 'Product Name Missing';
   const color = item.variantDetails?.color ?? 'N/A';
   const size = item.variantDetails?.size ?? 'N/A';
   const price = item.variantDetails?.price ?? 0;
@@ -392,39 +465,39 @@ function BagItem({ item }: { item: EnrichedCartItem }) {
   );
 }
 
-function WishlistItem({ item }: any) {
-  return (
-    <div className="mb-[24px] flex h-[120px] justify-between">
-      <div className="flex gap-x-[16px]">
-        <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            style={{ objectFit: 'cover' }}
-            className="rounded-[6px]"
-          />
-        </div>
-        <div className="flex w-[105px] flex-col py-[3px] text-[14px]">
-          <div className="flex-wrap pb-[16px] font-medium uppercase">
-            {item.name}
-          </div>
-          <div className="text-[#8E8E93]">
-            <div>
-              Color: <span className="uppercase">{item.color}</span>
-            </div>
-            <div>
-              Size: <span className="uppercase">{item.size}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
-        <div>${item.price}</div>
-        <div className="cursor-pointer uppercase underline hover:no-underline">
-          Remove
-        </div>
-      </div>
-    </div>
-  );
-}
+// function WishlistItem({ item }: any) {
+//   return (
+//     <div className="mb-[24px] flex h-[120px] justify-between">
+//       <div className="flex gap-x-[16px]">
+//         <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
+//           <Image
+//             src={item.image}
+//             alt={item.name}
+//             fill
+//             style={{ objectFit: 'cover' }}
+//             className="rounded-[6px]"
+//           />
+//         </div>
+//         <div className="flex w-[105px] flex-col py-[3px] text-[14px]">
+//           <div className="flex-wrap pb-[16px] font-medium uppercase">
+//             {item.name}
+//           </div>
+//           <div className="text-[#8E8E93]">
+//             <div>
+//               Color: <span className="uppercase">{item.color}</span>
+//             </div>
+//             <div>
+//               Size: <span className="uppercase">{item.size}</span>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//       <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
+//         <div>${item.price}</div>
+//         <div className="cursor-pointer uppercase underline hover:no-underline">
+//           Remove
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

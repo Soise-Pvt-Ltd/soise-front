@@ -1,14 +1,16 @@
+import { redirect } from 'next/navigation';
 import WishlistClient from './WishlistClient';
 export default async function WishlistPage() {
-  const res = await fetch('https://dummyjson.com/products', {
-    next: { revalidate: 3600 },
-  });
+  redirect('/');
+  // const res = await fetch('https://dummyjson.com/products', {
+  //   next: { revalidate: 3600 },
+  // });
 
-  if (!res.ok) {
-    return <h1>Failed to load wishlist.</h1>;
-  }
+  // if (!res.ok) {
+  //   return <h1>Failed to load wishlist.</h1>;
+  // }
 
-  const data = await res.json();
+  // const data = await res.json();
 
-  return <WishlistClient products={data.products} />;
+  // return <WishlistClient products={data.products} />;
 }

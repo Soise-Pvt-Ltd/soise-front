@@ -10,7 +10,7 @@ export function proxy(req: NextRequest) {
   if (path.startsWith('/admin')) {
     // If the user is not an admin, redirect to login.
     if (sessionValue !== 'admin') {
-      return NextResponse.redirect(new URL('/auth', req.url));
+      return NextResponse.redirect(new URL('/signin', req.url));
     }
     // If they are an admin, allow access.
     return NextResponse.next();

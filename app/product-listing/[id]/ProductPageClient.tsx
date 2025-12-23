@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import axios from 'axios';
 import Nav from '@/components/nav';
 import Footer from '@/components/footer';
-
 import { MinusIcon, PlusIcon, LikeIcon } from '@/components/icons';
 import SwiperCarouselClient from '@/components/caurosel';
 import { toast, Toaster } from 'sonner';
@@ -85,7 +85,7 @@ export default function ProductPageClient({
     [product.sample_variants],
   );
 
-  const addToCart = async () => {
+  const addToBag = async () => {
     if (!selectedColor || !selectedSize) {
       toast.error('Please select a color and size.');
       return;
@@ -102,29 +102,32 @@ export default function ProductPageClient({
     }
 
     try {
-      console.log(selectedVariant.id, quantity);
-      const response = await fetch(
+      // Check for an existing session_id in sessionStorage
+      const sessionId = sessionStorage.getItem('session_id');
+
+      const payload = {
+        variant_id: selectedVariant.id,
+        quantity: quantity,
+        ...(sessionId && { session_id: sessionId }), // Add session_id if it exists
+      };
+
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BASE_URL}/cart/items`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            variant_id: selectedVariant.id,
-            quantity: quantity,
-          }),
-        },
+        payload,
       );
 
-      if (!response.ok) {
-        throw new Error('Failed to add item to cart.');
-      }
-
-      // const result = await response.json();
       toast.success('Added to bag!');
+
+      // If the response contains a session_id, store it
+      if (response.data && response.data.session_id) {
+        sessionStorage.setItem('session_id', response.data.session_id);
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
       toast.error(
-        error instanceof Error ? error.message : 'An unknown error occurred.',
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : 'Failed to add item to cart.',
       );
     }
   };
@@ -202,13 +205,13 @@ export default function ProductPageClient({
                     </div>
                     <div className="flex flex-wrap gap-[8px] uppercase">
                       {availableSizes.map((size, index) => (
-                        <div
+                        <button
                           onClick={() => setSelectedSize(size)}
                           key={index}
-                          className={`flex h-[40px] w-[54px] cursor-pointer items-center justify-center border-1 bg-[#F5F5F5] text-[11px] transition-colors ${selectedSize === size ? 'border-2' : 'border-[#8E8E93] bg-[#F5F5F5]'}`}
+                          className={`flex h-[40px] w-[54px] items-center justify-center border-1 bg-[#F5F5F5] text-[11px] transition-colors ${selectedSize === size ? 'border-2' : 'border-[#8E8E93] bg-[#F5F5F5]'}`}
                         >
                           {size}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -239,7 +242,7 @@ export default function ProductPageClient({
               </div>
               <button
                 className="btn_black !mt-[36px] !mb-[56px]"
-                onClick={addToCart}
+                onClick={addToBag}
               >
                 Add to bag
               </button>

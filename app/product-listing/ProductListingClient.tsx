@@ -98,7 +98,7 @@ export default function ProductListingClient({
             {filteredProducts?.map((product: Product) => (
               <div key={product.id}>
                 <Link
-                  href={`/${product.slug}`}
+                  href={`/product-listing/${product.slug}`}
                   className="text-inherit no-underline"
                 >
                   <div className="flex h-[244px] w-full flex-col justify-between bg-[#F5F5F5] p-[10px]">

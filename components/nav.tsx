@@ -1,4 +1,6 @@
 import NavClient from './navClient';
+import axios from 'axios';
+import { cookies } from 'next/headers';
 
 // Define types for the data we're fetching to make the code safer and easier to understand.
 interface CartItem {
@@ -30,30 +32,25 @@ interface EnrichedCartItem extends CartItem {
 
 export default async function Nav() {
   try {
-    const [cartRes, productsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cart`),
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/products`),
-    ]);
-
-    if (!cartRes.ok) throw new Error('Failed to load cart');
-    if (!productsRes.ok) throw new Error('Failed to load products');
-
-    const cartData: { data: CartItem[] } = await cartRes.json();
-    const productsData: { data: Product[] } = await productsRes.json();
+    // Fetch only products on the server. Cart will be fetched on the client.
+    const productsRes = await axios.get<{ data: Product[] }>(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/products`,
+    );
 
     const variantsMap = new Map<string, ProductVariant>();
-    productsData.data.forEach((product) => {
+    productsRes.data.data.forEach((product) => {
       product.sample_variants.forEach((variant) => {
         variantsMap.set(variant.id, variant);
       });
     });
 
-    const enrichedCart: EnrichedCartItem[] = cartData.data.map((item) => ({
-      ...item,
-      variantDetails: variantsMap.get(item.variant),
-    }));
+    // Check for the access token cookie on the server side
+    const cookieStore = await cookies();
+    const isLoggedIn = cookieStore.has('accessToken');
 
-    return <NavClient cart={enrichedCart} />;
+    // Pass the variantsMap to the client component.
+    // The cart will be fetched and managed within NavClient.
+    return <NavClient variantsMap={variantsMap} isLoggedIn={isLoggedIn} />;
   } catch (error) {
     console.error(error);
     // In a real app, you might want a more user-friendly error component here.
