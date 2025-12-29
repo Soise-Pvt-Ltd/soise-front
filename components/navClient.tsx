@@ -139,7 +139,7 @@ export default function NavClient({
     },
     {
       name: 'Creator Experience',
-      href: '',
+      href: '/creators',
       icon: <ArrowUpRightIcon />,
     },
     {
