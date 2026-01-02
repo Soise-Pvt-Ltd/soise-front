@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import OrderSummaryClient from './OtherSummaryClient';
 
 export default async function OrderSummaryPage() {

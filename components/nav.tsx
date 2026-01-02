@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import NavClient from './navClient';
 import axios from 'axios';
 import { cookies } from 'next/headers';

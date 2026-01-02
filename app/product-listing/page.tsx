@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import axios from 'axios';
 import ProductListingClient from './ProductListingClient';
 

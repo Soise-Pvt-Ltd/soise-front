@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import OrderHistoryClient from './OrderHistoryCLient';
 import { cookies } from 'next/headers';
 

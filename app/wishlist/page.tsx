@@ -1,5 +1,7 @@
+export const runtime = 'nodejs';
+
 import { redirect } from 'next/navigation';
-import WishlistClient from './WishlistClient';
+//import WishlistClient from './WishlistClient';
 export default async function WishlistPage() {
   redirect('/');
   // const res = await fetch('https://dummyjson.com/products', {
