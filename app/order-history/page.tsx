@@ -1,15 +1,13 @@
 export const runtime = 'nodejs';
 
 import OrderHistoryClient from './OrderHistoryCLient';
-import { cookies } from 'next/headers';
 
 export default async function OrderHistoryPage() {
-  const cookieStore = await cookies();
-  const isLoggedIn = cookieStore.get('accessToken')?.value;
   const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/orders`, {
     method: 'GET',
+    credentials: 'include',
     headers: {
-      Authorization: `Bearer ${isLoggedIn || ''}`,
+      'Content-Type': 'application/json',
     },
     cache: 'no-store',
   });

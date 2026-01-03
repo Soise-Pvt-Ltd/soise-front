@@ -6,7 +6,6 @@ import axios, { isAxiosError } from 'axios';
 export async function POST(req: NextRequest) {
   try {
     const BASE_URL = 'https://api.soise.ng';
-    // 1. Extract email and password from the incoming JSON body
     const { email, password } = await req.json();
 
     if (!email || !password) {
@@ -23,7 +22,8 @@ export async function POST(req: NextRequest) {
     });
 
     // 3. On successful login, extract the access token and set it in a secure, HTTP-Only cookie.
-    const accessToken = authResponse.data?.data?.accessToken;
+    const accessToken = authResponse.data?.data?.access_token;
+    const refreshToken = authResponse.data?.data?.refresh_token;
 
     if (!accessToken) {
       console.error(
@@ -41,13 +41,23 @@ export async function POST(req: NextRequest) {
       message: 'Login successful',
     });
 
+    // Set the token in an HTTP-Only cookie
     response.cookies.set('accessToken', accessToken, {
-      httpOnly: true, // Prevents client-side JS from accessing the cookie
-      secure: process.env.NODE_ENV === 'production', // Only send cookie over HTTPS
-      path: '/', // Make the cookie available to all pages
-      sameSite: 'strict', // Helps prevent CSRF attacks
-      maxAge: 60 * 60 * 24, // Optional: expire cookie after 1 day
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24, // 1 day (adjust based on token expiry)
     });
+
+    // Set the refresh token in an HTTP-Only cookie if it exists
+    if (refreshToken) {
+      response.cookies.set('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7, // 7 days (Example: 1 week)
+      });
+    }
 
     return response;
   } catch (err) {

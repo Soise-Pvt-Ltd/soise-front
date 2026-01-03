@@ -1,8 +1,5 @@
 'use client';
 
-import Nav from '@/components/nav';
-import Footer from '@/components/footer';
-
 interface ErrorDisplayProps {
   title: string;
   message: string;
@@ -17,19 +14,15 @@ export default function ErrorDisplay({
   onButtonClick,
 }: ErrorDisplayProps) {
   return (
-    <>
-      <Nav />
-      <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-        <h2 className="text-2xl font-bold">{title}</h2>
-        <p className="mb-4 text-gray-600">{message}</p>
-        <button
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-          onClick={onButtonClick}
-        >
-          {buttonText}
-        </button>
-      </div>
-      <Footer />
-    </>
+    <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+      <h2 className="text-2xl font-bold">{title}</h2>
+      <p className="mb-4 text-gray-600">{message}</p>
+      <button
+        className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+        onClick={onButtonClick}
+      >
+        {buttonText}
+      </button>
+    </div>
   );
 }
