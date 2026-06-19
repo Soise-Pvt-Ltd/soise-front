@@ -46,6 +46,10 @@ interface NavClientProps {
   collections?: Collection[];
   admin?: boolean;
   storeCredit?: number | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  avatar?: string | null;
 }
 
 export default function NavClient({
@@ -54,6 +58,10 @@ export default function NavClient({
   collections = [],
   admin = false,
   storeCredit = null,
+  firstName = null,
+  lastName = null,
+  email = null,
+  avatar = null,
 }: NavClientProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -240,6 +248,19 @@ export default function NavClient({
   // Total number of units in the bag (sum of quantities), not distinct lines —
   // a single item with quantity 5 should show "5" on the badge, not "1".
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Identity shown at the top of the account panel so a user always knows who
+  // is signed in. Falls back gracefully through name → email local-part.
+  const displayName =
+    [firstName, lastName].filter(Boolean).join(' ').trim() ||
+    (email ? email.split('@')[0] : '') ||
+    'Your account';
+  const monogram =
+    (
+      (firstName?.[0] ?? '') + (lastName?.[0] ?? '') ||
+      email?.[0] ||
+      'S'
+    ).toUpperCase();
 
   const menu_1 = collections.map((collection) => ({
     name: collection.name,
@@ -670,6 +691,71 @@ export default function NavClient({
 
             {openMenu === 'user' && (
               <div className="flex min-h-full flex-col px-[24px] text-[#121212]">
+                {isLoggedIn && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: 0.12,
+                      duration: 0.5,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                    className="mb-[40px] border-b border-[#ECECEC] pb-[28px]"
+                  >
+                    {/* Who's signed in + the immersive entry point to the
+                        private wardrobe. The whole block is the affordance; the
+                        "Profile" word carries the luxury micro-interaction. */}
+                    <Link
+                      href="/shop/profile"
+                      onClick={closePanel}
+                      aria-label={`Open ${displayName}'s profile`}
+                      className={`group block ${LINK_FOCUS}`}
+                    >
+                      <div className="flex items-center gap-[14px]">
+                        {avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={avatar}
+                            alt=""
+                            className="h-[54px] w-[54px] rounded-full object-cover ring-1 ring-[#121212]/10"
+                          />
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className="grid h-[54px] w-[54px] place-items-center rounded-full bg-[#121212] text-[19px] leading-none text-white"
+                            style={{ fontFamily: 'var(--font-luxe)' }}
+                          >
+                            {monogram}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <div
+                            className="truncate text-[19px] leading-tight"
+                            style={{ fontFamily: 'var(--font-luxe)' }}
+                          >
+                            {displayName}
+                          </div>
+                          {email ? (
+                            <div className="mt-[2px] truncate text-[12px] text-[#8E8E93]">
+                              {email}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <span className="relative mt-[18px] inline-flex items-center gap-[8px] pb-[5px] text-[11px] font-medium tracking-[0.28em] text-[#121212] uppercase">
+                        Profile
+                        <span className="transition-transform duration-500 ease-out group-hover:translate-x-[3px]">
+                          <ArrowUpRightIcon />
+                        </span>
+                        {/* Hairline that draws itself in on hover/focus — the
+                            quiet, expensive-feeling reveal. */}
+                        <span className="absolute bottom-0 left-0 h-px w-0 bg-[#121212] transition-all duration-500 ease-out group-hover:w-full group-focus-visible:w-full" />
+                      </span>
+                    </Link>
+                  </motion.div>
+                )}
+
                 <div className="space-y-[43px]">
                   {menu_2.map((item, index) => (
                     <motion.div

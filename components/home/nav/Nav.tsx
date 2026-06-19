@@ -100,13 +100,21 @@ export default async function Nav() {
       variantDetails: variantsMap.get(item.variant),
     })) ?? [];
 
+  // Identity for the account panel ("who's logged in") + the luxury Profile
+  // entry point. Best-effort: any missing field simply renders less.
+  const u = userData?.data ?? null;
+
   return (
     <NavClient
       cart={enrichedCart}
       collections={collectionData.data ?? []}
       isLoggedIn={isLoggedIn}
-      admin={userData?.data?.role === 'admin'}
+      admin={u?.role === 'admin'}
       storeCredit={storeCredit}
+      firstName={u?.first_name ?? null}
+      lastName={u?.last_name ?? null}
+      email={u?.email ?? null}
+      avatar={u?.avatar ?? null}
     />
   );
 }

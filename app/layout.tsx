@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { Poppins, Molle } from 'next/font/google';
+import { Poppins, Molle, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import {
@@ -22,6 +22,17 @@ const display_font = Molle({
   subsets: ['latin'],
   weight: ['400'],
   variable: '--font-display',
+});
+
+// High-contrast editorial serif reserved for the LVMH-style private wardrobe
+// (the immersive customer profile). Loaded as a CSS variable so it never alters
+// the storefront's Poppins body type — it's opt-in via `var(--font-luxe)`.
+const luxe_font = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  variable: '--font-luxe',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -94,7 +105,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en-NG"
-      className={`${body_font.variable} ${display_font.variable}`}
+      className={`${body_font.variable} ${display_font.variable} ${luxe_font.variable}`}
     >
       <head>
         <script
