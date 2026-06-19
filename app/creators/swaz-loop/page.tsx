@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import Nav from '@/components/home/nav/Nav';
+import CreatorNav from '@/components/creators/CreatorNav';
 import Footer from '@/components/footer';
 import { ArrowUpRightIcon, WalletIcon, TagIcon } from '@/components/icons';
 import FaqAccordion, { type FaqItem } from './FaqAccordion';
@@ -66,8 +66,8 @@ const FAQS: FaqItem[] = [
 
 export default function CreatorSwazLoopPage() {
   return (
-    <>
-      <Nav />
+    <div className="min-h-screen bg-[#f9f9f9]">
+      <CreatorNav />
       <div className="mx-auto max-w-3xl px-[20px] py-[40px] md:py-[64px]">
         {/* Hero */}
         <div className="text-center">
@@ -215,6 +215,6 @@ export default function CreatorSwazLoopPage() {
         </div>
       </div>
       <Footer />
-    </>
+    </div>
   );
 }

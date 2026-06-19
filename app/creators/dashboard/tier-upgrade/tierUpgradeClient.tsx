@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { showToast } from '@/lib/toast-utils';
 import { submitTierUpgrade } from './actions';
+import CreatorNav from '@/components/creators/CreatorNav';
 
 type Req = {
   id: string;
@@ -55,8 +56,9 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-[#f9f9f9]">
       <Toaster position="top-center" richColors />
+      <CreatorNav />
       <div className="mx-auto max-w-xl px-[20px] py-[48px]">
         <h1 className="font-display text-[26px] text-[#121212]">Request a tier upgrade</h1>
         <p className="mt-2 text-[14px] text-[#8E8E93]">
@@ -122,6 +124,6 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

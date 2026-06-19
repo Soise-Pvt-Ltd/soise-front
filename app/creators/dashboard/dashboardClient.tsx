@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChainIcon, TagIcon, DollarIcon } from '@/components/icons';
 import ReferralCode from '../ReferralCode';
-import DashboardHeader from './DashboardHeader';
+import CreatorNav from '@/components/creators/CreatorNav';
 import { getWallet } from './request-payout/actions';
 
 ChartJS.register(
@@ -209,7 +209,7 @@ export default function CreatorDashboard({ dashboard }: { dashboard?: any }) {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <DashboardHeader balance={balance} />
+      <CreatorNav balance={balance} />
       <div className="mx-auto flex flex-col gap-[16px] px-[16px] py-[24px] md:max-w-7xl md:px-0">
         {/* Payout setup CTA */}
         {needsPayoutSetup && (

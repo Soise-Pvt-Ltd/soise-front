@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import DashboardHeader from '../DashboardHeader';
+import CreatorNav from '@/components/creators/CreatorNav';
 import { ArrowLeftIcon, CopyIconSolidWhite } from '@/components/icons';
 import { useState, useEffect } from 'react';
 import { getWallet, getBanks, savePayoutAccount } from '../request-payout/actions';
@@ -117,7 +117,7 @@ export default function WithdrawalBankPage() {
 
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
-      <DashboardHeader balance={balance} />
+      <CreatorNav balance={balance} />
       <div className="mx-auto flex flex-col gap-[16px] px-[16px] py-[24px] md:max-w-7xl md:px-0">
         <div
           className="flex items-center gap-x-2 hover:cursor-pointer"

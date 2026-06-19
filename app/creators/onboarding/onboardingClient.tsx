@@ -1,9 +1,8 @@
 'use client';
 import { useState } from 'react';
-import { CircleCheckIcon, MenuIcon, UserIcon } from '@/components/icons';
-import Image from 'next/image';
+import { CircleCheckIcon } from '@/components/icons';
 import ReferralCode from '../ReferralCode';
-import Menu from '../dashboard/Menu'; // Import the Menu component
+import CreatorNav from '@/components/creators/CreatorNav';
 import { savePaymentInformation } from './actions';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
@@ -18,7 +17,6 @@ export default function OnBoardingCreatorClient({
 }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State to control menu visibility
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     bankCode: '',
@@ -67,20 +65,10 @@ export default function OnBoardingCreatorClient({
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-[#f9f9f9]">
       <Toaster position="top-center" richColors />
-      <div className="profile mx-auto mb-[119px] px-[16px] md:max-w-7xl">
-        <div className="xs:gap-y-0 flex flex-wrap items-center justify-between gap-y-4 pt-[51px] pb-[28px]">
-          <div></div>
-
-          <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
-          <div
-            onClick={() => setIsMenuOpen(true)}
-            className="hover:cursor-pointer"
-          >
-            <MenuIcon />
-          </div>
-        </div>
+      <CreatorNav />
+      <div className="profile mx-auto mt-[24px] mb-[119px] px-[16px] md:max-w-7xl">
         {step === 1 && (
           <div className="mt-[112px] flex flex-col items-center justify-center">
             <div className="flex w-[208px] flex-col items-center text-center">
@@ -190,7 +178,6 @@ export default function OnBoardingCreatorClient({
           </>
         )}
       </div>
-      <Menu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-    </>
+    </div>
   );
 }

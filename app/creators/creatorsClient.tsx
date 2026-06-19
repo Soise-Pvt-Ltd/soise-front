@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ArrowLeftIcon, MenuIcon, CircleCheckIcon } from '@/components/icons';
+import { useState } from 'react';
+import { CircleCheckIcon } from '@/components/icons';
 import Image from 'next/image';
 import Link from 'next/link';
-import Menu from './dashboard/Menu';
 import { submitCreatorApplication } from './actions';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
@@ -12,7 +11,6 @@ import { showToast } from '@/lib/toast-utils';
 
 export default function CreatorsApplicationClient() {
   const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -50,15 +48,16 @@ export default function CreatorsApplicationClient() {
     <>
       <Toaster position="top-center" richColors />
       <div className="profile mx-auto mb-[119px] px-[16px] md:max-w-7xl">
-        <div className="xs:gap-y-0 flex flex-wrap items-center justify-between gap-y-4 pt-[51px] pb-[28px]">
-          <div>{/* <ArrowLeftIcon /> */}</div>
-          <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
-          <div
-            onClick={() => setIsMenuOpen(true)}
-            className="hover:cursor-pointer"
+        <div className="flex items-center justify-between pt-[51px] pb-[28px]">
+          <Link href="/" aria-label="Back to shop">
+            <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
+          </Link>
+          <Link
+            href="/"
+            className="rounded-full border border-[#EAEAEA] px-[16px] py-[9px] text-[12px] font-semibold tracking-wide text-[#121212] uppercase transition-colors hover:bg-[#121212] hover:text-white focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            <MenuIcon />
-          </div>
+            Back to Shop
+          </Link>
         </div>
         {submissionSuccess ? (
           <div className="mt-[112px] flex flex-col items-center justify-center">
@@ -139,11 +138,6 @@ export default function CreatorsApplicationClient() {
           </div>
         )}
       </div>
-      <Menu
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        showMenuItems={false}
-      />
     </>
   );
 }
