@@ -13,6 +13,7 @@ import {
   AdminLogoutIcon,
   AdminCreatorsIcon,
   AdminOrdersIcon,
+  AdminCheckCircleIcon,
 } from '@/components/icons';
 
 const Nav = () => {
@@ -53,6 +54,12 @@ const Nav = () => {
             path={'/dashboard/creators'}
             svg={<AdminCreatorsIcon />}
             linkname={'Creators'}
+          />
+
+          <Links
+            path={'/dashboard/applications'}
+            svg={<AdminCheckCircleIcon />}
+            linkname={'Applications'}
           />
 
           <Links
