@@ -14,7 +14,7 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import GridContainer from '../gridContainer';
-import { AdminEditIcon } from '@/components/icons';
+import { AdminMoreHorizontalIcon, AdminEditIcon } from '@/components/icons';
 import OrderActionsMenu from './OrderActionsMenu';
 
 ChartJS.register(
