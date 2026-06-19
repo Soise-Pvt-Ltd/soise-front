@@ -7,7 +7,7 @@ import {
   AdminMoreHorizontalIcon,
   AdminSuccessCheckIcon,
 } from '@/components/icons';
-import { confirmPayout, initiatePayout } from './actions';
+import { confirmPayout, initiatePayout, getPaystackBalance } from './actions';
 import { showToast } from '../toast';
 
 type PayoutStatus =
@@ -93,6 +93,19 @@ export default function PayoutClient({
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [pendingPayoutId, setPendingPayoutId] = useState<string | null>(null);
+  // Live Paystack balance — payouts draw from it. null = unknown/not loaded.
+  const [paystackBalance, setPaystackBalance] = useState<number | null>(null);
+
+  const loadBalance = useCallback(async () => {
+    const res = await getPaystackBalance();
+    if (res.success && typeof res.balance === 'number') {
+      setPaystackBalance(res.balance);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBalance();
+  }, [loadBalance]);
 
   const [selectedPeriod, setSelectedPeriod] = useState('All Time');
   const periodOptions = ['All Time', 'Today', 'Last 7 Days', 'Last 30 Days'];
@@ -219,22 +232,35 @@ export default function PayoutClient({
   // Admin initiates the Paystack transfer for a queued ('requested') payout.
   // If Paystack requires transfer OTP, open the OTP modal to finalize; if it
   // went through without OTP, just refresh.
-  const handleInitiateClick = async (id: string) => {
-    setProcessingId(id);
+  const handleInitiateClick = async (payout: Payout) => {
+    // Warn (don't hard-block — test mode succeeds regardless) when the payout
+    // exceeds the live Paystack balance it would draw from.
+    if (paystackBalance !== null && payout.amount > paystackBalance) {
+      const ok = window.confirm(
+        `This payout is ₦${payout.amount.toLocaleString()}, but your Paystack balance is only ₦${paystackBalance.toLocaleString()}.\n\n` +
+          `In live mode Paystack will reject it and the amount is returned to the creator. ` +
+          `Top up your Paystack balance first.\n\nInitiate anyway?`,
+      );
+      if (!ok) return;
+    }
+    setProcessingId(payout.id);
     try {
-      const result = await initiatePayout(id);
+      const result = await initiatePayout(payout.id);
       if (!result.success) {
         showToast('error', result.message || 'Could not initiate transfer');
+        loadBalance();
+        handleFilterChange();
         return;
       }
       if (result.data?.requires_otp) {
         showToast('success', 'Transfer started — enter the OTP to finalize.');
-        setPendingPayoutId(id);
+        setPendingPayoutId(payout.id);
         setOtpValue('');
         setShowOtpModal(true);
       } else {
         showToast('success', result.message || 'Transfer sent.');
         handleFilterChange();
+        loadBalance();
       }
     } catch {
       showToast('error', 'An error occurred while initiating the transfer');
@@ -252,6 +278,7 @@ export default function PayoutClient({
       if (result.success) {
         showToast('success', 'Payout confirmed successfully');
         handleFilterChange();
+        loadBalance();
       } else {
         showToast('error', `Failed to confirm payout: ${result.message || 'Unknown error'}`);
       }
@@ -269,7 +296,7 @@ export default function PayoutClient({
         // Admin starts the Paystack transfer. Creators only queue the request.
         return (
           <button
-            onClick={() => handleInitiateClick(payout.id)}
+            onClick={() => handleInitiateClick(payout)}
             disabled={processingId === payout.id}
             className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-[6px] bg-[#0072BB] px-[12px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -393,14 +420,14 @@ export default function PayoutClient({
       {/* 1st layer */}
       <div className="mb-[25px]">
         <div className="rounded-[20px] bg-white px-[30px] py-[30px] text-[#121212]">
-          <div className="grid grid-cols-1 divide-y divide-gray-200 md:grid-cols-2 md:divide-x md:divide-y-0">
+          <div className="grid grid-cols-1 divide-y divide-gray-200 md:grid-cols-3 md:divide-x md:divide-y-0">
             <div className="space-y-[16px] py-4 md:py-0 md:pr-6">
               <div className="flex items-center justify-between">
                 <div className="text-[14px] text-[#AFB1B0]">Confirmed</div>
                 <AdminMoreHorizontalIcon color="#35373C" />
               </div>
               <div className="text-[22px] font-medium">{stats.completed}</div>
-              <div className="text-[14px] text-[#0072BB]">Total completed</div>
+              <div className="text-[14px] text-[#0072BB]">Total paid</div>
             </div>
             <div className="space-y-[16px] py-4 md:px-6 md:py-0">
               <div className="flex items-center justify-between">
@@ -408,18 +435,27 @@ export default function PayoutClient({
                 <AdminMoreHorizontalIcon color="#35373C" />
               </div>
               <div className="text-[22px] font-medium">{stats.requested}</div>
-              <div className="text-[14px] text-[#991C00]">
-                Pending confirmation
-              </div>
+              <div className="text-[14px] text-[#991C00]">Awaiting transfer</div>
             </div>
-            {/* <div className="space-y-[16px] py-4 md:py-0 md:pl-6">
+            <div className="space-y-[16px] py-4 md:py-0 md:pl-6">
               <div className="flex items-center justify-between">
-                <div className="text-[14px] text-[#AFB1B0]">Rejected</div>
+                <div className="text-[14px] text-[#AFB1B0]">
+                  Paystack balance
+                </div>
                 <AdminMoreHorizontalIcon color="#35373C" />
               </div>
-              <div className="text-[22px] font-medium">{stats.rejected}</div>
-              <div className="text-[14px] text-[#AFB1B0]">Total rejected</div>
-            </div> */}
+              <div className="text-[22px] font-medium">
+                {paystackBalance === null
+                  ? '—'
+                  : `₦${paystackBalance.toLocaleString('en-NG', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`}
+              </div>
+              <div className="text-[14px] text-[#AFB1B0]">
+                Funds available to pay out
+              </div>
+            </div>
           </div>
         </div>
       </div>

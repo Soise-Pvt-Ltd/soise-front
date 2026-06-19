@@ -64,6 +64,37 @@ export async function fetchPayouts(
   };
 }
 
+export async function getPaystackBalance() {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!accessToken) {
+    return { success: false, balance: null as number | null };
+  }
+
+  try {
+    const res = await fetch(`${baseUrl}/admin/payouts/balance`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+        Accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return { success: false, balance: null as number | null };
+    const json = await res.json();
+    return {
+      success: Boolean(json.success),
+      balance: typeof json.data?.balance === 'number' ? json.data.balance : null,
+      currency: json.data?.currency || 'NGN',
+    };
+  } catch {
+    return { success: false, balance: null as number | null };
+  }
+}
+
 export async function initiatePayout(id: string) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
