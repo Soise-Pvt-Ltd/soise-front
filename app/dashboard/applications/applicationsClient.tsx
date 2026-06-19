@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
-import { fetchApplications, reviewApplication } from './actions';
+import { fetchApplications, reviewApplication, allowReapplication } from './actions';
 
 type Application = {
   id: string;
@@ -63,6 +63,24 @@ export default function ApplicationsClient({
       setApps((prev) => prev.filter((a) => a.id !== app.id));
     } else {
       showToast('error', res.error || 'Review failed');
+    }
+  };
+
+  const allowReapply = async (app: Application) => {
+    if (busyId) return;
+    if (
+      !confirm(
+        `Let @${app.applicant_username} re-apply now, bypassing the 30-day wait?`,
+      )
+    )
+      return;
+    setBusyId(app.id);
+    const res = await allowReapplication(shortId(app.id));
+    setBusyId(null);
+    if (res.success) {
+      showToast('success', 'Re-application enabled — they can apply again now');
+    } else {
+      showToast('error', res.error || 'Could not enable re-application');
     }
   };
 
@@ -145,6 +163,15 @@ export default function ApplicationsClient({
                             Reject
                           </button>
                         </div>
+                      ) : app.status === 'rejected' ? (
+                        <button
+                          onClick={() => allowReapply(app)}
+                          disabled={busyId === app.id}
+                          title="Bypass the 30-day cooldown so this applicant can re-apply now"
+                          className="rounded-[8px] border border-[#0072BB] px-3 py-1.5 text-[13px] font-medium text-[#0072BB] transition-colors hover:bg-[#0072BB] hover:text-white disabled:opacity-50"
+                        >
+                          {busyId === app.id ? '…' : 'Allow re-application'}
+                        </button>
                       ) : (
                         <span className="text-[13px] text-[#8E8E93]">Reviewed</span>
                       )}

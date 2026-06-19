@@ -56,3 +56,30 @@ export async function reviewApplication(
     return { success: false, error: 'Review failed' };
   }
 }
+
+// Admin: waive the 30-day re-apply cooldown on a rejected application (e.g. a
+// creator who suddenly goes viral) so they can apply again immediately.
+export async function allowReapplication(applicationId: string) {
+  const accessToken = (await cookies()).get('access_token')?.value;
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const res = await fetch(
+      `${BASE_URL}/admin/creator-applications/${applicationId}/allow-reapply`,
+      {
+        method: 'POST',
+        headers: {
+          Cookie: `access_token=${accessToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({}),
+      },
+    );
+    const json = await res.json();
+    if (!res.ok) return { success: false, error: json.message || 'Could not enable re-application' };
+    return { success: true, data: json.data };
+  } catch {
+    return { success: false, error: 'Could not enable re-application' };
+  }
+}
