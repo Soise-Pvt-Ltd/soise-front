@@ -24,7 +24,7 @@ export async function fetchProducts(
     offset: offset.toString(),
   });
 
-  if (search) queryParams.append('search', search);
+  if (search) queryParams.append('q', search);
 
   if (period && period !== 'All Time') {
     const now = new Date();
@@ -59,10 +59,12 @@ export async function fetchProducts(
       cache: 'no-store',
     },
   );
+  // Admin endpoint returns ALL statuses (incl. drafts) — needs the auth cookie
+  // forwarded explicitly (httpOnly cookies aren't sent by `credentials` server-side).
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/products?${queryParams.toString()}`,
+    `${process.env.NEXT_PUBLIC_BASE_URL}/admin/products?${queryParams.toString()}`,
     {
-      credentials: 'include',
+      headers: { Cookie: `access_token=${accessToken}`, Accept: 'application/json' },
       cache: 'no-store',
     },
   );
