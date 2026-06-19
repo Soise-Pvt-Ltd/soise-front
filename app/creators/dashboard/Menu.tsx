@@ -19,6 +19,10 @@ const menu_1 = [
     href: '/creators/dashboard/request-payout',
   },
   {
+    name: 'Tier Upgrade',
+    href: '/creators/dashboard/tier-upgrade',
+  },
+  {
     name: 'Creator Profile',
     href: '/creators/dashboard/profile',
   },
