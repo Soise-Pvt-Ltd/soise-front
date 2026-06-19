@@ -3,7 +3,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import Nav from './nav';
 import Image from 'next/image';
-import { AdminSearchIcon, AdminNotificationIcon } from '@/components/icons';
+import { AdminSearchIcon } from '@/components/icons';
 import { useRouter } from 'next/navigation';
 import { ToastContainer } from './toast';
 
@@ -155,14 +155,10 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
                     />
                     <AdminSearchIcon />
                   </div>
-                  <div>
-                    <button
-                      className="flex h-[44px] w-[44px] items-center justify-center rounded-[10px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:cursor-pointer hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
-                      aria-label="Notifications"
-                    >
-                      <AdminNotificationIcon />
-                    </button>
-                  </div>
+                  {/* Notifications affordance removed: it was a dead button with
+                      no handler, and no notifications feature/route/endpoint
+                      exists to wire it to. Re-add once a notifications system
+                      is implemented. */}
                 </div>
               </div>
               <div className="mx-[13px]">{children}</div>

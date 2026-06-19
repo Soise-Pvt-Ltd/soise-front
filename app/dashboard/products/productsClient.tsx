@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import GridContainer from '../gridContainer';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -10,6 +10,9 @@ import {
   AdminPlusCircleIcon,
   CloseIconTags,
   AdminMoreVerticalIcon,
+  AdminSearchIcon,
+  AdminEditIcon,
+  AdminExclamationIcon,
 } from '@/components/icons';
 import {
   createProduct,
@@ -65,6 +68,19 @@ async function uploadFile(formData: FormData) {
   }
 }
 
+// Small inline spinner reused for save / loading affordances.
+function Spinner({ className = '' }: { className?: string }) {
+  return (
+    <span
+      className={`inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent ${className}`}
+      aria-hidden="true"
+    />
+  );
+}
+
+// Low-stock threshold: any in-stock product at or below this is flagged.
+const LOW_STOCK_THRESHOLD = 5;
+
 async function deleteFile(mediaId: string) {
   try {
     const response = await fetch('/api/media/delete', {
@@ -91,12 +107,14 @@ function VariantItem({
   onUpdate,
   onRemove,
   canRemove,
+  errors,
 }: {
   variant: VariantData;
   index: number;
   onUpdate: (id: string, field: keyof VariantData, value: any) => void;
   onRemove: (id: string) => void;
   canRemove: boolean;
+  errors?: { size?: string; color?: string; stock?: string };
 }) {
   const [colorInput, setColorInput] = useState('');
   const SIZES = ['m', 'l', 'xl', '2xl'];
@@ -230,6 +248,11 @@ function VariantItem({
                   </div>
                 ))}
               </div>
+              {errors?.size && (
+                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                  <AdminExclamationIcon /> {errors.size}
+                </p>
+              )}
             </div>
             <div>
               <label className="adminsolidlabel">
@@ -271,11 +294,17 @@ function VariantItem({
                   className="min-w-[120px] flex-1 border-none bg-transparent p-0 text-[12px] !outline-none focus:ring-0"
                 />
               </div>
+              {errors?.color && (
+                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                  <AdminExclamationIcon /> {errors.color}
+                </p>
+              )}
             </div>
             <div>
               <label className="adminsolidlabel">Product price</label>
               <input
                 type="number"
+                min="0"
                 value={variant.price}
                 onChange={(e) => onUpdate(variant.id, 'price', e.target.value)}
                 className="adminsolid"
@@ -285,10 +314,17 @@ function VariantItem({
               <label className="adminsolidlabel">Available stock</label>
               <input
                 type="number"
+                min="0"
                 value={variant.stock}
                 onChange={(e) => onUpdate(variant.id, 'stock', e.target.value)}
-                className="adminsolid"
+                className={`adminsolid ${errors?.stock ? '!ring-2 !ring-[#991C00]' : ''}`}
+                aria-invalid={!!errors?.stock}
               />
+              {errors?.stock && (
+                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                  <AdminExclamationIcon /> {errors.stock}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -305,6 +341,9 @@ type Product = {
   inventory: number;
   outOfStock: number;
   created_at: string;
+  basePrice: number;
+  minVariantPrice: number | null;
+  priceVaries: boolean;
 };
 
 interface Pagination {
@@ -352,23 +391,63 @@ export default function ProductsPage({
   >('all');
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
 
+  // List controls
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<
+    'newest' | 'name' | 'price' | 'stock'
+  >('newest');
+
+  // Form robustness
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [editingProductMeta, setEditingProductMeta] = useState<{
+    name: string;
+    image: string;
+  } | null>(null);
+  const isDirtyRef = useRef(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+
   const mapProducts = (data: any[]): Product[] => {
     return (
-      data?.map((product) => ({
-        id: product.id,
-        name: product.name,
-        image: product.sample_variants?.[0]?.media?.[0]?.url || '',
-        status: product.status === 'active' ? 'live' : 'draft',
-        inventory: product.total_stock,
-        outOfStock:
-          product.sample_variants?.filter((v: any) => v.stock <= 0).length || 0,
-        created_at: product.created_at,
-      })) || []
+      (Array.isArray(data) ? data : [])
+        .filter(Boolean)
+        .map((product) => {
+          const variants: any[] = Array.isArray(product?.sample_variants)
+            ? product.sample_variants
+            : [];
+          const variantPrices = variants
+            .map((v) => Number(v?.price))
+            .filter((p) => Number.isFinite(p) && p > 0);
+          const minVariantPrice = variantPrices.length
+            ? Math.min(...variantPrices)
+            : null;
+          const maxVariantPrice = variantPrices.length
+            ? Math.max(...variantPrices)
+            : null;
+          return {
+            id: product?.id,
+            name: product?.name ?? 'Untitled product',
+            image: variants?.[0]?.media?.[0]?.url || '',
+            status: product?.status === 'active' ? 'live' : 'draft',
+            inventory: Number(product?.total_stock) || 0,
+            outOfStock: variants.filter((v) => Number(v?.stock) <= 0).length,
+            created_at: product?.created_at || '',
+            basePrice: Number(product?.base_price) || 0,
+            minVariantPrice,
+            priceVaries:
+              minVariantPrice !== null &&
+              maxVariantPrice !== null &&
+              minVariantPrice !== maxVariantPrice,
+          } as Product;
+        }) || []
     );
   };
 
@@ -404,8 +483,22 @@ export default function ProductsPage({
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0 },
   );
 
-  // Server-side filtering effect
+  // Debounce the search input into the committed search query (300ms).
   useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Server-side filtering effect (period + search). Skip the very first run
+  // so we don't refetch data that was already provided by the server.
+  const didMountRef = useRef(false);
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
     const fetchData = async () => {
       if (!fetchServerData) return;
       setIsLoading(true);
@@ -413,29 +506,28 @@ export default function ProductsPage({
         const result = await fetchServerData(
           pagination.limit,
           0, // Reset to first page on filter change
-          '',
+          searchQuery,
           selectedPeriod,
         );
-        if (result.success) {
-          rawDataRef.current = result.products.data || [];
-          setProducts(mapProducts(result.products.data));
+        if (result?.success) {
+          rawDataRef.current = result.products?.data || [];
+          setProducts(mapProducts(result.products?.data));
           if (result.meta?.pagination) {
             setPagination(result.meta.pagination);
           }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
+        showToast('error', 'Could not load products. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    const timer = setTimeout(() => {
-      fetchData();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [selectedPeriod]);
+    fetchData();
+    // pagination.limit intentionally excluded to avoid refetch loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPeriod, searchQuery]);
 
   const handlePageChange = async (newOffset: number) => {
     if (!fetchServerData) return;
@@ -444,33 +536,156 @@ export default function ProductsPage({
       const result = await fetchServerData(
         pagination.limit,
         newOffset,
-        '',
+        searchQuery,
         selectedPeriod,
       );
-      if (result.success) {
-        rawDataRef.current = result.products.data || [];
-        setProducts(mapProducts(result.products.data));
+      if (result?.success) {
+        rawDataRef.current = result.products?.data || [];
+        setProducts(mapProducts(result.products?.data));
         if (result.meta?.pagination) {
           setPagination(result.meta.pagination);
         }
       }
     } catch (error) {
       console.error('Error changing page:', error);
+      showToast('error', 'Could not load that page. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const filteredProducts = products.filter((product) => {
-    let matchesTab = true;
-    if (activeTab === 'active') matchesTab = product.status === 'live';
-    if (activeTab === 'draft') matchesTab = product.status === 'draft';
+  // Entering the focused add/edit panel: scroll to top and move keyboard
+  // focus to the first field so the admin can start typing immediately.
+  useEffect(() => {
+    if (!showAddProduct) return;
+    topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    const t = setTimeout(() => nameInputRef.current?.focus(), 150);
+    return () => clearTimeout(t);
+  }, [showAddProduct]);
 
-    // Date filtering is now handled server-side via selectedPeriod
-    return matchesTab;
-  });
+  // Warn the browser if the admin tries to close/refresh with unsaved edits.
+  useEffect(() => {
+    if (!showAddProduct) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirtyRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [showAddProduct]);
+
+  // Close the focused panel, confirming first if there are unsaved changes.
+  const closeForm = () => {
+    if (
+      isDirtyRef.current &&
+      !confirm('You have unsaved changes. Discard them and leave?')
+    ) {
+      return;
+    }
+    setShowAddProduct(false);
+    resetForm();
+  };
+
+  // Close any open popover menu on Escape or outside click (keyboard a11y).
+  useEffect(() => {
+    const anyOpen =
+      isDropdownOpen || isAddDropdownOpen || activeActionMenuId !== null;
+    if (!anyOpen) return;
+
+    const closeAll = () => {
+      setIsDropdownOpen(false);
+      setIsAddDropdownOpen(false);
+      setActiveActionMenuId(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeAll();
+    };
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-menu-root]')) closeAll();
+    };
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, [isDropdownOpen, isAddDropdownOpen, activeActionMenuId]);
+
+  // Close the delete-confirm dialog on Escape.
+  useEffect(() => {
+    if (!pendingDeleteId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) setPendingDeleteId(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [pendingDeleteId, isLoading]);
+
+  // Currency formatter for list prices.
+  const formatPrice = (value: number) => {
+    if (!Number.isFinite(value) || value <= 0) return '—';
+    try {
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        maximumFractionDigits: 0,
+      }).format(value);
+    } catch {
+      return `₦${Math.round(value).toLocaleString()}`;
+    }
+  };
+
+  const pendingDeleteProduct = pendingDeleteId
+    ? products.find((p) => p.id === pendingDeleteId)
+    : null;
+
+  // Per-tab counts (search/period are already applied server-side).
+  const tabCounts = useMemo(() => {
+    const safe = Array.isArray(products) ? products : [];
+    return {
+      all: safe.length,
+      active: safe.filter((p) => p.status === 'live').length,
+      draft: safe.filter((p) => p.status === 'draft').length,
+    };
+  }, [products]);
+
+  const filteredProducts = useMemo(() => {
+    const safe = Array.isArray(products) ? products : [];
+    const byTab = safe.filter((product) => {
+      if (activeTab === 'active') return product.status === 'live';
+      if (activeTab === 'draft') return product.status === 'draft';
+      return true; // 'all'
+    });
+
+    const sorted = [...byTab].sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'price': {
+          const pa = a.minVariantPrice ?? a.basePrice;
+          const pb = b.minVariantPrice ?? b.basePrice;
+          return pa - pb;
+        }
+        case 'stock':
+          return a.inventory - b.inventory;
+        case 'newest':
+        default:
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+      }
+    });
+    return sorted;
+  }, [products, activeTab, sortBy]);
 
   const addVariant = () => {
+    markDirty();
     setVariants((prev) => [
       ...prev,
       {
@@ -516,11 +731,18 @@ export default function ProductsPage({
         setIsLoading(false);
       }
     } else {
+      markDirty();
       setVariants((prev) => prev.filter((v) => v.id !== variantId));
     }
   };
 
+  // Mark the focused form as dirty so we can warn before discarding edits.
+  const markDirty = () => {
+    isDirtyRef.current = true;
+  };
+
   const updateVariant = (id: string, field: keyof VariantData, value: any) => {
+    markDirty();
     setVariants((prev) =>
       prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)),
     );
@@ -528,6 +750,9 @@ export default function ProductsPage({
 
   const resetForm = () => {
     setEditingId(null);
+    setEditingProductMeta(null);
+    setFieldErrors({});
+    isDirtyRef.current = false;
     setProductName('');
     setProductDescription('');
     setCategory('');
@@ -554,10 +779,19 @@ export default function ProductsPage({
   };
 
   const handleEditClick = (id: string) => {
-    const product = rawDataRef.current.find((p: any) => p.id === id);
-    if (!product) return;
+    const product = rawDataRef.current.find((p: any) => p?.id === id);
+    if (!product) {
+      showToast('error', 'Could not load that product for editing.');
+      return;
+    }
 
+    setFieldErrors({});
+    isDirtyRef.current = false;
     setEditingId(id);
+    setEditingProductMeta({
+      name: product.name || 'Untitled product',
+      image: product.sample_variants?.[0]?.media?.[0]?.url || '',
+    });
     setProductName(product.name || '');
     setProductDescription(product.description || '');
     setCategory(product.collection?.id || '');
@@ -632,16 +866,13 @@ export default function ProductsPage({
     setShowAddProduct(true);
   };
 
-  const handleDeleteProduct = async (id: string) => {
-    if (
-      !confirm(
-        'Are you sure you want to delete this product? This action cannot be undone.',
-      )
-    ) {
-      setActiveActionMenuId(null);
-      return;
-    }
+  // Open the styled confirm dialog instead of a raw window.confirm.
+  const requestDeleteProduct = (id: string) => {
+    setActiveActionMenuId(null);
+    setPendingDeleteId(id);
+  };
 
+  const handleDeleteProduct = async (id: string) => {
     setIsLoading(true);
     try {
       const formData = new FormData();
@@ -649,17 +880,23 @@ export default function ProductsPage({
 
       const result = await deleteProduct(formData);
 
-      if (result.success) {
+      if (result?.success) {
         setProducts((prev) => prev.filter((p) => p.id !== id));
+        rawDataRef.current = rawDataRef.current.filter(
+          (p: any) => p?.id !== id,
+        );
         showToast('success', 'Product deleted successfully');
       } else {
-        showToast('error', `Failed to delete product: ${result.error || 'Unknown error'}`);
+        showToast(
+          'error',
+          `Failed to delete product: ${result?.error || 'Unknown error'}`,
+        );
       }
     } catch (error) {
       showToast('error', 'Failed to delete product');
     } finally {
       setIsLoading(false);
-      setActiveActionMenuId(null);
+      setPendingDeleteId(null);
     }
   };
 
@@ -719,42 +956,41 @@ export default function ProductsPage({
   };
 
   const handleSaveProduct = async () => {
-    if (!productName.trim()) {
-      showToast('error', 'Please enter a product name');
+    // Prevent double-submit while a save is already in flight.
+    if (isSaving) return;
+
+    // Validate up-front and surface inline messages (plus one summary toast)
+    // instead of failing silently or only toasting.
+    const errors: Record<string, string> = {};
+    if (!productName.trim()) errors.productName = 'Product name is required';
+    if (!basePrice || Number(basePrice) <= 0)
+      errors.basePrice = 'Enter a valid price greater than 0';
+    if (!category) errors.category = 'Select a collection';
+
+    const safeVariants = Array.isArray(variants) ? variants : [];
+    if (safeVariants.length === 0) {
+      errors.variants = 'Add at least one variant';
+    }
+    safeVariants.forEach((v, i) => {
+      if (!v.selectedSizes || v.selectedSizes.length === 0)
+        errors[`variant-${v.id}-size`] = `Variant ${i + 1}: select a size`;
+      if (!v.colors || v.colors.length === 0)
+        errors[`variant-${v.id}-color`] = `Variant ${i + 1}: add a color`;
+      if (v.stock === '' || v.stock === null || Number(v.stock) < 0)
+        errors[`variant-${v.id}-stock`] =
+          `Variant ${i + 1}: enter a valid stock quantity`;
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      showToast('error', 'Please fix the highlighted fields before saving');
+      // Focus the first invalid top-level field for quick correction.
+      if (errors.productName) nameInputRef.current?.focus();
       return;
     }
+    setFieldErrors({});
 
-    if (!basePrice || Number(basePrice) <= 0) {
-      showToast('error', 'Please enter a valid product price');
-      return;
-    }
-
-    if (!category) {
-      showToast('error', 'Please select a collection');
-      return;
-    }
-
-    if (variants.length === 0) {
-      showToast('error', 'Please add at least one variant');
-      return;
-    }
-
-    for (let i = 0; i < variants.length; i++) {
-      const v = variants[i];
-      if (v.selectedSizes.length === 0) {
-        showToast('error', `Variant ${i + 1}: Please select a size`);
-        return;
-      }
-      if (v.colors.length === 0) {
-        showToast('error', `Variant ${i + 1}: Please add a color`);
-        return;
-      }
-      if (!v.stock || Number(v.stock) < 0) {
-        showToast('error', `Variant ${i + 1}: Please enter a valid stock quantity`);
-        return;
-      }
-    }
-
+    setIsSaving(true);
     setIsLoading(true);
 
     try {
@@ -864,51 +1100,91 @@ export default function ProductsPage({
         formData.append('id', editingId);
         const result = await updateProduct(formData);
 
-        if (result.success) {
+        if (result?.success) {
+          isDirtyRef.current = false;
           showToast('success', 'Product updated successfully');
           setShowAddProduct(false);
           resetForm();
-          setSelectedPeriod('All Time');
+          // Refresh the list so the edit is reflected immediately.
+          handlePageChange(0);
         } else {
-          showToast('error', `Failed to update product: ${result.error || 'Unknown error'}`);
+          showToast(
+            'error',
+            `Failed to update product: ${result?.error || 'Unknown error'}`,
+          );
         }
       } else {
         const result = await createProduct(formData);
 
-        if (result.success) {
+        if (result?.success) {
+          isDirtyRef.current = false;
           showToast('success', 'Product created successfully');
           setShowAddProduct(false);
           resetForm();
-          setSelectedPeriod('All Time');
+          // Refresh the list so the new product shows immediately.
+          handlePageChange(0);
         } else {
-          showToast('error', `Failed to create product: ${result.error || 'Unknown error'}`);
+          showToast(
+            'error',
+            `Failed to create product: ${result?.error || 'Unknown error'}`,
+          );
         }
       }
     } catch (error) {
-      showToast('error', `Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      showToast(
+        'error',
+        `Failed to save product: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       console.error('Error saving product:', error);
     } finally {
       setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
   return (
     <GridContainer user={user}>
       <>
-        <div className="px-[16px]">
+        <div ref={topRef} className="px-[16px]">
           {showAddProduct ? (
-            <div className="flex items-center justify-between py-[22px] !text-[#121212]">
-              <div
-                className="hover: flex cursor-pointer items-center gap-x-2"
-                onClick={() => {
-                  setShowAddProduct(false);
-                  resetForm();
-                }}
-              >
-                <ArrowLeftIcon />
-                <span className="font-medium">
-                  {editingId ? 'Edit product' : 'Add product'}
-                </span>
+            <div className="sticky top-0 z-40 -mx-[16px] mb-[8px] flex flex-col gap-3 border-b border-[#AEAEB266]/40 bg-[#f9f9f9]/95 px-[16px] py-[16px] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between !text-[#121212]">
+              <div className="flex items-center gap-x-3">
+                <button
+                  type="button"
+                  onClick={closeForm}
+                  className="flex h-[44px] min-w-[44px] cursor-pointer items-center justify-center gap-x-2 rounded-[10px] border border-[#E5E5E5] bg-white px-3 text-sm font-medium outline-none transition-colors hover:bg-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  aria-label="Back to products list"
+                >
+                  <ArrowLeftIcon />
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+                {editingId ? (
+                  <div className="flex items-center gap-x-3">
+                    {editingProductMeta?.image ? (
+                      <img
+                        src={editingProductMeta.image}
+                        alt=""
+                        className="size-10 rounded-[8px] border border-[#E5E5E5] object-cover"
+                      />
+                    ) : (
+                      <div className="flex size-10 items-center justify-center rounded-[8px] border border-[#E5E5E5] bg-[#F5F5F5] text-[#AFB1B0]">
+                        <AdminEditIcon />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-x-2">
+                        <span className="rounded-full bg-[#C0CBF2] px-2 py-0.5 text-[11px] font-semibold text-[#0072BB] uppercase">
+                          Editing
+                        </span>
+                      </div>
+                      <div className="mt-0.5 max-w-[260px] truncate text-[15px] font-semibold">
+                        {editingProductMeta?.name || productName || 'Product'}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-[18px] font-semibold">Add product</span>
+                )}
               </div>
             </div>
           ) : (
@@ -922,24 +1198,35 @@ export default function ProductsPage({
           <div className="">
             <div className="relative rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] text-[#121212]">
               <div className="scrollbar-hide flex flex-col-reverse items-start justify-between gap-4 overflow-visible sm:flex-row sm:items-center">
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-8" role="tablist">
                   {[
-                    { id: 'all', label: 'All' },
-                    { id: 'active', label: 'Active' },
-                    { id: 'draft', label: 'Draft' },
-                  ].map(({ id, label }: any) => {
+                    { id: 'all', label: 'All', count: tabCounts.all },
+                    { id: 'active', label: 'Active', count: tabCounts.active },
+                    { id: 'draft', label: 'Draft', count: tabCounts.draft },
+                  ].map(({ id, label, count }: any) => {
                     const isActive = activeTab === id;
                     return (
                       <button
                         key={id}
+                        role="tab"
+                        aria-selected={isActive}
                         onClick={() => setActiveTab(id)}
-                        className={`relative cursor-pointer pb-4 text-[14px] transition-all duration-200 ease-in-out ${
+                        className={`relative flex cursor-pointer items-center gap-x-2 pb-4 text-[14px] outline-none transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-[#0072BB] ${
                           isActive
                             ? 'text-gray-900'
                             : 'text-gray-400 hover:text-gray-600'
                         }`}
                       >
                         {label}
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            isActive
+                              ? 'bg-[#121212] text-white'
+                              : 'bg-[#F5F5F5] text-[#AFB1B0]'
+                          }`}
+                        >
+                          {count}
+                        </span>
                         {isActive && (
                           <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[5px]" />
                         )}
@@ -948,10 +1235,15 @@ export default function ProductsPage({
                   })}
                 </div>
                 <div className="flex items-center gap-x-2 pb-4">
-                  <div className="relative flex items-center">
+                  <div className="relative flex items-center" data-menu-root>
                     <button
-                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                      className="btn_admin_outline flex items-center gap-x-[2px]"
+                      onClick={() => {
+                        setIsAddDropdownOpen(false);
+                        setIsDropdownOpen(!isDropdownOpen);
+                      }}
+                      aria-haspopup="menu"
+                      aria-expanded={isDropdownOpen}
+                      className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                     >
                       <AdminSoundLevelsIcon />
                       {selectedPeriod}
@@ -975,10 +1267,15 @@ export default function ProductsPage({
                       </div>
                     )}
                   </div>
-                  <div className="relative flex items-center">
+                  <div className="relative flex items-center" data-menu-root>
                     <button
-                      onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
-                      className="btn_admin_outline flex items-center gap-x-[2px]"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        setIsAddDropdownOpen(!isAddDropdownOpen);
+                      }}
+                      aria-haspopup="menu"
+                      aria-expanded={isAddDropdownOpen}
+                      className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                     >
                       <AdminPlusCircleIcon />
                       Add
@@ -1013,6 +1310,50 @@ export default function ProductsPage({
               </div>
             </div>
 
+            {/* Search + sort toolbar */}
+            <div className="flex flex-col gap-3 bg-white px-[24px] pt-[20px] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex h-[44px] w-full items-center gap-x-2 rounded-[10px] bg-[#F5F5F5] px-[15px] sm:max-w-[320px]">
+                <AdminSearchIcon />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search products..."
+                  aria-label="Search products"
+                  className="w-full border-0 bg-transparent text-[14px] placeholder:text-[#9A9A9A] outline-none focus:ring-0"
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchInput('')}
+                    aria-label="Clear search"
+                    className="flex size-6 cursor-pointer items-center justify-center text-[#9A9A9A] hover:text-[#35373C]"
+                  >
+                    <CloseIconTags />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-x-2">
+                <label
+                  htmlFor="sort-products"
+                  className="text-[13px] text-[#AFB1B0]"
+                >
+                  Sort by
+                </label>
+                <select
+                  id="sort-products"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="h-[44px] cursor-pointer rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[13px] text-[#35373C] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="name">Name (A–Z)</option>
+                  <option value="price">Price (low–high)</option>
+                  <option value="stock">Stock (low–high)</option>
+                </select>
+              </div>
+            </div>
+
             <div
               id="product_display"
               className="rounded-b-[20px] bg-white px-[24px]"
@@ -1023,6 +1364,9 @@ export default function ProductsPage({
                     <tr>
                       <th scope="col" className="thead truncate">
                         Product
+                      </th>
+                      <th scope="col" className="thead">
+                        Price
                       </th>
                       <th scope="col" className="thead">
                         Status
@@ -1039,82 +1383,187 @@ export default function ProductsPage({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredProducts.map((product, index, arr) => (
-                      <tr key={product.id}>
-                        <td className="td">
-                          <div className="flex items-center gap-x-3">
-                            {product?.image && (
-                              <img
-                                src={product.image}
-                                alt={product.name || 'Product image'}
-                                className="size-8 rounded-md object-cover"
-                              />
-                            )}
-                            <div className="truncate whitespace-nowrap">
-                              {product.name}
+                    {/* Loading skeletons */}
+                    {isLoading &&
+                      filteredProducts.length === 0 &&
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <tr key={`skeleton-${i}`}>
+                          <td className="td">
+                            <div className="flex items-center gap-x-3">
+                              <div className="size-8 animate-pulse rounded-md bg-[#F0F0F0]" />
+                              <div className="h-3 w-40 animate-pulse rounded bg-[#F0F0F0]" />
                             </div>
-                          </div>
-                        </td>
-                        <td className="td">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                              product.status === 'live'
-                                ? 'bg-[#CCEAD6] text-[#32AC5B]'
-                                : 'bg-[#F5F1CC] text-[#D8C732]'
-                            }`}
-                          >
-                            {product.status}
-                          </span>
-                        </td>
-                        <td className="td">{product.inventory}</td>
-                        <td className="td">{product.outOfStock}</td>
-                        <td className="td">
-                          <div className="relative">
-                            <button
-                              onClick={() =>
-                                setActiveActionMenuId(
-                                  activeActionMenuId === product.id
-                                    ? null
-                                    : product.id,
-                                )
-                              }
-                              className="flex size-[25px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5]"
-                            >
-                              <AdminMoreVerticalIcon />
-                            </button>
-                            {activeActionMenuId === product.id && (
-                              <div
-                                className={`ring-opacity-5 absolute right-0 z-60 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
-                                  index === arr.length - 1
-                                    ? 'bottom-full mb-2'
-                                    : 'mt-2'
-                                }`}
+                          </td>
+                          <td className="td">
+                            <div className="h-3 w-16 animate-pulse rounded bg-[#F0F0F0]" />
+                          </td>
+                          <td className="td">
+                            <div className="h-5 w-14 animate-pulse rounded-full bg-[#F0F0F0]" />
+                          </td>
+                          <td className="td">
+                            <div className="h-3 w-8 animate-pulse rounded bg-[#F0F0F0]" />
+                          </td>
+                          <td className="td">
+                            <div className="h-3 w-8 animate-pulse rounded bg-[#F0F0F0]" />
+                          </td>
+                          <td className="td">
+                            <div className="size-[25px] animate-pulse rounded-[6px] bg-[#F0F0F0]" />
+                          </td>
+                        </tr>
+                      ))}
+
+                    {/* Empty state per tab */}
+                    {!isLoading && filteredProducts.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="td">
+                          <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                            <div className="flex size-12 items-center justify-center rounded-full bg-[#F5F5F5] text-[#AFB1B0]">
+                              <AdminSearchIcon />
+                            </div>
+                            <p className="text-[15px] font-medium text-[#35373C]">
+                              {searchQuery
+                                ? `No products match "${searchQuery}"`
+                                : activeTab === 'active'
+                                  ? 'No active products yet'
+                                  : activeTab === 'draft'
+                                    ? 'No draft products'
+                                    : 'No products yet'}
+                            </p>
+                            <p className="max-w-xs text-[13px] text-[#AFB1B0]">
+                              {searchQuery
+                                ? 'Try a different search term or clear the search.'
+                                : 'Add your first product to get started.'}
+                            </p>
+                            {!searchQuery && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  resetForm();
+                                  setShowAddProduct(true);
+                                }}
+                                className="mt-2 flex h-[44px] cursor-pointer items-center gap-x-1 rounded-[10px] bg-[#0072BB] px-4 text-[13px] font-semibold text-white outline-none transition-colors hover:bg-[#005a94] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                               >
-                                <div className="py-1">
-                                  <button
-                                    onClick={() => {
-                                      handleEditClick(product.id);
-                                      setActiveActionMenuId(null);
-                                    }}
-                                    className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteProduct(product.id)
-                                    }
-                                    className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 hover:bg-gray-100"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
+                                <AdminPlusCircleIcon /> Add Product
+                              </button>
                             )}
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    )}
+
+                    {filteredProducts.map((product, index, arr) => {
+                      const isOutOfStock = product.inventory <= 0;
+                      const isLowStock =
+                        !isOutOfStock &&
+                        product.inventory <= LOW_STOCK_THRESHOLD;
+                      const displayPrice =
+                        product.minVariantPrice ?? product.basePrice;
+                      return (
+                        <tr key={product.id} className="group">
+                          <td className="td">
+                            <div className="flex items-center gap-x-3">
+                              {product?.image ? (
+                                <img
+                                  src={product.image}
+                                  alt={product.name || 'Product image'}
+                                  className="size-9 rounded-md object-cover"
+                                />
+                              ) : (
+                                <div className="flex size-9 items-center justify-center rounded-md bg-[#F5F5F5] text-[10px] text-[#AFB1B0]">
+                                  N/A
+                                </div>
+                              )}
+                              <div className="max-w-[220px] truncate whitespace-nowrap font-medium text-[#121212]">
+                                {product.name}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="td whitespace-nowrap">
+                            {product.priceVaries && (
+                              <span className="mr-1 text-[#AFB1B0]">from</span>
+                            )}
+                            {formatPrice(displayPrice)}
+                          </td>
+                          <td className="td">
+                            <span
+                              className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                                product.status === 'live'
+                                  ? 'bg-[#CCEAD6] text-[#32AC5B]'
+                                  : 'bg-[#F5F1CC] text-[#D8C732]'
+                              }`}
+                            >
+                              {product.status}
+                            </span>
+                          </td>
+                          <td className="td">
+                            <div className="flex items-center gap-x-2">
+                              <span>{product.inventory}</span>
+                              {isOutOfStock ? (
+                                <span className="rounded-full bg-[#E5C6BF] px-2 py-0.5 text-[10px] font-semibold text-[#991C00] uppercase">
+                                  Out of stock
+                                </span>
+                              ) : isLowStock ? (
+                                <span className="rounded-full bg-[#F5E6CC] px-2 py-0.5 text-[10px] font-semibold text-[#B26A00] uppercase">
+                                  Low
+                                </span>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="td">{product.outOfStock}</td>
+                          <td className="td">
+                            <div className="relative" data-menu-root>
+                              <button
+                                onClick={() =>
+                                  setActiveActionMenuId(
+                                    activeActionMenuId === product.id
+                                      ? null
+                                      : product.id,
+                                  )
+                                }
+                                aria-haspopup="menu"
+                                aria-expanded={activeActionMenuId === product.id}
+                                aria-label={`Actions for ${product.name}`}
+                                className="flex size-[36px] cursor-pointer items-center justify-center rounded-[8px] bg-[#F5F5F5] outline-none transition-colors hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                              >
+                                <AdminMoreVerticalIcon />
+                              </button>
+                              {activeActionMenuId === product.id && (
+                                <div
+                                  role="menu"
+                                  className={`ring-opacity-5 absolute right-0 z-60 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
+                                    index === arr.length - 1 && arr.length > 1
+                                      ? 'bottom-full mb-2'
+                                      : 'mt-2'
+                                  }`}
+                                >
+                                  <div className="py-1">
+                                    <button
+                                      role="menuitem"
+                                      onClick={() => {
+                                        handleEditClick(product.id);
+                                        setActiveActionMenuId(null);
+                                      }}
+                                      className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      role="menuitem"
+                                      onClick={() =>
+                                        requestDeleteProduct(product.id)
+                                      }
+                                      className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1241,7 +1690,10 @@ export default function ProductsPage({
                           type="checkbox"
                           id="live-toggle"
                           checked={isLive}
-                          onChange={(e) => setIsLive(e.target.checked)}
+                          onChange={(e) => {
+                            markDirty();
+                            setIsLive(e.target.checked);
+                          }}
                           className="peer sr-only"
                         />
 
@@ -1250,25 +1702,62 @@ export default function ProductsPage({
                     </div>
 
                     {/* Name + Price */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
-                        <label className="adminsolidlabel">Product name</label>
+                        <label htmlFor="product-name" className="adminsolidlabel">
+                          Product name <span className="text-[#991C00]">*</span>
+                        </label>
                         <input
+                          id="product-name"
+                          ref={nameInputRef}
                           type="text"
-                          className="adminsolid"
+                          className={`adminsolid ${fieldErrors.productName ? '!ring-2 !ring-[#991C00]' : ''}`}
                           value={productName}
-                          onChange={(e) => setProductName(e.target.value)}
+                          aria-invalid={!!fieldErrors.productName}
+                          onChange={(e) => {
+                            markDirty();
+                            setProductName(e.target.value);
+                            if (fieldErrors.productName)
+                              setFieldErrors((p) => ({
+                                ...p,
+                                productName: '',
+                              }));
+                          }}
                         />
+                        {fieldErrors.productName && (
+                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                            <AdminExclamationIcon /> {fieldErrors.productName}
+                          </p>
+                        )}
                       </div>
 
                       <div>
-                        <label className="adminsolidlabel">Product price</label>
+                        <label
+                          htmlFor="product-price"
+                          className="adminsolidlabel"
+                        >
+                          Product price{' '}
+                          <span className="text-[#991C00]">*</span>
+                        </label>
                         <input
+                          id="product-price"
                           type="number"
-                          className="adminsolid"
+                          min="0"
+                          className={`adminsolid ${fieldErrors.basePrice ? '!ring-2 !ring-[#991C00]' : ''}`}
                           value={basePrice}
-                          onChange={(e) => setBasePrice(e.target.value)}
+                          aria-invalid={!!fieldErrors.basePrice}
+                          onChange={(e) => {
+                            markDirty();
+                            setBasePrice(e.target.value);
+                            if (fieldErrors.basePrice)
+                              setFieldErrors((p) => ({ ...p, basePrice: '' }));
+                          }}
                         />
+                        {fieldErrors.basePrice && (
+                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                            <AdminExclamationIcon /> {fieldErrors.basePrice}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -1280,28 +1769,44 @@ export default function ProductsPage({
                       <textarea
                         className="adminsolid !h-[80px]"
                         value={productDescription}
-                        onChange={(e) => setProductDescription(e.target.value)}
+                        onChange={(e) => {
+                          markDirty();
+                          setProductDescription(e.target.value);
+                        }}
                       />
                     </div>
 
                     {/* Selects */}
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <div>
-                        <label className="adminsolidlabel">Collection</label>
+                        <label className="adminsolidlabel">
+                          Collection <span className="text-[#991C00]">*</span>
+                        </label>
                         <select
-                          className="adminsolid"
+                          className={`adminsolid ${fieldErrors.category ? '!ring-2 !ring-[#991C00]' : ''}`}
                           value={category}
-                          onChange={(e) => setCategory(e.target.value)}
+                          aria-invalid={!!fieldErrors.category}
+                          onChange={(e) => {
+                            markDirty();
+                            setCategory(e.target.value);
+                            if (fieldErrors.category)
+                              setFieldErrors((p) => ({ ...p, category: '' }));
+                          }}
                         >
                           <option value="" disabled>
                             Select Collection
                           </option>
-                          {collections?.map((collection) => (
+                          {(collections || []).map((collection) => (
                             <option key={collection.id} value={collection.id}>
                               {collection.name}
                             </option>
                           ))}
                         </select>
+                        {fieldErrors.category && (
+                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                            <AdminExclamationIcon /> {fieldErrors.category}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -1309,7 +1814,10 @@ export default function ProductsPage({
                         <select
                           className="adminsolid"
                           value={material}
-                          onChange={(e) => setMaterial(e.target.value)}
+                          onChange={(e) => {
+                            markDirty();
+                            setMaterial(e.target.value);
+                          }}
                         >
                           <option value="" disabled>
                             Select Material
@@ -1327,7 +1835,10 @@ export default function ProductsPage({
                         <select
                           className="adminsolid"
                           value={fitType}
-                          onChange={(e) => setFitType(e.target.value)}
+                          onChange={(e) => {
+                            markDirty();
+                            setFitType(e.target.value);
+                          }}
                         >
                           <option value="" disabled>
                             Select Fit Type
@@ -1345,7 +1856,10 @@ export default function ProductsPage({
                         <select
                           className="adminsolid"
                           value={season}
-                          onChange={(e) => setSeason(e.target.value)}
+                          onChange={(e) => {
+                            markDirty();
+                            setSeason(e.target.value);
+                          }}
                         >
                           <option value="" disabled>
                             Select Season
@@ -1367,7 +1881,10 @@ export default function ProductsPage({
                       <textarea
                         className="adminsolid !h-[80px]"
                         value={careInstructions}
-                        onChange={(e) => setCareInstructions(e.target.value)}
+                        onChange={(e) => {
+                          markDirty();
+                          setCareInstructions(e.target.value);
+                        }}
                       />
                     </div>
                   </div>
@@ -1378,44 +1895,110 @@ export default function ProductsPage({
             {/* Variants */}
             <div>
               <div className="flex items-center justify-between px-[16px] pt-[24px] pb-[22px] !text-[#121212]">
-                <div
-                  className="hover: flex cursor-pointer items-center gap-x-2"
-                  onClick={() => setShowAddProduct(false)}
-                >
-                  <span className="font-medium">Product Variant</span>
-                </div>
+                <span className="font-medium">Product Variant</span>
                 <button
+                  type="button"
                   onClick={addVariant}
-                  className="btn_creators_solid_no_height p-[10px]"
+                  className="btn_creators_solid_no_height p-[10px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                 >
                   + Add Variant
                 </button>
               </div>
+              {fieldErrors.variants && (
+                <p className="mb-3 flex items-center gap-x-1 px-[16px] text-[12px] text-[#991C00]">
+                  <AdminExclamationIcon /> {fieldErrors.variants}
+                </p>
+              )}
               <div className="space-y-[24px]">
-                {variants.map((variant, index) => (
-                  <VariantItem
-                    key={variant.id}
-                    variant={variant}
-                    index={index}
-                    onUpdate={updateVariant}
-                    onRemove={removeVariant}
-                    canRemove={variants.length > 1}
-                  />
-                ))}
+                {(Array.isArray(variants) ? variants : []).map(
+                  (variant, index) => (
+                    <VariantItem
+                      key={variant.id}
+                      variant={variant}
+                      index={index}
+                      onUpdate={updateVariant}
+                      onRemove={removeVariant}
+                      canRemove={variants.length > 1}
+                      errors={{
+                        size: fieldErrors[`variant-${variant.id}-size`],
+                        color: fieldErrors[`variant-${variant.id}-color`],
+                        stock: fieldErrors[`variant-${variant.id}-stock`],
+                      }}
+                    />
+                  ),
+                )}
               </div>
             </div>
 
             <button
+              type="button"
               onClick={handleSaveProduct}
-              disabled={isLoading}
-              className={`btn_creators_solid mt-[24px] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+              disabled={isSaving}
+              aria-busy={isSaving}
+              className={`btn_creators_solid mt-[24px] flex items-center justify-center gap-x-2 focus-visible:ring-2 focus-visible:ring-[#0072BB] ${isSaving ? 'cursor-not-allowed opacity-60' : ''}`}
             >
-              {isLoading
+              {isSaving && <Spinner />}
+              {isSaving
                 ? 'Saving...'
                 : editingId
                   ? 'Update Product'
                   : 'Save Product'}
             </button>
+          </div>
+        )}
+
+        {/* Styled delete confirmation dialog */}
+        {pendingDeleteId && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            onClick={() => {
+              if (!isLoading) setPendingDeleteId(null);
+            }}
+          >
+            <div
+              className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center gap-x-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-[#E5C6BF]">
+                  <AdminExclamationIcon />
+                </div>
+                <h2
+                  id="delete-dialog-title"
+                  className="text-lg font-semibold text-[#121212]"
+                >
+                  Delete product?
+                </h2>
+              </div>
+              <p className="mb-6 text-sm text-[#6B6B6B]">
+                {pendingDeleteProduct?.name
+                  ? `“${pendingDeleteProduct.name}” and its variants will be permanently removed. This action cannot be undone.`
+                  : 'This product and its variants will be permanently removed. This action cannot be undone.'}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPendingDeleteId(null)}
+                  disabled={isLoading}
+                  className="h-[44px] flex-1 cursor-pointer rounded-[10px] border border-gray-300 px-4 text-sm font-medium text-gray-700 outline-none hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-[#0072BB] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteProduct(pendingDeleteId)}
+                  disabled={isLoading}
+                  aria-busy={isLoading}
+                  className="flex h-[44px] flex-1 cursor-pointer items-center justify-center gap-x-2 rounded-[10px] bg-[#991C00] px-4 text-sm font-semibold text-white outline-none transition-colors hover:bg-[#7d1700] focus-visible:ring-2 focus-visible:ring-[#991C00] disabled:opacity-60"
+                >
+                  {isLoading && <Spinner />}
+                  {isLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

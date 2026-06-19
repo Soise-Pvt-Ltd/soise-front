@@ -62,6 +62,7 @@ export default function OrderHistoryClient({
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>(
     'pending',
   );
+  const [showStatusInfo, setShowStatusInfo] = useState(false);
 
   // Filter orders by payment status: pending_payment, created = pending; paid, completed = completed
   const pendingOrders = orders.filter((order) => 
@@ -82,10 +83,27 @@ export default function OrderHistoryClient({
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="font-display text-[22px]">Order History</div>
-            <button className="cursor-pointer">
+            <button
+              type="button"
+              className="cursor-pointer"
+              aria-label="About order statuses"
+              aria-expanded={showStatusInfo}
+              title="About order statuses"
+              onClick={() => setShowStatusInfo((v) => !v)}
+            >
               <InfoIcon />
             </button>
           </motion.div>
+          {showStatusInfo && (
+            <div className="mb-[24px] rounded-[10px] bg-[#F5F5F5] p-[16px] text-[13px] text-[#35373C]">
+              <p>
+                <span className="font-medium text-[#121212]">Pending</span>{' '}
+                orders are awaiting payment or processing.{' '}
+                <span className="font-medium text-[#121212]">Completed</span>{' '}
+                orders have been paid for and fulfilled.
+              </p>
+            </div>
+          )}
           <div className="relative flex items-center gap-[10px] border-b border-[#AEAEB2] text-[12px] text-[#8E8E93] uppercase">
             {(['pending', 'completed'] as const).map((tab) => (
               <div

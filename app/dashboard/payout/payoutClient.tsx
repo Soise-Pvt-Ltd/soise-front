@@ -249,11 +249,13 @@ export default function PayoutClient({
           </div>
         );
       case 'completed':
+        // Status indicator only (not an action) — mirrors the `failed` case's
+        // <span>. Was previously a <button> with no handler.
         return (
-          <button className="flex h-[30px] items-center gap-x-[2px] rounded-full border border-[#CCEAD6] bg-[#CCEAD6] p-[6px] !pr-[8px] font-medium text-[#32AC5B]">
+          <span className="flex h-[30px] items-center gap-x-[2px] rounded-full border border-[#CCEAD6] bg-[#CCEAD6] p-[6px] !pr-[8px] font-medium text-[#32AC5B]">
             <AdminSuccessCheckIcon />
             Completed
-          </button>
+          </span>
         );
       case 'failed':
         return (
