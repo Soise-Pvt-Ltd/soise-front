@@ -19,6 +19,10 @@ const menu_1 = [
     href: '/creators/dashboard/request-payout',
   },
   {
+    name: 'Payout Account',
+    href: '/creators/dashboard/withdrawal-bank',
+  },
+  {
     name: 'Tier Upgrade',
     href: '/creators/dashboard/tier-upgrade',
   },

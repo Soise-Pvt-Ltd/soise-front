@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import DashboardHeader from '../DashboardHeader';
 import {
   EyeIcon,
@@ -16,6 +17,7 @@ export default function RequestPayoutPage() {
   const [isBalanceVisible, setIsBalanceVisible] = useState(false);
   const [balance, setBalance] = useState(0);
   const [bankName, setBankName] = useState('');
+  const [hasBank, setHasBank] = useState(false);
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,9 +33,9 @@ export default function RequestPayoutPage() {
       if (result.success && result.data?.wallets) {
         const wallet = result.data.wallets;
         setBalance(wallet.balance || 0);
-        setBankName(
-          wallet.payout_metadata?.details?.bank_name || 'No bank set',
-        );
+        const savedBank = wallet.payout_metadata?.details?.bank_name;
+        setHasBank(Boolean(savedBank));
+        setBankName(savedBank || 'No bank set');
       }
       setIsLoading(false);
     };
@@ -49,6 +51,10 @@ export default function RequestPayoutPage() {
   };
 
   const handleSubmit = async () => {
+    if (!hasBank) {
+      setErrorMessage('Please set up your payout account before withdrawing');
+      return;
+    }
     const numAmount = Number(amount);
     if (!numAmount || numAmount <= 0) {
       setErrorMessage('Please enter a valid amount');
@@ -188,41 +194,61 @@ export default function RequestPayoutPage() {
           </div>
         )}
 
-        <div className="profile mt-[36px] space-y-[36px]">
-          <div>
-            <label htmlFor="amount_to_withdraw">Amount to withdraw</label>
-            <input
-              id="amount_to_withdraw"
-              type="number"
-              className="solid"
-              placeholder="₦ 1,000"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                setErrorMessage('');
-              }}
-            />
+        {isLoading ? null : !hasBank ? (
+          <div className="mt-[36px] mb-[64px] rounded-2xl bg-white px-[16px] py-[32px] text-center">
+            <h3 className="text-[16px] font-semibold text-[#121212]">
+              Set up your payout account to withdraw
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-[#8E8E93]">
+              You need to add the bank account where your earnings will be sent
+              before you can request a payout.
+            </p>
+            <Link
+              href="/creators/dashboard/withdrawal-bank"
+              className="btn_creators_solid mt-[24px] inline-flex w-fit items-center justify-center px-[40px] py-[15px]"
+            >
+              Set up payout account
+            </Link>
           </div>
+        ) : (
+          <>
+            <div className="profile mt-[36px] space-y-[36px]">
+              <div>
+                <label htmlFor="amount_to_withdraw">Amount to withdraw</label>
+                <input
+                  id="amount_to_withdraw"
+                  type="number"
+                  className="solid"
+                  placeholder="₦ 1,000"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    setErrorMessage('');
+                  }}
+                />
+              </div>
 
-          <div>
-            <label htmlFor="funds_destination">Funds Destination</label>
-            <input
-              id="funds_destination"
-              type="text"
-              className="solid"
-              value={bankName}
-              disabled
-            />
-          </div>
-        </div>
+              <div>
+                <label htmlFor="funds_destination">Funds Destination</label>
+                <input
+                  id="funds_destination"
+                  type="text"
+                  className="solid"
+                  value={bankName}
+                  disabled
+                />
+              </div>
+            </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !amount}
-          className="btn_creators_solid mt-[116px] mb-[64px] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isSubmitting ? 'Processing...' : 'Withdraw'}
-        </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting || !amount}
+              className="btn_creators_solid mt-[116px] mb-[64px] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? 'Processing...' : 'Withdraw'}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -12,9 +12,12 @@ import {
   Title,
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { ChainIcon, TagIcon, DollarIcon } from '@/components/icons';
 import ReferralCode from '../ReferralCode';
 import DashboardHeader from './DashboardHeader';
+import { getWallet } from './request-payout/actions';
 
 ChartJS.register(
   ArcElement,
@@ -164,6 +167,25 @@ export default function CreatorDashboard({ dashboard }: { dashboard?: any }) {
   };
 
   const balance = dashboard.earnings?.current_balance || 0;
+
+  // Lightweight client check: surface a CTA when the creator has earnings but
+  // has not yet set up a payout account (no bank on their cash wallet).
+  const [needsPayoutSetup, setNeedsPayoutSetup] = useState(false);
+
+  useEffect(() => {
+    const checkPayoutAccount = async () => {
+      const result = await getWallet();
+      if (result.success) {
+        const wallet = result.data?.wallets;
+        const hasBank = Boolean(wallet?.payout_metadata?.details?.bank_name);
+        const hasFunds =
+          (wallet?.balance || 0) > 0 || summaryTotal > 0 || balance > 0;
+        setNeedsPayoutSetup(!hasBank && hasFunds);
+      }
+    };
+    checkPayoutAccount();
+  }, [balance, summaryTotal]);
+
   const stats = [
     {
       icon: <ChainIcon />,
@@ -189,6 +211,26 @@ export default function CreatorDashboard({ dashboard }: { dashboard?: any }) {
     <div className="min-h-screen bg-[#f9f9f9]">
       <DashboardHeader balance={balance} />
       <div className="mx-auto flex flex-col gap-[16px] px-[16px] py-[24px] md:max-w-7xl md:px-0">
+        {/* Payout setup CTA */}
+        {needsPayoutSetup && (
+          <Link
+            href="/creators/dashboard/withdrawal-bank"
+            className="flex items-center justify-between gap-x-4 rounded-2xl bg-[#F5F1CC] px-[16px] py-[16px] transition-shadow hover:shadow-[0_8px_30px_rgba(216,199,50,0.2)]"
+          >
+            <div>
+              <p className="text-[15px] font-semibold text-[#9C8E18]">
+                Set up payouts
+              </p>
+              <p className="mt-0.5 text-[13px] text-[#B5A93D]">
+                Add a payout account to withdraw your earnings.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-[8px] bg-[#0072BB] px-4 py-2 text-[12px] font-bold text-white uppercase">
+              Set up
+            </span>
+          </Link>
+        )}
+
         {/* Performance Metrics */}
         <div className="rounded-2xl bg-white p-[12px]">
           <div className="text-[16px] font-medium text-[#8E8E93] capitalize">
