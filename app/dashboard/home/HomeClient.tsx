@@ -14,7 +14,8 @@ import {
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import GridContainer from '../gridContainer';
-import { AdminMoreHorizontalIcon, AdminEditIcon } from '@/components/icons';
+import { AdminEditIcon } from '@/components/icons';
+import OrderActionsMenu from './OrderActionsMenu';
 
 ChartJS.register(
   ArcElement,
@@ -363,7 +364,10 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
                         </td>
                         <td className="py-3">{formatTime(order.created_at)}</td>
                         <td className="py-3 text-right">
-                          <AdminMoreHorizontalIcon color="#121212" />
+                          <OrderActionsMenu
+                            orderId={order.id}
+                            status={order.status}
+                          />
                         </td>
                       </tr>
                     ))
