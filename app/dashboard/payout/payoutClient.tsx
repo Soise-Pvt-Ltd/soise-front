@@ -7,7 +7,12 @@ import {
   AdminMoreHorizontalIcon,
   AdminSuccessCheckIcon,
 } from '@/components/icons';
-import { confirmPayout, initiatePayout, getPaystackBalance } from './actions';
+import {
+  confirmPayout,
+  initiatePayout,
+  getPaystackBalance,
+  getPayoutBreakdown,
+} from './actions';
 import { showToast } from '../toast';
 
 type PayoutStatus =
@@ -74,6 +79,14 @@ interface PayoutClientProps {
   ) => Promise<any>;
 }
 
+const money = (n: number) =>
+  `₦${(Number(n) || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const shortId = (id: any) => String(id ?? '').split(':').pop()?.slice(0, 8) ?? '—';
+
 export default function PayoutClient({
   initialData,
   initialMeta,
@@ -95,6 +108,20 @@ export default function PayoutClient({
   const [pendingPayoutId, setPendingPayoutId] = useState<string | null>(null);
   // Live Paystack balance — payouts draw from it. null = unknown/not loaded.
   const [paystackBalance, setPaystackBalance] = useState<number | null>(null);
+
+  // Payout breakdown modal — the traceable orders behind a payout.
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [breakdown, setBreakdown] = useState<any | null>(null);
+
+  const openBreakdown = async (payout: Payout) => {
+    setShowBreakdown(true);
+    setBreakdownLoading(true);
+    setBreakdown(null);
+    const res = await getPayoutBreakdown(payout.id);
+    setBreakdown(res.success ? res.data : null);
+    setBreakdownLoading(false);
+  };
 
   const loadBalance = useCallback(async () => {
     const res = await getPaystackBalance();
@@ -379,7 +406,12 @@ export default function PayoutClient({
             </thead>
             <tbody>
               {payouts.map((payout: any) => (
-                <tr key={payout.id}>
+                <tr
+                  key={payout.id}
+                  onClick={() => openBreakdown(payout)}
+                  title="Tap to verify the orders behind this payout"
+                  className="cursor-pointer transition-colors hover:bg-[#FAFAFA]"
+                >
                   <td className="td">
                     <div className="flex items-center gap-x-[5px]">
                       <img
@@ -399,7 +431,9 @@ export default function PayoutClient({
                       maximumFractionDigits: 2,
                     })}
                   </td>
-                  <td className="td">{renderActionButtons(payout)}</td>
+                  <td className="td" onClick={(e) => e.stopPropagation()}>
+                    {renderActionButtons(payout)}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -689,6 +723,229 @@ export default function PayoutClient({
               >
                 Confirm
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showBreakdown && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="breakdown-title"
+          onClick={() => setShowBreakdown(false)}
+        >
+          <div
+            className="max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-[20px] bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between border-b border-[#F0F0F0] px-[24px] py-[20px]">
+              <div>
+                <h2
+                  id="breakdown-title"
+                  className="text-[18px] font-semibold text-[#121212]"
+                >
+                  Payout verification
+                </h2>
+                <p className="mt-[2px] text-[13px] text-[#8E8E93]">
+                  The orders that built this creator&rsquo;s balance.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBreakdown(false)}
+                aria-label="Close"
+                className="flex h-[32px] w-[32px] items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:outline-none"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M15 5L5 15M5 5l10 10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="max-h-[72vh] overflow-y-auto px-[24px] py-[20px]">
+              {breakdownLoading ? (
+                <div className="py-12 text-center text-sm text-gray-500">
+                  Loading breakdown…
+                </div>
+              ) : !breakdown ? (
+                <div className="py-12 text-center text-sm text-[#991C00]">
+                  Could not load this payout&rsquo;s breakdown.
+                </div>
+              ) : (
+                <>
+                  <div className="mb-[18px]">
+                    <div className="text-[15px] font-medium text-[#121212]">
+                      {breakdown.creator?.name || '—'}
+                    </div>
+                    <div className="text-[12px] text-[#8E8E93]">
+                      {breakdown.creator?.email}
+                      {breakdown.creator?.code
+                        ? ` · ${breakdown.creator.code}`
+                        : ''}
+                    </div>
+                  </div>
+
+                  <div className="mb-[22px] grid grid-cols-2 gap-[10px] sm:grid-cols-4">
+                    {[
+                      {
+                        label: 'This payout',
+                        value: money(breakdown.summary?.this_payout),
+                        accent: 'text-[#0072BB]',
+                      },
+                      {
+                        label: 'Total earned',
+                        value: money(breakdown.summary?.total_earned),
+                      },
+                      {
+                        label: 'Paid out',
+                        value: money(breakdown.summary?.total_paid_out),
+                      },
+                      {
+                        label: 'Available',
+                        value: money(breakdown.summary?.available_balance),
+                      },
+                    ].map((s) => (
+                      <div
+                        key={s.label}
+                        className="rounded-[12px] bg-[#F7F7F8] px-[14px] py-[12px]"
+                      >
+                        <div className="text-[11px] tracking-wide text-[#AFB1B0] uppercase">
+                          {s.label}
+                        </div>
+                        <div
+                          className={`mt-[4px] text-[15px] font-semibold ${s.accent || 'text-[#121212]'}`}
+                        >
+                          {s.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Flag any commission tied to a non-paid order */}
+                  {(breakdown.orders || []).some(
+                    (o: any) =>
+                      o.order_status !== 'paid' &&
+                      o.order_status !== 'completed',
+                  ) && (
+                    <div className="mb-[14px] rounded-[10px] border border-[#E5C6BF] bg-[#FBEDE9] px-[14px] py-[10px] text-[12px] text-[#991C00]">
+                      ⚠ Some commission below is tied to an order that is not in a
+                      paid state — verify before sending this payout.
+                    </div>
+                  )}
+
+                  <div className="mb-[8px] text-[12px] font-medium tracking-wide text-[#AFB1B0] uppercase">
+                    Commission-earning orders ({breakdown.orders?.length || 0})
+                  </div>
+                  {breakdown.orders?.length ? (
+                    <div className="overflow-x-auto rounded-[12px] border border-[#F0F0F0]">
+                      <table className="min-w-full text-left text-[12px]">
+                        <thead className="bg-[#FAFAFA]">
+                          <tr>
+                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                              Order
+                            </th>
+                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                              Date
+                            </th>
+                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                              Order total
+                            </th>
+                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                              Status
+                            </th>
+                            <th className="px-[12px] py-[8px] text-right font-medium text-[#AFB1B0]">
+                              Commission
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {breakdown.orders.map((o: any, i: number) => {
+                            const paid =
+                              o.order_status === 'paid' ||
+                              o.order_status === 'completed';
+                            return (
+                              <tr
+                                key={i}
+                                className="border-t border-[#F5F5F5]"
+                              >
+                                <td className="px-[12px] py-[10px] font-mono text-[#121212]">
+                                  #{shortId(o.order_id)}
+                                </td>
+                                <td className="px-[12px] py-[10px] text-[#35373C]">
+                                  {o.order_created_at
+                                    ? formatDate(o.order_created_at)
+                                    : formatDate(o.created_at)}
+                                </td>
+                                <td className="px-[12px] py-[10px] text-[#35373C]">
+                                  {o.order_total != null
+                                    ? money(o.order_total)
+                                    : '—'}
+                                </td>
+                                <td className="px-[12px] py-[10px]">
+                                  <span
+                                    className={`rounded-full px-[8px] py-[2px] text-[11px] font-medium ${
+                                      paid
+                                        ? 'bg-[#CCEAD6] text-[#32AC5B]'
+                                        : 'bg-[#E5C6BF] text-[#991C00]'
+                                    }`}
+                                  >
+                                    {(o.order_status || 'unknown').replace(
+                                      '_',
+                                      ' ',
+                                    )}
+                                  </span>
+                                </td>
+                                <td className="px-[12px] py-[10px] text-right font-semibold text-[#121212]">
+                                  {money(o.commission)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="rounded-[12px] border border-[#F0F0F0] py-8 text-center text-[13px] text-[#8E8E93]">
+                      No commission orders found for this creator.
+                    </div>
+                  )}
+
+                  <p className="mt-[12px] text-[11px] leading-relaxed text-[#AFB1B0]">
+                    Payouts draw from the creator&rsquo;s accumulated balance, so
+                    a single payout isn&rsquo;t tied to one order — this is the
+                    full earning history behind the balance.
+                  </p>
+
+                  {breakdown.prior_payouts?.length > 1 && (
+                    <div className="mt-[18px]">
+                      <div className="mb-[8px] text-[12px] font-medium tracking-wide text-[#AFB1B0] uppercase">
+                        Payout history
+                      </div>
+                      <div className="space-y-[6px]">
+                        {breakdown.prior_payouts.map((p: any, i: number) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between rounded-[8px] bg-[#FAFAFA] px-[12px] py-[8px] text-[12px]"
+                          >
+                            <span className="text-[#35373C]">
+                              {formatDate(p.created_at)}
+                            </span>
+                            <span className="font-medium">{money(p.amount)}</span>
+                            <span className="text-[#8E8E93] capitalize">
+                              {p.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

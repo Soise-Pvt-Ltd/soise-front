@@ -64,6 +64,31 @@ export async function fetchPayouts(
   };
 }
 
+export async function getPayoutBreakdown(id: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!accessToken) return { success: false, data: null as any };
+
+  try {
+    const res = await fetch(`${baseUrl}/admin/payouts/${id}/breakdown`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+        Accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return { success: false, data: null as any };
+    const json = await res.json();
+    return { success: Boolean(json.success), data: json.data || null };
+  } catch {
+    return { success: false, data: null as any };
+  }
+}
+
 export async function getPaystackBalance() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;

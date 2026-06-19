@@ -65,6 +65,28 @@ const Nav = () => {
           />
 
           <Links
+            path={'/dashboard/creator-codes'}
+            svg={
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M8.2 1.6H3.2a1.6 1.6 0 0 0-1.6 1.6v5c0 .42.17.83.47 1.13l5.6 5.6c.62.62 1.64.62 2.26 0l4.4-4.4c.62-.62.62-1.64 0-2.26l-5.6-5.6c-.3-.3-.71-.47-1.13-.47ZM4.8 5.6a.8.8 0 1 1 0-1.6.8.8 0 0 1 0 1.6Z"
+                  fill="currentColor"
+                />
+              </svg>
+            }
+            linkname={'Creator Codes'}
+          />
+
+          <Links
             path={'/dashboard/applications'}
             svg={<AdminCheckCircleIcon />}
             linkname={'Applications'}
