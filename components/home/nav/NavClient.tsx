@@ -486,7 +486,7 @@ export default function NavClient({
                           >
                             <Link
                               href={`/shop/product-listing/${product.slug}`}
-                              className={`block transition-colors duration-200 hover:text-black ${LINK_FOCUS}`}
+                              className={`group -mx-2 flex items-center gap-4 rounded-[12px] p-2 transition-colors duration-200 hover:bg-[#F6F6F6] ${LINK_FOCUS}`}
                               onClick={() => {
                                 setOpenMenu(null);
                                 setSearchQuery('');
@@ -494,7 +494,32 @@ export default function NavClient({
                                 setHasSearched(false);
                               }}
                             >
-                              {product.name}
+                              <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-[8px] bg-[#F2F2F2]">
+                                {product?.sample_variants?.[0]?.media?.[0]?.url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={product.sample_variants[0].media[0].url}
+                                    alt={product.name}
+                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                ) : null}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-[14px] font-medium text-[#121212]">
+                                  {product.name}
+                                </p>
+                                <p className="mt-0.5 text-[13px] text-[#8E8E93]">
+                                  {formatPrice(Number(product.base_price) || 0)}
+                                </p>
+                              </div>
+                              <span
+                                aria-hidden
+                                className="text-[18px] leading-none text-[#C9C9C9] transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-[#121212]"
+                              >
+                                &rarr;
+                              </span>
                             </Link>
                           </motion.div>
                         ))}
