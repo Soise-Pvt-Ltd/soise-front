@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { ArrowUpIcon } from '@/components/icons';
 import Footer from '@/components/footer';
 import { EnrichedCartItem } from '@/components/home/nav/types';
 import { checkoutAction, applyDiscountCodeAction } from './actions';
+import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
@@ -60,9 +62,12 @@ export default function OrderSummaryClient({
   isLoggedIn,
 }: OrderSummaryClientProps) {
   const { formatPrice, currency } = useCurrency();
+  const router = useRouter();
+  const submittingRef = useRef(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   // Creator code states
   const [discountCode, setDiscountCode] = useState('');
@@ -84,7 +89,34 @@ export default function OrderSummaryClient({
   // Use final_total from API if available, otherwise calculate manually
   const total = finalTotal !== null ? finalTotal : subtotal - appliedDiscount;
 
+  async function handleRemoveItem(itemId: string) {
+    if (!itemId || removingId) return;
+    setRemovingId(itemId);
+    try {
+      const result = await removeFromCart(itemId);
+      if (result.success) {
+        // Any applied discount was computed against the old cart contents;
+        // clear it so totals can't desync from what will actually be charged.
+        setAppliedDiscount(0);
+        setFinalTotal(null);
+        setApiSubtotal(null);
+        setDiscountData(null);
+        router.refresh();
+      } else {
+        showToast.error('Could not remove item. Please try again.');
+      }
+    } catch {
+      showToast.error('Could not remove item. Please try again.');
+    } finally {
+      setRemovingId(null);
+    }
+  }
+
   async function handleSubmit(formData: FormData) {
+    // Re-entrancy guard: block a second submit firing before `pending` renders,
+    // preventing duplicate orders / duplicate /cart/checkout POSTs.
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setPending(true);
     setError(null);
 
@@ -103,6 +135,7 @@ export default function OrderSummaryClient({
         showToast.error(result.error || 'Checkout failed. Please try again.');
         setError(result.error || 'Checkout failed');
         setPending(false);
+        submittingRef.current = false;
       } else {
         showToast.success('Order placed successfully! Redirecting...');
       }
@@ -111,6 +144,7 @@ export default function OrderSummaryClient({
       showToast.error('An error occurred during checkout. Please try again.');
       setError('An unexpected error occurred');
       setPending(false);
+      submittingRef.current = false;
       console.error('Checkout error:', err);
     }
   }
@@ -253,6 +287,8 @@ export default function OrderSummaryClient({
                       key={item.id || index}
                       item={item}
                       index={index}
+                      onRemove={handleRemoveItem}
+                      removing={removingId === item.id}
                     />
                   ))
                 ) : (
@@ -524,9 +560,13 @@ export default function OrderSummaryClient({
 function OrderSummaryItem({
   item,
   index = 0,
+  onRemove,
+  removing = false,
 }: {
   item: EnrichedCartItem;
   index?: number;
+  onRemove?: (id: string) => void;
+  removing?: boolean;
 }) {
   const { formatPrice } = useCurrency();
   const name = item.variantDetails?.product_name ?? 'Product';
@@ -578,13 +618,16 @@ function OrderSummaryItem({
           </div>
           <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
             <div>{formatPrice(price)}</div>
-            <motion.div
-              className="cursor-pointer uppercase underline hover:no-underline"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <motion.button
+              type="button"
+              onClick={() => item.id && onRemove?.(item.id)}
+              disabled={removing}
+              className="cursor-pointer uppercase underline hover:no-underline disabled:cursor-not-allowed disabled:opacity-50"
+              whileHover={removing ? {} : { scale: 1.05 }}
+              whileTap={removing ? {} : { scale: 0.95 }}
             >
-              Remove
-            </motion.div>
+              {removing ? 'Removing...' : 'Remove'}
+            </motion.button>
           </div>
         </div>
       </div>

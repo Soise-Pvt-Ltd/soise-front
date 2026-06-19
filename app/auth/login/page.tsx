@@ -178,7 +178,21 @@ export default function LoginPage() {
                 </motion.div>
               </div>
               <motion.div
+                className="mt-3 text-right text-sm"
                 custom={4}
+                variants={staggerItem}
+                initial="hidden"
+                animate="show"
+              >
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-[#8E8E93] underline hover:text-black"
+                >
+                  Forgot password?
+                </Link>
+              </motion.div>
+              <motion.div
+                custom={5}
                 variants={staggerItem}
                 initial="hidden"
                 animate="show"

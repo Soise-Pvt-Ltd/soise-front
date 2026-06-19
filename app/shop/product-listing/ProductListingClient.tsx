@@ -40,10 +40,12 @@ interface Product {
 }
 interface ProductListingClientProps {
   products: Product[];
+  initialCategory?: string;
 }
 
 export default function ProductListingClient({
   products,
+  initialCategory,
 }: ProductListingClientProps) {
   const { formatPrice } = useCurrency();
   // Assuming products is an array of product objects, we can get unique categories.
@@ -56,7 +58,13 @@ export default function ProductListingClient({
       ]
     : [];
 
-  const [activeCategory, setActiveCategory] = useState<string>(categories[0]);
+  // Pre-select the collection passed via ?collection= when it matches a known
+  // category; otherwise fall back to the first category ("All") or a safe default.
+  const defaultCategory =
+    initialCategory && categories.includes(initialCategory)
+      ? initialCategory
+      : (categories[0] ?? 'All');
+  const [activeCategory, setActiveCategory] = useState<string>(defaultCategory);
 
   const filteredProducts =
     activeCategory === 'All'
@@ -65,10 +73,12 @@ export default function ProductListingClient({
           (product) => product.collection?.name === activeCategory,
         );
 
-  function isNewProduct(createdAt: string, days = 14): boolean {
+  function isNewProduct(createdAt?: string, days = 14): boolean {
+    if (!createdAt) return false;
     const createdDate = new Date(createdAt);
-    const now = new Date();
+    if (isNaN(createdDate.getTime())) return false;
 
+    const now = new Date();
     const diffInMs = now.getTime() - createdDate.getTime();
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
@@ -119,12 +129,34 @@ export default function ProductListingClient({
           </div>
         </div>
         <div className="pb-[50px]">
-          <motion.div
-            className="grid grid-cols-1 grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4"
-            key={activeCategory}
-          >
-            <AnimatePresence>
-              {productsWithNewFlag?.map((product: any, index: number) => (
+          {products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-6 py-[80px] text-center">
+              <p className="text-[16px] text-[#8E8E93]">
+                No products available right now.
+              </p>
+              <p className="mt-2 text-[14px] text-[#AEAEB2]">
+                Please check back soon.
+              </p>
+            </div>
+          ) : productsWithNewFlag.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-6 py-[80px] text-center">
+              <p className="text-[16px] text-[#8E8E93]">
+                No products in this collection.
+              </p>
+              <button
+                onClick={() => setActiveCategory('All')}
+                className="mt-4 cursor-pointer text-[14px] underline hover:no-underline"
+              >
+                View all products
+              </button>
+            </div>
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4"
+              key={activeCategory}
+            >
+              <AnimatePresence>
+                {productsWithNewFlag?.map((product: any, index: number) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -193,8 +225,9 @@ export default function ProductListingClient({
                   </div>
                 </motion.div>
               ))}
-            </AnimatePresence>
-          </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          )}
         </div>
       </div>
       <Footer />

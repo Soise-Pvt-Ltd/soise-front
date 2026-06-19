@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { Poppins, Molle } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
@@ -78,11 +79,18 @@ export const metadata: Metadata = {
   category: 'fashion',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const savedCurrency = cookieStore.get('soise_currency')?.value;
+  const initialCurrency =
+    savedCurrency === 'USD' || savedCurrency === 'NGN'
+      ? savedCurrency
+      : undefined;
+
   return (
     <html
       lang="en-NG"
@@ -95,7 +103,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body 4xl:mx-auto 4xl:max-w-screen-4x mx-auto max-w-screen-2xl antialiased">
-        <Providers>{children}</Providers>
+        <Providers initialCurrency={initialCurrency}>{children}</Providers>
       </body>
     </html>
   );

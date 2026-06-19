@@ -1,7 +1,17 @@
 'use client';
 
-import { CurrencyProvider } from '@/lib/currency-context';
+import { CurrencyProvider, type Currency } from '@/lib/currency-context';
 
-export default function Providers({ children }: { children: React.ReactNode }) {
-  return <CurrencyProvider>{children}</CurrencyProvider>;
+export default function Providers({
+  children,
+  initialCurrency,
+}: {
+  children: React.ReactNode;
+  initialCurrency?: Currency;
+}) {
+  return (
+    <CurrencyProvider initialCurrency={initialCurrency}>
+      {children}
+    </CurrencyProvider>
+  );
 }

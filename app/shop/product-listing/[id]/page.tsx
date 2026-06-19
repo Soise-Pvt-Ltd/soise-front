@@ -83,7 +83,7 @@ export default async function ProductPage(props: {
           p.collection.name === product.collection.name &&
           p.slug !== product.slug,
       )
-      .splice(0, 6);
+      .slice(0, 6);
   }
 
   const jsonLd = productJsonLd(product);

@@ -10,7 +10,7 @@ const USER_PROTECTED_PATHS = [
   '/shop/user',
 ];
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const accessToken = req.cookies.get('access_token')?.value;
   const isAdmin = req.cookies.get('isAdmin')?.value === 'true';

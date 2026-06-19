@@ -135,9 +135,15 @@ export default function NavClient({
     0,
   );
 
+  // Total number of units in the bag (sum of quantities), not distinct lines —
+  // a single item with quantity 5 should show "5" on the badge, not "1".
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
   const menu_1 = collections.map((collection) => ({
     name: collection.name,
-    href: `/collections/${collection.slug || collection.name.toLowerCase().replace(/\s+/g, '-')}`,
+    // Route to the product listing pre-filtered by collection name (the
+    // listing groups by collection.name). There is no /collections/[slug] route.
+    href: `/shop/product-listing?collection=${encodeURIComponent(collection.name)}`,
   }));
 
   const menu_2 = [
@@ -153,6 +159,11 @@ export default function NavClient({
     {
       name: 'Order History',
       href: '/shop/order-history',
+      disabled: !isLoggedIn,
+    },
+    {
+      name: 'Wishlist',
+      href: '/shop/wishlist',
       disabled: !isLoggedIn,
     },
     {
@@ -219,7 +230,7 @@ export default function NavClient({
           >
             <BagIcon />
             <AnimatePresence>
-              {cart.length > 0 && (
+              {cartCount > 0 && (
                 <motion.span
                   className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white"
                   initial={{ scale: 0 }}
@@ -231,7 +242,7 @@ export default function NavClient({
                     damping: 15,
                   }}
                 >
-                  {cart.length}
+                  {cartCount}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -338,7 +349,7 @@ export default function NavClient({
                             transition={{ delay: i * 0.05, duration: 0.3 }}
                           >
                             <Link
-                              href={`/shop/${product.slug}`}
+                              href={`/shop/product-listing/${product.slug}`}
                               className="block transition-colors duration-200 hover:text-black"
                               onClick={() => {
                                 setOpenMenu(null);

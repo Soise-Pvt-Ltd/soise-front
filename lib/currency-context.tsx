@@ -29,15 +29,28 @@ const RATE_CACHE_KEY = 'soise_fx_cache';
 const RATE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const FALLBACK_USD_RATE = 0.00063; // ~1600 NGN/USD fallback
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-  const [currency, setCurrencyState] = useState<Currency>('NGN');
+export function CurrencyProvider({
+  children,
+  initialCurrency = 'NGN',
+}: {
+  children: React.ReactNode;
+  initialCurrency?: Currency;
+}) {
+  // Seeded from a server-read cookie so the first paint already uses the
+  // saved currency (no NGN→USD flash on load).
+  const [currency, setCurrencyState] = useState<Currency>(initialCurrency);
   const [usdRate, setUsdRate] = useState<number>(FALLBACK_USD_RATE);
   const [isRateLoading, setIsRateLoading] = useState(false);
 
-  // Restore saved preference on mount
+  // Migration fallback: clients that only have the old localStorage pref (no
+  // cookie yet) get restored here and we backfill the cookie for next load.
   useEffect(() => {
     const saved = localStorage.getItem(PREF_KEY);
-    if (saved === 'NGN' || saved === 'USD') setCurrencyState(saved);
+    if ((saved === 'NGN' || saved === 'USD') && saved !== currency) {
+      setCurrencyState(saved);
+      document.cookie = `${PREF_KEY}=${saved}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch live exchange rate (NGN → USD), with 1h cache
@@ -81,6 +94,8 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const setCurrency = useCallback((c: Currency) => {
     setCurrencyState(c);
     localStorage.setItem(PREF_KEY, c);
+    // Persist to a cookie so the server can render the right currency next load.
+    document.cookie = `${PREF_KEY}=${c}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
   }, []);
 
   const formatPrice = useCallback(

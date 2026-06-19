@@ -1,157 +1,161 @@
 'use client';
 
-import { LikeIcon, LikeIconSolid } from '@/components/icons';
+import { LikeIconSolid } from '@/components/icons';
 import Footer from '@/components/footer';
-import { FilterIcon } from '@/components/icons';
 import Link from 'next/link';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
+import { showToast } from '@/lib/toast-utils';
+import { Toaster } from 'sonner';
+import { removeFromWishlist } from './actions';
 
-interface Product {
-  id: string | number;
-  title: string;
+export interface WishlistItem {
+  id: string;
+  productId: string;
+  slug: string;
+  name: string;
   price: number;
-  thumbnail: string;
-  category: string;
+  image: string;
+  status: string;
 }
-interface ProductListingClientProps {
-  products: Product[];
-}
-export default function WishlistClient({
-  products,
-}: ProductListingClientProps) {
-  // Assuming products is an array of product objects, we can get unique categories.
-  const categories = products?.length
-    ? ['All', ...new Set(products.map((p: Product) => p.category))]
-    : [];
 
+export default function WishlistClient({ items }: { items: WishlistItem[] }) {
   const { formatPrice } = useCurrency();
-  const [activeCategory, setActiveCategory] = useState<string>(categories[0]);
+  const router = useRouter();
+  const [list, setList] = useState<WishlistItem[]>(items);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
-  const filteredProducts =
-    activeCategory === 'All'
-      ? products
-      : products.filter((product) => product.category === activeCategory);
+  const handleRemove = async (productId: string) => {
+    if (!productId || removingId) return;
+    setRemovingId(productId);
+    const previous = list;
+    setList((prev) => prev.filter((p) => p.productId !== productId));
+    const result = await removeFromWishlist(productId);
+    if (!result.success) {
+      setList(previous);
+      showToast.error('Could not remove item. Please try again.');
+    } else {
+      router.refresh();
+    }
+    setRemovingId(null);
+  };
 
   return (
     <>
+      <Toaster position="top-center" />
       <div className="mx-auto md:max-w-7xl">
-        <div className="pb-[35px]">
-          <div className="px-[16px]">
-            <motion.div
-              className="font-display text-[22px] capitalize"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-              Wishlist
-            </motion.div>
-            <motion.div
-              className="mb-[16px] flex items-center pt-[20px]"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-            >
-              <FilterIcon />
-              <span className="ml-2 font-medium uppercase">Filters</span>
-            </motion.div>
+        <div className="px-[16px] pt-[8px] pb-[35px]">
+          <motion.div
+            className="font-display text-[22px] capitalize"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          >
+            Wishlist
+          </motion.div>
+          <div className="pt-[8px] text-[14px] text-[#8E8E93]">
+            {list.length > 0
+              ? `${list.length} item${list.length > 1 ? 's' : ''} saved`
+              : 'Items you save will appear here.'}
           </div>
-          {/* <div className="scrollbar-hide flex items-center gap-x-[8px] overflow-x-auto pl-[18px] md:pl-0">
-            {categories.map((category, index) => (
-              <div
-                onClick={() => setActiveCategory(category)}
-                key={index}
-                className={`cursor-pointer rounded-full border-1 px-[12px] py-[6px] font-medium capitalize ${
-                  activeCategory === category
-                    ? 'border-[#121212] bg-[#121212] text-white'
-                    : 'border-[#8E8E93] text-[#8E8E93]'
-                }`}
-              >
-                {String(category)}
-              </div>
-            ))}
-          </div> */}
         </div>
-        <div className="pb-[50px]">
-          <div className="grid grid-cols-1 grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4">
-            {filteredProducts.map((product: Product, index: number) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.45,
-                  delay: index * 0.06,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              >
-                <Link
-                  href={`/${product.id}`}
-                  className="text-inherit no-underline"
-                >
-                  <motion.div
-                    className="h-[244px] w-full bg-[#F5F5F5] p-[10px]"
-                    whileHover={{
-                      y: -6,
-                      boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
-                    }}
-                    transition={{
-                      type: 'spring',
-                      stiffness: 300,
-                      damping: 20,
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div></div>
-                      <motion.div
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.85 }}
-                      >
-                        <LikeIconSolid />
-                      </motion.div>
-                    </div>
-                    <motion.img
-                      src={product.thumbnail}
-                      alt={product.title}
-                      className="mx-auto h-40 w-auto object-contain"
-                      whileHover={{ scale: 1.08 }}
+
+        {list.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-6 py-[80px] text-center">
+            <p className="text-[16px] text-[#8E8E93]">
+              Your wishlist is empty.
+            </p>
+            <Link
+              href="/shop/product-listing"
+              className="btn_black mt-6 flex max-w-[280px] items-center justify-center"
+            >
+              Browse Products
+            </Link>
+          </div>
+        ) : (
+          <div className="pb-[50px]">
+            <div className="grid grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4">
+              <AnimatePresence>
+                {list.map((product, index) => {
+                  const href = product.slug
+                    ? `/shop/product-listing/${product.slug}`
+                    : '/shop/product-listing';
+                  const soldOut = product.status !== 'active';
+                  return (
+                    <motion.div
+                      key={product.id || product.productId}
+                      layout
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
                       transition={{
-                        duration: 0.6,
+                        duration: 0.45,
+                        delay: index * 0.05,
                         ease: [0.22, 1, 0.36, 1],
                       }}
-                    />
-                  </motion.div>
-                </Link>
-                <div className="mt-[10px] px-[7.5px] px-[8px] text-[14px] md:text-base">
-                  <div className="text=[#8E8E93] uppercase">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate uppercase">{product.title}</p>
-                    </div>
-                    <div className="text-[#8E8E93]">
-                      <div className="flex-shrink-0">
-                        Color: {product.category}
+                    >
+                      <div className="relative h-[244px] w-full bg-[#F5F5F5] p-[10px]">
+                        <div className="flex items-center justify-end">
+                          <motion.button
+                            type="button"
+                            aria-label="Remove from wishlist"
+                            title="Remove from wishlist"
+                            onClick={() => handleRemove(product.productId)}
+                            disabled={removingId === product.productId}
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.85 }}
+                            className="cursor-pointer disabled:opacity-50"
+                          >
+                            <LikeIconSolid />
+                          </motion.button>
+                        </div>
+                        <Link href={href}>
+                          {product.image ? (
+                            <motion.img
+                              src={product.image}
+                              alt={product.name}
+                              className="mx-auto h-40 w-auto object-contain"
+                              whileHover={{ scale: 1.08 }}
+                              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                            />
+                          ) : (
+                            <div className="mx-auto flex h-40 items-center justify-center text-[12px] text-[#AEAEB2]">
+                              No image
+                            </div>
+                          )}
+                        </Link>
+                        {soldOut && (
+                          <span className="absolute bottom-2 left-2 rounded-[4px] bg-black/80 px-2 py-1 text-[10px] text-white uppercase">
+                            Unavailable
+                          </span>
+                        )}
                       </div>
-                      <div className="flex-shrink-0">
-                        Size: {product.category}
+                      <div className="mt-[10px] px-[8px] text-[14px] md:text-base">
+                        <Link href={href} className="text-inherit no-underline">
+                          <p className="truncate uppercase">{product.name}</p>
+                        </Link>
+                        <div className="mt-1 font-medium">
+                          {formatPrice(product.price)}
+                        </div>
+                        <Link href={href}>
+                          <motion.button
+                            className="btn_black mt-[16px]"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.97 }}
+                          >
+                            View Product
+                          </motion.button>
+                        </Link>
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex-shrink-0 font-medium">
-                    {formatPrice(product.price)}
-                  </div>
-                  <motion.button
-                    className="btn_black mt-[16px]"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    Add
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <Footer />
     </>

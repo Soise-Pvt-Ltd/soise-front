@@ -23,7 +23,7 @@ function OtpFormComponent() {
       if (storedEmail) {
         setEmail(storedEmail);
       } else {
-        router.replace('/signup');
+        router.replace('/auth/register');
       }
     }
   }, [email, router]);
@@ -103,6 +103,7 @@ function OtpFormComponent() {
 
   return (
     <div className="mx-auto px-[16px] py-[100px] md:max-w-xl">
+      <Toaster position="top-center" />
       <div className="mb-2 cursor-pointer" onClick={() => router.push('/')}>
         <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
       </div>

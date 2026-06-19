@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Footer from '@/components/footer';
-import { MinusIcon, PlusIcon } from '@/components/icons';
+import { MinusIcon, PlusIcon, LikeIcon, LikeIconSolid } from '@/components/icons';
 import SwiperCarouselClient from '@/components/caurosel';
 import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
 import { addToBag as addToBagAction } from './actions';
+import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
@@ -28,8 +30,15 @@ interface SampleVariant {
   color: string;
   size: string;
   price: number;
+  stock?: number;
   media: Media[] | null;
 }
+
+// A variant is sold out only when the backend reports a numeric stock of 0
+// or less. Missing/undefined stock is treated as available to avoid hiding
+// buyable items if the field is ever absent.
+const isVariantSoldOut = (v?: SampleVariant | null) =>
+  !!v && typeof v.stock === 'number' && v.stock <= 0;
 
 interface Collection {
   id: string;
@@ -53,12 +62,16 @@ export default function ProductPageClient({
   recommendedProducts: Product[];
 }) {
   const { formatPrice } = useCurrency();
+  const router = useRouter();
+  const pathname = usePathname();
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<SampleVariant | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
+  const [wishlistPending, setWishlistPending] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const variants = useMemo(() => product?.sample_variants || [], [product?.sample_variants]);
 
@@ -123,9 +136,31 @@ export default function ProductPageClient({
     return product?.base_price ?? 0;
   }, [selectedVariant, product?.base_price]);
 
+  const isOutOfStock = isVariantSoldOut(selectedVariant);
+
+  const handleAddToWishlist = async () => {
+    if (!product?.id || wishlistPending || saved) return;
+    setWishlistPending(true);
+    const result = await addToWishlistAction(product.id);
+    setWishlistPending(false);
+    if (result.success) {
+      setSaved(true);
+      showToast.success('Saved to your wishlist.');
+    } else if (result.unauthenticated) {
+      showToast.error('Please sign in to save items.');
+      router.push('/auth/login?callbackUrl=' + encodeURIComponent(pathname));
+    } else {
+      showToast.error(result.message || 'Could not save to wishlist.');
+    }
+  };
+
   const addToBag = async () => {
     if (!selectedVariant) {
       showToast.error('Please select a variant before adding to bag.');
+      return;
+    }
+    if (isOutOfStock) {
+      showToast.error('This item is sold out.');
       return;
     }
     setIsAdding(true);
@@ -299,17 +334,22 @@ export default function ProductPageClient({
                     <div className="flex flex-wrap gap-2">
                       {availableSizes.map((v) => {
                         const isSelected = selectedSize === v.size;
+                        const soldOut = isVariantSoldOut(v);
                         return (
                           <motion.button
                             key={v.size}
-                            onClick={() => setSelectedSize(v.size)}
+                            onClick={() => !soldOut && setSelectedSize(v.size)}
+                            disabled={soldOut}
+                            title={soldOut ? 'Sold out' : undefined}
                             className={`flex h-9 min-w-[40px] items-center justify-center rounded-[2px] border px-2 text-[11px] uppercase transition-colors duration-200 ${
-                              isSelected
-                                ? 'border-black bg-black text-white'
-                                : 'border-[#8E8E93] bg-[#F5F5F5] hover:border-black'
+                              soldOut
+                                ? 'cursor-not-allowed border-[#E5E5E5] bg-[#FAFAFA] text-[#C7C7CC] line-through'
+                                : isSelected
+                                  ? 'border-black bg-black text-white'
+                                  : 'border-[#8E8E93] bg-[#F5F5F5] hover:border-black'
                             }`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            whileHover={soldOut ? {} : { scale: 1.05 }}
+                            whileTap={soldOut ? {} : { scale: 0.95 }}
                             transition={{ duration: 0.15 }}
                           >
                             {v.size}
@@ -357,14 +397,38 @@ export default function ProductPageClient({
               </motion.div>
 
               <motion.button
-                className="btn_black !mt-[36px] !mb-[56px]"
+                className="btn_black !mt-[36px] !mb-[56px] disabled:cursor-not-allowed disabled:opacity-40"
                 onClick={addToBag}
-                disabled={isAdding || !selectedVariant}
-                whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}
-                whileTap={{ scale: 0.97 }}
+                disabled={isAdding || !selectedVariant || isOutOfStock}
+                whileHover={
+                  isOutOfStock
+                    ? {}
+                    : { scale: 1.02, boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }
+                }
+                whileTap={isOutOfStock ? {} : { scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               >
-                {isAdding ? 'Adding...' : 'Add to bag'}
+                {isOutOfStock
+                  ? 'Sold out'
+                  : isAdding
+                    ? 'Adding...'
+                    : 'Add to bag'}
+              </motion.button>
+
+              <motion.button
+                type="button"
+                onClick={handleAddToWishlist}
+                disabled={wishlistPending || saved}
+                className="mb-[56px] flex w-full items-center justify-center gap-x-2 text-[13px] font-medium uppercase text-[#121212] disabled:opacity-60"
+                whileHover={saved ? {} : { scale: 1.02 }}
+                whileTap={saved ? {} : { scale: 0.97 }}
+              >
+                {saved ? <LikeIconSolid /> : <LikeIcon />}
+                {saved
+                  ? 'Saved to wishlist'
+                  : wishlistPending
+                    ? 'Saving...'
+                    : 'Save to wishlist'}
               </motion.button>
             </motion.div>
           </div>

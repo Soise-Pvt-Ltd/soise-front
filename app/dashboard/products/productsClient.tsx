@@ -785,19 +785,9 @@ export default function ProductsPage({
             if (v.files.length > 0) {
               hasImageChanged = true;
 
-              for (const media of v.existingMedia) {
-                const deleteResult = await deleteFile(media.id);
-                if (!deleteResult.success) {
-                  console.error(
-                    `Failed to delete media ${media.id}:`,
-                    deleteResult.error,
-                  );
-                  throw new Error(
-                    `Failed to delete existing image: ${deleteResult.error}`,
-                  );
-                }
-              }
-
+              // Upload the new images FIRST. If an upload fails we abort
+              // before touching the existing media, so the product never
+              // ends up with its original images deleted and no replacement.
               const uploadedIds = [];
               for (const file of v.files) {
                 const fileData = new FormData();
@@ -813,6 +803,21 @@ export default function ProductsPage({
                   uploadedIds.push(res.data.id);
                 }
               }
+
+              // New images are safely uploaded — now remove the old ones.
+              // Treat delete failures as non-fatal (the swap already
+              // succeeded); a leftover old image is far better than losing
+              // all images by rolling back the whole save.
+              for (const media of v.existingMedia) {
+                const deleteResult = await deleteFile(media.id);
+                if (!deleteResult.success) {
+                  console.error(
+                    `Failed to delete old media ${media.id}:`,
+                    deleteResult.error,
+                  );
+                }
+              }
+
               mediaIds = uploadedIds;
             } else {
               mediaIds = existingMediaIds;

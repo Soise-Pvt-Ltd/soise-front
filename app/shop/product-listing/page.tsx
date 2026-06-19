@@ -16,7 +16,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ProductListingPage() {
+export default async function ProductListingPage(props: {
+  searchParams: Promise<{ collection?: string }>;
+}) {
+  const { collection } = await props.searchParams;
   let products = [];
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -39,7 +42,7 @@ export default async function ProductListingPage() {
   return (
     <>
       <Nav />
-      <ProductListingClient products={products} />
+      <ProductListingClient products={products} initialCategory={collection} />
     </>
   );
 }
