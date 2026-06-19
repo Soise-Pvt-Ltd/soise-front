@@ -123,8 +123,8 @@ export default function HomeContentClient() {
       // Upload route returns the backend media payload: { success, data: { id, url, ... } }
       const url: string | undefined = json?.data?.url ?? json?.url;
       if (res.ok && url) {
-        setImages((prev) => ({ ...prev, [slot]: url }));
-        showToast('success', 'Image uploaded. Remember to save your changes.');
+        // Auto-persist immediately — no separate "Save" step to forget.
+        await persist({ ...images, [slot]: url }, 'Image updated and live on the homepage.');
       } else {
         showToast('error', json?.error || 'Upload failed. Please try again.');
       }
@@ -135,20 +135,28 @@ export default function HomeContentClient() {
     }
   };
 
-  const handleReset = (slot: HomepageSlot) => {
-    setImages((prev) => ({ ...prev, [slot]: null }));
+  const handleReset = async (slot: HomepageSlot) => {
+    await persist({ ...images, [slot]: null }, 'Reset to the default image.');
+  };
+
+  // Persist a full images object and reflect it locally. Used by upload, reset,
+  // and the explicit Save button so a change is never silently un-saved.
+  const persist = async (next: HomepageImages, okMsg: string): Promise<boolean> => {
+    setSaving(true);
+    const res = await saveHomepageContent(next);
+    setSaving(false);
+    if (res.success) {
+      setImages(next);
+      setInitial(normalize(next));
+      showToast('success', okMsg);
+      return true;
+    }
+    showToast('error', res.error || 'Failed to save changes.');
+    return false;
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    const res = await saveHomepageContent(images);
-    setSaving(false);
-    if (res.success) {
-      setInitial(normalize(images));
-      showToast('success', 'Homepage images saved.');
-    } else {
-      showToast('error', res.error || 'Failed to save changes.');
-    }
+    await persist(images, 'Homepage images saved.');
   };
 
   return (

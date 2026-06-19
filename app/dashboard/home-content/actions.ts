@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -70,6 +71,8 @@ export async function saveHomepageContent(
     if (!res.ok) {
       return { success: false, error: json?.message || 'Failed to save' };
     }
+    // Purge the homepage cache so the new images show immediately on reload.
+    revalidatePath('/');
     return { success: true };
   } catch {
     return { success: false, error: 'Failed to save changes' };
