@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
+import { getDisplayPrice } from '@/lib/product-price';
 
 interface Media {
   url: string;
@@ -21,6 +22,7 @@ interface Media {
 
 interface SampleVariant {
   media: Media[] | null;
+  price?: number | null;
 }
 
 interface Collection {
@@ -227,7 +229,19 @@ export default function ProductListingClient({
                       <p className="truncate uppercase">{product.name}</p>
                     </div>
                     <div className="flex-shrink-0 pl-2 font-medium">
-                      {formatPrice(product.base_price)}
+                      {(() => {
+                        const { amount, isFrom } = getDisplayPrice(product);
+                        return (
+                          <>
+                            {isFrom && (
+                              <span className="mr-1 text-[11px] font-normal text-[#8E8E93]">
+                                from
+                              </span>
+                            )}
+                            {formatPrice(amount)}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 </motion.div>

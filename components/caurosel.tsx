@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { useCurrency } from '@/lib/currency-context';
+import { getDisplayPrice } from '@/lib/product-price';
 
 export default function SwiperCarouselClient({ items: products }: any) {
   const { formatPrice } = useCurrency();
@@ -99,7 +100,19 @@ export default function SwiperCarouselClient({ items: products }: any) {
                   {item.name}
                 </div>
                 <div className="font-medium whitespace-nowrap">
-                  {formatPrice(item.base_price ?? 0)}
+                  {(() => {
+                    const { amount, isFrom } = getDisplayPrice(item);
+                    return (
+                      <>
+                        {isFrom && (
+                          <span className="mr-1 text-[11px] font-normal text-[#8E8E93]">
+                            from
+                          </span>
+                        )}
+                        {formatPrice(amount)}
+                      </>
+                    );
+                  })()}
                 </div>
               </motion.div>
             </motion.div>

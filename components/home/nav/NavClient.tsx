@@ -18,6 +18,7 @@ import { EnrichedCartItem, Product } from './types';
 import { logout, removeFromCart, updateCartItemQuantity } from './actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
+import { getDisplayPrice } from '@/lib/product-price';
 import { showToast } from '@/lib/toast-utils';
 
 export interface Collection {
@@ -511,7 +512,10 @@ export default function NavClient({
                                   {product.name}
                                 </p>
                                 <p className="mt-0.5 text-[13px] text-[#8E8E93]">
-                                  {formatPrice(Number(product.base_price) || 0)}
+                                  {(() => {
+                                    const { amount, isFrom } = getDisplayPrice(product);
+                                    return `${isFrom ? 'from ' : ''}${formatPrice(amount)}`;
+                                  })()}
                                 </p>
                               </div>
                               <span
