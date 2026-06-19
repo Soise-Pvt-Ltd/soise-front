@@ -41,12 +41,45 @@ export default async function creatorsPage() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  const authHeaders = { Cookie: `access_token=${accessToken ?? ''}` };
+
+  // If the user is ALREADY a creator, never show the apply form. An onboarded
+  // creator (has a code) goes to their dashboard; an approved-but-not-yet-onboarded
+  // creator goes to onboarding. (redirect() must be called outside try/catch — it
+  // throws NEXT_REDIRECT internally, which a catch would otherwise swallow.)
+  let creatorRedirect: string | null = null;
+  try {
+    const codesRes = await fetch(`${baseUrl}/creators/codes`, {
+      headers: authHeaders,
+      cache: 'no-store',
+    });
+    if (codesRes.ok) {
+      const codes = await codesRes.json();
+      const hasCode = Array.isArray(codes?.data)
+        ? codes.data.length > 0
+        : !!codes?.data;
+      if (hasCode) creatorRedirect = '/creators/dashboard';
+    }
+    if (!creatorRedirect) {
+      const profileRes = await fetch(`${baseUrl}/profiles`, {
+        headers: authHeaders,
+        cache: 'no-store',
+      });
+      if (profileRes.ok) {
+        const profile = await profileRes.json();
+        if (profile?.data?.role === 'creator') creatorRedirect = '/creators/onboarding';
+      }
+    }
+  } catch {
+    // fall through to the application-status logic below
+  }
+  if (creatorRedirect) redirect(creatorRedirect);
 
   let status: string | null = null;
   try {
     const res = await fetch(`${baseUrl}/creators/application`, {
       method: 'GET',
-      headers: { Cookie: `access_token=${accessToken ?? ''}` },
+      headers: authHeaders,
       cache: 'no-store',
     });
     if (res.ok) {

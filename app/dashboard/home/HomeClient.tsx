@@ -37,7 +37,22 @@ type HomeClientProps = {
   data: any;
 };
 
-export default function HomeClient({ data }: HomeClientProps) {
+export default function HomeClient({ data: rawData }: HomeClientProps) {
+  // Normalize the payload to a guaranteed shape so a missing/partial/error
+  // response from the backend can never crash the admin dashboard.
+  const d = rawData && typeof rawData === 'object' ? rawData : {};
+  const data = {
+    ...d,
+    revenue: { total: 0, percentage_change: 0, ...(d.revenue || {}) },
+    payout: { total: 0, percentage_change: 0, ...(d.payout || {}) },
+    products: { total: 0, active: 0, ...(d.products || {}) },
+    items_sold: { current_month: 0, percentage_change: 0, ...(d.items_sold || {}) },
+    users: { total: 0, new_this_month: 0, creators: 0, ...(d.users || {}) },
+    monthly_sales: Array.isArray(d.monthly_sales) ? d.monthly_sales : [],
+    latest_orders: Array.isArray(d.latest_orders) ? d.latest_orders : [],
+    top_products: Array.isArray(d.top_products) ? d.top_products : [],
+  };
+
   const doughnutData = {
     labels: ['Social Media', 'Creators', 'Ads', 'Purchased'],
     backgroundColor: ['#2D2C54', '#0072BB', '#121212', '#C0CBF2'],

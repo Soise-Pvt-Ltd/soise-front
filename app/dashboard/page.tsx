@@ -17,15 +17,17 @@ export default async function DashboardPage() {
     });
 
     if (!res.ok) {
-      throw new Error('Failed to fetch dashboard data');
+      // Degrade to an empty dashboard rather than crashing the whole admin.
+      return <HomeClient data={null} />;
     }
 
     const data = await res.json();
 
-    // return <HomeClient data={data.data} />;
-    return <HomeClient data={data.data} />;
+    // data.data is an object on success, or (on a backend query error) a string.
+    // HomeClient normalizes any non-object to safe zeros, so never throw here.
+    return <HomeClient data={data?.data} />;
   } catch (error) {
-    console.error('Failed to fetch dahsboard data:', error);
-    throw new Error('Failed to fetch dashboard data');
+    console.error('Failed to fetch dashboard data:', error);
+    return <HomeClient data={null} />;
   }
 }
