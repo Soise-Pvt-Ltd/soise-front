@@ -37,7 +37,12 @@ function StatusScreen({
   );
 }
 
-export default async function creatorsPage() {
+export default async function creatorsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reason?: string }>;
+}) {
+  const { reason } = await searchParams;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -114,6 +119,17 @@ export default async function creatorsPage() {
     );
   }
 
-  // No application yet → show the apply form.
-  return <CreatorsApplicationClient />;
+  // No application yet → show the apply form (with a reason banner if the user
+  // was redirected here for lacking creator access).
+  return (
+    <>
+      {reason === 'not-creator' && (
+        <div className="bg-[#FFF4E5] px-6 py-3 text-center text-[13px] font-medium text-[#B25E09]">
+          You need an approved creator account to access the Creator Portal —
+          apply below to get started.
+        </div>
+      )}
+      <CreatorsApplicationClient />
+    </>
+  );
 }
