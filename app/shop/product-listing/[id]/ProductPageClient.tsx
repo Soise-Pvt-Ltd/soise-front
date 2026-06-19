@@ -138,6 +138,14 @@ export default function ProductPageClient({
 
   const isOutOfStock = isVariantSoldOut(selectedVariant);
 
+  // Upper bound for the quantity stepper: the selected variant's stock when the
+  // backend reports a positive number, otherwise an unknown fallback so users
+  // can't increment without limit and overshoot available inventory.
+  const maxQty =
+    typeof selectedVariant?.stock === 'number' && selectedVariant.stock > 0
+      ? selectedVariant.stock
+      : undefined;
+
   const handleAddToWishlist = async () => {
     if (!product?.id || wishlistPending || saved) return;
     setWishlistPending(true);
@@ -220,8 +228,10 @@ export default function ProductPageClient({
                     {currentImages.map((img, i) => {
                       const isSelected = selectedImageIndex === i;
                       return (
-                        <motion.div
+                        <motion.button
                           key={i}
+                          type="button"
+                          aria-label={`Select image ${i + 1}`}
                           onClick={() => setSelectedImageIndex(i)}
                           className={`relative h-20 w-20 flex-shrink-0 cursor-pointer overflow-hidden rounded-md border-2 transition-colors duration-300 ${
                             isSelected ? 'border-black' : 'border-gray-200 hover:border-gray-400'
@@ -237,7 +247,7 @@ export default function ProductPageClient({
                             alt={`${product.name} view ${i + 1}`}
                             className="h-full w-full object-cover"
                           />
-                        </motion.div>
+                        </motion.button>
                       );
                     })}
                   </div>
@@ -307,6 +317,8 @@ export default function ProductPageClient({
                         return (
                           <motion.button
                             key={v.color}
+                            type="button"
+                            aria-label={`Select color ${v.color}`}
                             onClick={() => handleColorSelect(v.color)}
                             className={`h-8 w-8 rounded-full transition-all duration-200 ${
                               isLight ? 'border border-gray-400' : ''
@@ -385,7 +397,9 @@ export default function ProductPageClient({
                       </motion.span>
                     </AnimatePresence>
                     <motion.button
-                      onClick={() => setQuantity((prev) => prev + 1)}
+                      onClick={() =>
+                        setQuantity((q) => Math.min(q + 1, maxQty ?? 999))
+                      }
                       className="p-1"
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.85 }}

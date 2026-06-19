@@ -48,12 +48,17 @@ export default function ProductListingClient({
   initialCategory,
 }: ProductListingClientProps) {
   const { formatPrice } = useCurrency();
+  // Defensive: the API shape isn't guaranteed, so normalize to a safe array
+  // before any .length / .map / .filter access downstream.
+  const safeProducts = Array.isArray(products) ? products : [];
   // Assuming products is an array of product objects, we can get unique categories.
-  const categories = products?.length
+  const categories = safeProducts.length
     ? [
         'All',
         ...new Set(
-          products.filter((p) => p.collection).map((p) => p.collection!.name),
+          safeProducts
+            .filter((p) => p.collection)
+            .map((p) => p.collection!.name),
         ),
       ]
     : [];
@@ -68,8 +73,8 @@ export default function ProductListingClient({
 
   const filteredProducts =
     activeCategory === 'All'
-      ? products
-      : products.filter(
+      ? safeProducts
+      : safeProducts.filter(
           (product) => product.collection?.name === activeCategory,
         );
 
@@ -111,8 +116,10 @@ export default function ProductListingClient({
           </div>
           <div className="scrollbar-hide flex items-center gap-x-[8px] overflow-x-auto pl-[18px] md:pl-0">
             {categories.map((category, index) => (
-              <motion.div
+              <motion.button
+                type="button"
                 onClick={() => setActiveCategory(category)}
+                aria-pressed={activeCategory === category}
                 key={index}
                 className={`relative cursor-pointer rounded-full border-1 px-[12px] py-[6px] font-medium capitalize transition-colors duration-300 ${
                   activeCategory === category
@@ -124,7 +131,7 @@ export default function ProductListingClient({
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               >
                 {String(category)}
-              </motion.div>
+              </motion.button>
             ))}
           </div>
         </div>

@@ -57,7 +57,6 @@ export default async function onBoardingCreatorPage() {
 
         if (generateRes.ok) {
           const generatedCodes = await generateRes.json();
-          console.log('Generated Codes:', generatedCodes);
           codes = generatedCodes.data || generatedCodes;
         } else {
           console.error('Generate codes error:', await generateRes.text());

@@ -18,6 +18,7 @@ import { EnrichedCartItem, Product } from './types';
 import { logout, removeFromCart, updateCartItemQuantity } from './actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
+import { showToast } from '@/lib/toast-utils';
 
 export interface Collection {
   id: string;
@@ -73,7 +74,7 @@ export default function NavClient({
       setSearchResults(data.data || []);
     } catch (error) {
       console.error('Search failed:', error);
-      // TODO: Show error toast/message to user
+      showToast.error('Search failed. Please try again.');
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -205,6 +206,7 @@ export default function NavClient({
         <div className="flex items-center gap-x-[18px]">
           <motion.button
             onClick={() => setOpenMenu('menu')}
+            aria-label="Open menu"
             className="hover:cursor-pointer"
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
@@ -214,6 +216,7 @@ export default function NavClient({
           </motion.button>
           <motion.button
             onClick={() => setOpenMenu('search')}
+            aria-label="Search"
             className="hover:cursor-pointer"
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
@@ -236,6 +239,7 @@ export default function NavClient({
         <div className="flex items-center gap-x-[18px]">
           <motion.button
             onClick={() => setOpenMenu('bag')}
+            aria-label={`Cart, ${cartCount} items`}
             className="relative hover:cursor-pointer"
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
@@ -262,6 +266,7 @@ export default function NavClient({
           </motion.button>
           <motion.button
             onClick={() => setOpenMenu('user')}
+            aria-label="Account menu"
             className="hover:cursor-pointer"
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
@@ -331,6 +336,7 @@ export default function NavClient({
                   <input
                     type="text"
                     placeholder="Search by keyword"
+                    aria-label="Search products"
                     className="form-input w-full rounded-[10px] pr-16 !text-[13px] focus:border-gray-300 focus:ring-2 focus:ring-transparent focus:outline-none"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

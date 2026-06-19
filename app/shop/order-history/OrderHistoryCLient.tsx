@@ -245,7 +245,7 @@ function OrderHistoryItem({
         <div className="w-full py-[3px]">
           <div className="mb-[16px] flex items-center justify-between">
             <div className="flex-wrap truncate font-medium uppercase">
-              Order #{item.id.substring(0, 7)}
+              Order #{(item.id ?? '').toString().substring(0, 7)}
             </div>
             <div className="font-medium">{formatPrice(item.total)}</div>
           </div>

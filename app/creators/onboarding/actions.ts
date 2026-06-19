@@ -30,7 +30,14 @@ export async function savePaymentInformation(formData: FormData) {
     });
 
     if (!response.ok) {
-      return { success: false, error: await response.text() };
+      // Don't surface the raw upstream response body to the UI — it can leak
+      // internal error detail. Log server-side, return a generic message.
+      console.error(
+        'Onboarding failed:',
+        response.status,
+        await response.text(),
+      );
+      return { success: false, error: 'Onboarding failed. Please try again.' };
     }
 
     return { success: true, data: await response.json() };

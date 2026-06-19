@@ -85,11 +85,12 @@ export default async function OrderHistoryPage() {
   });
 
   // Enrich cart
-  const enrichedCart: EnrichedCartItem[] =
-    cartData?.data?.map((item: CartItem) => ({
-      ...item,
-      variantDetails: variantsMap.get(item.variant),
-    })) ?? [];
+  const enrichedCart: EnrichedCartItem[] = Array.isArray(cartData?.data)
+    ? cartData.data.map((item: CartItem) => ({
+        ...item,
+        variantDetails: variantsMap.get(item.variant),
+      }))
+    : [];
 
   return (
     <>

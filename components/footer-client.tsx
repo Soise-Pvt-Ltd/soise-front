@@ -69,13 +69,22 @@ export default function FooterClient() {
 
               <div className="flex space-x-4">
                 {[
-                  { Icon: InstagramIcon, href: siteConfig.social.instagram },
-                  { Icon: TiktokIcon, href: siteConfig.social.tiktok },
-                  { Icon: XIcon, href: siteConfig.social.x },
-                ].map(({ Icon, href }, i) => (
+                  {
+                    Icon: InstagramIcon,
+                    href: siteConfig.social.instagram,
+                    label: 'SOISE on Instagram',
+                  },
+                  {
+                    Icon: TiktokIcon,
+                    href: siteConfig.social.tiktok,
+                    label: 'SOISE on TikTok',
+                  },
+                  { Icon: XIcon, href: siteConfig.social.x, label: 'SOISE on X' },
+                ].map(({ Icon, href, label }, i) => (
                   <motion.a
                     key={i}
                     href={href}
+                    aria-label={label}
                     target="_blank"
                     rel="noopener noreferrer"
                     whileHover={{ scale: 1.2, y: -2 }}
@@ -108,6 +117,7 @@ export default function FooterClient() {
             <div className="relative flex items-center">
               <input
                 type="text"
+                aria-label="Email address"
                 className="h-[40px] w-full rounded-[10px] border border-[#AEAEB2] pr-[42px] pl-[10px] transition-all duration-300 focus:border-[#121212] focus:shadow-[0_0_0_1px_#121212]"
                 placeholder="EMAIL"
               />
@@ -129,7 +139,11 @@ export default function FooterClient() {
             </div>
 
             <div className="flex gap-x-[10px]">
-              <input type="checkbox" className="form-checkbox size-[17px]" />
+              <input
+                type="checkbox"
+                aria-label="I consent to the processing of my personal data for marketing purposes"
+                className="form-checkbox size-[17px]"
+              />
               <div className="text-[13px] leading-[18px] text-[#2F2F2F]">
                 I have read the Privacy Policy and consent to the processing of
                 my personal data for marketing purposes (Newsletters, News and
