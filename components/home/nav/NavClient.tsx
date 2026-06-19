@@ -30,6 +30,7 @@ interface NavClientProps {
   isLoggedIn: boolean;
   collections?: Collection[];
   admin?: boolean;
+  storeCredit?: number | null;
 }
 
 export default function NavClient({
@@ -37,6 +38,7 @@ export default function NavClient({
   isLoggedIn,
   collections = [],
   admin = false,
+  storeCredit = null,
 }: NavClientProps) {
   const router = useRouter();
   const { currency, setCurrency, formatPrice, isRateLoading } = useCurrency();
@@ -171,6 +173,17 @@ export default function NavClient({
       href: '/creators',
       icon: <ArrowUpRightIcon />,
       disabled: !isLoggedIn,
+    },
+    {
+      name: 'Invite & Earn',
+      href: '/swaz-loop',
+      // Show the live store-credit balance as a badge when the user has any —
+      // a constant reminder that they accumulate spendable credit.
+      badge:
+        isLoggedIn && typeof storeCredit === 'number' && storeCredit > 0
+          ? `₦${Math.round(storeCredit).toLocaleString('en-NG')}`
+          : undefined,
+      disabled: false,
     },
     {
       name: isLoggedIn ? 'Logout' : 'Sign In',
@@ -467,6 +480,11 @@ export default function NavClient({
                           className="flex items-center gap-2 transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer"
                         >
                           {item.name} {item.icon}
+                          {'badge' in item && item.badge ? (
+                            <span className="rounded-full bg-[#CCEAD6] px-[8px] py-[2px] text-[10px] font-medium text-[#32AC5B]">
+                              {item.badge}
+                            </span>
+                          ) : null}
                         </Link>
                       )}
                     </motion.div>

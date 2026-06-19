@@ -1,6 +1,7 @@
 'use client';
 
 import { CurrencyProvider, type Currency } from '@/lib/currency-context';
+import RefCapture from '@/components/RefCapture';
 
 export default function Providers({
   children,
@@ -11,6 +12,7 @@ export default function Providers({
 }) {
   return (
     <CurrencyProvider initialCurrency={initialCurrency}>
+      <RefCapture />
       {children}
     </CurrencyProvider>
   );

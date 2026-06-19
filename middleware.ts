@@ -99,8 +99,20 @@ function redirectToLogin(req: NextRequest, fallback: URL): NextResponse {
   return res;
 }
 
+// Public pages that live under an otherwise-protected prefix (e.g. the Swaz
+// Loop explainer/FAQ under /creators). These must remain viewable logged-out,
+// so they bypass the auth gate while everything else under /creators stays
+// protected.
+const PUBLIC_PATHS = ['/creators/swaz-loop'];
+
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
+
+  // Allow explicitly-public pages straight through (no session work needed).
+  if (PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) {
+    return NextResponse.next();
+  }
+
   const accessToken = req.cookies.get('access_token')?.value;
   const refreshToken = req.cookies.get('refresh_token')?.value;
   const isAdmin = req.cookies.get('isAdmin')?.value === 'true';

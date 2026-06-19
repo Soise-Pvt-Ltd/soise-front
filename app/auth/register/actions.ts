@@ -1,5 +1,7 @@
 'use server';
 
+import { cookies } from 'next/headers';
+
 interface RegisterPayload {
   email: string;
   password: string;
@@ -36,6 +38,10 @@ export async function register(payload: RegisterPayload) {
     console.error('Email check failed:', error);
   }
 
+  // Pull any captured referral code so the new user is attributed to whoever
+  // shared the Swaz Loop link with them.
+  const refCode = (await cookies()).get('swaz_ref')?.value;
+
   try {
     // Proceed with signup by calling the external API
     const authResponse = await fetch(`${BASE_URL}/auth/signup`, {
@@ -49,6 +55,7 @@ export async function register(payload: RegisterPayload) {
         username,
         first_name: firstName,
         last_name: lastName,
+        ...(refCode ? { ref: refCode } : {}),
       }),
     });
 

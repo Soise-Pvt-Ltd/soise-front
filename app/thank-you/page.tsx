@@ -3,6 +3,7 @@ import Nav from '@/components/home/nav/Nav';
 import { ArrowLeftIcon, AdminCheckCircleIcon } from '@/components/icons';
 import Link from 'next/link';
 import { siteConfig } from '@/lib/site-config';
+import ReferralPromoCard from '@/components/ReferralPromoCard';
 
 export default async function ThankYouPage({
   searchParams,
@@ -60,6 +61,11 @@ export default async function ThankYouPage({
                 </p>
               </div>
             </section>
+
+            {/* Invite & earn store credit */}
+            <div className="mb-12">
+              <ReferralPromoCard />
+            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">

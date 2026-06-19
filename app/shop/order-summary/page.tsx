@@ -19,6 +19,7 @@ export default async function OrderHistoryPage() {
 
   let productsData = { data: [] };
   let cartData = { data: [] };
+  let storeCredit = 0;
 
   try {
     if (!baseUrl) {
@@ -46,6 +47,28 @@ export default async function OrderHistoryPage() {
 
     if (productsRes.ok) productsData = await productsRes.json();
     if (cartRes.ok) cartData = await cartRes.json();
+
+    // Fetch the signed-in user's store-credit balance so we can offer to apply
+    // it at checkout. Best-effort — never block checkout on it. Guests have no
+    // credit, so we only ask when authenticated.
+    if (isLoggedIn && accessToken) {
+      try {
+        const creditRes = await fetch(`${baseUrl}/referrals/credit`, {
+          cache: 'no-store',
+          headers: {
+            Cookie: `access_token=${accessToken}`,
+            Accept: 'application/json',
+          },
+        });
+        if (creditRes.ok) {
+          const creditJson = await creditRes.json();
+          const bal = creditJson?.data?.store_credit_balance;
+          if (typeof bal === 'number') storeCredit = bal;
+        }
+      } catch {
+        // ignore — toggle simply won't show
+      }
+    }
   } catch (error) {
     console.error('Order history page fetch failed:', error);
   }
@@ -71,7 +94,11 @@ export default async function OrderHistoryPage() {
   return (
     <>
       <Nav />
-      <OrderSummaryClient cart={enrichedCart} isLoggedIn={isLoggedIn} />
+      <OrderSummaryClient
+        cart={enrichedCart}
+        isLoggedIn={isLoggedIn}
+        storeCredit={storeCredit}
+      />
     </>
   );
 }

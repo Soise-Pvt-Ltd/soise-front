@@ -15,6 +15,7 @@ import { useCurrency } from '@/lib/currency-context';
 interface OrderSummaryClientProps {
   cart: EnrichedCartItem[];
   isLoggedIn: boolean;
+  storeCredit?: number;
 }
 
 const NIGERIAN_STATES = [
@@ -60,6 +61,7 @@ const NIGERIAN_STATES = [
 export default function OrderSummaryClient({
   cart,
   isLoggedIn,
+  storeCredit = 0,
 }: OrderSummaryClientProps) {
   const { formatPrice, currency } = useCurrency();
   const router = useRouter();
@@ -68,6 +70,10 @@ export default function OrderSummaryClient({
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Store-credit redemption toggle. The exact reduction is computed on the
+  // backend; here we preview "up to" the lesser of the balance and the total.
+  const [useStoreCredit, setUseStoreCredit] = useState(false);
 
   // Creator code states
   const [discountCode, setDiscountCode] = useState('');
@@ -88,6 +94,13 @@ export default function OrderSummaryClient({
 
   // Use final_total from API if available, otherwise calculate manually
   const total = finalTotal !== null ? finalTotal : subtotal - appliedDiscount;
+
+  // Store credit can cover at most the current total. Only preview a reduction
+  // when the toggle is on and the user actually has a balance.
+  const hasStoreCredit = isLoggedIn && storeCredit > 0;
+  const creditApplied =
+    useStoreCredit && hasStoreCredit ? Math.min(storeCredit, total) : 0;
+  const totalAfterCredit = Math.max(total - creditApplied, 0);
 
   async function handleRemoveItem(itemId: string) {
     if (!itemId || removingId) return;
@@ -122,6 +135,10 @@ export default function OrderSummaryClient({
 
     if (discountData?.code) {
       formData.set('creator_code', discountData.code);
+    }
+
+    if (useStoreCredit && hasStoreCredit) {
+      formData.set('use_store_credit', 'true');
     }
 
     const toastId = showToast.loading('Processing your order...');
@@ -410,6 +427,36 @@ export default function OrderSummaryClient({
             )}
           </AnimatePresence>
 
+          {/* Store credit toggle — only when logged in with a balance */}
+          {hasStoreCredit && (
+            <div className="mt-[16px] flex items-center justify-between rounded-[10px] border border-[#CCEAD6] bg-[#F5FCF7] px-[14px] py-[12px]">
+              <div className="text-[13px] normal-case">
+                <p className="font-medium text-[#121212]">
+                  Apply my {formatPrice(storeCredit)} store credit
+                </p>
+                <p className="text-[11px] text-[#8E8E93]">
+                  Earned through the Swaz Loop. Spendable now.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={useStoreCredit}
+                aria-label="Apply store credit"
+                onClick={() => setUseStoreCredit((v) => !v)}
+                className={`relative h-[26px] w-[46px] shrink-0 rounded-full transition-colors ${
+                  useStoreCredit ? 'bg-[#32AC5B]' : 'bg-[#D1D1D6]'
+                }`}
+              >
+                <span
+                  className={`absolute top-[3px] h-[20px] w-[20px] rounded-full bg-white transition-all ${
+                    useStoreCredit ? 'left-[23px]' : 'left-[3px]'
+                  }`}
+                />
+              </button>
+            </div>
+          )}
+
           <div className="pt-[24px] uppercase">
             <div className="flex items-center justify-between text-[12px] text-[#8E8E93]">
               <div>Subtotal</div>
@@ -429,18 +476,32 @@ export default function OrderSummaryClient({
                 </motion.div>
               )}
             </AnimatePresence>
+            <AnimatePresence>
+              {creditApplied > 0 && (
+                <motion.div
+                  className="flex items-center justify-between pt-[8px] text-[12px] text-green-600"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div>Store credit</div>
+                  <div>-{formatPrice(creditApplied)}</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
               <div>Total</div>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={total}
+                  key={totalAfterCredit}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.25 }}
                   className={showSavingsPulse ? 'text-green-600' : ''}
                 >
-                  {formatPrice(total)}
+                  {formatPrice(totalAfterCredit)}
                 </motion.div>
               </AnimatePresence>
             </div>

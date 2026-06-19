@@ -52,6 +52,10 @@ export async function checkoutAction(formData: FormData) {
 
   const creatorCode = formData.get('creator_code') as string | null;
   const email = formData.get('email') as string | null;
+  // Only authenticated users have store credit; honor the toggle from the
+  // order summary. The backend reduces (or fully covers) the charge.
+  const useStoreCredit =
+    !!accessToken && formData.get('use_store_credit') === 'true';
 
   // Validate required fields
   const requiredFields = Object.entries(deliveryData);
@@ -97,6 +101,7 @@ export async function checkoutAction(formData: FormData) {
         ...deliveryData,
         ...(creatorCode ? { creator_code: creatorCode } : {}),
         ...(!accessToken && email ? { email } : {}),
+        ...(useStoreCredit ? { use_store_credit: true } : {}),
       }),
     });
 
@@ -110,9 +115,16 @@ export async function checkoutAction(formData: FormData) {
     const data = await response.json();
 
     const authUrl = data?.data?.payment?.checkout_metadata?.authorization_url;
+    // When store credit fully covers the order, the backend marks it paid and
+    // returns no Paystack URL — go straight to the thank-you page.
+    const fullyCovered =
+      data?.data?.payment?.fully_covered === true ||
+      data?.data?.order?.status === 'paid';
 
     if (authUrl) {
       redirect(authUrl);
+    } else if (fullyCovered) {
+      redirect('/thank-you');
     } else {
       return {
         success: false,

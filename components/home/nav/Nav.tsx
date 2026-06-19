@@ -10,6 +10,7 @@ export default async function Nav() {
   let collectionData = { data: [] };
   let cartData = { data: [] };
   let userData: any = { data: null };
+  let storeCredit: number | null = null;
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   const isLoggedIn = cookieStore.has('access_token');
@@ -49,6 +50,26 @@ export default async function Nav() {
           cache: 'no-store',
         });
         if (userRes.ok) userData = await userRes.json();
+
+        // Store-credit balance for the "Invite & Earn" badge in the account
+        // menu. Best-effort — never block nav rendering on it.
+        try {
+          const creditRes = await fetch(`${baseUrl}/referrals/credit`, {
+            method: 'GET',
+            headers: {
+              Cookie: `access_token=${accessToken}`,
+              Accept: 'application/json',
+            },
+            cache: 'no-store',
+          });
+          if (creditRes.ok) {
+            const creditJson = await creditRes.json();
+            const bal = creditJson?.data?.store_credit_balance;
+            if (typeof bal === 'number') storeCredit = bal;
+          }
+        } catch {
+          // ignore — badge simply won't show
+        }
       }
 
       if (productsRes.ok) productsData = await productsRes.json();
@@ -85,6 +106,7 @@ export default async function Nav() {
       collections={collectionData.data ?? []}
       isLoggedIn={isLoggedIn}
       admin={userData?.data?.role === 'admin'}
+      storeCredit={storeCredit}
     />
   );
 }

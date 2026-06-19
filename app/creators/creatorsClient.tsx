@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeftIcon, MenuIcon, CircleCheckIcon } from '@/components/icons';
 import Image from 'next/image';
+import Link from 'next/link';
 import Menu from './dashboard/Menu';
 import { submitCreatorApplication } from './actions';
 import { useRouter } from 'next/navigation';
@@ -83,6 +84,15 @@ export default function CreatorsApplicationClient() {
         ) : (
           <div className="mt-[24px]">
             <h1 className="text-[16px] uppercase">Creators Application</h1>
+            <p className="mt-[8px] text-[13px] text-[#8E8E93]">
+              Earn cash commission on every order placed with your code.{' '}
+              <Link
+                href="/creators/swaz-loop"
+                className="font-medium text-[#0072BB] underline"
+              >
+                Learn how the Swaz Loop works
+              </Link>
+            </p>
             <div className="mt-[24px] mb-[18px] space-y-[16px]">
               <div>
                 <label>Portfolio URL</label>
