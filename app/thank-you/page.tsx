@@ -15,6 +15,36 @@ export default async function ThankYouPage({
   const params = await searchParams;
   const orderRef = params.reference || params.trxref;
 
+  // Confirm the payment on the Paystack callback. This is the reliable client
+  // path: Paystack redirects the browser here after charging, and we verify by
+  // reference server-side. `confirm_payment` is idempotent, so this is safe to
+  // run alongside the webhook. Without this, a paid order can sit forever in
+  // `pending_payment` if the webhook is missed.
+  let paymentConfirmed = false;
+  if (orderRef) {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/payments/verify`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ reference: orderRef }),
+          cache: 'no-store',
+        },
+      );
+      paymentConfirmed = res.ok;
+    } catch {
+      // Network/verify hiccup — the webhook is the backup. Show a soft
+      // "processing" state rather than a hard error.
+    }
+  }
+  // Fully-covered (store-credit) orders redirect here with no reference; they
+  // are already paid, so treat the absence of a reference as confirmed.
+  const showConfirmed = paymentConfirmed || !orderRef;
+
   // "You may also like": if a purchased product id is available in the URL
   // context, recommend against it; otherwise fall back to a generic featured row.
   // Both helpers never throw and return [] on failure, so the row simply hides.
@@ -50,7 +80,9 @@ export default async function ThankYouPage({
             </h1>
             
             <p className="mb-8 text-xl text-[#35373C] md:text-2xl">
-              Your order has been successfully placed
+              {showConfirmed
+                ? 'Your order has been successfully placed'
+                : "We're confirming your payment — this can take a moment"}
             </p>
 
             {/* Order Details */}
@@ -63,7 +95,11 @@ export default async function ThankYouPage({
                 </p>
                 <p className="flex justify-between">
                   <span>Status:</span>
-                  <span className="font-medium text-[#32AC5B]">Confirmed</span>
+                  <span
+                    className={`font-medium ${showConfirmed ? 'text-[#32AC5B]' : 'text-[#B8860B]'}`}
+                  >
+                    {showConfirmed ? 'Confirmed' : 'Processing'}
+                  </span>
                 </p>
                 <p className="flex justify-between">
                   <span>Estimated Delivery:</span>

@@ -76,15 +76,18 @@ export async function checkoutAction(formData: FormData) {
     };
   }
 
+  if (!accessToken && !guestId) {
+    return {
+      success: false,
+      error: 'Your session has expired. Please sign in and try again.',
+    };
+  }
+
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     if (!baseUrl) {
-      throw new Error('API base URL is not configured');
-    }
-
-    if (!accessToken && !guestId) {
-      redirect('/');
+      return { success: false, error: 'API base URL is not configured' };
     }
 
     const checkoutUrl = accessToken
@@ -107,9 +110,11 @@ export async function checkoutAction(formData: FormData) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      throw new Error(
-        errorData?.message || `HTTP error! status: ${response.status}`,
-      );
+      return {
+        success: false,
+        error:
+          errorData?.message || `Checkout failed (status ${response.status})`,
+      };
     }
 
     const data = await response.json();
@@ -121,24 +126,24 @@ export async function checkoutAction(formData: FormData) {
       data?.data?.payment?.fully_covered === true ||
       data?.data?.order?.status === 'paid';
 
+    // Hand the destination back to the client to navigate. We deliberately do
+    // NOT call redirect() here: a server-action redirect rejects the client
+    // promise with NEXT_REDIRECT, which the caller's catch surfaced as a bogus
+    // "An error occurred during checkout" toast — even though the navigation
+    // to Paystack still happened. Returning the URL lets the client do a clean
+    // window.location navigation with no spurious error.
     if (authUrl) {
-      redirect(authUrl);
-    } else if (fullyCovered) {
-      redirect('/thank-you');
-    } else {
-      return {
-        success: false,
-        error: 'Checkout failed - No authorization URL received',
-      };
+      return { success: true as const, redirectUrl: authUrl as string };
     }
+    if (fullyCovered) {
+      return { success: true as const, redirectUrl: '/thank-you' };
+    }
+    return {
+      success: false,
+      error: 'Checkout failed — no payment link was returned.',
+    };
   } catch (error) {
     console.error('Checkout error:', error);
-
-    // Handle redirect errors (Next.js redirects throw NEXT_REDIRECT)
-    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
-      throw error;
-    }
-
     return {
       success: false,
       error:

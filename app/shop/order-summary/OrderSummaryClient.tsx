@@ -148,14 +148,18 @@ export default function OrderSummaryClient({
 
       showToast.dismiss(toastId);
 
-      if (result && !result.success) {
-        showToast.error(result.error || 'Checkout failed. Please try again.');
-        setError(result.error || 'Checkout failed');
-        setPending(false);
-        submittingRef.current = false;
-      } else {
-        showToast.success('Order placed successfully! Redirecting...');
+      if (result?.success && result.redirectUrl) {
+        // Success: navigate to Paystack (external) or the thank-you page.
+        // Keep `pending` true so the button stays locked through navigation.
+        showToast.success('Order placed! Taking you to secure checkout…');
+        window.location.href = result.redirectUrl;
+        return;
       }
+
+      showToast.error(result?.error || 'Checkout failed. Please try again.');
+      setError(result?.error || 'Checkout failed');
+      setPending(false);
+      submittingRef.current = false;
     } catch (err) {
       showToast.dismiss(toastId);
       showToast.error('An error occurred during checkout. Please try again.');
