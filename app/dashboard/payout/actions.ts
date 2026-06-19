@@ -64,6 +64,43 @@ export async function fetchPayouts(
   };
 }
 
+export async function initiatePayout(id: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!accessToken) {
+    return { success: false, message: 'Unauthorized' };
+  }
+
+  const res = await fetch(`${baseUrl}/admin/payouts/${id}/initiate`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      Cookie: `access_token=${accessToken}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error(`Upstream error: ${res.status} ${text}`);
+    try {
+      const errorJson = JSON.parse(text);
+      return {
+        success: false,
+        message: errorJson.message || 'Failed to initiate transfer',
+      };
+    } catch {
+      return { success: false, message: 'Failed to initiate transfer' };
+    }
+  }
+
+  const json = await res.json();
+  return { success: Boolean(json.success), data: json.data, message: json.message };
+}
+
 export async function confirmPayout(id: string, otp: string) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;

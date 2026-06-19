@@ -7,10 +7,15 @@ import {
   AdminMoreHorizontalIcon,
   AdminSuccessCheckIcon,
 } from '@/components/icons';
-import { confirmPayout } from './actions';
+import { confirmPayout, initiatePayout } from './actions';
 import { showToast } from '../toast';
 
-type PayoutStatus = 'requested' | 'completed' | 'failed';
+type PayoutStatus =
+  | 'requested'
+  | 'processing'
+  | 'paid'
+  | 'completed'
+  | 'failed';
 
 interface TransferData {
   amount: number;
@@ -124,8 +129,12 @@ export default function PayoutClient({
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const completed = payouts.filter((p) => p.status === 'completed').length;
-    const requested = payouts.filter((p) => p.status === 'requested').length;
+    const completed = payouts.filter(
+      (p) => p.status === 'completed' || p.status === 'paid',
+    ).length;
+    const requested = payouts.filter(
+      (p) => p.status === 'requested' || p.status === 'processing',
+    ).length;
     const failed = payouts.filter((p) => p.status === 'failed').length;
 
     return { completed, requested, failed };
@@ -207,6 +216,33 @@ export default function PayoutClient({
     setShowOtpModal(true);
   };
 
+  // Admin initiates the Paystack transfer for a queued ('requested') payout.
+  // If Paystack requires transfer OTP, open the OTP modal to finalize; if it
+  // went through without OTP, just refresh.
+  const handleInitiateClick = async (id: string) => {
+    setProcessingId(id);
+    try {
+      const result = await initiatePayout(id);
+      if (!result.success) {
+        showToast('error', result.message || 'Could not initiate transfer');
+        return;
+      }
+      if (result.data?.requires_otp) {
+        showToast('success', 'Transfer started — enter the OTP to finalize.');
+        setPendingPayoutId(id);
+        setOtpValue('');
+        setShowOtpModal(true);
+      } else {
+        showToast('success', result.message || 'Transfer sent.');
+        handleFilterChange();
+      }
+    } catch {
+      showToast('error', 'An error occurred while initiating the transfer');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   const handleOtpSubmit = async () => {
     if (!pendingPayoutId || !otpValue.trim()) return;
     setShowOtpModal(false);
@@ -230,31 +266,35 @@ export default function PayoutClient({
   const renderActionButtons = (payout: Payout) => {
     switch (payout.status) {
       case 'requested':
+        // Admin starts the Paystack transfer. Creators only queue the request.
+        return (
+          <button
+            onClick={() => handleInitiateClick(payout.id)}
+            disabled={processingId === payout.id}
+            className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-[6px] bg-[#0072BB] px-[12px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {processingId === payout.id ? 'Initiating…' : 'Initiate transfer'}
+          </button>
+        );
+      case 'processing':
+        // Transfer initiated; awaiting OTP finalization (or Paystack webhook).
         return (
           <div className="flex items-center gap-x-2">
             <button
               onClick={() => handleConfirmClick(payout.id)}
               disabled={processingId === payout.id}
-              className="flex h-[30px] w-[90px] items-center justify-center gap-x-[2px] rounded-[6px] border border-[#AEAEB2] p-[6px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-[6px] border border-[#AEAEB2] px-[12px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {processingId === payout.id ? (
-                'Confirming...'
-              ) : (
-                <>
-                  <AdminSuccessCheckIcon />
-                  Confirm
-                </>
-              )}
+              {processingId === payout.id ? 'Confirming…' : 'Enter OTP'}
             </button>
           </div>
         );
       case 'completed':
-        // Status indicator only (not an action) — mirrors the `failed` case's
-        // <span>. Was previously a <button> with no handler.
+      case 'paid':
         return (
           <span className="flex h-[30px] items-center gap-x-[2px] rounded-full border border-[#CCEAD6] bg-[#CCEAD6] p-[6px] !pr-[8px] font-medium text-[#32AC5B]">
             <AdminSuccessCheckIcon />
-            Completed
+            Paid
           </span>
         );
       case 'failed':

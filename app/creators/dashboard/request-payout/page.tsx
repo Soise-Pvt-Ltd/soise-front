@@ -74,7 +74,7 @@ export default function RequestPayoutPage() {
     const result = await requestPayout(numAmount);
     if (result.success) {
       setSuccessMessage(
-        'Payout requested successfully! Admin will confirm shortly.',
+        'Payout request submitted! Our team will review and send your transfer shortly.',
       );
       setAmount('');
       setBalance((prev) => prev - numAmount);
