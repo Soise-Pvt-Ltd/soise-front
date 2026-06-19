@@ -261,6 +261,8 @@ export default function NavClient({
       email?.[0] ||
       'S'
     ).toUpperCase();
+  // First name only, for the always-visible signed-in label in the nav.
+  const firstNameShort = (firstName?.trim() || displayName).split(' ')[0];
 
   const menu_1 = collections.map((collection) => ({
     name: collection.name,
@@ -416,16 +418,50 @@ export default function NavClient({
               triggerRef.current = e.currentTarget;
               setOpenMenu('user');
             }}
-            aria-label="Account menu"
+            aria-label={
+              isLoggedIn
+                ? `Account — signed in as ${displayName}`
+                : 'Account menu'
+            }
             aria-haspopup="dialog"
             aria-expanded={openMenu === 'user'}
             aria-controls="nav-panel"
-            className={NAV_BTN}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
+            className={
+              isLoggedIn
+                ? 'flex h-11 items-center gap-[8px] rounded-full px-[5px] hover:cursor-pointer focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none sm:pl-[12px]'
+                : NAV_BTN
+            }
+            whileHover={{ scale: isLoggedIn ? 1.04 : 1.15 }}
+            whileTap={{ scale: isLoggedIn ? 0.97 : 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
           >
-            <UserIcon />
+            {isLoggedIn ? (
+              <>
+                {/* Always-visible signed-in cue (LVMH-quiet): first name on
+                    wider screens, identity disc everywhere. */}
+                <span className="hidden text-[11px] font-medium tracking-[0.16em] text-[#121212] uppercase sm:inline">
+                  {firstNameShort}
+                </span>
+                {avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={avatar}
+                    alt=""
+                    className="h-[34px] w-[34px] rounded-full object-cover ring-1 ring-[#121212]/10"
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#121212] text-[12px] leading-none text-white"
+                    style={{ fontFamily: 'var(--font-luxe)' }}
+                  >
+                    {monogram}
+                  </span>
+                )}
+              </>
+            ) : (
+              <UserIcon />
+            )}
           </motion.button>
         </div>
       </motion.nav>
