@@ -4,14 +4,24 @@ import { ArrowLeftIcon, AdminCheckCircleIcon } from '@/components/icons';
 import Link from 'next/link';
 import { siteConfig } from '@/lib/site-config';
 import ReferralPromoCard from '@/components/ReferralPromoCard';
+import RecommendationCarousel from '@/components/RecommendationCarousel';
+import { getRecommendations, getFeaturedProducts } from '@/app/shop/product-listing/[id]/recs-actions';
 
 export default async function ThankYouPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reference?: string; trxref?: string }>;
+  searchParams: Promise<{ reference?: string; trxref?: string; product?: string }>;
 }) {
   const params = await searchParams;
   const orderRef = params.reference || params.trxref;
+
+  // "You may also like": if a purchased product id is available in the URL
+  // context, recommend against it; otherwise fall back to a generic featured row.
+  // Both helpers never throw and return [] on failure, so the row simply hides.
+  const purchasedProductId = params.product;
+  const youMayAlsoLike = purchasedProductId
+    ? await getRecommendations(purchasedProductId, 8)
+    : await getFeaturedProducts(8);
 
   return (
     <div className="min-h-screen bg-white">
@@ -92,6 +102,14 @@ export default async function ThankYouPage({
             </div>
           </div>
         </div>
+
+        {/* You may also like — generic recommendation row. Hidden when empty. */}
+        <RecommendationCarousel
+          title="You may also like"
+          items={youMayAlsoLike}
+          headingId="thank-you-recs"
+          className="mt-[56px] md:mt-[80px]"
+        />
       </main>
 
       {/* Footer */}

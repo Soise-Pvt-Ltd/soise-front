@@ -56,10 +56,12 @@ export interface Product {
 
 export default function ProductPageClient({
   product,
-  recommendedProducts,
+  frequentlyBoughtTogether = [],
+  similarProducts = [],
 }: {
   product: Product | null;
-  recommendedProducts: Product[];
+  frequentlyBoughtTogether?: Product[];
+  similarProducts?: Product[];
 }) {
   const { formatPrice } = useCurrency();
   const router = useRouter();
@@ -455,15 +457,35 @@ export default function ProductPageClient({
               <div className="text-[13px] font-medium">{product.description}</div>
             </div>
           </FadeIn>
-          <FadeIn direction="up" delay={0.2}>
-            <div className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]">
-              recommended products
-            </div>
-          </FadeIn>
-          {recommendedProducts.length > 0 ? (
-            <SwiperCarouselClient items={recommendedProducts} />
-          ) : (
-            <p className="text-[#AEAEB2]">no recommended product</p>
+          {/* Frequently bought together — co-purchase recommendations. Hidden
+              entirely when empty so we never render a thin/empty row. */}
+          {frequentlyBoughtTogether.length > 0 && (
+            <section aria-labelledby="freq-bought-heading">
+              <FadeIn direction="up" delay={0.2}>
+                <h2
+                  id="freq-bought-heading"
+                  className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]"
+                >
+                  frequently bought together
+                </h2>
+              </FadeIn>
+              <SwiperCarouselClient items={frequentlyBoughtTogether} />
+            </section>
+          )}
+
+          {/* Products like this — deterministic feature similarity. */}
+          {similarProducts.length > 0 && (
+            <section aria-labelledby="similar-heading">
+              <FadeIn direction="up" delay={0.2}>
+                <h2
+                  id="similar-heading"
+                  className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]"
+                >
+                  products like this
+                </h2>
+              </FadeIn>
+              <SwiperCarouselClient items={similarProducts} />
+            </section>
           )}
         </div>
       </div>

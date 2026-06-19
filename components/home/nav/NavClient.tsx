@@ -20,6 +20,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
 import { showToast } from '@/lib/toast-utils';
+import SwiperCarouselClient from '@/components/caurosel';
+import {
+  getRecommendations,
+  type RecProduct,
+} from '@/app/shop/product-listing/[id]/recs-actions';
 
 export interface Collection {
   id: string;
@@ -64,6 +69,36 @@ export default function NavClient({
   // Tracks whether a search has been submitted at least once, so we only show
   // the "no results" message after an actual query — not before the user searches.
   const [hasSearched, setHasSearched] = useState(false);
+  // "Complete the look" recommendations for the bag panel, seeded from the first
+  // cart item's product. Empty array => the row hides itself (no layout shift).
+  const [bagRecs, setBagRecs] = useState<RecProduct[]>([]);
+
+  // The product id that seeds bag recommendations: the first cart item's product.
+  const firstCartProductId = cart[0]?.variantDetails?.product;
+
+  // Fetch recs only while the bag is open and we have a seed product. Re-runs
+  // when the seed changes (item removed/added). Never blocks the cart UI.
+  useEffect(() => {
+    if (openMenu !== 'bag' || !firstCartProductId) {
+      setBagRecs([]);
+      return;
+    }
+    let cancelled = false;
+    getRecommendations(firstCartProductId, 8).then((recs) => {
+      if (cancelled) return;
+      // Exclude anything already in the bag so we don't recommend owned items.
+      const inBag = new Set(
+        cart.map((i) => i.variantDetails?.product).filter(Boolean),
+      );
+      setBagRecs(recs.filter((p) => !inBag.has(p.id)));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // `cart` intentionally omitted: re-running on every quantity tweak is wasteful;
+    // the seed id + panel-open state are what should drive a refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openMenu, firstCartProductId]);
 
   // Remember the trigger that opened the active panel so we can return focus to
   // it on close (a11y: focus should not be lost to <body>).
@@ -588,6 +623,27 @@ export default function NavClient({
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {/* Complete the look — recommendations seeded from the first
+                      bag item. Hidden entirely when empty so it never pushes an
+                      empty row above the subtotal. */}
+                  {cart.length > 0 && bagRecs.length > 0 && (
+                    <motion.section
+                      aria-labelledby="complete-the-look-heading"
+                      className="mt-[32px]"
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.4 }}
+                    >
+                      <h2
+                        id="complete-the-look-heading"
+                        className="mb-[16px] text-[13px] font-bold uppercase"
+                      >
+                        Complete the look
+                      </h2>
+                      <SwiperCarouselClient items={bagRecs} />
+                    </motion.section>
+                  )}
                 </div>
                 <motion.div
                   className="mt-auto pt-[32px]"

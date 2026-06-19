@@ -3,6 +3,7 @@ import ProductPageClient from './ProductPageClient';
 import { notFound } from 'next/navigation';
 import Nav from '@/components/home/nav/Nav';
 import { SITE_URL, SITE_NAME, productJsonLd } from '@/lib/seo';
+import { getRecommendations, getSimilarProducts } from './recs-actions';
 
 async function getProducts() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -73,18 +74,21 @@ export default async function ProductPage(props: {
     notFound();
   }
 
-  let recommendedProducts = [];
+  // Fetch both recommendation rows server-side, in parallel. Each helper never
+  // throws and returns [] on error, so a failing row just hides itself.
+  const [boughtTogether, similar] = await Promise.all([
+    getRecommendations(product.id, 8),
+    getSimilarProducts(product.id, 8),
+  ]);
 
-  if (product.collection) {
-    recommendedProducts = allProducts
-      .filter(
-        (p: { collection: { name: string } | null; slug: string }) =>
-          p.collection &&
-          p.collection.name === product.collection.name &&
-          p.slug !== product.slug,
-      )
-      .slice(0, 6);
-  }
+  // Backend already excludes the seed product, but dedupe defensively by id/slug.
+  const dedupe = (list: any[]) =>
+    list.filter(
+      (p) => p && p.id !== product.id && p.slug !== product.slug,
+    );
+
+  const frequentlyBoughtTogether = dedupe(boughtTogether);
+  const similarProducts = dedupe(similar);
 
   const jsonLd = productJsonLd(product);
 
@@ -97,7 +101,8 @@ export default async function ProductPage(props: {
       <Nav />
       <ProductPageClient
         product={product}
-        recommendedProducts={recommendedProducts}
+        frequentlyBoughtTogether={frequentlyBoughtTogether}
+        similarProducts={similarProducts}
       />
     </>
   );
