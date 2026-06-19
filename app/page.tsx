@@ -33,6 +33,15 @@ interface Product {
   sample_variants?: { media?: { url: string }[] }[];
 }
 
+interface HomepageImages {
+  hero?: string | null;
+  mens_top?: string | null;
+  explore_collection?: string | null;
+  gallery_1?: string | null;
+  gallery_2?: string | null;
+  gallery_3?: string | null;
+}
+
 export default async function Home() {
   let products: Product[] = [];
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -56,6 +65,23 @@ export default async function Home() {
     console.error('Error fetching products:', error);
   }
 
+  // Admin-managed homepage imagery. On ANY failure we fall back to the bundled
+  // static images so the homepage never breaks and looks identical to before.
+  let homeImages: HomepageImages = {};
+  try {
+    if (baseUrl) {
+      const res = await fetch(`${baseUrl}/content/homepage`, {
+        cache: 'no-store',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        homeImages = json?.data?.images || {};
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching homepage content:', error);
+  }
+
   // First 5 products
   const category1Products = products.slice(0, 5);
 
@@ -63,9 +89,9 @@ export default async function Home() {
   const category2Products = products.slice(5, 10);
 
   const images = [
-    '/before-explore-collection-1.png',
-    '/before-explore-collection-2.png',
-    '/before-explore-collection-3.png',
+    homeImages.gallery_1 || '/before-explore-collection-1.png',
+    homeImages.gallery_2 || '/before-explore-collection-2.png',
+    homeImages.gallery_3 || '/before-explore-collection-3.png',
   ];
 
   // ItemList JSON-LD — gives Google a structured product carousel
@@ -90,16 +116,16 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
-      <Hero />
+      <Hero img={homeImages.hero} />
       {category1Products.length > 0 && (
         <AfterHero products={category1Products} />
       )}
-      <MensTops />
+      <MensTops img={homeImages.mens_top} />
       {category2Products.length > 0 && (
         <BeforeExploreCollection products={category2Products} />
       )}
       <ImageGallerySection images={images} />
-      <ExploreCollection />
+      <ExploreCollection image={homeImages.explore_collection} />
       <Footer />
     </>
   );

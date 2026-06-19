@@ -15,6 +15,7 @@ import {
   AdminOrdersIcon,
   AdminCheckCircleIcon,
   AdminBadge1,
+  AdminSettingsIcon,
 } from '@/components/icons';
 
 const Nav = () => {
@@ -44,6 +45,12 @@ const Nav = () => {
             path={'/dashboard/products'}
             svg={<AdminProductsIcon />}
             linkname={'Products'}
+          />
+
+          <Links
+            path={'/dashboard/home-content'}
+            svg={<AdminSettingsIcon />}
+            linkname={'Home Page'}
           />
 
           <Links

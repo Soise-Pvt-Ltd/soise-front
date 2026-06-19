@@ -1,5 +1,9 @@
 import ExploreCollectionClient from './explore-collection-client';
 
-export default function ExploreCollection() {
-  return <ExploreCollectionClient />;
+interface ExploreCollectionProps {
+  image?: string | null;
+}
+
+export default function ExploreCollection({ image }: ExploreCollectionProps) {
+  return <ExploreCollectionClient image={image} />;
 }

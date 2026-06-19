@@ -1,7 +1,9 @@
-import { ArrowRightIcon } from '../icons';
-import Link from 'next/link';
 import MensTopsClient from './mens-tops-client';
 
-export default function MensTops() {
-  return <MensTopsClient />;
+interface MensTopsProps {
+  img?: string | null;
+}
+
+export default function MensTops({ img }: MensTopsProps) {
+  return <MensTopsClient img={img} />;
 }

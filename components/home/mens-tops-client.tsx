@@ -5,7 +5,11 @@ import { useRef } from 'react';
 import { ArrowRightIcon } from '../icons';
 import Link from 'next/link';
 
-export default function MensTopsClient() {
+interface MensTopsClientProps {
+  img?: string | null;
+}
+
+export default function MensTopsClient({ img }: MensTopsClientProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
@@ -16,7 +20,8 @@ export default function MensTopsClient() {
     >
       {/* Background with subtle zoom on scroll */}
       <motion.div
-        className="absolute inset-0 bg-[url('/mens-top.jpg')] bg-cover bg-center"
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${img || '/mens-top.jpg'})` }}
         initial={{ scale: 1.15 }}
         animate={isInView ? { scale: 1 } : { scale: 1.15 }}
         transition={{ duration: 1.6, ease: [0.25, 0.46, 0.45, 0.94] }}

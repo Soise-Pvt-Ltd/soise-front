@@ -2,12 +2,17 @@
 
 import { motion } from 'framer-motion';
 
-export default function HeroClient() {
+interface HeroClientProps {
+  img?: string | null;
+}
+
+export default function HeroClient({ img }: HeroClientProps) {
   return (
     <>
       {/* Background image — fixed so it stays "glued" while page scrolls */}
       <motion.div
-        className="absolute inset-0 bg-[url('/hero.jpg')] bg-cover bg-fixed bg-center"
+        className="absolute inset-0 bg-cover bg-fixed bg-center"
+        style={{ backgroundImage: `url(${img || '/hero.jpg'})` }}
         initial={{ scale: 1.1 }}
         animate={{ scale: 1 }}
         transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}

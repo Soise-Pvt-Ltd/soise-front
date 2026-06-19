@@ -5,9 +5,17 @@ import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export default function ExploreCollectionClient() {
+interface ExploreCollectionClientProps {
+  image?: string | null;
+}
+
+export default function ExploreCollectionClient({
+  image,
+}: ExploreCollectionClientProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const src = image || '/explore-collection.png';
+  const isRemote = /^https?:\/\//.test(src);
 
   return (
     <div
@@ -26,12 +34,19 @@ export default function ExploreCollectionClient() {
             ease: [0.22, 1, 0.36, 1],
           }}
         >
-          <Image
-            src="/explore-collection.png"
-            alt="Explore Collection"
-            width={211}
-            height={113}
-          />
+          {isRemote ? (
+            // Remote (admin-configured) URLs aren't whitelisted for next/image,
+            // so render via a plain <img> at the same intrinsic size.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={src}
+              alt="Explore Collection"
+              width={211}
+              height={113}
+            />
+          ) : (
+            <Image src={src} alt="Explore Collection" width={211} height={113} />
+          )}
         </motion.div>
       </div>
 
