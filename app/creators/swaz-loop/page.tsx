@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import CreatorNav from '@/components/creators/CreatorNav';
 import Footer from '@/components/footer';
 import { ArrowUpRightIcon, WalletIcon, TagIcon } from '@/components/icons';
-import FaqAccordion, { type FaqItem } from './FaqAccordion';
+import FaqAccordion, { type FaqCategory } from './FaqAccordion';
 
 export const runtime = 'nodejs';
 
@@ -13,54 +13,78 @@ export const metadata: Metadata = {
     'How the Swaz Loop works for creators (cash commission) and everyday users (store credit). Share, sell, and earn with Soise.',
 };
 
-const FAQS: FaqItem[] = [
+const FAQ_CATEGORIES: FaqCategory[] = [
   {
-    q: 'How do I make money with Soise?',
-    a: 'Apply to become a creator to get a unique code and shareable link, then earn commission on every order placed with your code. Rates rise with your tier.',
+    id: 'getting-started',
+    title: 'Getting started',
+    items: [
+      {
+        q: 'How do I make money with Soise?',
+        a: 'Apply to become a creator to get a unique code and shareable link, then earn commission on every order placed with your code. Rates rise with your tier.',
+      },
+      {
+        q: "What's the difference between my creator code and my referral link?",
+        a: 'Your creator code gives your audience a discount and pays YOU cash commission (withdrawable). Your referral link (the Swaz Loop) is for everyone and earns store credit when a friend’s first order is paid.',
+      },
+      {
+        q: "I'm a UGC/TikTok creator without a huge following — can I join?",
+        a: 'Yes. Apply via the Creator Experience; we review every application. You can also earn store credit right now by sharing your referral link.',
+      },
+      {
+        q: 'Does it cost anything?',
+        a: 'No. Joining and sharing are free.',
+      },
+    ],
   },
   {
-    q: "What's the difference between my creator code and my referral link?",
-    a: 'Your creator code gives your audience a discount and pays YOU cash commission (withdrawable). Your referral link (the Swaz Loop) is for everyone and earns store credit when a friend’s first order is paid.',
+    id: 'earnings-payouts',
+    title: 'Earnings & payouts',
+    items: [
+      {
+        q: 'How much do creators earn?',
+        a: "Commission starts at your tier's base rate and increases as you hit follower/sales milestones, up to your tier cap.",
+      },
+      {
+        q: 'When and how do I get paid?',
+        a: 'Commission lands in your creator wallet on each verified (paid) order; request a bank payout from your dashboard.',
+      },
+      {
+        q: 'How does store credit work?',
+        a: "You earn store credit when friends' first orders are paid via your link, and you spend it at checkout.",
+      },
+      {
+        q: 'Can I combine store credit with a creator code?',
+        a: 'Yes, both apply at checkout.',
+      },
+    ],
   },
   {
-    q: 'How much do creators earn?',
-    a: "Commission starts at your tier's base rate and increases as you hit follower/sales milestones, up to your tier cap.",
+    id: 'tiers-growth',
+    title: 'Tiers & growth',
+    items: [
+      {
+        q: 'How do I level up my tier?',
+        a: 'Submit a tier-upgrade request with your follower count and social handle; an admin reviews it. Higher tiers earn higher commission.',
+      },
+      {
+        q: 'Do my followers get anything?',
+        a: 'Yes — your code gives them a checkout discount, which lifts conversions.',
+      },
+    ],
   },
   {
-    q: 'When and how do I get paid?',
-    a: 'Commission lands in your creator wallet on each verified (paid) order; request a bank payout from your dashboard.',
-  },
-  {
-    q: 'How do I level up my tier?',
-    a: 'Submit a tier-upgrade request with your follower count and social handle; an admin reviews it. Higher tiers earn higher commission.',
-  },
-  {
-    q: 'Do my followers get anything?',
-    a: 'Yes — your code gives them a checkout discount, which lifts conversions.',
-  },
-  {
-    q: "I'm a UGC/TikTok creator without a huge following — can I join?",
-    a: 'Yes. Apply via the Creator Experience; we review every application. You can also earn store credit right now by sharing your referral link.',
-  },
-  {
-    q: 'What content performs best?',
-    a: 'Short-form try-ons/hauls tagging Soise with your code in the caption or bio link. Authentic UGC beats ads.',
-  },
-  {
-    q: 'Does it cost anything?',
-    a: 'No. Joining and sharing are free.',
-  },
-  {
-    q: 'How do I track performance?',
-    a: 'Your creator dashboard shows earnings, referrals, and tier progress.',
-  },
-  {
-    q: 'How does store credit work?',
-    a: "You earn store credit when friends' first orders are paid via your link, and you spend it at checkout.",
-  },
-  {
-    q: 'Can I combine store credit with a creator code?',
-    a: 'Yes, both apply at checkout.',
+    id: 'performance',
+    title: 'Performance',
+    items: [
+      {
+        q: 'How do I track performance?',
+        a: 'Your creator dashboard shows earnings, referrals, and tier progress.',
+      },
+      {
+        q: 'What content performs best?',
+        a: 'Short-form try-ons/hauls tagging Soise with your code in the caption or bio link. Authentic UGC beats ads.',
+      },
+    ],
   },
 ];
 
@@ -186,8 +210,23 @@ export default function CreatorSwazLoopPage() {
           <p className="mt-2 text-[14px] text-[#8E8E93]">
             Everything you need to know about earning with Soise.
           </p>
-          <div className="mt-[20px]">
-            <FaqAccordion items={FAQS} />
+          {/* Category index */}
+          <nav
+            aria-label="FAQ categories"
+            className="mt-[16px] flex flex-wrap gap-2"
+          >
+            {FAQ_CATEGORIES.map((category) => (
+              <a
+                key={category.id}
+                href={`#${category.id}`}
+                className="rounded-full border border-[#EAEAEA] bg-white px-4 py-2 text-[13px] font-medium text-[#35373C] transition-colors hover:border-[#0072BB] hover:text-[#0072BB]"
+              >
+                {category.title}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-[24px]">
+            <FaqAccordion categories={FAQ_CATEGORIES} />
           </div>
         </div>
 

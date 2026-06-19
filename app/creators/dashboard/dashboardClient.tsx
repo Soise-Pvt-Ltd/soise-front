@@ -29,7 +29,13 @@ ChartJS.register(
   Title,
 );
 
-export default function CreatorDashboard({ dashboard }: { dashboard?: any }) {
+export default function CreatorDashboard({
+  dashboard,
+  codeCreatedAt,
+}: {
+  dashboard?: any;
+  codeCreatedAt?: string | null;
+}) {
   // Extract performance metrics
   const totalReferrals = dashboard.performance_metrics?.total_referrals || 0;
   const salesGenerated = dashboard.performance_metrics?.sales_generated || 0;
@@ -255,7 +261,10 @@ export default function CreatorDashboard({ dashboard }: { dashboard?: any }) {
 
         {/* Referral Code */}
         <div className="rounded-2xl bg-white p-[12px]">
-          <ReferralCode code={dashboard.creator_code?.code} />
+          <ReferralCode
+            code={dashboard.creator_code?.code}
+            codeCreatedAt={codeCreatedAt}
+          />
         </div>
 
         {/* Earning Summary */}

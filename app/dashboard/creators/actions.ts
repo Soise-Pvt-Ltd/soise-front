@@ -164,6 +164,52 @@ export async function assignTierToCreator(creatorCodeId: string, tierId: string)
   return { success: true, data: json.data };
 }
 
+/**
+ * Admin override: change a creator's code regardless of the 24-hour window.
+ * Pass a `customCode` for a specific code, or omit it to randomize a new one.
+ */
+export async function changeCreatorCodeAdmin(userId: string, customCode?: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+  if (!userId) return { success: false, error: 'Missing creator user id' };
+
+  const trimmed = customCode?.trim();
+  const body: Record<string, string> = {};
+  if (trimmed) {
+    if (!/^[A-Za-z0-9-]{3,30}$/.test(trimmed)) {
+      return {
+        success: false,
+        error: 'Code must be 3–30 letters, numbers, or dashes.',
+      };
+    }
+    body.custom_code = trimmed;
+  }
+
+  const res = await fetch(
+    `${BASE_URL}/admin/creators/${encodeURIComponent(userId)}/code`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok)
+    return {
+      success: false,
+      error: json?.message || 'Failed to change creator code',
+    };
+  return { success: true, data: json?.data ?? json };
+}
+
 export async function updateTier(formData: FormData) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;

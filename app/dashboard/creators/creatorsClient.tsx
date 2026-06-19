@@ -10,7 +10,7 @@ import {
   AdminPlusCircleIcon,
   CloseIconTags,
 } from '@/components/icons';
-import { fetchTiers, createTier, updateTier, assignTierToCreator } from './actions';
+import { fetchTiers, createTier, updateTier, assignTierToCreator, changeCreatorCodeAdmin } from './actions';
 import { showToast } from '../toast';
 
 type Creator = {
@@ -72,6 +72,28 @@ export default function CreatorsClient({
   const [assigningCreator, setAssigningCreator] = useState<Creator | null>(null);
   const [selectedTierIdForAssign, setSelectedTierIdForAssign] = useState('');
   const [isAssigning, setIsAssigning] = useState(false);
+
+  // Admin "change code" modal (overrides the 24h window).
+  const [codeModalCreator, setCodeModalCreator] = useState<Creator | null>(null);
+  const [codeInput, setCodeInput] = useState('');
+  const [isChangingCode, setIsChangingCode] = useState(false);
+
+  const submitCodeChange = async (randomize: boolean) => {
+    if (!codeModalCreator || isChangingCode) return;
+    setIsChangingCode(true);
+    const res = await changeCreatorCodeAdmin(
+      codeModalCreator.id,
+      randomize ? undefined : codeInput.trim(),
+    );
+    setIsChangingCode(false);
+    if (res.success) {
+      showToast('success', `Code updated to ${res.data?.code ?? 'new code'}`);
+      setCodeModalCreator(null);
+      setCodeInput('');
+    } else {
+      showToast('error', res.error || 'Could not change code');
+    }
+  };
 
   const periodOptions = [
     'All Time',
@@ -357,6 +379,16 @@ export default function CreatorsClient({
                           >
                             Update tier
                           </button>
+                          <button
+                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => {
+                              setCodeModalCreator(creator);
+                              setCodeInput('');
+                              setActiveActionMenuId(null);
+                            }}
+                          >
+                            Change code
+                          </button>
                         </div>
                       </div>
                     )}
@@ -550,6 +582,56 @@ export default function CreatorsClient({
           </div>
         )}
       </div>
+
+      {codeModalCreator && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-lg font-medium">Change creator code</h2>
+              <button
+                onClick={() => setCodeModalCreator(null)}
+                aria-label="Close"
+                className="text-[#8E8E93] hover:text-[#121212]"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="mb-4 text-[13px] text-[#8E8E93]">
+              Set a custom code for{' '}
+              <span className="font-medium text-[#121212]">
+                {codeModalCreator.full_name}
+              </span>
+              , or randomize one. This overrides the 24-hour limit.
+            </p>
+            <input
+              value={codeInput}
+              onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
+              placeholder="e.g. SOISE-STAR (blank = randomize)"
+              className="mb-4 w-full rounded-[10px] border border-[#E5E5E5] px-3 py-2 text-[14px] uppercase outline-none focus:border-[#0072BB]"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => submitCodeChange(false)}
+                disabled={isChangingCode || !codeInput.trim()}
+                className="flex-1 rounded-[10px] bg-[#121212] px-4 py-2.5 text-[14px] font-medium text-white disabled:opacity-40"
+              >
+                {isChangingCode ? '…' : 'Save custom code'}
+              </button>
+              <button
+                onClick={() => submitCodeChange(true)}
+                disabled={isChangingCode}
+                className="rounded-[10px] border border-[#0072BB] px-4 py-2.5 text-[14px] font-medium text-[#0072BB] transition-colors hover:bg-[#0072BB] hover:text-white disabled:opacity-40"
+              >
+                Randomize
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAssignModal && assigningCreator && (
         <div
