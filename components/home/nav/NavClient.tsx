@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   MenuIcon,
   BagIcon,
@@ -26,6 +26,14 @@ export interface Collection {
   slug?: string;
 }
 
+// Shared nav icon-button styling: ≥44×44 tap target + focus-visible ring.
+const NAV_BTN =
+  'grid h-11 w-11 place-items-center rounded-full hover:cursor-pointer focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none';
+
+// Shared focus-visible ring for menu links inside panels.
+const LINK_FOCUS =
+  'rounded-[4px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none';
+
 interface NavClientProps {
   cart: EnrichedCartItem[];
   isLoggedIn: boolean;
@@ -42,6 +50,7 @@ export default function NavClient({
   storeCredit = null,
 }: NavClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { currency, setCurrency, formatPrice, isRateLoading } = useCurrency();
   const [cart, setCart] = useState<EnrichedCartItem[]>(initialCart);
   const pendingMutations = useRef(0);
@@ -51,6 +60,59 @@ export default function NavClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  // Tracks whether a search has been submitted at least once, so we only show
+  // the "no results" message after an actual query — not before the user searches.
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Remember the trigger that opened the active panel so we can return focus to
+  // it on close (a11y: focus should not be lost to <body>).
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  // Active-link detection. hrefs may carry query strings (e.g. collection
+  // filters), so compare on the pathname portion only.
+  const isActive = (href: string) => {
+    if (!href) return false;
+    const target = href.split('?')[0];
+    if (target === '/') return pathname === '/';
+    return pathname === target || pathname.startsWith(`${target}/`);
+  };
+
+  const closePanel = () => {
+    setOpenMenu(null);
+    if (openMenu === 'search') {
+      setSearchQuery('');
+      setSearchResults([]);
+      setHasSearched(false);
+    }
+    // Return focus to whatever opened the panel.
+    triggerRef.current?.focus();
+  };
+
+  // Body scroll lock while any fullscreen panel is open. Restores the prior
+  // value on close/unmount so we never clobber styles set elsewhere.
+  useEffect(() => {
+    if (!openMenu) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [openMenu]);
+
+  // Escape closes the active panel.
+  useEffect(() => {
+    if (!openMenu) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        closePanel();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+    // closePanel reads openMenu/search state via closure; re-bind when panel changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openMenu]);
 
   // Replace the handleSearch function:
   const handleSearch = async (e: React.FormEvent) => {
@@ -58,6 +120,7 @@ export default function NavClient({
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
+    setHasSearched(true);
     setSearchResults([]); // Clear previous results
 
     try {
@@ -203,11 +266,18 @@ export default function NavClient({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="flex items-center gap-x-[18px]">
+        <div className="flex items-center gap-x-[6px]">
           <motion.button
-            onClick={() => setOpenMenu('menu')}
+            type="button"
+            onClick={(e) => {
+              triggerRef.current = e.currentTarget;
+              setOpenMenu('menu');
+            }}
             aria-label="Open menu"
-            className="hover:cursor-pointer"
+            aria-haspopup="dialog"
+            aria-expanded={openMenu === 'menu'}
+            aria-controls="nav-panel"
+            className={NAV_BTN}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -215,9 +285,16 @@ export default function NavClient({
             <MenuIcon />
           </motion.button>
           <motion.button
-            onClick={() => setOpenMenu('search')}
+            type="button"
+            onClick={(e) => {
+              triggerRef.current = e.currentTarget;
+              setOpenMenu('search');
+            }}
             aria-label="Search"
-            className="hover:cursor-pointer"
+            aria-haspopup="dialog"
+            aria-expanded={openMenu === 'search'}
+            aria-controls="nav-panel"
+            className={NAV_BTN}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -227,20 +304,31 @@ export default function NavClient({
         </div>
 
         <motion.div
-          className="cursor-pointer"
-          onClick={() => router.push('/')}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
-          <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
+          <Link
+            href="/"
+            aria-label="Soise home"
+            className="inline-block rounded-[6px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
+          >
+            <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
+          </Link>
         </motion.div>
 
-        <div className="flex items-center gap-x-[18px]">
+        <div className="flex items-center gap-x-[6px]">
           <motion.button
-            onClick={() => setOpenMenu('bag')}
-            aria-label={`Cart, ${cartCount} items`}
-            className="relative hover:cursor-pointer"
+            type="button"
+            onClick={(e) => {
+              triggerRef.current = e.currentTarget;
+              setOpenMenu('bag');
+            }}
+            aria-label={`Bag, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`}
+            aria-haspopup="dialog"
+            aria-expanded={openMenu === 'bag'}
+            aria-controls="nav-panel"
+            className={`relative ${NAV_BTN}`}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -249,7 +337,8 @@ export default function NavClient({
             <AnimatePresence>
               {cartCount > 0 && (
                 <motion.span
-                  className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[10px] text-white"
+                  aria-live="polite"
+                  className="pointer-events-none absolute -top-2 -right-2 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-black px-[5px] text-[10px] leading-none font-medium text-white tabular-nums"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
@@ -259,15 +348,22 @@ export default function NavClient({
                     damping: 15,
                   }}
                 >
-                  {cartCount}
+                  {cartCount > 99 ? '99+' : cartCount}
                 </motion.span>
               )}
             </AnimatePresence>
           </motion.button>
           <motion.button
-            onClick={() => setOpenMenu('user')}
+            type="button"
+            onClick={(e) => {
+              triggerRef.current = e.currentTarget;
+              setOpenMenu('user');
+            }}
             aria-label="Account menu"
-            className="hover:cursor-pointer"
+            aria-haspopup="dialog"
+            aria-expanded={openMenu === 'user'}
+            aria-controls="nav-panel"
+            className={NAV_BTN}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -283,13 +379,7 @@ export default function NavClient({
           <FullscreenPanel
             key={openMenu}
             openMenu={openMenu}
-            onClose={() => {
-              setOpenMenu(null);
-              if (openMenu === 'search') {
-                setSearchQuery('');
-                setSearchResults([]);
-              }
-            }}
+            onClose={closePanel}
           >
             {openMenu === 'menu' && (
               <div className="flex min-h-full flex-col">
@@ -307,7 +397,9 @@ export default function NavClient({
                     >
                       <Link
                         href={item.href}
-                        className="inline-block transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer"
+                        aria-current={isActive(item.href) ? 'page' : undefined}
+                        onClick={closePanel}
+                        className={`inline-block transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer aria-[current=page]:underline aria-[current=page]:underline-offset-4 ${LINK_FOCUS}`}
                       >
                         {item.name}
                       </Link>
@@ -332,25 +424,50 @@ export default function NavClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.4 }}
               >
-                <form onSubmit={handleSearch} className="relative w-full">
+                <form
+                  onSubmit={handleSearch}
+                  role="search"
+                  aria-busy={isSearching}
+                  className="relative w-full"
+                >
                   <input
-                    type="text"
+                    type="search"
+                    enterKeyHint="search"
                     placeholder="Search by keyword"
                     aria-label="Search products"
-                    className="form-input w-full rounded-[10px] pr-16 !text-[13px] focus:border-gray-300 focus:ring-2 focus:ring-transparent focus:outline-none"
+                    aria-controls="nav-search-results"
+                    className="form-input w-full rounded-[10px] pr-24 !text-[13px] focus:border-gray-300 focus:ring-2 focus:ring-transparent focus:outline-none"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     autoFocus
                   />
                   <button
                     type="submit"
-                    className="absolute top-1/2 right-[16px] -translate-y-1/2 !text-[13px] font-medium text-black"
-                    disabled={isSearching}
+                    aria-label="Search"
+                    className={`absolute top-1/2 right-[12px] flex -translate-y-1/2 items-center gap-1.5 rounded-[6px] px-2 py-1 !text-[13px] font-medium text-black disabled:opacity-50 ${LINK_FOCUS}`}
+                    disabled={isSearching || !searchQuery.trim()}
                   >
-                    {isSearching ? 'Searching...' : 'Search'}
+                    {isSearching && (
+                      <motion.span
+                        aria-hidden="true"
+                        className="block h-3 w-3 rounded-full border-[1.5px] border-[#AEAEB2] border-t-black"
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 0.7,
+                          ease: 'linear',
+                        }}
+                      />
+                    )}
+                    {isSearching ? 'Searching…' : 'Search'}
                   </button>
                 </form>
-                <div className="mt-[36px] space-y-[24px] text-[13px]">
+                <div
+                  id="nav-search-results"
+                  role="region"
+                  aria-live="polite"
+                  className="mt-[36px] space-y-[24px] text-[13px]"
+                >
                   <AnimatePresence mode="wait">
                     {searchResults.length > 0 ? (
                       <motion.div
@@ -369,11 +486,12 @@ export default function NavClient({
                           >
                             <Link
                               href={`/shop/product-listing/${product.slug}`}
-                              className="block transition-colors duration-200 hover:text-black"
+                              className={`block transition-colors duration-200 hover:text-black ${LINK_FOCUS}`}
                               onClick={() => {
                                 setOpenMenu(null);
                                 setSearchQuery('');
                                 setSearchResults([]);
+                                setHasSearched(false);
                               }}
                             >
                               {product.name}
@@ -381,14 +499,24 @@ export default function NavClient({
                           </motion.div>
                         ))}
                       </motion.div>
-                    ) : searchQuery && !isSearching ? (
+                    ) : isSearching ? (
+                      <motion.div
+                        key="searching"
+                        className="text-[#8E8E93]"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        Searching…
+                      </motion.div>
+                    ) : hasSearched && searchQuery ? (
                       <motion.div
                         key="no-results"
                         className="text-[#8E8E93]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
-                        No results found
+                        No results found for “{searchQuery.trim()}”. Try a
+                        different keyword.
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
@@ -471,23 +599,34 @@ export default function NavClient({
                     >
                       {item.action ? (
                         <button
+                          type="button"
                           onClick={item.action}
-                          className="flex items-center gap-2 transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer"
+                          className={`flex items-center gap-2 transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer ${LINK_FOCUS}`}
                         >
                           {item.name} {item.icon}
                         </button>
                       ) : item.disabled ? (
-                        <div className="flex cursor-not-allowed items-center gap-2 text-[#8E8E93]">
+                        <div
+                          aria-disabled="true"
+                          className="flex cursor-not-allowed items-center gap-2 text-[#8E8E93]"
+                        >
                           {item.name} {item.icon}
                         </div>
                       ) : (
                         <Link
                           href={item.href}
-                          className="flex items-center gap-2 transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer"
+                          aria-current={
+                            isActive(item.href) ? 'page' : undefined
+                          }
+                          onClick={closePanel}
+                          className={`flex items-center gap-2 transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer aria-[current=page]:underline aria-[current=page]:underline-offset-4 ${LINK_FOCUS}`}
                         >
                           {item.name} {item.icon}
                           {'badge' in item && item.badge ? (
-                            <span className="rounded-full bg-[#CCEAD6] px-[8px] py-[2px] text-[10px] font-medium text-[#32AC5B]">
+                            <span
+                              aria-live="polite"
+                              className="rounded-full bg-[#CCEAD6] px-[8px] py-[2px] text-[10px] font-medium text-[#32AC5B]"
+                            >
                               {item.badge}
                             </span>
                           ) : null}
@@ -501,10 +640,11 @@ export default function NavClient({
                 <div className="mt-auto flex items-center gap-x-[18px] pt-[40px]">
                   {/* Currency toggle */}
                   <motion.button
+                    type="button"
                     onClick={() =>
                       setCurrency(currency === 'NGN' ? 'USD' : 'NGN')
                     }
-                    className="relative flex h-[26px] items-center rounded-full border border-[#AEAEB2] bg-white px-[3px] text-[10px] font-medium tracking-wide hover:cursor-pointer"
+                    className="relative flex h-[26px] items-center rounded-full border border-[#AEAEB2] bg-white px-[3px] text-[10px] font-medium tracking-wide hover:cursor-pointer focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
                     title={`Switch to ${currency === 'NGN' ? 'USD' : 'NGN'}`}
                     whileTap={{ scale: 0.93 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -542,7 +682,68 @@ export default function NavClient({
 
 /* ---------------- HELPER COMPONENTS ---------------- */
 
-function FullscreenPanel({ children, onClose, openMenu }: any) {
+type PanelKey = 'menu' | 'search' | 'bag' | 'wishlist' | 'user';
+
+const PANEL_TITLES: Record<PanelKey, string> = {
+  menu: 'Collections',
+  search: 'Search',
+  bag: 'Shopping Bag',
+  wishlist: 'Wishlist',
+  user: 'Account',
+};
+
+function FullscreenPanel({
+  children,
+  onClose,
+  openMenu,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+  openMenu: PanelKey;
+}) {
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const title = PANEL_TITLES[openMenu] ?? 'Menu';
+
+  // Move focus to the close button when the panel mounts (a11y: focus should
+  // enter the dialog). NavClient returns focus to the trigger on close.
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
+  // Simple focus trap: keep Tab / Shift+Tab cycling within the panel.
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Tab') return;
+    const root = panelRef.current;
+    if (!root) return;
+
+    const focusable = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+
+    if (focusable.length === 0) {
+      e.preventDefault();
+      closeButtonRef.current?.focus();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement as HTMLElement | null;
+
+    if (e.shiftKey) {
+      if (active === first || !root.contains(active)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -555,6 +756,12 @@ function FullscreenPanel({ children, onClose, openMenu }: any) {
         onClick={onClose}
       />
       <motion.div
+        ref={panelRef}
+        id="nav-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onKeyDown={handleKeyDown}
         className="text-primary fixed inset-0 z-50 flex min-h-screen w-full flex-col bg-white"
         initial={{ x: openMenu === 'menu' ? '-100%' : '100%' }}
         animate={{ x: 0 }}
@@ -582,8 +789,11 @@ function FullscreenPanel({ children, onClose, openMenu }: any) {
                   : ''}
           </motion.div>
           <motion.button
+            ref={closeButtonRef}
+            type="button"
             onClick={onClose}
-            className="cursor-pointer"
+            aria-label="Close"
+            className="grid h-11 w-11 place-items-center rounded-full focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
             whileHover={{ scale: 1.15, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
@@ -616,11 +826,17 @@ function BagItem({
   return (
     <div className="mb-[24px] flex h-[120px] justify-between">
       <div className="flex gap-x-[16px]">
-        <div className="relative h-[120px] w-[120px] rounded-[6px] bg-[#f5f5f5]">
+        <div className="relative h-[120px] w-[120px] overflow-hidden rounded-[6px] bg-[#f5f5f5]">
           {image && (
+            // Remote product image URLs are not whitelisted in next.config
+            // (no remotePatterns), so next/image would reject them. Keep the
+            // native <img> but lazy-load + async-decode it to ease the panel.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={image}
               alt={name}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full rounded-[6px] object-cover"
             />
           )}
@@ -639,20 +855,26 @@ function BagItem({
           </div>
           <div className="flex h-[36px] w-[96px] items-center justify-between rounded-[4px] border border-[#AEAEB2] p-[6px]">
             <button
+              type="button"
               onClick={() =>
                 onUpdateQuantity(item.id, item.variant, item.quantity - 1)
               }
               disabled={item.quantity <= 1}
-              className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={`Decrease quantity of ${name}`}
+              className="grid h-6 w-6 cursor-pointer place-items-center rounded-[3px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               <MinusIcon />
             </button>
-            <div className="font-medium text-[#121212]">{item.quantity}</div>
+            <div className="font-medium text-[#121212] tabular-nums" aria-live="polite">
+              {item.quantity}
+            </div>
             <button
+              type="button"
               onClick={() =>
                 onUpdateQuantity(item.id, item.variant, item.quantity + 1)
               }
-              className="cursor-pointer"
+              aria-label={`Increase quantity of ${name}`}
+              className="grid h-6 w-6 cursor-pointer place-items-center rounded-[3px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:outline-none"
             >
               <PlusIcon />
             </button>
@@ -661,12 +883,14 @@ function BagItem({
       </div>
       <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
         <div>{formatPrice(price)}</div>
-        <div
+        <button
+          type="button"
           onClick={() => onRemove(item.id)}
-          className="cursor-pointer uppercase underline hover:no-underline"
+          aria-label={`Remove ${name} from bag`}
+          className="cursor-pointer rounded-[3px] text-right uppercase underline hover:no-underline focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:outline-none"
         >
           Remove
-        </div>
+        </button>
       </div>
     </div>
   );
