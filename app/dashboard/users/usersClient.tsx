@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   AdminSoundLevelsIcon,
   AdminMoreVerticalIcon,
@@ -43,7 +44,10 @@ export default function UsersPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get('search') ?? '',
+  );
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState('');

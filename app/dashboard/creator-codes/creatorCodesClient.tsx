@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 
@@ -45,7 +46,10 @@ export default function CreatorCodesClient({
   const [pagination, setPagination] = useState(
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0, total: 0 },
   );
-  const [search, setSearch] = useState('');
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(
+    () => searchParams.get('search') ?? '',
+  );
   const [isLoading, setIsLoading] = useState(false);
   const isFirstRender = useRef(true);
 

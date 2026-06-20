@@ -2,6 +2,7 @@
 
 import GridContainer from '../gridContainer';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   AdminMoreVerticalIcon,
   AdminSoundLevelsIcon,
@@ -50,7 +51,10 @@ export default function OrdersPage({
   const [pagination, setPagination] = useState(
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0 },
   );
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get('search') ?? '',
+  );
   const [isLoading, setIsLoading] = useState(false);
   const isFirstRender = useRef(true);
   const actionMenuRef = useRef<HTMLDivElement>(null);

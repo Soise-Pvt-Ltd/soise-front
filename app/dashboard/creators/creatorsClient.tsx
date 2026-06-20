@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
 import {
   AdminSoundLevelsIcon,
@@ -47,7 +48,10 @@ export default function CreatorsClient({
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
-  const [searchValue, setSearchValue] = useState<string>('');
+  const searchParams = useSearchParams();
+  const [searchValue, setSearchValue] = useState<string>(
+    () => searchParams.get('search') ?? '',
+  );
   const [selectedPeriod, setSelectedPeriod] = useState('All Time');
   const [creators, setCreators] = useState<Creator[]>(initialData || []);
   const [pagination, setPagination] = useState(

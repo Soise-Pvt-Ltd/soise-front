@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -400,8 +401,13 @@ export default function ProductsPage({
   );
 
   // List controls
-  const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [searchInput, setSearchInput] = useState(
+    () => searchParams.get('search') ?? '',
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get('search') ?? '',
+  );
   const [sortBy, setSortBy] = useState<
     'newest' | 'name' | 'price' | 'stock'
   >('newest');
