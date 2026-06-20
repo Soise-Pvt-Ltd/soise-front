@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
+import Link from 'next/link';
 import { useRef } from 'react';
 import { ChevronRightIcon, InstagramIcon, TiktokIcon, XIcon } from './icons';
 import { siteConfig } from '@/lib/site-config';
@@ -162,6 +163,17 @@ export default function FooterClient() {
         transition={{ duration: 0.6, delay: 0.1 }}
       >
         <div className="container px-[24px] pt-[24px] pb-[40px] text-[13px] text-[#2F2F2F] md:px-[48px]">
+          <nav className="mb-[18px] flex flex-wrap gap-x-6 gap-y-2 text-[12px] tracking-wide uppercase">
+            <Link href="/about" className="transition-colors hover:text-[#121212]">
+              About
+            </Link>
+            <Link href="/creators" className="transition-colors hover:text-[#121212]">
+              Creators
+            </Link>
+            <Link href="/swaz-loop" className="transition-colors hover:text-[#121212]">
+              The Swaz Loop
+            </Link>
+          </nav>
           Copyright © {new Date().getFullYear()} {siteConfig.name}™
           <br />
           Office: {siteConfig.officeAddress}

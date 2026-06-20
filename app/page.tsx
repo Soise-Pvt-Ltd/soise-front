@@ -9,14 +9,14 @@ import ImageGallerySection from '@/components/home/image-gallery-section';
 import { SITE_URL, SITE_NAME } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — Creator-Led Streetwear from Lagos`,
+  title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
   description:
-    'Fashion moves on what you see others wear. SOISE turns that into creator-led streetwear from Lagos — hoodies, tees, beanies and denim in limited capsule drops, and a stage for Nigeria\'s creatives. Wear the culture.',
+    'Fashion moves on what you see the culture wearing. SOISE is creator-led streetwear — hoodies, tees, beanies and denim in considered, limited capsule drops, worn first by Nigeria\'s creatives. Say less, look more.',
   alternates: { canonical: '/' },
   openGraph: {
-    title: `${SITE_NAME} — Creator-Led Streetwear from Lagos`,
+    title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
     description:
-      'The pieces you see the culture wearing. SOISE makes creator-led streetwear in Lagos — limited capsule drops, built as a stage for Nigeria\'s stylists, artists and designers. Say less, look more.',
+      'Creator-led streetwear, worn first by the creatives shaping the culture. Considered capsule drops, deliberately limited — a stage for Nigeria\'s stylists, artists and designers. Say less, look more.',
     url: SITE_URL,
   },
 };

@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     locale: 'en_NG',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Creator-Led Streetwear from Lagos`,
+    title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
     description: DEFAULT_DESCRIPTION,
     images: [
       {
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@soise',
     creator: '@soise',
-    title: `${SITE_NAME} — Creator-Led Streetwear from Lagos`,
+    title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
     description: DEFAULT_DESCRIPTION,
     images: ['/og-image.jpg'],
   },

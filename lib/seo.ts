@@ -8,7 +8,7 @@ export const SITE_NAME = 'SOISE';
 export const SITE_TAGLINE = 'Wear the Culture';
 
 export const DEFAULT_DESCRIPTION =
-  'SOISE is creator-led streetwear from Lagos — hoodies, tees, beanies and denim, released in limited capsule drops and worn first by the creators shaping the culture. Built as a stage for Nigeria\'s stylists, artists and designers. Say less, look more.';
+  'Creator-led streetwear in considered, limited capsule drops — worn first by the creatives shaping the culture. Quiet luxury, deliberately scarce; a stage for Nigeria\'s stylists, artists and designers. Say less, look more.';
 
 export const KEYWORDS = [
   'SOISE',
@@ -57,7 +57,7 @@ export function productJsonLd(product: {
     name: product.name,
     description:
       product.description ??
-      `Shop ${product.name} from SOISE — creator-led streetwear from Lagos, released in limited capsule drops. Worn by the culture, shipped across Nigeria.`,
+      `Shop ${product.name} from SOISE — creator-led streetwear in limited capsule drops, worn by the culture. Considered, scarce, and shipped across Nigeria.`,
     image,
     url: `${SITE_URL}/shop/product-listing/${product.slug}`,
     brand: {
