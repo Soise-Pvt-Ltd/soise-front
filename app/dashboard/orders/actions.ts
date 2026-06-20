@@ -55,33 +55,40 @@ export async function fetchOrders(
     }
   }
 
-  const res = await fetch(
-    `${BASE_URL}/admin/orders?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        Cookie: `access_token=${accessToken}`,
-        Accept: 'application/json',
-      },
-      cache: 'no-store',
-    },
-  );
-
-  if (!res.ok) {
-    return {
-      success: false,
-      data: [],
-      meta: { pagination: { limit, offset, count: 0 } },
-    };
-  }
-
-  const json = await res.json();
-  return {
-    success: Boolean(json.success),
-    data: json.data || [],
-    meta: json.meta || { pagination: { limit, offset, count: 0 } },
+  const empty = {
+    success: false,
+    data: [] as any[],
+    meta: { pagination: { limit, offset, count: 0 } },
   };
+
+  // Never throw out of the server action — a thrown error here bubbles up to the
+  // route error boundary ("We hit an unexpected error"). Degrade gracefully.
+  try {
+    const res = await fetch(
+      `${BASE_URL}/admin/orders?${queryParams.toString()}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          Cookie: `access_token=${accessToken}`,
+          Accept: 'application/json',
+        },
+        cache: 'no-store',
+      },
+    );
+
+    if (!res.ok) return empty;
+
+    const json = await res.json();
+    return {
+      success: Boolean(json.success),
+      data: Array.isArray(json.data) ? json.data : [],
+      meta: json.meta || { pagination: { limit, offset, count: 0 } },
+    };
+  } catch (error) {
+    console.error('fetchOrders failed:', error);
+    return empty;
+  }
 }
 
 export async function updateOrderStatus(orderId: string, status: string) {

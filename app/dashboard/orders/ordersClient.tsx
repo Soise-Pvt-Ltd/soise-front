@@ -272,11 +272,11 @@ export default function OrdersPage({
                     <span
                       className={`px-2 py-1 capitalize ${statusClasses[order.status] || ''}`}
                     >
-                      {order.status.replace('_', ' ')}
+                      {(order.status || 'unknown').replace('_', ' ')}
                     </span>
                   </td>
                   <td className="td whitespace-nowrap">
-                    {formatDate(order.created_at)}
+                    {order.created_at ? formatDate(order.created_at) : '—'}
                   </td>
                   <td className="td">
                     <div ref={activeActionMenuId === order.id ? actionMenuRef : undefined} className="relative">
