@@ -93,3 +93,131 @@ input[type='number'].adminsolid,
 .td {
   @apply py-6 pr-3 text-[13px] whitespace-nowrap text-[#35373C];
 }
+
+/* ----------------------------------------------------------------------------
+   LVMH-style signifier cursor + interactivity cues (see components/cursor)
+   ---------------------------------------------------------------------------- */
+
+/* Baseline signifier: anything actionable shows the pointer (the native cue,
+   used on touch / no-JS, and overridden by the custom cursor when active). */
+a[href],
+button:not(:disabled),
+[role='button'],
+summary,
+label[for],
+select,
+[data-cursor] {
+  cursor: pointer;
+}
+
+/* Once the custom cursor mounts (desktop only), hide the native one everywhere
+   except where a text caret is genuinely useful. */
+html.luxe-cursor-on,
+html.luxe-cursor-on *:not(input):not(textarea):not([contenteditable='true']) {
+  cursor: none !important;
+}
+
+.luxe-cur-dot-wrap,
+.luxe-cur-ring-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.luxe-cur-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 6px;
+  width: 6px;
+  border-radius: 9999px;
+  background: #ffffff;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%) scale(var(--s, 1));
+  transition:
+    transform 0.2s ease,
+    opacity 0.3s ease;
+}
+.luxe-cur-dot.is-press {
+  --s: 2.4;
+}
+.luxe-cur-dot.is-view {
+  opacity: 0;
+}
+
+.luxe-cur-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  height: 38px;
+  width: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ffffff;
+  border-radius: 9999px;
+  background: transparent;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%) scale(var(--s, 1));
+  transition:
+    width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.42s ease,
+    border-color 0.42s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.luxe-cur-ring.is-link {
+  height: 58px;
+  width: 58px;
+}
+.luxe-cur-ring.is-view {
+  height: 92px;
+  width: 92px;
+  border-color: #121212;
+  background: #121212;
+  mix-blend-mode: normal;
+}
+.luxe-cur-ring.is-press {
+  --s: 0.82;
+}
+.luxe-cur-label {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Reusable signifier utilities for high-value surfaces. */
+.luxe-lift {
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.luxe-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 48px -16px rgba(0, 0, 0, 0.22);
+}
+
+.luxe-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.luxe-underline:hover {
+  background-size: 100% 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luxe-cur-dot,
+  .luxe-cur-ring,
+  .luxe-lift,
+  .luxe-underline {
+    transition: none;
+  }
+}

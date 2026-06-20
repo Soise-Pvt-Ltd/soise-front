@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { Poppins, Molle, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
+import LuxeCursor from '@/components/cursor/LuxeCursor';
 import {
   SITE_URL,
   SITE_NAME,
@@ -115,6 +116,7 @@ export default async function RootLayout({
       </head>
       <body className="font-body 4xl:mx-auto 4xl:max-w-screen-4x mx-auto max-w-screen-2xl antialiased">
         <Providers initialCurrency={initialCurrency}>{children}</Providers>
+        <LuxeCursor />
       </body>
     </html>
   );
