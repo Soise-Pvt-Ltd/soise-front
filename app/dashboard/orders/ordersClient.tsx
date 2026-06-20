@@ -17,6 +17,10 @@ type Order = {
   total: number;
   user?: string;
   guest_email?: string;
+  customer_first_name?: string;
+  customer_last_name?: string;
+  customer_email?: string;
+  item_count?: number;
 };
 
 interface OrdersPageProps {
@@ -154,6 +158,27 @@ export default function OrdersPage({
     })} ${date.getFullYear()}`;
   };
 
+  const customerName = (o: Order) => {
+    const name = `${o.customer_first_name ?? ''} ${o.customer_last_name ?? ''}`.trim();
+    if (name) return name;
+    return o.user ? 'Registered customer' : 'Guest';
+  };
+  const customerEmail = (o: Order) => o.customer_email || o.guest_email || '—';
+  const shortRef = (id: string) => String(id ?? '').split(':').pop() ?? id;
+  const copyRef = async (o: Order) => {
+    try {
+      await navigator.clipboard.writeText(shortRef(o.id));
+      showToast('success', 'Order ID copied');
+    } catch {
+      showToast('error', 'Could not copy');
+    }
+  };
+  const initials = (o: Order) =>
+    (
+      (o.customer_first_name?.[0] ?? '') + (o.customer_last_name?.[0] ?? '') ||
+      (o.customer_email || o.guest_email || 'G')[0]
+    ).toUpperCase();
+
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {
     setIsUpdating(true);
     try {
@@ -188,20 +213,23 @@ export default function OrdersPage({
           <table className="min-w-full text-left text-[13px]">
             <thead>
               <tr>
-                <th scope="col" className="thead truncate">
-                  User
+                <th scope="col" className="thead">
+                  Customer
+                </th>
+                <th scope="col" className="thead">
+                  Order #
+                </th>
+                <th scope="col" className="thead">
+                  Items
                 </th>
                 <th scope="col" className="thead">
                   Total
                 </th>
                 <th scope="col" className="thead">
-                  Order ID
+                  Status
                 </th>
                 <th scope="col" className="thead">
                   Date
-                </th>
-                <th scope="col" className="thead">
-                  Status
                 </th>
                 <th scope="col" className="thead">
                   Actions
@@ -212,19 +240,43 @@ export default function OrdersPage({
               {orders.map((order, index, arr) => (
                 <tr key={order.id}>
                   <td className="td">
-                    {order.guest_email || order.user || 'Guest'}
+                    <div className="flex items-center gap-x-[10px]">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#EAEAEA] text-[11px] font-semibold text-[#121212]">
+                        {initials(order)}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-[#121212]">
+                          {customerName(order)}
+                        </div>
+                        <div className="truncate text-[11px] text-[#AFB1B0]">
+                          {customerEmail(order)}
+                        </div>
+                      </div>
+                    </div>
                   </td>
                   <td className="td">
-                    {order.currency} {order.total.toLocaleString()}
+                    <button
+                      onClick={() => copyRef(order)}
+                      title="Copy full order ID"
+                      className="rounded-[6px] bg-[#F5F5F5] px-[8px] py-[3px] font-mono text-[12px] text-[#121212] transition-colors hover:bg-[#EBEBEB]"
+                    >
+                      #{shortRef(order.id)}
+                    </button>
                   </td>
-                  <td className="td">{order.id}</td>
-                  <td className="td">{formatDate(order.created_at)}</td>
+                  <td className="td">{order.item_count ?? 0}</td>
+                  <td className="td font-medium">
+                    {order.currency === 'NGN' ? '₦' : `${order.currency} `}
+                    {Number(order.total).toLocaleString()}
+                  </td>
                   <td className="td">
                     <span
                       className={`px-2 py-1 capitalize ${statusClasses[order.status] || ''}`}
                     >
                       {order.status.replace('_', ' ')}
                     </span>
+                  </td>
+                  <td className="td whitespace-nowrap">
+                    {formatDate(order.created_at)}
                   </td>
                   <td className="td">
                     <div ref={activeActionMenuId === order.id ? actionMenuRef : undefined} className="relative">
@@ -317,9 +369,9 @@ export default function OrdersPage({
             <div className="mb-4 flex w-full items-center justify-between gap-x-2 sm:w-auto">
               <input
                 type="text"
-                placeholder="Search orders..."
-                aria-label="Search orders"
-                className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] sm:w-[245px]"
+                placeholder="Search order ID, customer or email…"
+                aria-label="Search orders by ID, customer name or email"
+                className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] sm:w-[290px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
