@@ -6,6 +6,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export async function fetchApplications(
   status: string = 'submitted',
+  search: string = '',
   limit: number = 50,
   offset: number = 0,
 ) {
@@ -14,6 +15,7 @@ export async function fetchApplications(
 
   const qs = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   if (status && status !== 'all') qs.set('status', status);
+  if (search && search.trim()) qs.set('search', search.trim());
 
   try {
     const res = await fetch(`${BASE_URL}/admin/creator-applications?${qs}`, {

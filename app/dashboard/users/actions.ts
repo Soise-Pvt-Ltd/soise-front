@@ -10,6 +10,7 @@ export async function fetchUsers(
   offset = 0,
   search = '',
   period = 'All Time',
+  role = 'All',
 ) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
@@ -28,6 +29,7 @@ export async function fetchUsers(
   });
 
   if (search) queryParams.append('search', search);
+  if (role && role !== 'All') queryParams.append('role', role);
 
   if (period && period !== 'All Time') {
     const now = new Date();

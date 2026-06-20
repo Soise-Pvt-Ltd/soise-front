@@ -2,11 +2,21 @@
 import { cookies } from 'next/headers';
 import { getUserInfo } from '../actions';
 
+// Map the UI sort options to the backend's supported sort fields.
+const SORT_MAP: Record<string, string> = {
+  newest: 'created_at',
+  name: 'name',
+  price: 'base_price',
+  stock: 'created_at', // backend can't sort by aggregate stock; client refines
+};
+
 export async function fetchProducts(
   limit = 50,
   offset = 0,
   search = '',
   period = 'All Time',
+  status = 'all',
+  sortBy = 'newest',
 ) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
@@ -25,6 +35,8 @@ export async function fetchProducts(
   });
 
   if (search) queryParams.append('q', search);
+  if (status && status !== 'all') queryParams.append('status', status);
+  queryParams.append('sort_by', SORT_MAP[sortBy] ?? 'created_at');
 
   if (period && period !== 'All Time') {
     const now = new Date();

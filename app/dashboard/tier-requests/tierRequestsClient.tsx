@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchTierRequests, reviewTierRequest } from './actions';
@@ -39,15 +39,28 @@ export default function TierRequestsClient({
 }) {
   const [reqs, setReqs] = useState<Req[]>(initialData || []);
   const [status, setStatus] = useState<string>('pending');
+  const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tierChoice, setTierChoice] = useState<Record<string, string>>({});
+  const firstRender = useRef(true);
 
-  const load = async (next: string) => {
-    setStatus(next);
-    const res = await fetchTierRequests(next);
+  const load = async (nextStatus = status, nextSearch = search) => {
+    setStatus(nextStatus);
+    const res = await fetchTierRequests(nextStatus, nextSearch);
     setReqs(res.success ? res.data : []);
     if (!res.success) showToast('error', res.error || 'Failed to load');
   };
+
+  // Debounced search by creator username / email / code.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const t = setTimeout(() => load(status, search), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const review = async (req: Req, action: 'approve' | 'reject') => {
     if (busyId) return;
@@ -85,6 +98,17 @@ export default function TierRequestsClient({
               {s}
             </button>
           ))}
+        </div>
+
+        <div className="mt-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search creator, email or code…"
+            aria-label="Search tier requests"
+            className="h-[38px] w-full max-w-[320px] rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+          />
         </div>
 
         <div className="mt-5 overflow-x-auto rounded-[12px] border border-[#F0F0F0]">

@@ -9,11 +9,15 @@ async function authHeader() {
   return accessToken ? { Cookie: `access_token=${accessToken}`, Accept: 'application/json' } : null;
 }
 
-export async function fetchTierRequests(status: string = 'pending') {
+export async function fetchTierRequests(
+  status: string = 'pending',
+  search: string = '',
+) {
   const h = await authHeader();
   if (!h) return { success: false, data: [], error: 'Unauthorized' };
   const qs = new URLSearchParams();
   if (status && status !== 'all') qs.set('status', status);
+  if (search && search.trim()) qs.set('search', search.trim());
   try {
     const res = await fetch(`${BASE_URL}/admin/tier-upgrade-requests?${qs}`, { headers: h, cache: 'no-store' });
     const json = await res.json();

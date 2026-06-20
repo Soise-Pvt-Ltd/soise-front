@@ -33,6 +33,10 @@ export async function fetchPayouts(
     queryParams.append('pending', 'false');
   }
 
+  // Creator search + period — previously built in the UI but never sent.
+  if (search && search.trim()) queryParams.append('search', search.trim());
+  if (period && period !== 'All Time') queryParams.append('period', period);
+
   const res = await fetch(
     `${baseUrl}/admin/payouts?${queryParams.toString()}`,
     {

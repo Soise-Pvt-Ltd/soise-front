@@ -372,6 +372,8 @@ export default function ProductsPage({
     offset: number,
     search: string,
     period: string,
+    status?: string,
+    sortBy?: string,
   ) => Promise<any>;
 }) {
   const rawDataRef = useRef<any[]>(initialData || []);
@@ -508,6 +510,8 @@ export default function ProductsPage({
           0, // Reset to first page on filter change
           searchQuery,
           selectedPeriod,
+          activeTab, // server-side status filter (was client-side, page-only)
+          sortBy, // server-side sort (was client-side, page-only)
         );
         if (result?.success) {
           rawDataRef.current = result.products?.data || [];
@@ -527,7 +531,7 @@ export default function ProductsPage({
     fetchData();
     // pagination.limit intentionally excluded to avoid refetch loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPeriod, searchQuery]);
+  }, [selectedPeriod, searchQuery, activeTab, sortBy]);
 
   const handlePageChange = async (newOffset: number) => {
     if (!fetchServerData) return;
@@ -538,6 +542,8 @@ export default function ProductsPage({
         newOffset,
         searchQuery,
         selectedPeriod,
+        activeTab,
+        sortBy,
       );
       if (result?.success) {
         rawDataRef.current = result.products?.data || [];

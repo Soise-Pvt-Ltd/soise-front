@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchApplications, reviewApplication, allowReapplication } from './actions';
@@ -39,17 +39,30 @@ export default function ApplicationsClient({
 }) {
   const [apps, setApps] = useState<Application[]>(initialData || []);
   const [status, setStatus] = useState<string>(initialStatus);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const firstRender = useRef(true);
 
-  const load = async (next: string) => {
-    setStatus(next);
+  const load = async (nextStatus = status, nextSearch = search) => {
+    setStatus(nextStatus);
     setLoading(true);
-    const res = await fetchApplications(next);
+    const res = await fetchApplications(nextStatus, nextSearch);
     setApps(res.success ? res.data : []);
     if (!res.success) showToast('error', res.error || 'Failed to load');
     setLoading(false);
   };
+
+  // Debounced search by applicant name / email.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const t = setTimeout(() => load(status, search), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const review = async (app: Application, action: 'approve' | 'reject') => {
     if (busyId) return;
@@ -107,6 +120,17 @@ export default function ApplicationsClient({
               {s}
             </button>
           ))}
+        </div>
+
+        <div className="mt-4">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search applicant name or email…"
+            aria-label="Search applications"
+            className="h-[38px] w-full max-w-[320px] rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+          />
         </div>
 
         <div className="mt-5 overflow-x-auto rounded-[12px] border border-[#F0F0F0]">

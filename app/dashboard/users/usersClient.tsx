@@ -30,6 +30,7 @@ interface UsersPageProps {
     offset?: number,
     search?: string,
     period?: string,
+    role?: string,
   ) => Promise<any>;
 }
 
@@ -69,6 +70,10 @@ export default function UsersPage({
     'Last 90 Days',
   ];
 
+  // Role filter (backend supports ?role=; previously no UI for it).
+  const [roleFilter, setRoleFilter] = useState('All');
+  const roleOptions = ['All', 'user', 'creator', 'admin'];
+
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
       setActiveActionMenuId(null);
@@ -103,7 +108,7 @@ export default function UsersPage({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedPeriod]);
+  }, [searchQuery, selectedPeriod, roleFilter]);
 
   const handleFilterChange = async () => {
     setIsLoading(true);
@@ -112,6 +117,7 @@ export default function UsersPage({
       0,
       searchQuery,
       selectedPeriod,
+      roleFilter,
     );
     if (result.success) {
       setUsers(result.data);
@@ -128,6 +134,7 @@ export default function UsersPage({
       newOffset,
       searchQuery,
       selectedPeriod,
+      roleFilter,
     );
     if (result.success) {
       setUsers(result.data);
@@ -179,6 +186,20 @@ export default function UsersPage({
               onChange={(e) => setSearchQuery(e.target.value)}
             />
 
+            <div className="flex items-center gap-x-2">
+            <select
+              aria-label="Filter by role"
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="h-[36px] cursor-pointer rounded-[10px] border-2 border-[#F6F6F6] bg-white px-2 text-[12px] text-[#AFB1B0] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+            >
+              {roleOptions.map((r) => (
+                <option key={r} value={r}>
+                  {r === 'All' ? 'All roles' : r.charAt(0).toUpperCase() + r.slice(1)}
+                </option>
+              ))}
+            </select>
+
             <div ref={filterDropdownRef} className="relative flex items-center">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -207,6 +228,7 @@ export default function UsersPage({
                   </div>
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>
