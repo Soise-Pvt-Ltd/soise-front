@@ -52,7 +52,7 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
     <>
       <header className="flex items-center justify-between p-[24px] lg:hidden">
         <button onClick={() => router.push('/')} className="cursor-pointer" aria-label="Go to homepage">
-          <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
+          <Image src="/main-logo.png" alt="Soise" width={50} height={50} priority />
         </button>
         <button
           className="flex h-[44px] w-[44px] cursor-pointer items-center justify-center rounded-[10px] bg-white text-[#35373C] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
@@ -130,10 +130,11 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
                 aria-label="Go to homepage"
               >
                 <Image
-                  src="/logo.png"
-                  alt="Soise Logo"
-                  width={100}
-                  height={58}
+                  src="/main-logo.png"
+                  alt="Soise"
+                  width={78}
+                  height={78}
+                  priority
                 />
               </button>
 

@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/require-role';
 import TeamNav from './TeamNav';
+import StatueWatermark from '@/components/brand/StatueWatermark';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +20,16 @@ export default async function TeamLayout({
   });
 
   return (
-    <div className="min-h-screen bg-[#FAFBFC]">
+    <div className="relative min-h-screen overflow-hidden bg-[#FAFBFC]">
+      {/* Ambient Soise statue — quiet brand presence, never forefront. */}
+      <StatueWatermark
+        tone="dark"
+        width={560}
+        opacity={0.04}
+        className="pointer-events-none fixed -right-24 bottom-[-40px] z-0 hidden lg:block"
+      />
       <TeamNav role={role} />
-      <main className="mx-auto max-w-[1180px] px-5 pb-24 pt-8 sm:px-8">
+      <main className="relative z-10 mx-auto max-w-[1180px] px-5 pb-24 pt-8 sm:px-8">
         {children}
       </main>
     </div>

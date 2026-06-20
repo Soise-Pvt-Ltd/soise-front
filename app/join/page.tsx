@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import StatueWatermark from '@/components/brand/StatueWatermark';
 
 export const metadata: Metadata = {
   title: 'You’re Invited · Swaz Creator Program',
@@ -38,9 +39,16 @@ export default async function JoinPage({
   const signInHref = `/auth/login?callbackUrl=${encodeURIComponent('/creators')}`;
 
   return (
-    <main className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
+    <main className="relative min-h-screen overflow-hidden bg-[#0E0E10] text-[#F4F1EA]">
+      {/* Ambient statue — the Soise muse watching over the invitation. */}
+      <StatueWatermark
+        tone="light"
+        width={460}
+        opacity={0.06}
+        className="fixed top-1/2 left-[-110px] z-0 hidden -translate-y-1/2 lg:block"
+      />
       {/* Hero */}
-      <section className="relative overflow-hidden">
+      <section className="relative z-10 overflow-hidden">
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
           style={{
@@ -49,6 +57,14 @@ export default async function JoinPage({
           }}
         />
         <div className="relative mx-auto max-w-[860px] px-6 pb-16 pt-20 text-center sm:pt-28">
+          {/* The muse-in-meander emblem, inverted to read on the dark canvas. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/swz.jpg"
+            alt="Soise"
+            className="mx-auto mb-8 h-[72px] w-[72px] object-contain"
+            style={{ filter: 'invert(1)', mixBlendMode: 'screen' }}
+          />
           <p className="text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
             {ref ? 'Your invitation is verified' : 'By invitation'}
           </p>

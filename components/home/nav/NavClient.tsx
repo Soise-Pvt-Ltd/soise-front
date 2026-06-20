@@ -14,6 +14,7 @@ import {
 } from '../../icons';
 import Link from 'next/link';
 import Image from 'next/image';
+import BrandMark from '@/components/brand/BrandMark';
 import { EnrichedCartItem, Product } from './types';
 import { logout, removeFromCart, updateCartItemQuantity } from './actions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -372,7 +373,7 @@ export default function NavClient({
             aria-label="Soise home"
             className="inline-block rounded-[6px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
           >
-            <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
+            <BrandMark height={50} />
           </Link>
         </motion.div>
 

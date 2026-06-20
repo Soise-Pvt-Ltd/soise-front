@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { logout } from '@/components/home/nav/actions';
 
@@ -23,9 +24,10 @@ export default function TeamNav({ role }: { role: string }) {
     <header className="sticky top-0 z-30 border-b border-[#ECECEF] bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-5 py-3 sm:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/team" className="flex items-center gap-2">
-            <span className="text-[15px] font-semibold tracking-tight text-[#121212]">
-              Swaz<span className="text-[#0072BB]"> Creator Team</span>
+          <Link href="/team" className="flex items-center gap-2.5">
+            <Image src="/main-logo.png" alt="Soise" width={38} height={38} priority />
+            <span className="hidden text-[13px] font-medium tracking-tight text-[#6B6B70] sm:inline">
+              <span className="text-[#121212]">Creator</span> Team
             </span>
           </Link>
           <nav className="hidden items-center gap-1 sm:flex">

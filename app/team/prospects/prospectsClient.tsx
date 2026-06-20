@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { showToast } from '@/lib/toast-utils';
+import StatueWatermark from '@/components/brand/StatueWatermark';
 import {
   fetchProspects,
   createProspect,
@@ -410,7 +411,13 @@ export default function ProspectsClient({
             onSubmit={submitForm}
             className="relative h-full w-full max-w-[480px] overflow-y-auto bg-white p-6 shadow-xl"
           >
-            <div className="mb-4 flex items-center justify-between">
+            <StatueWatermark
+              tone="dark"
+              width={160}
+              opacity={0.05}
+              className="pointer-events-none absolute -top-2 right-2 z-0"
+            />
+            <div className="relative z-10 mb-4 flex items-center justify-between">
               <h2 className="text-[17px] font-semibold text-[#121212]">
                 {editing ? 'Score / edit prospect' : 'Log a creator'}
               </h2>
