@@ -44,13 +44,52 @@ const STAGES = [
   'onboarded',
   'passed',
 ];
-const SCORE_DIMS: { field: keyof Prospect; label: string }[] = [
-  { field: 'score_aesthetic', label: 'Aesthetic fit' },
-  { field: 'score_engagement', label: 'Engagement quality' },
-  { field: 'score_audience', label: 'Audience overlap' },
-  { field: 'score_cadence', label: 'Posting cadence' },
-  { field: 'score_fit', label: 'Personal fit' },
+const SCORE_DIMS: { field: keyof Prospect; label: string; hint: string }[] = [
+  {
+    field: 'score_aesthetic',
+    label: 'Aesthetic fit',
+    hint: 'Does their grid already look like it belongs next to SOISE?',
+  },
+  {
+    field: 'score_engagement',
+    label: 'Engagement quality',
+    hint: 'Real comments & saves — not just likes.',
+  },
+  {
+    field: 'score_audience',
+    label: 'Audience overlap',
+    hint: 'Nigeria-based, right age, people who’d actually buy.',
+  },
+  {
+    field: 'score_cadence',
+    label: 'Posting cadence',
+    hint: 'Consistent, current output — not a dormant account.',
+  },
+  {
+    field: 'score_fit',
+    label: 'Personal fit',
+    hint: 'Gut check: would you wear it / repost it?',
+  },
 ];
+
+// Engagement, one abstraction simpler than a raw percentage: a vibe a scorer can
+// judge at a glance. Mapped to a representative number so storage stays numeric.
+const ENGAGEMENT_OPTIONS = [
+  { value: '', label: 'Not sure' },
+  { value: '1.5', label: 'Quiet — mostly passive likes' },
+  { value: '4', label: 'Healthy — regular comments & saves' },
+  { value: '8', label: 'Buzzing — very active, lots of comments/shares' },
+];
+
+function snapEngagement(n?: number): string {
+  if (n == null) return '';
+  return n >= 6 ? '8' : n >= 2.5 ? '4' : '1.5';
+}
+
+function engagementLabel(n?: number): string | null {
+  if (n == null) return null;
+  return n >= 6 ? 'Buzzing' : n >= 2.5 ? 'Healthy' : 'Quiet';
+}
 
 const TIER_STYLES: Record<string, string> = {
   A: 'bg-[#E8F6EE] text-[#1E7A45]',
@@ -144,7 +183,7 @@ export default function ProspectsClient({
       contact: p.contact || '',
       profile_url: p.profile_url || '',
       follower_count: p.follower_count != null ? String(p.follower_count) : '',
-      engagement_rate: p.engagement_rate != null ? String(p.engagement_rate) : '',
+      engagement_rate: snapEngagement(p.engagement_rate),
       source: p.source || '',
       stage: p.stage || 'sourced',
       notes: p.notes || '',
@@ -348,8 +387,11 @@ export default function ProspectsClient({
                       p.follower_count,
                     )
                   : '—'}
-                {p.engagement_rate != null && (
-                  <span className="text-[#9A9AA0]"> · {p.engagement_rate}%</span>
+                {engagementLabel(p.engagement_rate) && (
+                  <span className="text-[#9A9AA0]">
+                    {' '}
+                    · {engagementLabel(p.engagement_rate)}
+                  </span>
                 )}
               </div>
 
@@ -509,16 +551,20 @@ export default function ProspectsClient({
                     className={inputCls}
                   />
                 </Field>
-                <Field label="Engagement %">
-                  <input
-                    type="number"
-                    step="0.1"
+                <Field label="Audience engagement">
+                  <select
                     value={form.engagement_rate}
                     onChange={(e) =>
                       setForm({ ...form, engagement_rate: e.target.value })
                     }
                     className={inputCls}
-                  />
+                  >
+                    {ENGAGEMENT_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
               </div>
 
@@ -565,36 +611,43 @@ export default function ProspectsClient({
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {SCORE_DIMS.map((d) => (
-                    <div key={d.field} className="flex items-center justify-between gap-2">
-                      <span className="text-[13px] text-[#48484C]">{d.label}</span>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((n) => {
-                          const cur = form[d.field as keyof FormState] as number;
-                          return (
-                            <button
-                              key={n}
-                              type="button"
-                              onClick={() =>
-                                setForm({
-                                  ...form,
-                                  [d.field]: cur === n ? 0 : n,
-                                })
-                              }
-                              className={`h-7 w-7 rounded-[6px] text-[12px] font-semibold transition-colors ${
-                                cur >= n && cur > 0
-                                  ? 'bg-[#0072BB] text-white'
-                                  : 'bg-white text-[#9A9AA0] ring-1 ring-[#E0E0E4] hover:ring-[#0072BB]'
-                              }`}
-                              aria-label={`${d.label} ${n}`}
-                            >
-                              {n}
-                            </button>
-                          );
-                        })}
+                  {SCORE_DIMS.map((d) => {
+                    const cur = form[d.field as keyof FormState] as number;
+                    return (
+                      <div
+                        key={d.field}
+                        className="rounded-[8px] bg-white p-2.5 ring-1 ring-[#EFEFF1]"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[13px] font-medium text-[#2E2E32]">
+                            {d.label}
+                          </span>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <button
+                                key={n}
+                                type="button"
+                                onClick={() =>
+                                  setForm({ ...form, [d.field]: cur === n ? 0 : n })
+                                }
+                                className={`h-7 w-7 rounded-[6px] text-[12px] font-semibold transition-colors ${
+                                  cur >= n && cur > 0
+                                    ? 'bg-[#0072BB] text-white'
+                                    : 'bg-[#FAFBFC] text-[#9A9AA0] ring-1 ring-[#E0E0E4] hover:ring-[#0072BB]'
+                                }`}
+                                aria-label={`${d.label} ${n}`}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="mt-1.5 text-[11px] leading-snug text-[#9A9AA0]">
+                          {d.hint}
+                        </p>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <p className="mt-2 text-[11px] text-[#9A9AA0]">
                   Click a number to set 1–5; click it again to clear. All five must

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import { Poppins, Molle, Playfair_Display } from 'next/font/google';
 import './globals.css';
@@ -86,10 +86,32 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-16x16.png', type: 'image/png', sizes: '16x16' },
+      { url: '/favicon-32x32.png', type: 'image/png', sizes: '32x32' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+  manifest: '/site.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'SOISE',
+    statusBarStyle: 'black-translucent',
+  },
+  other: {
+    'msapplication-TileColor': '#121212',
+    'msapplication-config': '/browserconfig.xml',
   },
   category: 'fashion',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#121212',
+  colorScheme: 'light',
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default async function RootLayout({

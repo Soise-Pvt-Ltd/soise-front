@@ -80,8 +80,17 @@ export const ORG_JSONLD = {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
       name: SITE_NAME,
+      alternateName: 'Soise',
       url: SITE_URL,
-      logo: `${SITE_URL}/logo.png`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/main-logo.png`,
+        width: 1000,
+        height: 1000,
+        caption: 'SOISE — Say less, look more.',
+      },
+      image: `${SITE_URL}/og-image.jpg`,
+      slogan: SITE_TAGLINE,
       sameAs: [
         'https://instagram.com/soise',
         'https://tiktok.com/@soise',
