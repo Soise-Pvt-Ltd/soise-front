@@ -13,9 +13,11 @@ import {
   Title,
 } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
+import { useRouter } from 'next/navigation';
 import GridContainer from '../gridContainer';
-import { AdminMoreHorizontalIcon, AdminEditIcon } from '@/components/icons';
+import { AdminEditIcon } from '@/components/icons';
 import OrderActionsMenu from './OrderActionsMenu';
+import StatCardMenu from './StatCardMenu';
 
 ChartJS.register(
   ArcElement,
@@ -180,9 +182,46 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
     return `₦${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  const router = useRouter();
+
   const formatPercentage = (percentage: number) => {
     const sign = percentage >= 0 ? '+' : '';
     return `${sign}${percentage.toFixed(1)}%`;
+  };
+
+  // Trend badge — shows "New" when there is current-period activity but no
+  // prior-period baseline (where a percentage would be a misleading +0.0%).
+  const trendBadge = (
+    metric: { percentage_change: number; is_new?: boolean },
+    variant: 'onDark' | 'onLight',
+  ) => {
+    if (metric?.is_new) {
+      return (
+        <div
+          className={`w-fit rounded-full p-[10px] text-[14px] font-medium ${
+            variant === 'onDark'
+              ? 'bg-white text-[#0072BB]'
+              : 'bg-[#CCEAD6] text-[#32AC5B]'
+          }`}
+        >
+          New
+        </div>
+      );
+    }
+    const pos = (metric?.percentage_change ?? 0) >= 0;
+    const cls =
+      variant === 'onDark'
+        ? pos
+          ? 'bg-white text-[#0072BB]'
+          : 'bg-[#F0DEDC] text-[#D87C86]'
+        : pos
+          ? 'bg-[#CCEAD6] text-[#32AC5B]'
+          : 'bg-[#F0DEDC] text-[#D87C86]';
+    return (
+      <div className={`w-fit rounded-full p-[10px] text-[14px] ${cls}`}>
+        {formatPercentage(metric?.percentage_change ?? 0)}
+      </div>
+    );
   };
 
   return (
@@ -194,23 +233,21 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
           <div className="flex flex-col justify-between rounded-[20px] bg-[#0072BB] px-[24px] py-[30px] text-white" role="region" aria-label="Total Revenue">
             <div className="flex items-center justify-between">
               <div className="text-[14px]">Total Revenue</div>
-              <div className="cursor-pointer text-white">
-                <AdminMoreHorizontalIcon />
-              </div>
+              <StatCardMenu
+                color="#ffffff"
+                ariaLabel="Revenue options"
+                items={[
+                  { label: 'View all orders', href: '/dashboard/orders' },
+                  { label: 'View payouts', href: '/dashboard/payout' },
+                  { label: 'Refresh data', onClick: () => router.refresh() },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div className="text-[22px] font-medium">
                 {formatCurrency(data.revenue.total)}
               </div>
-              <div
-                className={`w-fit rounded-full p-[10px] text-[14px] ${
-                  data.revenue.percentage_change >= 0
-                    ? 'bg-white text-[#0072BB]'
-                    : 'bg-[#F0DEDC] text-[#D87C86]'
-                }`}
-              >
-                {formatPercentage(data.revenue.percentage_change)}
-              </div>
+              {trendBadge(data.revenue, 'onDark')}
             </div>
           </div>
 
@@ -218,25 +255,20 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
           <div className="flex flex-col justify-between rounded-[20px] bg-white px-[24px] py-[30px] text-[#121212]" role="region" aria-label="Payout">
             <div className="flex items-center justify-between">
               <div className="text-[14px] text-[#AFB1B0]">Payout</div>
-              <div className="cursor-pointer text-[#121212]">
-                <AdminMoreHorizontalIcon color="#121212" />
-              </div>
+              <StatCardMenu
+                color="#121212"
+                ariaLabel="Payout options"
+                items={[
+                  { label: 'Manage payouts', href: '/dashboard/payout' },
+                  { label: 'Refresh data', onClick: () => router.refresh() },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div className="text-[22px] font-medium">
                 {formatCurrency(data.payout.total)}
               </div>
-              {data.payout.percentage_change !== 0 && (
-                <div
-                  className={`w-fit rounded-full p-[10px] text-[14px] ${
-                    data.payout.percentage_change >= 0
-                      ? 'bg-[#CCEAD6] text-[#32AC5B]'
-                      : 'bg-[#F0DEDC] text-[#D87C86]'
-                  }`}
-                >
-                  {formatPercentage(data.payout.percentage_change)}
-                </div>
-              )}
+              {trendBadge(data.payout, 'onLight')}
             </div>
           </div>
 
@@ -244,9 +276,14 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
           <div className="flex flex-col justify-between rounded-[20px] bg-white px-[24px] py-[30px] text-[#121212]" role="region" aria-label="Total Products">
             <div className="flex items-center justify-between">
               <div className="text-[14px] text-[#AFB1B0]">Total Products</div>
-              <div className="cursor-pointer text-[#121212]">
-                <AdminMoreHorizontalIcon color="#121212" />
-              </div>
+              <StatCardMenu
+                color="#121212"
+                ariaLabel="Products options"
+                items={[
+                  { label: 'Manage products', href: '/dashboard/products' },
+                  { label: 'Refresh data', onClick: () => router.refresh() },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div className="text-[22px] font-medium">
@@ -262,9 +299,14 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
           <div className="flex flex-col justify-between rounded-[20px] bg-white px-[24px] py-[30px] text-[#121212]" role="region" aria-label="Items Sold">
             <div className="flex items-center justify-between">
               <div className="text-[14px] text-[#AFB1B0]">Items Sold</div>
-              <div className="cursor-pointer text-[#121212]">
-                <AdminMoreHorizontalIcon color="#121212" />
-              </div>
+              <StatCardMenu
+                color="#121212"
+                ariaLabel="Items sold options"
+                items={[
+                  { label: 'View all orders', href: '/dashboard/orders' },
+                  { label: 'Refresh data', onClick: () => router.refresh() },
+                ]}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div className="text-[22px] font-medium">
