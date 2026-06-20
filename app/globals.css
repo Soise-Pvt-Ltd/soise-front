@@ -117,6 +117,22 @@ html.luxe-cursor-on *:not(input):not(textarea):not([contenteditable='true']) {
   cursor: none !important;
 }
 
+/* Cursor colour adapts to the background luminance sampled under it, so it's
+   always visible — light cursor on dark surfaces, dark cursor on light ones —
+   plus a thin contrasting halo (--luxe-edge) that keeps it readable even over
+   photos/gradients where the colour can't be sampled. Defaults assume a dark
+   surface; JS adds .cur-on-light when it detects a light one. */
+html.luxe-cursor-on {
+  --luxe-cur: #ffffff;
+  --luxe-ink: #121212;
+  --luxe-edge: rgba(0, 0, 0, 0.45);
+}
+html.luxe-cursor-on.cur-on-light {
+  --luxe-cur: #121212;
+  --luxe-ink: #ffffff;
+  --luxe-edge: rgba(255, 255, 255, 0.9);
+}
+
 .luxe-cur-dot-wrap,
 .luxe-cur-ring-wrap {
   position: fixed;
@@ -134,12 +150,14 @@ html.luxe-cursor-on *:not(input):not(textarea):not([contenteditable='true']) {
   height: 6px;
   width: 6px;
   border-radius: 9999px;
-  background: #ffffff;
-  mix-blend-mode: difference;
+  background: var(--luxe-cur, #fff);
+  box-shadow: 0 0 0 1.5px var(--luxe-edge, rgba(0, 0, 0, 0.45));
   transform: translate(-50%, -50%) scale(var(--s, 1));
   transition:
     transform 0.2s ease,
-    opacity 0.3s ease;
+    opacity 0.3s ease,
+    background-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 .luxe-cur-dot.is-press {
   --s: 2.4;
@@ -157,16 +175,17 @@ html.luxe-cursor-on *:not(input):not(textarea):not([contenteditable='true']) {
   width: 38px;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid #ffffff;
+  border: 1.5px solid var(--luxe-cur, #fff);
   border-radius: 9999px;
   background: transparent;
-  mix-blend-mode: difference;
+  box-shadow: 0 0 0 1px var(--luxe-edge, rgba(0, 0, 0, 0.45));
   transform: translate(-50%, -50%) scale(var(--s, 1));
   transition:
     width 0.42s cubic-bezier(0.22, 1, 0.36, 1),
     height 0.42s cubic-bezier(0.22, 1, 0.36, 1),
     background-color 0.42s ease,
-    border-color 0.42s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
     transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .luxe-cur-ring.is-link {
@@ -176,15 +195,14 @@ html.luxe-cursor-on *:not(input):not(textarea):not([contenteditable='true']) {
 .luxe-cur-ring.is-view {
   height: 92px;
   width: 92px;
-  border-color: #121212;
-  background: #121212;
-  mix-blend-mode: normal;
+  border-color: var(--luxe-cur, #121212);
+  background: var(--luxe-cur, #121212);
 }
 .luxe-cur-ring.is-press {
   --s: 0.82;
 }
 .luxe-cur-label {
-  color: #ffffff;
+  color: var(--luxe-ink, #fff);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.18em;

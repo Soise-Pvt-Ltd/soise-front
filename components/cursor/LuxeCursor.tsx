@@ -46,7 +46,7 @@ export default function LuxeCursor() {
 
   useEffect(() => {
     if (!enabled) {
-      document.documentElement.classList.remove('luxe-cursor-on');
+      document.documentElement.classList.remove('luxe-cursor-on', 'cur-on-light');
       return;
     }
     document.documentElement.classList.add('luxe-cursor-on');
@@ -60,11 +60,48 @@ export default function LuxeCursor() {
       setLabel((prev) => (prev === l ? prev : l));
     };
 
+    // Sample the effective background luminance under the cursor (walking up to
+    // the first opaque background-color) so the cursor can flip dark/light and
+    // stay visible. Returns null over media/gradients where colour is unknown —
+    // there the contrasting halo (--luxe-edge) keeps it readable.
+    let lastSample = 0;
+    const sampleBackground = (x: number, y: number): number | null => {
+      let el = document.elementFromPoint(x, y) as HTMLElement | null;
+      let guard = 0;
+      while (el && guard++ < 14) {
+        const tag = el.tagName.toLowerCase();
+        if (['img', 'video', 'canvas', 'svg', 'picture'].includes(tag)) {
+          return null;
+        }
+        const cs = getComputedStyle(el);
+        if (cs.backgroundImage && cs.backgroundImage !== 'none') return null;
+        const m = cs.backgroundColor.match(/rgba?\(([^)]+)\)/);
+        if (m) {
+          const p = m[1].split(',').map((s) => parseFloat(s));
+          const a = p[3] === undefined ? 1 : p[3];
+          if (a >= 0.25) {
+            return (0.299 * p[0] + 0.587 * p[1] + 0.114 * p[2]) / 255;
+          }
+        }
+        el = el.parentElement;
+      }
+      return 1; // reached the root with no opaque bg → treat page as light
+    };
+
     const onMove = (e: MouseEvent) => {
       target.current.x = e.clientX;
       target.current.y = e.clientY;
       if (dotWrap.current) {
         dotWrap.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      }
+
+      const now = performance.now();
+      if (now - lastSample > 60) {
+        lastSample = now;
+        const lum = sampleBackground(e.clientX, e.clientY);
+        if (lum !== null) {
+          document.documentElement.classList.toggle('cur-on-light', lum > 0.55);
+        }
       }
 
       const el = (e.target as HTMLElement)?.closest?.(
@@ -128,7 +165,7 @@ export default function LuxeCursor() {
       document.removeEventListener('mouseleave', onLeave);
       cancelAnimationFrame(raf);
       if (magnetEl.current) magnetEl.current.style.transform = '';
-      document.documentElement.classList.remove('luxe-cursor-on');
+      document.documentElement.classList.remove('luxe-cursor-on', 'cur-on-light');
     };
   }, [enabled]);
 
