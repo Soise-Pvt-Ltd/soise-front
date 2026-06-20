@@ -1,23 +1,20 @@
-import { requireRole } from '@/lib/require-role';
+import { getCurrentRole } from '@/lib/require-role';
 import TeamNav from './TeamNav';
 import StatueWatermark from '@/components/brand/StatueWatermark';
 
 export const dynamic = 'force-dynamic';
 
-// Gate the entire /team workspace to admin + staff. This is the authoritative
-// server-side check (the `getCurrentRole` helper reads the role from the backend
-// profile, not a client cookie). Staff is the outreach role: this tooling holds
-// no financial data, so they can use it without access to the money dashboard.
+// Shared shell for /team. Auth is enforced PER PAGE: the Overview and Prospects
+// pages gate to admin/staff (they expose the prospect pipeline), while the
+// Playbook is intentionally PUBLIC and shareable — so we must not block it here.
+// We still read the role to tailor the chrome (internal nav for staff, a clean
+// public header for everyone else).
 export default async function TeamLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const role = await requireRole(['admin', 'staff'], {
-    deniedTo: '/',
-    reason: 'team-only',
-    loginCallback: '/team',
-  });
+  const role = await getCurrentRole();
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#FAFBFC]">

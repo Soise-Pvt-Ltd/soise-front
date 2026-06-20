@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     locale: 'en_NG',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Nigeria's #1 Streetwear Brand`,
+    title: `${SITE_NAME} — Streetwear with a Classical Soul`,
     description: DEFAULT_DESCRIPTION,
     images: [
       {
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@soise',
     creator: '@soise',
-    title: `${SITE_NAME} — Nigeria's #1 Streetwear Brand`,
+    title: `${SITE_NAME} — Streetwear with a Classical Soul`,
     description: DEFAULT_DESCRIPTION,
     images: ['/og-image.jpg'],
   },

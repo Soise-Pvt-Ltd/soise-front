@@ -7,7 +7,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        // /team is internal — except the publicly shareable playbook (longest-match wins).
+        allow: ['/', '/team/playbook'],
         disallow: ['/dashboard/', '/team/', '/api/', '/creators/dashboard/'],
       },
     ],

@@ -8,7 +8,7 @@ export const SITE_NAME = 'SOISE';
 export const SITE_TAGLINE = 'Wear the Culture';
 
 export const DEFAULT_DESCRIPTION =
-  'SOISE is Nigeria\'s leading streetwear brand. Shop authentic African-inspired urban fashion, hoodies, tees, joggers & more. Fast delivery across Lagos & Nigeria.';
+  'Lagos streetwear with a classical soul — where ancient form meets the Nigerian street. SOISE makes considered hoodies, tees and joggers for those who let the look do the talking. Say less, look more.';
 
 export const KEYWORDS = [
   'SOISE',
@@ -51,7 +51,7 @@ export function productJsonLd(product: {
     name: product.name,
     description:
       product.description ??
-      `Shop ${product.name} from SOISE — Nigeria's #1 streetwear brand. Fast delivery across Lagos & Nigeria.`,
+      `Shop ${product.name} from SOISE — Lagos streetwear where classical form meets the street. Considered, sharp-cut, and shipped across Nigeria.`,
     image,
     url: `${SITE_URL}/shop/product-listing/${product.slug}`,
     brand: {

@@ -1,6 +1,29 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'The Creator Playbook',
+  description:
+    'How the Swaz Creator Program is built — the way we find, score, and invite the creators shaping how Nigeria wears SOISE. Our rubric, our principles, our standard.',
+  alternates: { canonical: '/team/playbook' },
+  openGraph: {
+    type: 'article',
+    title: 'The Swaz Creator Playbook — SOISE',
+    description:
+      'How we find, score, and invite the creators shaping how Nigeria wears SOISE.',
+    url: '/team/playbook',
+    images: ['/og-image.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The Swaz Creator Playbook — SOISE',
+    description:
+      'How we find, score, and invite the creators shaping how Nigeria wears SOISE.',
+    images: ['/og-image.jpg'],
+  },
+};
 
 const SCORECARD = [
   {
@@ -59,7 +82,7 @@ export default function PlaybookPage() {
     <div className="mx-auto max-w-[760px]">
       <header className="mb-8">
         <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0072BB]">
-          Internal · Swaz Creator Program
+          The Swaz Creator Program
         </p>
         <h1 className="mt-1 text-[28px] font-semibold tracking-tight text-[#121212]">
           Creator Outreach Playbook

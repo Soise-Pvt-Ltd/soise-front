@@ -106,7 +106,7 @@ function redirectToLogin(req: NextRequest, fallback: URL): NextResponse {
 // Loop explainer/FAQ under /creators). These must remain viewable logged-out,
 // so they bypass the auth gate while everything else under /creators stays
 // protected.
-const PUBLIC_PATHS = ['/creators/swaz-loop'];
+const PUBLIC_PATHS = ['/creators/swaz-loop', '/team/playbook'];
 
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;

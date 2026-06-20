@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
+import { requireRole } from '@/lib/require-role';
 import { fetchProspectStats, fetchProspects } from './prospects/actions';
 
 const STAGES = [
@@ -19,6 +20,11 @@ const TIER_STYLES: Record<string, string> = {
 };
 
 export default async function TeamOverviewPage() {
+  await requireRole(['admin', 'staff'], {
+    deniedTo: '/',
+    reason: 'team-only',
+    loginCallback: '/team',
+  });
   const [stats, recent] = await Promise.all([
     fetchProspectStats(),
     fetchProspects('', 'all', 'all'),

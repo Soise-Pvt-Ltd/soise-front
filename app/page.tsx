@@ -9,14 +9,14 @@ import ImageGallerySection from '@/components/home/image-gallery-section';
 import { SITE_URL, SITE_NAME } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — Shop Streetwear Online in Nigeria | Lagos Fashion`,
+  title: `${SITE_NAME} — Lagos Streetwear with a Classical Soul`,
   description:
-    'Shop the latest streetwear collection from SOISE. Hoodies, tees, joggers & more. Premium African-inspired urban fashion with fast delivery across Lagos & Nigeria. Free shipping on select orders.',
+    'The new SOISE collection — Lagos streetwear where classical form meets the street. Hoodies, tees and joggers cut sharp and worn quiet, for those who let the look do the talking. Shipped across Nigeria.',
   alternates: { canonical: '/' },
   openGraph: {
-    title: `${SITE_NAME} — Shop Streetwear Online in Nigeria`,
+    title: `${SITE_NAME} — Streetwear with a Classical Soul`,
     description:
-      'Nigeria\'s #1 streetwear brand. Premium hoodies, tees, joggers & more with fast delivery across Lagos & all of Nigeria.',
+      'Where the discipline of classical form meets the pulse of the Lagos street. Considered streetwear — hoodies, tees, joggers — for those who let the look do the talking. Say less, look more.',
     url: SITE_URL,
   },
 };
