@@ -98,7 +98,7 @@ export const ORG_JSONLD = {
       ],
       contactPoint: {
         '@type': 'ContactPoint',
-        email: 'support@soise.ng',
+        email: 'hello@soise.ng',
         contactType: 'customer service',
         areaServed: 'NG',
         availableLanguage: 'English',

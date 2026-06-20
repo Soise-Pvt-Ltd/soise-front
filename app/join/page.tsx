@@ -57,13 +57,13 @@ export default async function JoinPage({
           }}
         />
         <div className="relative mx-auto max-w-[860px] px-6 pb-16 pt-20 text-center sm:pt-28">
-          {/* The muse-in-meander emblem, inverted to read on the dark canvas. */}
+          {/* The muse-in-meander emblem (transparent), inverted to white on dark. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/swz.jpg"
+            src="/swz.png"
             alt="Soise"
             className="mx-auto mb-8 h-[72px] w-[72px] object-contain"
-            style={{ filter: 'invert(1)', mixBlendMode: 'screen' }}
+            style={{ filter: 'invert(1)' }}
           />
           <p className="text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
             {ref ? 'Your invitation is verified' : 'By invitation'}

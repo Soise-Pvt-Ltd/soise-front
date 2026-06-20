@@ -1,9 +1,9 @@
 /**
- * Ambient Soise statue (the Venus torso, swz-statue.jpg) used as a quiet brand
- * watermark — never forefront. It's a black-line-art JPG on white, so we blend
- * it into the surface instead of dropping a white box:
- *   - tone="dark"  → dark lines for LIGHT surfaces (multiply drops the white)
- *   - tone="light" → light lines for DARK surfaces (invert, then screen)
+ * Ambient Soise statue (the Venus torso, swz-statue.png) used as a quiet brand
+ * watermark — never forefront. Transparent black line art, so it sits on any
+ * surface; we only flip the line colour by surface tone:
+ *   - tone="dark"  → black lines for LIGHT surfaces (as-is)
+ *   - tone="light" → white lines for DARK surfaces (inverted)
  *
  * Purely decorative: pointer-events off, aria-hidden, positioned by the caller.
  * Server-safe (no hooks).
@@ -25,16 +25,15 @@ export default function StatueWatermark({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/swz-statue.jpg"
+      src="/swz-statue.png"
       alt=""
       aria-hidden="true"
       draggable={false}
       className={`pointer-events-none select-none ${className}`}
       style={{
         width,
-        opacity: opacity ?? (isLight ? 0.12 : 0.05),
+        opacity: opacity ?? (isLight ? 0.14 : 0.06),
         filter: isLight ? 'invert(1)' : 'none',
-        mixBlendMode: isLight ? 'screen' : 'multiply',
         ...style,
       }}
     />

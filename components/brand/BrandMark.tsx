@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 /**
  * The user-facing brand mark. Soise has two public faces — the bold oval badge
- * (logo.png) and the refined muse-in-meander emblem (swz.jpg) — and we show them
+ * (logo.png) and the refined muse-in-meander emblem (swz.png) — and we show them
  * alternately each visit so the brand feels alive without ever exposing the
  * formal main-logo (which is reserved for the internal admin / team surfaces).
  *
@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
  * a consistent height. Chosen on the client after mount to avoid hydration
  * mismatch; the slot reserves space so there's no layout shift.
  */
-const MARKS = ['/logo.png', '/swz.jpg'];
+const MARKS = ['/logo.png', '/swz.png'];
 
 export default function BrandMark({
   height = 52,

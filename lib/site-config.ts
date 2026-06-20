@@ -5,7 +5,7 @@
  */
 export const siteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME ?? 'SOISE',
-  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'support@soise.ng',
+  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'hello@soise.ng',
   officeAddress: process.env.NEXT_PUBLIC_OFFICE_ADDRESS ?? 'Better Days, Heaven.',
   registrationNumber: process.env.NEXT_PUBLIC_COMPANY_REG_NUMBER ?? '1234567890',
   estimatedDelivery: process.env.NEXT_PUBLIC_ESTIMATED_DELIVERY ?? '3-5 business days',
