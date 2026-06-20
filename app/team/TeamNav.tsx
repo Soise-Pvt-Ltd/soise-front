@@ -15,7 +15,7 @@ const LINKS = [
 export default function TeamNav({ role }: { role: string | null }) {
   const path = usePathname();
   const router = useRouter();
-  const isStaff = role === 'admin' || role === 'staff';
+  const isOutreach = role === 'admin' || role === 'outreach';
 
   const handleLogout = async () => {
     await logout();
@@ -24,7 +24,7 @@ export default function TeamNav({ role }: { role: string | null }) {
 
   // Public viewers (e.g. on the shareable /team/playbook) get a clean public
   // header — a user-facing mark, no internal links, no sign-out, never main-logo.
-  if (!isStaff) {
+  if (!isOutreach) {
     return (
       <header className="sticky top-0 z-30 border-b border-[#ECECEF] bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1180px] items-center justify-between gap-4 px-5 py-3 sm:px-8">

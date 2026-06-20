@@ -20,7 +20,7 @@ const TIER_STYLES: Record<string, string> = {
 };
 
 export default async function TeamOverviewPage() {
-  await requireRole(['admin', 'staff'], {
+  await requireRole(['admin', 'outreach'], {
     deniedTo: '/',
     reason: 'team-only',
     loginCallback: '/team',

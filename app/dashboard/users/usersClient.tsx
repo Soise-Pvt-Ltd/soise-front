@@ -64,7 +64,7 @@ export default function UsersPage({
     user: 'bg-[#CCEAD6] text-[#32AC5B] border border-[#CCEAD6] rounded-full',
     creator: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
     admin: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
-    staff: 'bg-[#D6E6F2] text-[#0072BB] border border-[#D6E6F2] rounded-full',
+    outreach: 'bg-[#D6E6F2] text-[#0072BB] border border-[#D6E6F2] rounded-full',
   };
 
   const [selectedPeriod, setSelectedPeriod] = useState('All Time');
@@ -77,7 +77,7 @@ export default function UsersPage({
 
   // Role filter (backend supports ?role=; previously no UI for it).
   const [roleFilter, setRoleFilter] = useState('All');
-  const roleOptions = ['All', 'user', 'creator', 'staff', 'admin'];
+  const roleOptions = ['All', 'user', 'creator', 'outreach', 'admin'];
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
@@ -460,7 +460,7 @@ export default function UsersPage({
                 >
                   <option value="user">User</option>
                   <option value="creator">Creator</option>
-                  <option value="staff">Staff (outreach team)</option>
+                  <option value="outreach">Outreach (creator team)</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>

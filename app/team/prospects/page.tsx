@@ -5,7 +5,7 @@ import { fetchProspects, fetchProspectStats } from './actions';
 import { requireRole } from '@/lib/require-role';
 
 export default async function ProspectsPage() {
-  await requireRole(['admin', 'staff'], {
+  await requireRole(['admin', 'outreach'], {
     deniedTo: '/',
     reason: 'team-only',
     loginCallback: '/team',

@@ -9,7 +9,7 @@ const USER_PROTECTED_PATHS = [
   '/shop/order-history',
   '/shop/user',
   // /team requires a session here; the /team layout further restricts to
-  // admin + staff via requireRole (the authoritative server-side role check).
+  // admin + outreach via requireRole (the authoritative server-side role check).
   '/team',
 ];
 

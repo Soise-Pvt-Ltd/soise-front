@@ -5,9 +5,9 @@ import StatueWatermark from '@/components/brand/StatueWatermark';
 export const dynamic = 'force-dynamic';
 
 // Shared shell for /team. Auth is enforced PER PAGE: the Overview and Prospects
-// pages gate to admin/staff (they expose the prospect pipeline), while the
+// pages gate to admin/outreach (they expose the prospect pipeline), while the
 // Playbook is intentionally PUBLIC and shareable — so we must not block it here.
-// We still read the role to tailor the chrome (internal nav for staff, a clean
+// We still read the role to tailor the chrome (internal nav for the outreach team, a clean
 // public header for everyone else).
 export default async function TeamLayout({
   children,
