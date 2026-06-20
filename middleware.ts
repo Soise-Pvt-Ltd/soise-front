@@ -8,6 +8,9 @@ const USER_PROTECTED_PATHS = [
   '/creators',
   '/shop/order-history',
   '/shop/user',
+  // /team requires a session here; the /team layout further restricts to
+  // admin + staff via requireRole (the authoritative server-side role check).
+  '/team',
 ];
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api.soise.ng';
@@ -168,6 +171,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/creators/:path*',
+    '/team/:path*',
     '/shop/checkout/:path*',
     '/shop/wishlist/:path*',
     '/shop/order-history/:path*',

@@ -105,6 +105,12 @@ const Nav = () => {
           />
 
           <Links
+            path={'/team'}
+            svg={<AdminCreatorsIcon />}
+            linkname={'Creator Team'}
+          />
+
+          <Links
             path={'/dashboard/payout'}
             svg={<AdminPayoutIcon />}
             linkname={'Payout'}
