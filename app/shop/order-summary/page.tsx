@@ -20,6 +20,8 @@ export default async function OrderHistoryPage() {
   let productsData = { data: [] };
   let cartData = { data: [] };
   let storeCredit = 0;
+  let welcomeCreditPending = false;
+  let welcomeCreditAmount = 1000;
 
   try {
     if (!baseUrl) {
@@ -64,6 +66,11 @@ export default async function OrderHistoryPage() {
           const creditJson = await creditRes.json();
           const bal = creditJson?.data?.store_credit_balance;
           if (typeof bal === 'number') storeCredit = bal;
+          welcomeCreditPending = Boolean(
+            creditJson?.data?.welcome_credit_pending,
+          );
+          const amt = creditJson?.data?.welcome_credit_amount;
+          if (typeof amt === 'number') welcomeCreditAmount = amt;
         }
       } catch {
         // ignore — toggle simply won't show
@@ -99,6 +106,8 @@ export default async function OrderHistoryPage() {
         cart={enrichedCart}
         isLoggedIn={isLoggedIn}
         storeCredit={storeCredit}
+        welcomeCreditPending={welcomeCreditPending}
+        welcomeCreditAmount={welcomeCreditAmount}
       />
     </>
   );

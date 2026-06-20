@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { ArrowUpIcon } from '@/components/icons';
@@ -16,6 +17,10 @@ interface OrderSummaryClientProps {
   cart: EnrichedCartItem[];
   isLoggedIn: boolean;
   storeCredit?: number;
+  // A referred buyer who hasn't completed a first paid order yet still has a
+  // one-time welcome credit pending. Surfaced as a gentle nudge at checkout.
+  welcomeCreditPending?: boolean;
+  welcomeCreditAmount?: number;
 }
 
 const NIGERIAN_STATES = [
@@ -62,6 +67,8 @@ export default function OrderSummaryClient({
   cart,
   isLoggedIn,
   storeCredit = 0,
+  welcomeCreditPending = false,
+  welcomeCreditAmount = 1000,
 }: OrderSummaryClientProps) {
   const { formatPrice, currency } = useCurrency();
   const router = useRouter();
@@ -328,6 +335,50 @@ export default function OrderSummaryClient({
         </div>
 
         <div className="px-[20px]">
+          {/* Referred-buyer welcome — a referred first-timer has ₦1,000 store
+              credit unlocking on this very order. Frame it as a gift, never a
+              pop-up shout. Hidden once they've completed a first paid order. */}
+          {welcomeCreditPending && (
+            <div className="mb-[18px] overflow-hidden rounded-[12px] border border-[#CFE9D8] bg-gradient-to-br from-[#F2FBF5] to-[#FBF7EE] px-[16px] py-[14px]">
+              <div className="flex items-start gap-x-3">
+                <span className="mt-[1px] flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#32AC5B]/10">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#2C8F4D"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="8" width="18" height="4" rx="1" />
+                    <path d="M12 8v13" />
+                    <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+                    <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5" />
+                  </svg>
+                </span>
+                <div className="flex-1 normal-case">
+                  <p className="text-[13px] font-semibold text-[#121212]">
+                    A welcome gift is waiting
+                  </p>
+                  <p className="mt-[2px] text-[12px] leading-relaxed text-[#5A6B5F]">
+                    Complete your first order and{' '}
+                    {formatPrice(welcomeCreditAmount)} in store credit is yours
+                    — a thank-you from the friend who invited you to Soise.
+                  </p>
+                  <Link
+                    href="/swaz-loop"
+                    className="mt-[6px] inline-block text-[12px] font-semibold text-[#2C8F4D] underline-offset-2 hover:underline"
+                  >
+                    How the Swaz Loop works →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Code input — hidden when a code is already active */}
           <AnimatePresence mode="wait">
             {!discountData ? (
@@ -431,6 +482,46 @@ export default function OrderSummaryClient({
             )}
           </AnimatePresence>
 
+          {/* Swaz Loop awareness — surfaced the moment a creator code lands.
+              The buyer just made a creator earn; show them the loop runs both
+              ways. Quiet, editorial tone — never a Temu-style shout. */}
+          <AnimatePresence>
+            {discountData && (
+              <motion.div
+                className="mt-[10px] overflow-hidden rounded-[10px] border border-[#ECE7F4] bg-[#FAF8FE] px-[14px] py-[12px]"
+                initial={{ opacity: 0, height: 0, y: -8 }}
+                animate={{ opacity: 1, height: 'auto', y: 0 }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#6B5B95]">
+                  The Swaz Loop
+                </p>
+                <p className="mt-[4px] text-[12px] leading-relaxed text-[#4A4458]">
+                  {discountData.creator?.username
+                    ? `@${discountData.creator.username} earns when you shop their code`
+                    : 'Your creator earns when you shop their code'}{' '}
+                  — and the loop runs both ways. Earn store credit when friends
+                  shop your link, or create with us.
+                </p>
+                <div className="mt-[10px] flex flex-wrap items-center gap-x-5 gap-y-1.5">
+                  <Link
+                    href="/swaz-loop"
+                    className="text-[12px] font-semibold text-[#6B5B95] underline-offset-2 hover:underline"
+                  >
+                    Invite &amp; earn →
+                  </Link>
+                  <Link
+                    href="/creators"
+                    className="text-[12px] font-semibold text-[#6B5B95] underline-offset-2 hover:underline"
+                  >
+                    Become a creator →
+                  </Link>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Store credit toggle — only when logged in with a balance */}
           {hasStoreCredit && (
             <div className="mt-[16px] flex items-center justify-between rounded-[10px] border border-[#CCEAD6] bg-[#F5FCF7] px-[14px] py-[12px]">
@@ -439,7 +530,13 @@ export default function OrderSummaryClient({
                   Apply my {formatPrice(storeCredit)} store credit
                 </p>
                 <p className="text-[11px] text-[#8E8E93]">
-                  Earned through the Swaz Loop. Spendable now.
+                  You earned this by inviting friends.{' '}
+                  <Link
+                    href="/swaz-loop"
+                    className="font-medium text-[#32AC5B] underline-offset-2 hover:underline"
+                  >
+                    Keep earning →
+                  </Link>
                 </p>
               </div>
               <button
