@@ -227,6 +227,17 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* ── Incorporated (colophon) ──────────────────────────── */}
+        <section className="border-t border-[#14110E]/10 px-6 py-12 text-center">
+          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#9C6F2E]">
+            Incorporated
+          </p>
+          <p className="mx-auto mt-3 max-w-[480px] text-[13px] leading-relaxed text-[#5C544A]">
+            SOISE PVT. LTD was incorporated in Abuja, Nigeria on 15 April 2025 —
+            a private company limited by shares. RC 8413888.
+          </p>
+        </section>
       </main>
       <Footer />
     </>
