@@ -9,11 +9,10 @@ export const siteConfig = {
   // Operating region shown in the footer. Hardcoded (not env-driven) so it
   // can't be overridden by a stale NEXT_PUBLIC_OFFICE_ADDRESS in the host env.
   officeAddress: 'Sub-Saharan Africa, Africa',
-  // CAC registration (RC) number + TIN from the certificate of incorporation
-  // (SOISE PVT. LTD, incorporated 15 Apr 2025). Hardcoded so they reflect the
+  // CAC registration (RC) number from the certificate of incorporation
+  // (SOISE PVT. LTD, incorporated 15 Apr 2025). Hardcoded so it reflects the
   // real entity and can't be overridden by a stale host env var.
   registrationNumber: '8413888',
-  tin: '33081024-0001',
   estimatedDelivery: process.env.NEXT_PUBLIC_ESTIMATED_DELIVERY ?? '3-5 business days',
   social: {
     instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://instagram.com/soise',

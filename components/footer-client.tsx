@@ -179,8 +179,6 @@ export default function FooterClient() {
           Office: {siteConfig.officeAddress}
           <br />
           Company Registration Number: RC {siteConfig.registrationNumber}
-          <br />
-          Tax Identification Number: {siteConfig.tin}
         </div>
       </motion.div>
     </>
