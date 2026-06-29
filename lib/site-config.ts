@@ -6,7 +6,9 @@
 export const siteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME ?? 'SOISE',
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'hello@soise.ng',
-  officeAddress: process.env.NEXT_PUBLIC_OFFICE_ADDRESS ?? 'Better Days, Heaven.',
+  // Operating region shown in the footer. Hardcoded (not env-driven) so it
+  // can't be overridden by a stale NEXT_PUBLIC_OFFICE_ADDRESS in the host env.
+  officeAddress: 'Sub-Saharan Africa, Africa',
   registrationNumber: process.env.NEXT_PUBLIC_COMPANY_REG_NUMBER ?? '1234567890',
   estimatedDelivery: process.env.NEXT_PUBLIC_ESTIMATED_DELIVERY ?? '3-5 business days',
   social: {
