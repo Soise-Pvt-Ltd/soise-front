@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CopyIcon, ShareIcon, CloseIcon } from '@/components/icons';
+import {
+  CopyIcon,
+  ShareIcon,
+  CloseIcon,
+  TagIcon,
+  DollarIcon,
+} from '@/components/icons';
 import { showToast } from '@/lib/toast-utils';
 import { changeCreatorCode } from './dashboard/actions';
 
@@ -13,13 +19,29 @@ interface ReferralCodeProps {
    * change their code within 24h of this moment; after that it is permanent.
    */
   codeCreatedAt?: string | null;
+  /** % the customer saves when they redeem the code */
+  discountPercentage?: number;
+  /** % the creator earns on every order placed with the code */
+  commissionRate?: number;
+  /** how many times the code has been used so far */
+  usageCount?: number;
+  /** the creator's current tier name, if any */
+  tierName?: string;
 }
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
-export default function ReferralCode({ code, codeCreatedAt }: ReferralCodeProps) {
+export default function ReferralCode({
+  code,
+  codeCreatedAt,
+  discountPercentage = 10,
+  commissionRate = 10,
+  usageCount = 0,
+  tierName,
+}: ReferralCodeProps) {
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [customCode, setCustomCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,13 +51,30 @@ export default function ReferralCode({ code, codeCreatedAt }: ReferralCodeProps)
   const createdMs = codeCreatedAt ? new Date(codeCreatedAt).getTime() : NaN;
   const withinWindow =
     !Number.isNaN(createdMs) && Date.now() - createdMs < TWENTY_FOUR_HOURS_MS;
-  const hoursLeft =
-    !Number.isNaN(createdMs)
-      ? Math.max(
-          0,
-          Math.ceil((createdMs + TWENTY_FOUR_HOURS_MS - Date.now()) / (60 * 60 * 1000)),
-        )
-      : 0;
+  const hoursLeft = !Number.isNaN(createdMs)
+    ? Math.max(
+        0,
+        Math.ceil((createdMs + TWENTY_FOUR_HOURS_MS - Date.now()) / (60 * 60 * 1000)),
+      )
+    : 0;
+
+  const fmtPct = (n: number) =>
+    Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
+
+  const hasTier =
+    !!tierName &&
+    !['no tier', 'unassigned'].includes(tierName.toLowerCase());
+
+  // A shareable link that pre-applies the code at checkout (captured by
+  // RefCapture via the `?code=` param). Built at call time so we read the real
+  // origin on the client without risking a hydration mismatch.
+  const buildShareUrl = () => {
+    const origin =
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : 'https://soise.ng';
+    return `${origin}/shop/product-listing?code=${encodeURIComponent(code)}`;
+  };
 
   const copy = async (text: string) => {
     if (isCopied) return; // Prevent multiple clicks
@@ -50,18 +89,35 @@ export default function ReferralCode({ code, codeCreatedAt }: ReferralCodeProps)
     }
   };
 
+  const copyLink = async () => {
+    if (linkCopied) return;
+    try {
+      await navigator.clipboard.writeText(buildShareUrl());
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link: ', err);
+    }
+  };
+
+  const shareMessage = `Get ${fmtPct(
+    discountPercentage,
+  )} off on Soise with my creator code ${code}`;
+
   const handleShare = async () => {
+    const url = buildShareUrl();
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'My Soise Creator Code',
-          text: `Use my creator code on Soise: ${code}`,
+          text: shareMessage,
+          url,
         });
       } catch (error) {
         console.error('Error sharing:', error);
       }
     } else {
-      copy(`Use my creator code on Soise: ${code}`);
+      copy(`${shareMessage}: ${url}`);
     }
   };
 
@@ -95,15 +151,28 @@ export default function ReferralCode({ code, codeCreatedAt }: ReferralCodeProps)
 
   return (
     <div>
-      <p className="mb-[16px] text-[#8E8E93]">Creator code</p>
+      {/* Header: label + usage */}
+      <div className="flex items-center justify-between">
+        <p className="text-[#8E8E93]">Your creator code</p>
+        {usageCount > 0 && (
+          <span className="text-[13px] text-[#8E8E93]">
+            Used{' '}
+            <span className="font-medium text-[#121212]">
+              {usageCount.toLocaleString()}
+            </span>{' '}
+            {usageCount === 1 ? 'time' : 'times'}
+          </span>
+        )}
+      </div>
 
-      <div className="flex items-center gap-x-[12px]">
-        <span className="font-semibold tracking-widest text-[#0072BB] uppercase">
-          {code}
+      {/* The code + copy */}
+      <div className="mt-[12px] flex items-center justify-between gap-x-[12px] rounded-[12px] bg-[#f9f9f9] px-[16px] py-[14px]">
+        <span className="truncate text-[18px] font-semibold tracking-widest text-[#0072BB] uppercase">
+          {code || '—'}
         </span>
         <button
           onClick={() => copy(code)}
-          className="flex cursor-pointer items-center gap-x-1 text-[#8E8E93] transition-colors hover:text-[#121212]"
+          className="flex shrink-0 cursor-pointer items-center gap-x-1 text-[#8E8E93] transition-colors hover:text-[#121212]"
           title="Copy creator code"
           type="button"
         >
@@ -115,13 +184,51 @@ export default function ReferralCode({ code, codeCreatedAt }: ReferralCodeProps)
         </button>
       </div>
 
-      <div className="pt-[24px] text-[13px] text-[#8E8E93]">
-        Invite customers and promote SOISE.
+      {/* What the code does */}
+      <div className="mt-[20px] space-y-[12px]">
+        <div className="flex items-start gap-x-[12px]">
+          <div className="mt-[1px] rounded-full bg-[#121212] p-[8px]">
+            <TagIcon />
+          </div>
+          <div>
+            <p className="text-[14px] font-medium text-[#121212]">
+              Customers save {fmtPct(discountPercentage)}
+            </p>
+            <p className="text-[13px] text-[#8E8E93]">
+              Anyone who enters your code at checkout gets{' '}
+              {fmtPct(discountPercentage)} off their order.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-x-[12px]">
+          <div className="mt-[1px] rounded-full bg-[#121212] p-[8px]">
+            <DollarIcon />
+          </div>
+          <div>
+            <p className="text-[14px] font-medium text-[#121212]">
+              You earn {fmtPct(commissionRate)} commission
+            </p>
+            <p className="text-[13px] text-[#8E8E93]">
+              Every order placed with your code pays {fmtPct(commissionRate)}{' '}
+              into your wallet
+              {hasTier ? (
+                <>
+                  {' '}
+                  at your{' '}
+                  <span className="font-medium text-[#121212]">{tierName}</span>{' '}
+                  tier
+                </>
+              ) : null}
+              . Sell more to grow your rate.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* 24h change-code window */}
       {withinWindow ? (
-        <div className="mt-[16px] rounded-[10px] bg-[#F5F8FB] px-[14px] py-[12px]">
+        <div className="mt-[20px] rounded-[10px] bg-[#F5F8FB] px-[14px] py-[12px]">
           <p className="text-[13px] font-medium text-[#121212]">
             Not happy with your code?
           </p>
@@ -148,12 +255,26 @@ export default function ReferralCode({ code, codeCreatedAt }: ReferralCodeProps)
         </p>
       ) : null}
 
-      <button
-        onClick={handleShare}
-        className="btn_black mt-[24px] flex items-center justify-center gap-x-2 !text-[12px] !font-medium !capitalize sm:!w-fit sm:!px-[40px]"
-      >
-        share code <ShareIcon />
-      </button>
+      {/* Actions */}
+      <div className="mt-[20px] flex flex-col gap-[12px] sm:flex-row sm:items-center">
+        <button
+          onClick={handleShare}
+          className="btn_black flex items-center justify-center gap-x-2 !text-[12px] !font-medium !capitalize sm:!w-fit sm:!px-[40px]"
+        >
+          share link <ShareIcon />
+        </button>
+        <button
+          onClick={copyLink}
+          type="button"
+          className="text-[13px] font-medium text-[#0072BB] transition-opacity hover:opacity-70 sm:px-[8px]"
+        >
+          {linkCopied ? 'Link copied!' : 'Copy link'}
+        </button>
+      </div>
+      <p className="mt-[10px] text-[13px] text-[#8E8E93]">
+        Your link applies the discount automatically at checkout — they never
+        have to type the code.
+      </p>
 
       {/* Change-code modal */}
       {showModal && (

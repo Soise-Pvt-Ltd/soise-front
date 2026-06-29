@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Toaster } from 'sonner';
@@ -12,6 +12,20 @@ import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
+import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
+
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(
+    new RegExp('(?:^|; )' + name + '=([^;]*)'),
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function clearCookie(name: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
+}
 
 interface OrderSummaryClientProps {
   cart: EnrichedCartItem[];
@@ -177,33 +191,19 @@ export default function OrderSummaryClient({
     }
   }
 
-  async function handleApplyDiscount(e: React.FormEvent) {
-    e.preventDefault();
-
-    const codeError = validateField(discountCode, 'Creator code', {
-      required: true,
-      minLength: 3,
-    });
-
-    if (codeError) {
-      showToast.error(codeError);
-      return;
-    }
-
+  async function applyCode(code: string, { silent = false } = {}) {
     setDiscountPending(true);
 
-    const toastId = showToast.loading('Applying creator code...');
+    const toastId = silent
+      ? null
+      : showToast.loading('Applying creator code...');
 
     try {
-      const result = await applyDiscountCodeAction(discountCode);
+      const result = await applyDiscountCodeAction(code);
 
-      showToast.dismiss(toastId);
+      if (toastId) showToast.dismiss(toastId);
 
       if (result.success) {
-        showToast.success(
-          result.message || 'Creator code applied successfully!',
-        );
-
         const data = result.data ?? {};
         const base = data.subtotal ?? calculatedSubtotal;
 
@@ -224,32 +224,83 @@ export default function OrderSummaryClient({
             : base - discountAmt;
 
         // Always store applied code — use entered code as fallback if API doesn't echo it back
-        setDiscountData({ ...data, code: data.code || discountCode });
+        setDiscountData({ ...data, code: data.code || code });
         setAppliedDiscount(discountAmt);
         setFinalTotal(computedTotal);
         setDiscountCode('');
         setShowSavingsPulse(true);
         setTimeout(() => setShowSavingsPulse(false), 1200);
-      } else {
-        showToast.error(
-          result.error ||
-            'Failed to apply creator code. Please check and try again.',
+
+        showToast.success(
+          silent
+            ? `Creator code ${data.code || code} applied — you saved!`
+            : result.message || 'Creator code applied successfully!',
         );
+        return true;
+      } else {
+        // A bad/expired link code shouldn't nag the customer — stay quiet when silent.
+        if (!silent) {
+          showToast.error(
+            result.error ||
+              'Failed to apply creator code. Please check and try again.',
+          );
+        }
+        return false;
       }
     } catch (err) {
-      showToast.dismiss(toastId);
-      showToast.error('An error occurred while applying the discount.');
+      if (toastId) showToast.dismiss(toastId);
+      if (!silent)
+        showToast.error('An error occurred while applying the discount.');
       console.error('Discount error:', err);
+      return false;
     } finally {
       setDiscountPending(false);
     }
   }
+
+  async function handleApplyDiscount(e: React.FormEvent) {
+    e.preventDefault();
+
+    const codeError = validateField(discountCode, 'Creator code', {
+      required: true,
+      minLength: 3,
+    });
+
+    if (codeError) {
+      showToast.error(codeError);
+      return;
+    }
+
+    await applyCode(discountCode);
+  }
+
+  // Auto-apply a creator code that arrived via a share link (`?code=`),
+  // stored in the PENDING_CREATOR_CODE_COOKIE cookie by RefCapture. Runs once
+  // the cart has items and nothing is applied yet; clears the cookie once it
+  // lands so it can't re-fire on later visits.
+  const autoApplyAttempted = useRef(false);
+  useEffect(() => {
+    if (autoApplyAttempted.current) return;
+    if (discountData || cart.length === 0) return;
+
+    const pending = readCookie(PENDING_CREATOR_CODE_COOKIE);
+    if (!pending) return;
+
+    autoApplyAttempted.current = true;
+    applyCode(pending, { silent: true }).finally(() => {
+      // Whether it succeeded or the code was invalid, don't keep retrying.
+      clearCookie(PENDING_CREATOR_CODE_COOKIE);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart.length, discountData]);
 
   function handleRemoveCode() {
     setDiscountData(null);
     setAppliedDiscount(0);
     setFinalTotal(null);
     setApiSubtotal(null);
+    // The customer opted out — don't let the link cookie silently re-apply it.
+    clearCookie(PENDING_CREATOR_CODE_COOKIE);
   }
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
