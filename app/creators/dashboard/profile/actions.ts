@@ -1,6 +1,6 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { getBackendToken } from '@/lib/server-auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -19,8 +19,7 @@ export interface UpdateProfilePayload {
  * profile as `{ success, data }`.
  */
 export async function updateProfile(payload: UpdateProfilePayload) {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('access_token')?.value;
+  const accessToken = await getBackendToken();
 
   if (!accessToken) return { success: false, error: 'Unauthorized' };
 

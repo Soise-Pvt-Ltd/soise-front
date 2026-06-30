@@ -133,31 +133,30 @@ export default function ProfileClient({ dashboard }: any) {
       return;
     }
 
+    if (file.size > 8 * 1024 * 1024) {
+      showToast.error('Image must be 8MB or smaller.');
+      return;
+    }
+
     setUploadingAvatar(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
 
-      const res = await fetch('/api/media/upload', {
+      // Single auth-only call: uploads to Cloudinary AND saves the avatar.
+      const res = await fetch('/api/profile/avatar', {
         method: 'POST',
         body: formData,
       });
       const json = await res.json().catch(() => null);
-      const url: string | undefined = json?.data?.url ?? json?.url;
+      const url: string | undefined = json?.avatar ?? json?.data?.avatar;
 
-      if (!res.ok || !url) {
+      if (!res.ok || !json?.success || !url) {
         showToast.error(json?.error || 'Upload failed. Please try again.');
         return;
       }
 
-      const result = await updateProfile({ avatar: url });
-      if (!result.success) {
-        showToast.error(result.error || 'Failed to update profile picture.');
-        return;
-      }
-
-      const updated = result.data ?? {};
-      setProfile((prev) => ({ ...prev, avatar: updated.avatar ?? url }));
+      setProfile((prev) => ({ ...prev, avatar: url }));
       showToast.success('Profile picture updated.');
       router.refresh();
     } catch {
@@ -174,13 +173,12 @@ export default function ProfileClient({ dashboard }: any) {
       (profile?.full_name || 'U')[0],
     )}&background=F5F5F5&color=000000`;
 
-  // Dynamic profile details using dashboard data
+  // Dynamic profile details using dashboard data. Only fields the backend
+  // actually stores on the user are shown (no perpetually-empty Gender/Address).
   const profileDetails = [
     { label: 'Full Name', value: fullName, truncate: false },
     { label: 'Mobile Number', value: profile?.phone || 'Not set', truncate: false },
-    { label: 'Gender', value: profile?.gender || 'Not set', truncate: false },
-    { label: 'Email', value: profile?.email || 'Not set', truncate: false },
-    { label: 'Address', value: profile?.address || 'Not set', truncate: true },
+    { label: 'Email', value: profile?.email || 'Not set', truncate: true },
   ];
 
   return (
