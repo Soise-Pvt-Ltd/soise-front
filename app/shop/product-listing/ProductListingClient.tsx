@@ -206,7 +206,7 @@ export default function ProductListingClient({
                       )}
 
                       {/* Image */}
-                      <div className="flex flex-1 items-center justify-center">
+                      <div className="flex flex-1 items-center justify-center overflow-hidden">
                         {(() => {
                           const src =
                             product.primary_image ||

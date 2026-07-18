@@ -221,7 +221,7 @@ export default function ProductPageClient({
                 {/* Main Image */}
                 <div className="order-1 flex-1 md:order-2">
                   <div className="flex h-[500px] w-full flex-col">
-                    <div className="flex flex-1 items-center justify-center">
+                    <div className="flex flex-1 items-center justify-center overflow-hidden">
                       <AnimatePresence mode="wait">
                         <motion.img
                           key={mainImage}

@@ -73,7 +73,7 @@ export default function SwiperCarouselClient({ items: products }: any) {
                   }}
                 >
                   {/* Image */}
-                  <div className="flex flex-1 items-center justify-center">
+                  <div className="flex flex-1 items-center justify-center overflow-hidden">
                     <motion.img
                       src={
                         item.primary_image ||
