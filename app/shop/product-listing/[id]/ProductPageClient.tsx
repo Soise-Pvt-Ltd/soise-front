@@ -220,14 +220,14 @@ export default function ProductPageClient({
               <div className="flex flex-col gap-4 md:flex-row">
                 {/* Main Image */}
                 <div className="order-1 flex-1 md:order-2">
-                  <div className="flex h-[500px] w-full flex-col bg-[#F5F5F5] p-[10px]">
-                    <div className="flex flex-1 items-center justify-center overflow-hidden">
+                  <div className="flex h-[500px] w-full flex-col">
+                    <div className="flex flex-1 items-center justify-center">
                       <AnimatePresence mode="wait">
                         <motion.img
                           key={mainImage}
                           src={mainImage}
                           alt={product.name}
-                          className="size-[80%] max-h-full max-w-full object-contain md:size-[75%]"
+                          className="max-h-full max-w-full object-contain"
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 1.02 }}
