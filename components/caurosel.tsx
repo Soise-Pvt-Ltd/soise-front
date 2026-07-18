@@ -62,10 +62,9 @@ export default function SwiperCarouselClient({ items: products }: any) {
             >
               <Link href={`/shop/product-listing/${item.slug}`}>
                 <motion.div
-                  className="flex h-[357px] flex-col rounded-[10px] bg-[#F5F5F5] p-[15px]"
+                  className="flex h-[357px] flex-col rounded-[10px]"
                   whileHover={{
                     y: -6,
-                    boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
                   }}
                   transition={{
                     type: 'spring',
@@ -73,8 +72,8 @@ export default function SwiperCarouselClient({ items: products }: any) {
                     damping: 20,
                   }}
                 >
-                  {/* Image Container */}
-                  <div className="flex flex-1 items-center justify-center overflow-hidden rounded-sm">
+                  {/* Image */}
+                  <div className="flex flex-1 items-center justify-center">
                     <motion.img
                       src={
                         item.primary_image ||
@@ -82,7 +81,7 @@ export default function SwiperCarouselClient({ items: products }: any) {
                         item.images?.[0]?.url
                       }
                       alt={item.title || item.name}
-                      className="size-[70%] object-cover"
+                      className="max-h-full max-w-full object-contain"
                       whileHover={{ scale: 1.08 }}
                       transition={{
                         duration: 0.6,

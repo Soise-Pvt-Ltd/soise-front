@@ -183,10 +183,9 @@ export default function ProductListingClient({
                     className="text-inherit no-underline"
                   >
                     <motion.div
-                      className="relative flex h-[244px] w-full flex-col bg-[#F5F5F5] p-[10px]"
+                      className="relative flex h-[244px] w-full flex-col"
                       whileHover={{
                         y: -6,
-                        boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
                       }}
                       transition={{
                         type: 'spring',
@@ -207,7 +206,7 @@ export default function ProductListingClient({
                       )}
 
                       {/* Image */}
-                      <div className="flex flex-1 items-center justify-center overflow-hidden">
+                      <div className="flex flex-1 items-center justify-center">
                         {(() => {
                           const src =
                             product.primary_image ||
