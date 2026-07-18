@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import GridContainer from '../gridContainer';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -230,6 +231,14 @@ function VariantItem({
                 >
                   <AdminUploadIcon /> Upload Image
                 </button>
+                {variant.files.length === 0 &&
+                  (!variant.existingMedia ||
+                    variant.existingMedia.length === 0) && (
+                    <p className="mt-2 text-xs text-[#8E8E93]">
+                      No photos yet — the storefront will borrow another
+                      variant&apos;s photos until you upload some here.
+                    </p>
+                  )}
               </div>
             </div>
           </div>
@@ -399,6 +408,7 @@ export default function ProductsPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
+  const [actionMenuOpensUp, setActionMenuOpensUp] = useState(false);
 
   // List controls
   const searchParams = useSearchParams();
@@ -443,7 +453,7 @@ export default function ProductsPage({
           return {
             id: product?.id,
             name: product?.name ?? 'Untitled product',
-            image: variants?.[0]?.media?.[0]?.url || '',
+            image: product?.primary_image || variants?.[0]?.media?.[0]?.url || '',
             status: product?.status === 'active' ? 'live' : 'draft',
             inventory: Number(product?.total_stock) || 0,
             outOfStock: variants.filter((v) => Number(v?.stock) <= 0).length,
@@ -802,7 +812,7 @@ export default function ProductsPage({
     setEditingId(id);
     setEditingProductMeta({
       name: product.name || 'Untitled product',
-      image: product.sample_variants?.[0]?.media?.[0]?.url || '',
+      image: product.primary_image || product.sample_variants?.[0]?.media?.[0]?.url || '',
     });
     setProductName(product.name || '');
     setProductDescription(product.description || '');
@@ -1248,75 +1258,93 @@ export default function ProductsPage({
                 </div>
                 <div className="flex items-center gap-x-2 pb-4">
                   <div className="relative flex items-center" data-menu-root>
-                    <button
+                    <motion.button
                       onClick={() => {
                         setIsAddDropdownOpen(false);
                         setIsDropdownOpen(!isDropdownOpen);
                       }}
+                      whileTap={{ scale: 0.95 }}
                       aria-haspopup="menu"
                       aria-expanded={isDropdownOpen}
                       className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                     >
                       <AdminSoundLevelsIcon />
                       {selectedPeriod}
-                    </button>
-                    {isDropdownOpen && (
-                      <div className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
-                        <div className="py-1">
-                          {periodOptions.map((option) => (
-                            <button
-                              key={option}
-                              onClick={() => {
-                                setSelectedPeriod(option);
-                                setIsDropdownOpen(false);
-                              }}
-                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
-                            >
-                              {option}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    </motion.button>
+                    <AnimatePresence>
+                      {isDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                          className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200"
+                        >
+                          <div className="py-1">
+                            {periodOptions.map((option) => (
+                              <button
+                                key={option}
+                                onClick={() => {
+                                  setSelectedPeriod(option);
+                                  setIsDropdownOpen(false);
+                                }}
+                                className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                              >
+                                {option}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="relative flex items-center" data-menu-root>
-                    <button
+                    <motion.button
                       onClick={() => {
                         setIsDropdownOpen(false);
                         setIsAddDropdownOpen(!isAddDropdownOpen);
                       }}
+                      whileTap={{ scale: 0.95 }}
                       aria-haspopup="menu"
                       aria-expanded={isAddDropdownOpen}
                       className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                     >
                       <AdminPlusCircleIcon />
                       Add
-                    </button>
-                    {isAddDropdownOpen && (
-                      <div className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-40 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
-                        <div className="py-1">
-                          <button
-                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
-                            onClick={() => {
-                              setIsAddDropdownOpen(false);
-                              setShowCollectionModal(true);
-                            }}
-                          >
-                            Add Collection
-                          </button>
-                          <button
-                            onClick={() => {
-                              resetForm();
-                              setShowAddProduct(true);
-                              setIsAddDropdownOpen(false);
-                            }}
-                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
-                          >
-                            Add Product
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    </motion.button>
+                    <AnimatePresence>
+                      {isAddDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.92, y: -6 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.92, y: -6 }}
+                          transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                          className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-40 origin-top-right rounded-md bg-white ring-1 ring-gray-200"
+                        >
+                          <div className="py-1">
+                            <button
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                              onClick={() => {
+                                setIsAddDropdownOpen(false);
+                                setShowCollectionModal(true);
+                              }}
+                            >
+                              Add Collection
+                            </button>
+                            <button
+                              onClick={() => {
+                                resetForm();
+                                setShowAddProduct(true);
+                                setIsAddDropdownOpen(false);
+                              }}
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                            >
+                              Add Product
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -1463,7 +1491,7 @@ export default function ProductsPage({
                       </tr>
                     )}
 
-                    {filteredProducts.map((product, index, arr) => {
+                    {filteredProducts.map((product) => {
                       const isOutOfStock = product.inventory <= 0;
                       const isLowStock =
                         !isOutOfStock &&
@@ -1524,53 +1552,66 @@ export default function ProductsPage({
                           <td className="td">{product.outOfStock}</td>
                           <td className="td">
                             <div className="relative" data-menu-root>
-                              <button
-                                onClick={() =>
-                                  setActiveActionMenuId(
-                                    activeActionMenuId === product.id
-                                      ? null
-                                      : product.id,
-                                  )
-                                }
+                              <motion.button
+                                onClick={(e) => {
+                                  if (activeActionMenuId === product.id) {
+                                    setActiveActionMenuId(null);
+                                    return;
+                                  }
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
+                                  const MENU_HEIGHT = 96; // ~2 items, roughly
+                                  setActionMenuOpensUp(
+                                    window.innerHeight - rect.bottom <
+                                      MENU_HEIGHT &&
+                                      rect.top > MENU_HEIGHT,
+                                  );
+                                  setActiveActionMenuId(product.id);
+                                }}
+                                whileTap={{ scale: 0.88 }}
                                 aria-haspopup="menu"
                                 aria-expanded={activeActionMenuId === product.id}
                                 aria-label={`Actions for ${product.name}`}
                                 className="flex size-[36px] cursor-pointer items-center justify-center rounded-[8px] bg-[#F5F5F5] outline-none transition-colors hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                               >
                                 <AdminMoreVerticalIcon />
-                              </button>
-                              {activeActionMenuId === product.id && (
-                                <div
-                                  role="menu"
-                                  className={`ring-opacity-5 absolute right-0 z-60 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
-                                    index === arr.length - 1 && arr.length > 1
-                                      ? 'bottom-full mb-2'
-                                      : 'mt-2'
-                                  }`}
-                                >
-                                  <div className="py-1">
-                                    <button
-                                      role="menuitem"
-                                      onClick={() => {
-                                        handleEditClick(product.id);
-                                        setActiveActionMenuId(null);
-                                      }}
-                                      className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      role="menuitem"
-                                      onClick={() =>
-                                        requestDeleteProduct(product.id)
-                                      }
-                                      className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </div>
-                              )}
+                              </motion.button>
+                              <AnimatePresence>
+                                {activeActionMenuId === product.id && (
+                                  <motion.div
+                                    role="menu"
+                                    initial={{ opacity: 0, scale: 0.92, y: actionMenuOpensUp ? 6 : -6 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.92, y: actionMenuOpensUp ? 6 : -6 }}
+                                    transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                                    className={`ring-opacity-5 absolute right-0 z-60 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
+                                      actionMenuOpensUp ? 'bottom-full mb-2' : 'mt-2'
+                                    }`}
+                                  >
+                                    <div className="py-1">
+                                      <button
+                                        role="menuitem"
+                                        onClick={() => {
+                                          handleEditClick(product.id);
+                                          setActiveActionMenuId(null);
+                                        }}
+                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        role="menuitem"
+                                        onClick={() =>
+                                          requestDeleteProduct(product.id)
+                                        }
+                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
                           </td>
                         </tr>
