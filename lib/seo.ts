@@ -47,9 +47,12 @@ export function productJsonLd(product: {
   slug: string;
   base_price: number;
   sample_variants?: { media?: { url: string }[] }[];
+  primary_image?: string | null;
 }) {
   const image =
-    product.sample_variants?.[0]?.media?.[0]?.url ?? `${SITE_URL}/hero.jpg`;
+    product.primary_image ??
+    product.sample_variants?.[0]?.media?.[0]?.url ??
+    `${SITE_URL}/hero.jpg`;
 
   return {
     '@context': 'https://schema.org',

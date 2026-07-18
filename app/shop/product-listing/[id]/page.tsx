@@ -31,7 +31,7 @@ export async function generateMetadata(props: {
     return { title: 'Product Not Found' };
   }
 
-  const image = product.sample_variants?.[0]?.media?.[0]?.url;
+  const image = product.primary_image || product.sample_variants?.[0]?.media?.[0]?.url;
   const price = product.base_price;
   const title = `${product.name} — Buy Online in Nigeria`;
   const description =

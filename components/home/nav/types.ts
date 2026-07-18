@@ -12,7 +12,9 @@ export interface ProductVariant {
 export interface Product {
   id: string;
   name: string;
+  slug?: string;
   sample_variants: ProductVariant[];
+  primary_image?: string | null;
 }
 
 export interface CartItem {

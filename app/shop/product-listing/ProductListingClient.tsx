@@ -37,6 +37,7 @@ interface Product {
   base_price: number;
   material?: string;
   sample_variants?: SampleVariant[];
+  primary_image?: string | null;
   title?: string; // For alt text
   collection: Collection | null;
 }
@@ -207,18 +208,25 @@ export default function ProductListingClient({
 
                       {/* Image */}
                       <div className="flex flex-1 items-center justify-center overflow-hidden">
-                        {product.sample_variants?.[0]?.media?.[0]?.url && (
-                          <motion.img
-                            src={product.sample_variants[0].media[0].url}
-                            alt={product.title || product.name}
-                            className="size-[70%] max-h-full max-w-full object-contain"
-                            whileHover={{ scale: 1.1 }}
-                            transition={{
-                              duration: 0.6,
-                              ease: [0.22, 1, 0.36, 1],
-                            }}
-                          />
-                        )}
+                        {(() => {
+                          const src =
+                            product.primary_image ||
+                            product.sample_variants?.[0]?.media?.[0]?.url;
+                          return (
+                            src && (
+                              <motion.img
+                                src={src}
+                                alt={product.title || product.name}
+                                className="size-[70%] max-h-full max-w-full object-contain"
+                                whileHover={{ scale: 1.1 }}
+                                transition={{
+                                  duration: 0.6,
+                                  ease: [0.22, 1, 0.36, 1],
+                                }}
+                              />
+                            )
+                          );
+                        })()}
                       </div>
                     </motion.div>
                   </Link>

@@ -32,6 +32,8 @@ interface SampleVariant {
   price: number;
   stock?: number;
   media: Media[] | null;
+  display_media?: Media[];
+  has_own_media?: boolean;
 }
 
 // A variant is sold out only when the backend reports a numeric stock of 0
@@ -123,8 +125,21 @@ export default function ProductPageClient({
     setSelectedSize(firstSize);
   };
 
-  // Images from the currently selected variant
-  const currentImages = useMemo(() => selectedVariant?.media ?? [], [selectedVariant]);
+  // Images for the currently selected variant. The backend already resolves
+  // display_media with sibling-variant fallback (so an unphotographed color
+  // still shows something), but we fall back client-side too in case a
+  // cached/older payload doesn't have display_media yet.
+  const currentImages = useMemo(() => {
+    if (!selectedVariant) return [];
+    if (selectedVariant.display_media?.length) return selectedVariant.display_media;
+    if (selectedVariant.media?.length) return selectedVariant.media;
+    const sameColor = variants.find(
+      (v) => v.color === selectedVariant.color && v.media?.length,
+    );
+    if (sameColor) return sameColor.media as Media[];
+    const anyWithMedia = variants.find((v) => v.media?.length);
+    return anyWithMedia?.media ?? [];
+  }, [selectedVariant, variants]);
 
   const mainImage = useMemo(() => {
     if (currentImages.length > 0) {

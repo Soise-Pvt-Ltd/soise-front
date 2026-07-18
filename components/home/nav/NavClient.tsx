@@ -589,16 +589,21 @@ export default function NavClient({
                               }}
                             >
                               <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-[8px] bg-[#F2F2F2]">
-                                {product?.sample_variants?.[0]?.media?.[0]?.url ? (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    src={product.sample_variants[0].media[0].url}
-                                    alt={product.name}
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
-                                ) : null}
+                                {(() => {
+                                  const src =
+                                    product?.primary_image ||
+                                    product?.sample_variants?.[0]?.media?.[0]?.url;
+                                  return src ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={src}
+                                      alt={product.name}
+                                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      loading="lazy"
+                                      decoding="async"
+                                    />
+                                  ) : null;
+                                })()}
                               </div>
                               <div className="min-w-0 flex-1">
                                 <p className="truncate text-[14px] font-medium text-[#121212]">

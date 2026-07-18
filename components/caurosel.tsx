@@ -76,7 +76,11 @@ export default function SwiperCarouselClient({ items: products }: any) {
                   {/* Image Container */}
                   <div className="flex flex-1 items-center justify-center overflow-hidden rounded-sm">
                     <motion.img
-                      src={item.sample_variants?.[0]?.media?.[0]?.url}
+                      src={
+                        item.primary_image ||
+                        item.sample_variants?.[0]?.media?.[0]?.url ||
+                        item.images?.[0]?.url
+                      }
                       alt={item.title || item.name}
                       className="size-[70%] object-cover"
                       whileHover={{ scale: 1.08 }}

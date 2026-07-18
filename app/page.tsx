@@ -31,6 +31,7 @@ interface Product {
   category: string;
   slug: string;
   sample_variants?: { media?: { url: string }[] }[];
+  primary_image?: string | null;
 }
 
 interface HomepageImages {
@@ -106,7 +107,7 @@ export default async function Home() {
       position: i + 1,
       url: `${SITE_URL}/shop/product-listing/${p.slug}`,
       name: p.name,
-      image: p.sample_variants?.[0]?.media?.[0]?.url,
+      image: p.primary_image || p.sample_variants?.[0]?.media?.[0]?.url,
     })),
   };
 
