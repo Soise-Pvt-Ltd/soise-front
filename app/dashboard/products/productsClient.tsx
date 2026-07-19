@@ -22,6 +22,7 @@ import {
   deleteProduct,
   createCollection,
   updateCollection,
+  deleteCollection,
   deleteVariant,
 } from './actions';
 import { showToast } from '../toast';
@@ -425,6 +426,7 @@ export default function ProductsPage({
   // Form robustness
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteCollectionId, setPendingDeleteCollectionId] = useState<string | null>(null);
   const [editingProductMeta, setEditingProductMeta] = useState<{
     name: string;
     image: string;
@@ -648,6 +650,16 @@ export default function ProductsPage({
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [pendingDeleteId, isLoading]);
+
+  // Close the collection delete-confirm dialog on Escape.
+  useEffect(() => {
+    if (!pendingDeleteCollectionId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isLoading) setPendingDeleteCollectionId(null);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [pendingDeleteCollectionId, isLoading]);
 
   // Currency formatter for list prices.
   const formatPrice = (value: number) => {
@@ -919,6 +931,36 @@ export default function ProductsPage({
     } finally {
       setIsLoading(false);
       setPendingDeleteId(null);
+    }
+  };
+
+  const handleDeleteCollection = async (id: string) => {
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('id', id);
+
+      const result = await deleteCollection(formData);
+
+      if (result?.success) {
+        showToast('success', 'Collection deleted successfully');
+        setShowCollectionModal(false);
+        setCollectionView('list');
+        setCollectionName('');
+        setCollectionDescription('');
+        setEditingCollectionId(null);
+        setSelectedPeriod('All Time');
+      } else {
+        showToast(
+          'error',
+          `Failed to delete collection: ${result?.error || 'Unknown error'}`,
+        );
+      }
+    } catch (error) {
+      showToast('error', 'Failed to delete collection');
+    } finally {
+      setIsLoading(false);
+      setPendingDeleteCollectionId(null);
     }
   };
 
@@ -1329,7 +1371,7 @@ export default function ProductsPage({
                                 setShowCollectionModal(true);
                               }}
                             >
-                              Add Collection
+                              Manage Collections
                             </button>
                             <button
                               onClick={() => {
@@ -2035,8 +2077,7 @@ export default function ProductsPage({
                 <button
                   type="button"
                   onClick={() => setPendingDeleteId(null)}
-                  disabled={isLoading}
-                  className="h-[44px] flex-1 cursor-pointer rounded-[10px] border border-gray-300 px-4 text-sm font-medium text-gray-700 outline-none hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-[#0072BB] disabled:opacity-50"
+                  className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -2044,8 +2085,58 @@ export default function ProductsPage({
                   type="button"
                   onClick={() => handleDeleteProduct(pendingDeleteId)}
                   disabled={isLoading}
-                  aria-busy={isLoading}
-                  className="flex h-[44px] flex-1 cursor-pointer items-center justify-center gap-x-2 rounded-[10px] bg-[#991C00] px-4 text-sm font-semibold text-white outline-none transition-colors hover:bg-[#7d1700] focus-visible:ring-2 focus-visible:ring-[#991C00] disabled:opacity-60"
+                  className="flex-1 rounded-[10px] bg-[#991C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#7A1600] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isLoading && <Spinner />}
+                  {isLoading ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Collection delete confirmation dialog */}
+        {pendingDeleteCollectionId && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-collection-dialog-title"
+            onClick={() => {
+              if (!isLoading) setPendingDeleteCollectionId(null);
+            }}
+          >
+            <div
+              className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center gap-x-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-[#E5C6BF]">
+                  <AdminExclamationIcon />
+                </div>
+                <h2
+                  id="delete-collection-dialog-title"
+                  className="text-lg font-semibold text-[#121212]"
+                >
+                  Delete collection?
+                </h2>
+              </div>
+              <p className="mb-6 text-sm text-[#6B6B6B]">
+                This collection will be permanently removed. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPendingDeleteCollectionId(null)}
+                  className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCollection(pendingDeleteCollectionId)}
+                  disabled={isLoading}
+                  className="flex-1 rounded-[10px] bg-[#991C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#7A1600] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading && <Spinner />}
                   {isLoading ? 'Deleting...' : 'Delete'}
@@ -2090,19 +2181,27 @@ export default function ProductsPage({
                         <span className="text-[#121212]">
                           {collection.name}
                         </span>
-                        <button
-                          onClick={() => {
-                            setEditingCollectionId(collection.id);
-                            setCollectionName(collection.name);
-                            setCollectionDescription(
-                              collection.description || '',
-                            );
-                            setCollectionView('edit');
-                          }}
-                          className="text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingCollectionId(collection.id);
+                              setCollectionName(collection.name);
+                              setCollectionDescription(
+                                collection.description || '',
+                              );
+                              setCollectionView('edit');
+                            }}
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => setPendingDeleteCollectionId(collection.id)}
+                            className="text-sm text-red-600 hover:text-red-800"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {(!collections || collections.length === 0) && (
