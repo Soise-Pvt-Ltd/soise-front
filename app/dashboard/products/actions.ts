@@ -2,6 +2,18 @@
 import { cookies } from 'next/headers';
 import { getUserInfo } from '../actions';
 
+// Shape of one variant row as posted by the admin product form. colors/
+// selectedSizes are arrays for legacy reasons but the UI only ever lets an
+// admin pick one of each per row.
+type FormVariantRow = {
+  id?: string;
+  colors?: string[];
+  selectedSizes?: string[];
+  price?: number | string;
+  stock?: number | string;
+  media?: string[];
+};
+
 // Map the UI sort options to the backend's supported sort fields.
 const SORT_MAP: Record<string, string> = {
   newest: 'created_at',
@@ -178,36 +190,6 @@ async function attachMediaToVariant(
 // attachMediaToVariant (which only appends) whenever we know the full
 // final order, since it never leaves the variant's media out of sync
 // with what the admin actually arranged.
-async function setVariantMediaOrder(
-  productId: string,
-  variantId: string,
-  mediaIds: string[],
-  accessToken: string,
-) {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/products/${productId}/variants/${variantId}/media/reorder`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Cookie: `access_token=${accessToken}`,
-        },
-        body: JSON.stringify({ media_ids: mediaIds }),
-      },
-    );
-    if (!response.ok) {
-      console.error(
-        `Failed to set media order for variant ${variantId}: ${response.status}`,
-      );
-    }
-    return response.ok;
-  } catch (error) {
-    console.error('Error setting variant media order:', error);
-    return false;
-  }
-}
-
 // ✅ NEW: Helper to delete a variant
 async function deleteVariantById(
   productId: string,
@@ -312,51 +294,37 @@ export async function createProduct(formData: FormData) {
   if (productResponse.success && productResponse.data?.id) {
     const productId = productResponse.data.id;
 
-    for (const variant of processedVariants) {
-      if (variant.colors && variant.selectedSizes) {
-        for (const color of variant.colors) {
-          for (const size of variant.selectedSizes) {
-            const variantPayload = {
-              color: color,
-              size: size,
-              stock: variant.stock,
-              price: variant.price,
-            };
+    // Flatten each form-level variant row (color[]/size[] are UI leftovers -
+    // in practice each row is a single color/size pair) into the flat array
+    // the bulk sync endpoint expects, then persist the whole set in one call
+    // instead of one create + one media-attach round trip per variant.
+    const variantsPayload = processedVariants.flatMap((variant: FormVariantRow) =>
+      (variant.colors ?? []).flatMap((color: string) =>
+        (variant.selectedSizes ?? []).map((size: string) => ({
+          color,
+          size,
+          price: variant.price,
+          stock: variant.stock,
+          media: variant.media ?? [],
+        })),
+      ),
+    );
 
-            const variantRes = await fetch(
-              `${process.env.NEXT_PUBLIC_BASE_URL}/products/${productId}/variants`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Cookie: `access_token=${accessToken}`,
-                },
-                body: JSON.stringify(variantPayload),
-              },
-            );
-
-            const variantResponse = await variantRes.json();
-
-            if (
-              variantResponse.success &&
-              variantResponse.data?.id &&
-              variant.media?.length > 0
-            ) {
-              const mediaAttachRes = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/products/${productId}/variants/${variantResponse.data.id}/media`,
-                {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Cookie: `access_token=${accessToken}`,
-                  },
-                  body: JSON.stringify({ media_ids: variant.media }),
-                },
-              );
-              await mediaAttachRes.json();
-            }
-          }
-        }
+    if (variantsPayload.length > 0) {
+      const syncRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/products/${productId}/variants`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie: `access_token=${accessToken}`,
+          },
+          body: JSON.stringify({ variants: variantsPayload }),
+        },
+      );
+      const syncResponse = await syncRes.json();
+      if (!syncResponse.success) {
+        console.error('Failed to sync variants:', syncResponse.message);
       }
     }
   }
@@ -416,84 +384,43 @@ export async function updateProduct(formData: FormData) {
   const productResponse = await res.json();
 
   if (productResponse.success) {
-    for (const variant of rawFormData.variants) {
-      // variant.media is already the final ordered list of media record ids
-      // - uploads happened client-side before this action was called, so
-      // this is just persisting the order the admin arranged.
-      if (variant.colors && variant.selectedSizes) {
-        for (const color of variant.colors) {
-          for (const size of variant.selectedSizes) {
-            const variantPayload = {
-              color,
-              size,
-              stock: variant.stock,
-              price: variant.price,
-            };
+    // Flatten each form-level variant row into the flat array the bulk
+    // sync endpoint expects. variant.media is already the final ordered
+    // list of media record ids - uploads happened client-side before this
+    // action was called, so this is just persisting the state the admin
+    // arranged. `variants` here is the whole current set (removed rows are
+    // deleted immediately via the standalone deleteVariant action when the
+    // admin clicks remove, not deferred to save), so sending it as-is - not
+    // diffed against anything - is correct: the sync endpoint deletes any
+    // variant it has on record that's absent from this array.
+    const variantsPayload = rawFormData.variants.flatMap((variant: FormVariantRow) => {
+      const isExisting = variant.id && variant.id.length > 9;
+      return (variant.colors ?? []).flatMap((color: string) =>
+        (variant.selectedSizes ?? []).map((size: string) => ({
+          ...(isExisting ? { id: variant.id } : {}),
+          color,
+          size,
+          price: variant.price,
+          stock: variant.stock,
+          media: variant.media ?? [],
+        })),
+      );
+    });
 
-            let variantId: string | undefined = variant.id;
-            const isExisting = variantId && variantId.length > 9;
-
-            if (isExisting) {
-              // This variant already exists - it's the same data we loaded
-              // from the server to populate this edit form, so there's no
-              // need to re-fetch and diff it before deciding what to do.
-              const variantRes = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants/${variantId}`,
-                {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Cookie: `access_token=${accessToken}`,
-                  },
-                  body: JSON.stringify(variantPayload),
-                },
-              );
-              if (!variantRes.ok) {
-                console.error(
-                  `Failed to update variant ${variantId}: ${variantRes.status}`,
-                );
-              }
-            } else {
-              // New variant - create it first (no media yet).
-              const variantRes = await fetch(
-                `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Cookie: `access_token=${accessToken}`,
-                  },
-                  body: JSON.stringify(variantPayload),
-                },
-              );
-              const variantResponse = await variantRes.json();
-              if (!variantResponse.success || !variantResponse.data?.id) {
-                console.error(
-                  `Failed to create variant ${color}/${size}:`,
-                  variantResponse.message,
-                );
-                continue;
-              }
-              variantId = variantResponse.data.id;
-            }
-
-            // Set this variant's media to the exact order the admin
-            // arranged, in one call. Handles additions, removals, and
-            // reordering together, and never touches the variant's id -
-            // unlike deleting and recreating the variant (the old
-            // approach for "photo changed"), which broke any cart/order
-            // line item still pointing at that variant.
-            if (variantId) {
-              await setVariantMediaOrder(
-                id,
-                variantId,
-                variant.media || [],
-                accessToken,
-              );
-            }
-          }
-        }
-      }
+    const syncRes = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `access_token=${accessToken}`,
+        },
+        body: JSON.stringify({ variants: variantsPayload }),
+      },
+    );
+    const syncResponse = await syncRes.json();
+    if (!syncResponse.success) {
+      console.error('Failed to sync variants:', syncResponse.message);
     }
   }
 

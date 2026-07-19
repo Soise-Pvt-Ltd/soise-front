@@ -1157,35 +1157,50 @@ export default function ProductsPage({
       formData.append('discountType', discountType);
       formData.append('keywords', JSON.stringify(keywords));
 
-      const variantsToSend = await Promise.all(
-        variants.map(async (v) => {
-          const finalMediaIds: string[] = [];
-          for (const item of v.media) {
-            if (item.kind === 'existing' && item.id) {
-              finalMediaIds.push(item.id);
-            } else if (item.kind === 'new' && item.file) {
-              const fileData = new FormData();
-              fileData.append('file', item.file);
-              const res = await uploadFile(fileData);
-              if (!res?.success || !res.data?.id) {
-                throw new Error(
-                  `Failed to upload image: ${res?.error || 'Unknown error'}`,
-                );
-              }
-              finalMediaIds.push(res.data.id);
-            }
-          }
-
-          const { media, ...rest } = v;
-
-          return {
-            ...rest,
-            price: Number(rest.price) || 0,
-            stock: Number(rest.stock) || 0,
-            media: finalMediaIds,
-          };
-        }),
+      // Each variant's media slots, in the admin's exact order - existing
+      // items resolve immediately, new items start as null and get filled
+      // in below once their upload completes. Uploading every new photo
+      // across every variant concurrently (rather than per-variant
+      // Promise.all wrapping a sequential per-file loop) is safe since
+      // each variant is already capped at 6 photos.
+      const mediaSlots: (string | null)[][] = variants.map((v) =>
+        v.media.map((item) => (item.kind === 'existing' ? (item.id ?? null) : null)),
       );
+
+      const uploadTasks: Promise<void>[] = [];
+      variants.forEach((v, vIdx) => {
+        v.media.forEach((item, mIdx) => {
+          if (item.kind === 'new' && item.file) {
+            const file = item.file;
+            uploadTasks.push(
+              (async () => {
+                const fileData = new FormData();
+                fileData.append('file', file);
+                const res = await uploadFile(fileData);
+                if (!res?.success || !res.data?.id) {
+                  throw new Error(
+                    `Failed to upload image: ${res?.error || 'Unknown error'}`,
+                  );
+                }
+                mediaSlots[vIdx][mIdx] = res.data.id;
+              })(),
+            );
+          }
+        });
+      });
+
+      await Promise.all(uploadTasks);
+
+      const variantsToSend = variants.map((v, vIdx) => {
+        const { media, ...rest } = v;
+
+        return {
+          ...rest,
+          price: Number(rest.price) || 0,
+          stock: Number(rest.stock) || 0,
+          media: mediaSlots[vIdx].filter((mediaId): mediaId is string => Boolean(mediaId)),
+        };
+      });
 
       formData.append('variants', JSON.stringify(variantsToSend));
 
