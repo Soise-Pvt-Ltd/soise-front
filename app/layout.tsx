@@ -13,6 +13,7 @@ import {
   KEYWORDS,
   ORG_JSONLD,
 } from '@/lib/seo';
+import { Analytics } from '@vercel/analytics/next';
 
 const body_font = Poppins({
   subsets: ['latin'],
@@ -141,6 +142,7 @@ export default async function RootLayout({
         <Providers initialCurrency={initialCurrency}>{children}</Providers>
         <AmbientStatue />
         <LuxeCursor />
+        <Analytics />
       </body>
     </html>
   );
