@@ -303,7 +303,7 @@ export default function OrderSummaryClient({
     clearCookie(PENDING_CREATOR_CODE_COOKIE);
   }
 
-  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoneInput = (e: React.InputEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
     if (value.length <= 11) {
       e.target.value = value;
