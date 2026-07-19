@@ -4,7 +4,9 @@
 // on the variants. Showing `base_price` when it's lower than every variant
 // (e.g. base 85k but variants 90–100k) advertises a price the customer can't
 // actually buy at. So: when variants have prices, show the MINIMUM variant
-// price, flagged as "from" whenever there's a spread or it differs from base.
+// price. Flag it "from" only when variants genuinely span a range - a base/
+// variant mismatch alone isn't a range, and labeling a single fixed price as
+// "from X" implies options the shopper won't find on the product page.
 
 export interface PricedProduct {
   base_price?: number | null;
@@ -27,7 +29,7 @@ export function getDisplayPrice(product: PricedProduct): {
 
   const min = Math.min(...variantPrices);
   const max = Math.max(...variantPrices);
-  // "from" when variants span a range, or the cheapest variant differs from base.
-  const isFrom = max !== min || min !== base;
+  // "from" only when there's an actual spread between purchasable prices.
+  const isFrom = max !== min;
   return { amount: min, isFrom };
 }
