@@ -304,11 +304,12 @@ export default function OrderSummaryClient({
   }
 
   const handlePhoneInput = (e: React.InputEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+    const target = e.target as HTMLInputElement;
+    const value = target.value.replace(/\D/g, ''); // Remove non-numeric characters
     if (value.length <= 11) {
-      e.target.value = value;
+      target.value = value;
     } else {
-      e.target.value = value.slice(0, 11);
+      target.value = value.slice(0, 11);
     }
   };
 
