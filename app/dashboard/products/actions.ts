@@ -473,6 +473,7 @@ export async function updateProduct(formData: FormData) {
 
               if (variant.id && variant.id.length > 9) {
                 let shouldUpdate = true;
+                let variantExists = false;
                 try {
                   const existingVariantRes = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants/${variant.id}`,
@@ -485,6 +486,7 @@ export async function updateProduct(formData: FormData) {
                   );
 
                   if (existingVariantRes.ok) {
+                    variantExists = true;
                     const existingVariantData = await existingVariantRes.json();
                     const existingVariant = existingVariantData.data;
 
@@ -503,7 +505,7 @@ export async function updateProduct(formData: FormData) {
                   console.error('Error fetching existing variant:', error);
                 }
 
-                if (shouldUpdate) {
+                if (variantExists && shouldUpdate) {
                   const variantRes = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants/${variant.id}`,
                     {
@@ -516,6 +518,35 @@ export async function updateProduct(formData: FormData) {
                     },
                   );
                   await variantRes.json();
+                } else if (!variantExists) {
+                  // Variant doesn't exist, create it instead
+                  const variantRes = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        Cookie: `access_token=${accessToken}`,
+                      },
+                      body: JSON.stringify(variantPayload),
+                    },
+                  );
+
+                  const variantResponse = await variantRes.json();
+
+                  // Attach media to newly created variant
+                  if (
+                    variantResponse.success &&
+                    variantResponse.data?.id &&
+                    variant.newMedia?.length > 0
+                  ) {
+                    await attachMediaToVariant(
+                      id,
+                      variantResponse.data.id,
+                      variant.newMedia,
+                      accessToken,
+                    );
+                  }
                 }
               } else {
                 // Create new variant
