@@ -12,6 +12,8 @@ type FormVariantRow = {
   price?: number | string;
   stock?: number | string;
   media?: string[];
+  colorHex?: string;
+  finish?: string;
 };
 
 // Map the UI sort options to the backend's supported sort fields.
@@ -306,6 +308,8 @@ export async function createProduct(formData: FormData) {
           price: variant.price,
           stock: variant.stock,
           media: variant.media ?? [],
+          color_hex: variant.colorHex || undefined,
+          finish: variant.finish || undefined,
         })),
       ),
     );
@@ -403,6 +407,8 @@ export async function updateProduct(formData: FormData) {
           price: variant.price,
           stock: variant.stock,
           media: variant.media ?? [],
+          color_hex: variant.colorHex || undefined,
+          finish: variant.finish || undefined,
         })),
       );
     });

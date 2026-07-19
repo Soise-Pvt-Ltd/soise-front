@@ -12,6 +12,12 @@ import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/action
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
+import {
+  type ColorFinish,
+  finishSwatchStyle,
+  isValidHex,
+  guessHexFromName,
+} from '@/lib/color-palette';
 
 interface Media {
   url: string;
@@ -28,6 +34,8 @@ interface Media {
 interface SampleVariant {
   id: string;
   color: string;
+  color_hex?: string | null;
+  finish?: ColorFinish | null;
   size: string;
   price: number;
   stock?: number;
@@ -328,8 +336,11 @@ export default function ProductPageClient({
                     <div className="flex flex-wrap gap-2">
                       {uniqueColors.map((v) => {
                         const isSelected = selectedColor === v.color;
+                        const hex = isValidHex(v.color_hex)
+                          ? v.color_hex
+                          : guessHexFromName(v.color);
                         const isLight =
-                          v.color.toLowerCase() === '#ffffff' ||
+                          hex.toLowerCase() === '#ffffff' ||
                           v.color.toLowerCase() === 'white';
                         return (
                           <motion.button
@@ -344,7 +355,7 @@ export default function ProductPageClient({
                                 ? 'ring-2 ring-black ring-offset-2'
                                 : 'ring-1 ring-transparent hover:ring-gray-400 hover:ring-offset-1'
                             }`}
-                            style={{ backgroundColor: v.color }}
+                            style={finishSwatchStyle(hex, v.finish)}
                             title={v.color}
                             whileHover={{ scale: 1.15 }}
                             whileTap={{ scale: 0.9 }}

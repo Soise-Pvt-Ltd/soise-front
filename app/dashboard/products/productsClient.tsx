@@ -26,6 +26,14 @@ import {
   deleteVariant,
 } from './actions';
 import { showToast } from '../toast';
+import {
+  COLOR_PRESETS,
+  COLOR_FINISHES,
+  type ColorFinish,
+  isValidHex,
+  guessHexFromName,
+  finishSwatchStyle,
+} from '@/lib/color-palette';
 
 const MATERIALS = [
   'cotton',
@@ -61,6 +69,8 @@ interface VariantData {
   media: VariantMediaItem[];
   selectedSizes: string[];
   colors: string[];
+  colorHex: string;
+  finish: ColorFinish;
   price: number | string;
   stock: number | string;
 }
@@ -203,6 +213,18 @@ function VariantItem({
       const newColor = colorInput.trim();
       if (newColor) {
         onUpdate(variant.id, 'colors', [newColor]);
+        // If the typed name matches a preset and no exact hex has been
+        // picked yet, auto-fill it so the swatch renders immediately
+        // instead of falling back to a guess (or nothing).
+        if (!variant.colorHex) {
+          const preset = COLOR_PRESETS.find(
+            (p) => p.name.toLowerCase() === newColor.toLowerCase(),
+          );
+          if (preset) {
+            onUpdate(variant.id, 'colorHex', preset.hex);
+            onUpdate(variant.id, 'finish', preset.finish);
+          }
+        }
         setColorInput('');
       }
     } else if (
@@ -211,11 +233,15 @@ function VariantItem({
       variant.colors.length > 0
     ) {
       onUpdate(variant.id, 'colors', []);
+      onUpdate(variant.id, 'colorHex', '');
+      onUpdate(variant.id, 'finish', 'standard');
     }
   };
 
-  const removeColor = (colorToRemove: string) => {
+  const removeColor = () => {
     onUpdate(variant.id, 'colors', []);
+    onUpdate(variant.id, 'colorHex', '');
+    onUpdate(variant.id, 'finish', 'standard');
   };
 
   return (
@@ -348,9 +374,35 @@ function VariantItem({
               )}
             </div>
             <div>
-              <label className="adminsolidlabel">
-                Color (press enter to add color)
-              </label>
+              <label className="adminsolidlabel">Color</label>
+
+              {/* Quick-pick presets - one click sets name + hex + finish */}
+              <div className="flex flex-wrap gap-2 pb-2">
+                {COLOR_PRESETS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    title={
+                      preset.finish === 'standard'
+                        ? preset.name
+                        : `${preset.name} (${preset.finish})`
+                    }
+                    onClick={() => {
+                      onUpdate(variant.id, 'colors', [preset.name]);
+                      onUpdate(variant.id, 'colorHex', preset.hex);
+                      onUpdate(variant.id, 'finish', preset.finish);
+                    }}
+                    className={`size-6 shrink-0 rounded-full transition-all ${
+                      variant.colors[0] === preset.name
+                        ? 'ring-2 ring-[#0072BB] ring-offset-1'
+                        : 'ring-1 ring-[#E5E5E5] ring-offset-1'
+                    }`}
+                    style={finishSwatchStyle(preset.hex, preset.finish)}
+                    aria-label={preset.name}
+                  />
+                ))}
+              </div>
+
               <div
                 className={`adminsolid flex flex-wrap items-center gap-x-2 py-2 ${
                   variant.colors.length > 0 ? '!h-auto px-2' : 'px-3'
@@ -363,13 +415,13 @@ function VariantItem({
                     className="flex items-center gap-[4px] rounded-sm bg-white p-[7px] text-[11px]"
                   >
                     <div
-                      className="size-3 rounded-full"
-                      style={{ backgroundColor: color }}
+                      className="size-3 shrink-0 rounded-full"
+                      style={finishSwatchStyle(variant.colorHex, variant.finish)}
                     />
                     <span className="text-[#424242] capitalize">{color}</span>
                     <button
                       type="button"
-                      onClick={() => removeColor(color)}
+                      onClick={() => removeColor()}
                       className="cursor-pointer text-gray-500 hover:text-gray-800"
                       aria-label={`Remove ${color}`}
                     >
@@ -381,12 +433,49 @@ function VariantItem({
                 <input
                   ref={inputRef}
                   type="text"
+                  placeholder={
+                    variant.colors.length === 0
+                      ? 'Custom color name, press enter'
+                      : ''
+                  }
                   value={colorInput}
                   onChange={(e) => setColorInput(e.target.value)}
                   onKeyDown={handleColorKeyDown}
                   className="min-w-[120px] flex-1 border-none bg-transparent p-0 text-[12px] !outline-none focus:ring-0"
                 />
               </div>
+
+              {/* Exact swatch color + finish - covers anything not in the
+                  presets above (full RGB spectrum via the native picker). */}
+              <div className="mt-2 flex items-center gap-x-3">
+                <label className="flex items-center gap-x-2 text-[11px] text-[#8E8E93]">
+                  Exact color
+                  <input
+                    type="color"
+                    value={isValidHex(variant.colorHex) ? variant.colorHex : '#cccccc'}
+                    onChange={(e) =>
+                      onUpdate(variant.id, 'colorHex', e.target.value)
+                    }
+                    className="h-6 w-8 cursor-pointer rounded border border-[#E5E5E5] bg-transparent p-0"
+                    aria-label="Pick exact swatch color"
+                  />
+                </label>
+                <select
+                  value={variant.finish}
+                  onChange={(e) =>
+                    onUpdate(variant.id, 'finish', e.target.value as ColorFinish)
+                  }
+                  className="rounded-[6px] border border-[#E5E5E5] bg-white px-2 py-1 text-[11px] capitalize outline-none"
+                  aria-label="Color finish"
+                >
+                  {COLOR_FINISHES.map((f) => (
+                    <option key={f} value={f} className="capitalize">
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {errors?.color && (
                 <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
                   <AdminExclamationIcon /> {errors.color}
@@ -573,6 +662,8 @@ export default function ProductsPage({
       media: [],
       selectedSizes: [],
       colors: [],
+      colorHex: '',
+      finish: 'standard',
       price: '',
       stock: '',
     },
@@ -808,6 +899,8 @@ export default function ProductsPage({
         media: [],
         selectedSizes: [],
         colors: [],
+        colorHex: '',
+        finish: 'standard',
         price: '',
         stock: '',
       },
@@ -885,6 +978,8 @@ export default function ProductsPage({
         media: [],
         selectedSizes: [],
         colors: [],
+        colorHex: '',
+        finish: 'standard',
         price: '',
         stock: '',
       },
@@ -965,6 +1060,12 @@ export default function ProductsPage({
               ),
               selectedSizes: parsedSizes.map((s: string) => s.toLowerCase()),
               colors: parsedColors,
+              colorHex: isValidHex(v.color_hex)
+                ? v.color_hex
+                : guessHexFromName(parsedColors[0]),
+              finish: (COLOR_FINISHES as string[]).includes(v.finish)
+                ? v.finish
+                : 'standard',
               price: v.price ?? '',
               stock: v.stock ?? '',
             };
@@ -975,6 +1076,8 @@ export default function ProductsPage({
               media: [],
               selectedSizes: [],
               colors: [],
+              colorHex: '',
+              finish: 'standard',
               price: '',
               stock: '',
             },
