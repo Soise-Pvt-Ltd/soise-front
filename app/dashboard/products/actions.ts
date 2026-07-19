@@ -173,6 +173,41 @@ async function attachMediaToVariant(
   }
 }
 
+// Sets a variant's media to an exact ordered list in one call - handles
+// additions, removals, and reordering together. Preferred over
+// attachMediaToVariant (which only appends) whenever we know the full
+// final order, since it never leaves the variant's media out of sync
+// with what the admin actually arranged.
+async function setVariantMediaOrder(
+  productId: string,
+  variantId: string,
+  mediaIds: string[],
+  accessToken: string,
+) {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/products/${productId}/variants/${variantId}/media/reorder`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: `access_token=${accessToken}`,
+        },
+        body: JSON.stringify({ media_ids: mediaIds }),
+      },
+    );
+    if (!response.ok) {
+      console.error(
+        `Failed to set media order for variant ${variantId}: ${response.status}`,
+      );
+    }
+    return response.ok;
+  } catch (error) {
+    console.error('Error setting variant media order:', error);
+    return false;
+  }
+}
+
 // ✅ NEW: Helper to delete a variant
 async function deleteVariantById(
   productId: string,
@@ -240,10 +275,9 @@ export async function createProduct(formData: FormData) {
     variants: JSON.parse((formData.get('variants') as string) || '[]'),
   };
 
-  const processedVariants = rawFormData.variants.map((variant: any) => {
-    const { existingMedia, newMedia, hasImageChanged, ...rest } = variant;
-    return { ...rest, media: newMedia || [] };
-  });
+  // variant.media is already the final ordered array of media record ids
+  // built client-side (uploads happened before this action was called).
+  const processedVariants = rawFormData.variants;
 
   const finalData = {
     ...rawFormData,
@@ -383,52 +417,44 @@ export async function updateProduct(formData: FormData) {
 
   if (productResponse.success) {
     for (const variant of rawFormData.variants) {
-      // Handle image changes for existing variants
-      if (variant.id && variant.id.length > 9 && variant.hasImageChanged) {
-        // Step 1: Delete old media files from storage
-        if (variant.existingMedia && variant.existingMedia.length > 0) {
-          for (const media of variant.existingMedia) {
-            // Detach media from variant
-            const detached = await detachMediaFromVariant(
-              id,
-              variant.id,
-              accessToken,
-              media.id,
-            );
-            if (!detached) {
-              console.error(
-                `Failed to detach media from variant ${variant.id}`,
+      // variant.media is already the final ordered list of media record ids
+      // - uploads happened client-side before this action was called, so
+      // this is just persisting the order the admin arranged.
+      if (variant.colors && variant.selectedSizes) {
+        for (const color of variant.colors) {
+          for (const size of variant.selectedSizes) {
+            const variantPayload = {
+              color,
+              size,
+              stock: variant.stock,
+              price: variant.price,
+            };
+
+            let variantId: string | undefined = variant.id;
+            const isExisting = variantId && variantId.length > 9;
+
+            if (isExisting) {
+              // This variant already exists - it's the same data we loaded
+              // from the server to populate this edit form, so there's no
+              // need to re-fetch and diff it before deciding what to do.
+              const variantRes = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants/${variantId}`,
+                {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Cookie: `access_token=${accessToken}`,
+                  },
+                  body: JSON.stringify(variantPayload),
+                },
               );
-            }
-
-            const deleted = await deleteMediaFromStorage(media.id, accessToken);
-            if (!deleted) {
-              console.error(`Failed to delete media ${media.id} from storage`);
-            }
-          }
-        }
-
-        // ✅ FIXED: Step 3: Delete the variant after media is removed
-        const variantDeleted = await deleteVariantById(
-          id,
-          variant.id,
-          accessToken,
-        );
-        if (!variantDeleted) {
-          console.error(`Failed to delete variant ${variant.id}`);
-        }
-
-        // Step 4: Create new variant with new media
-        if (variant.colors && variant.selectedSizes) {
-          for (const color of variant.colors) {
-            for (const size of variant.selectedSizes) {
-              const variantPayload = {
-                color: color,
-                size: size,
-                stock: variant.stock,
-                price: variant.price,
-              };
-
+              if (!variantRes.ok) {
+                console.error(
+                  `Failed to update variant ${variantId}: ${variantRes.status}`,
+                );
+              }
+            } else {
+              // New variant - create it first (no media yet).
               const variantRes = await fetch(
                 `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants`,
                 {
@@ -440,93 +466,30 @@ export async function updateProduct(formData: FormData) {
                   body: JSON.stringify(variantPayload),
                 },
               );
-
               const variantResponse = await variantRes.json();
-
-              // Attach new media to newly created variant
-              if (
-                variantResponse.success &&
-                variantResponse.data?.id &&
-                variant.newMedia?.length > 0
-              ) {
-                await attachMediaToVariant(
-                  id,
-                  variantResponse.data.id,
-                  variant.newMedia,
-                  accessToken,
+              if (!variantResponse.success || !variantResponse.data?.id) {
+                console.error(
+                  `Failed to create variant ${color}/${size}:`,
+                  variantResponse.message,
                 );
+                continue;
               }
+              variantId = variantResponse.data.id;
             }
-          }
-        }
-      } else {
-        // Handle variant updates without image changes
-        if (variant.colors && variant.selectedSizes) {
-          for (const color of variant.colors) {
-            for (const size of variant.selectedSizes) {
-              const variantPayload = {
-                color: color,
-                size: size,
-                stock: variant.stock,
-                price: variant.price,
-              };
 
-              if (variant.id && variant.id.length > 9) {
-                // This variant already exists - it's the same data we loaded
-                // from the server to populate this edit form, so there's no
-                // need to re-fetch and diff it before deciding what to do.
-                // (The old code did exactly that against
-                // GET /products/:id/variants/:variantId, a route that was
-                // never implemented on the backend. It 404'd every time,
-                // which made every save think the variant didn't exist and
-                // create a brand new one instead of updating - duplicating
-                // every variant on every product save.)
-                const variantRes = await fetch(
-                  `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants/${variant.id}`,
-                  {
-                    method: 'PUT',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Cookie: `access_token=${accessToken}`,
-                    },
-                    body: JSON.stringify(variantPayload),
-                  },
-                );
-                if (!variantRes.ok) {
-                  console.error(
-                    `Failed to update variant ${variant.id}: ${variantRes.status}`,
-                  );
-                }
-              } else {
-                // Create new variant
-                const variantRes = await fetch(
-                  `${process.env.NEXT_PUBLIC_BASE_URL}/products/${id}/variants`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      Cookie: `access_token=${accessToken}`,
-                    },
-                    body: JSON.stringify(variantPayload),
-                  },
-                );
-
-                const variantResponse = await variantRes.json();
-
-                // Attach media to newly created variant
-                if (
-                  variantResponse.success &&
-                  variantResponse.data?.id &&
-                  variant.newMedia?.length > 0
-                ) {
-                  await attachMediaToVariant(
-                    id,
-                    variantResponse.data.id,
-                    variant.newMedia,
-                    accessToken,
-                  );
-                }
-              }
+            // Set this variant's media to the exact order the admin
+            // arranged, in one call. Handles additions, removals, and
+            // reordering together, and never touches the variant's id -
+            // unlike deleting and recreating the variant (the old
+            // approach for "photo changed"), which broke any cart/order
+            // line item still pointing at that variant.
+            if (variantId) {
+              await setVariantMediaOrder(
+                id,
+                variantId,
+                variant.media || [],
+                accessToken,
+              );
             }
           }
         }

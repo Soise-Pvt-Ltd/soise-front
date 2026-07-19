@@ -43,10 +43,22 @@ interface MyFile extends File {
   preview: string;
 }
 
+// A variant's media gallery, unified into one orderable list so existing
+// photos and newly-added ones can be freely reordered together and the
+// exact order is what gets persisted (via reorder_variant_media).
+interface VariantMediaItem {
+  key: string; // stable React key
+  kind: 'existing' | 'new';
+  id?: string; // set when kind === 'existing'
+  url: string; // display url (server url, or a blob preview for 'new')
+  file?: MyFile; // set when kind === 'new'
+}
+
+const MAX_VARIANT_MEDIA = 6;
+
 interface VariantData {
   id: string;
-  files: MyFile[];
-  existingMedia?: { id: string; url: string }[];
+  media: VariantMediaItem[];
   selectedSizes: string[];
   colors: string[];
   price: number | string;
@@ -123,53 +135,62 @@ function VariantItem({
   const SIZES = ['m', 'l', 'xl', '2xl'];
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  const remainingSlots = MAX_VARIANT_MEDIA - variant.media.length;
 
   const { getRootProps, getInputProps } = useDropzone({
     accept: { 'image/*': [] },
-    maxFiles: 1,
-    multiple: false,
+    multiple: true,
+    disabled: remainingSlots <= 0,
     onDrop: (acceptedFiles) => {
-      const newFiles = acceptedFiles.map((file) =>
-        Object.assign(file, {
+      if (acceptedFiles.length === 0) return;
+      const toAdd = acceptedFiles.slice(0, remainingSlots);
+      if (toAdd.length < acceptedFiles.length) {
+        showToast(
+          'error',
+          `Only added ${toAdd.length} of ${acceptedFiles.length} - a variant can have at most ${MAX_VARIANT_MEDIA} photos.`,
+        );
+      }
+      const newItems: VariantMediaItem[] = toAdd.map((file) => {
+        const withPreview = Object.assign(file, {
           preview: URL.createObjectURL(file),
-        }),
-      ) as MyFile[];
-      onUpdate(variant.id, 'files', newFiles);
+        }) as MyFile;
+        return {
+          key: `new-${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+          kind: 'new',
+          url: withPreview.preview,
+          file: withPreview,
+        };
+      });
+      onUpdate(variant.id, 'media', [...variant.media, ...newItems]);
     },
   });
 
-  const thumbs = variant.files.map((file) => (
-    <div
-      key={file.name}
-      className="inline-flex h-24 w-24 rounded border border-gray-300 p-1"
-    >
-      <div className="flex min-w-0 overflow-hidden">
-        <img
-          src={file.preview}
-          className="block h-full w-full object-cover"
-          onLoad={() => {
-            URL.revokeObjectURL(file.preview);
-          }}
-        />
-      </div>
-    </div>
-  ));
+  const removeMediaItem = (key: string) => {
+    onUpdate(
+      variant.id,
+      'media',
+      variant.media.filter((m) => m.key !== key),
+    );
+  };
 
-  const existingThumbs = variant.existingMedia?.map((media) => (
-    <div
-      key={media.id}
-      className="inline-flex h-24 w-24 rounded border border-gray-300 p-1"
-    >
-      <div className="flex min-w-0 overflow-hidden">
-        <img src={media.url} className="block h-full w-full object-cover" />
-      </div>
-    </div>
-  ));
+  const reorderMedia = (fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    const next = [...variant.media];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    onUpdate(variant.id, 'media', next);
+  };
 
   useEffect(() => {
     return () =>
-      variant.files.forEach((file) => URL.revokeObjectURL(file.preview));
-  }, [variant.files]);
+      variant.media.forEach((m) => {
+        if (m.kind === 'new' && m.file) URL.revokeObjectURL(m.file.preview);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSizeClick = (size: string) => {
     const newSizes = variant.selectedSizes.includes(size) ? [] : [size];
@@ -218,28 +239,89 @@ function VariantItem({
             <div {...getRootProps({ className: 'dropzone h-full' })}>
               <div className="flex h-full cursor-pointer flex-col items-center justify-center rounded-lg border-1 border-dashed border-[#DADDDC] bg-gray-50 p-6 text-center">
                 <input {...getInputProps()} />
-                {(variant.files.length > 0 ||
-                  (variant.existingMedia &&
-                    variant.existingMedia.length > 0)) && (
+                {variant.media.length > 0 && (
                   <div className="mb-4 flex flex-wrap justify-center gap-2">
-                    {existingThumbs}
-                    {thumbs}
+                    {variant.media.map((m, i) => (
+                      <div
+                        key={m.key}
+                        draggable
+                        onDragStart={(e) => {
+                          e.stopPropagation();
+                          dragIndexRef.current = i;
+                        }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDragOverIndex(i);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (dragIndexRef.current !== null) {
+                            reorderMedia(dragIndexRef.current, i);
+                          }
+                          dragIndexRef.current = null;
+                          setDragOverIndex(null);
+                        }}
+                        onDragEnd={(e) => {
+                          e.stopPropagation();
+                          dragIndexRef.current = null;
+                          setDragOverIndex(null);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className={`group relative inline-flex h-24 w-24 cursor-grab rounded border p-1 active:cursor-grabbing ${
+                          dragOverIndex === i
+                            ? 'border-[#0072BB] border-dashed'
+                            : 'border-gray-300'
+                        }`}
+                        title="Drag to reorder"
+                      >
+                        <div className="flex min-w-0 overflow-hidden rounded-sm">
+                          <img
+                            src={m.url}
+                            className="pointer-events-none block h-full w-full object-cover"
+                            onLoad={() => {
+                              if (m.kind === 'new') URL.revokeObjectURL(m.url);
+                            }}
+                          />
+                        </div>
+                        {i === 0 && (
+                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[9px] font-medium text-white">
+                            Cover
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeMediaItem(m.key);
+                          }}
+                          className="absolute -top-2 -right-2 flex size-5 cursor-pointer items-center justify-center rounded-full bg-black text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
+                          aria-label="Remove photo"
+                        >
+                          <CloseIconTags />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-x-[2.5px] rounded-[10px] border-2 border-[#0072BB] bg-[#B3D5EB33] p-[10px] text-sm font-semibold text-[#0072BB]"
+                  disabled={remainingSlots <= 0}
+                  className="flex items-center justify-center gap-x-[2.5px] rounded-[10px] border-2 border-[#0072BB] bg-[#B3D5EB33] p-[10px] text-sm font-semibold text-[#0072BB] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <AdminUploadIcon /> Upload Image
                 </button>
-                {variant.files.length === 0 &&
-                  (!variant.existingMedia ||
-                    variant.existingMedia.length === 0) && (
-                    <p className="mt-2 text-xs text-[#8E8E93]">
-                      No photos yet — the storefront will borrow another
-                      variant&apos;s photos until you upload some here.
-                    </p>
-                  )}
+                <p className="mt-2 text-xs text-[#8E8E93]">
+                  {variant.media.length}/{MAX_VARIANT_MEDIA} photos
+                  {remainingSlots <= 0 ? ' - limit reached' : ''}
+                </p>
+                {variant.media.length === 0 && (
+                  <p className="mt-1 text-xs text-[#8E8E93]">
+                    No photos yet — the storefront will borrow another
+                    variant&apos;s photos until you upload some here.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -488,8 +570,7 @@ export default function ProductsPage({
   const [variants, setVariants] = useState<VariantData[]>([
     {
       id: Math.random().toString(36).substr(2, 9),
-      files: [],
-      existingMedia: [],
+      media: [],
       selectedSizes: [],
       colors: [],
       price: '',
@@ -724,8 +805,7 @@ export default function ProductsPage({
       ...prev,
       {
         id: Math.random().toString(36).substr(2, 9),
-        files: [],
-        existingMedia: [],
+        media: [],
         selectedSizes: [],
         colors: [],
         price: '',
@@ -802,8 +882,7 @@ export default function ProductsPage({
     setVariants([
       {
         id: Math.random().toString(36).substr(2, 9),
-        files: [],
-        existingMedia: [],
+        media: [],
         selectedSizes: [],
         colors: [],
         price: '',
@@ -876,8 +955,14 @@ export default function ProductsPage({
 
             return {
               id: v.id || Math.random().toString(36).substr(2, 9),
-              files: [],
-              existingMedia: v.media || [],
+              media: (v.media || []).map(
+                (m: { id: string; url: string }): VariantMediaItem => ({
+                  key: `existing-${m.id}`,
+                  kind: 'existing',
+                  id: m.id,
+                  url: m.url,
+                }),
+              ),
               selectedSizes: parsedSizes.map((s: string) => s.toLowerCase()),
               colors: parsedColors,
               price: v.price ?? '',
@@ -887,8 +972,7 @@ export default function ProductsPage({
         : [
             {
               id: Math.random().toString(36).substr(2, 9),
-              files: [],
-              existingMedia: [],
+              media: [],
               selectedSizes: [],
               colors: [],
               price: '',
@@ -1075,85 +1159,30 @@ export default function ProductsPage({
 
       const variantsToSend = await Promise.all(
         variants.map(async (v) => {
-          let mediaIds: string[] = [];
-          let hasImageChanged = false;
-          let existingMediaIds: string[] = [];
-
-          if (editingId && v.existingMedia && v.existingMedia.length > 0) {
-            existingMediaIds = v.existingMedia.map((m) => m.id);
-
-            if (v.files.length > 0) {
-              hasImageChanged = true;
-
-              // Upload the new images FIRST. If an upload fails we abort
-              // before touching the existing media, so the product never
-              // ends up with its original images deleted and no replacement.
-              const uploadedIds = [];
-              for (const file of v.files) {
-                const fileData = new FormData();
-                fileData.append('file', file);
-                const res = await uploadFile(fileData);
-                if (!res?.success) {
-                  console.error('Upload failed:', res?.error);
-                  throw new Error(
-                    `Failed to upload new image: ${res?.error || 'Unknown error'}`,
-                  );
-                }
-                if (res.data?.id) {
-                  uploadedIds.push(res.data.id);
-                }
-              }
-
-              // New images are safely uploaded — now remove the old ones.
-              // Treat delete failures as non-fatal (the swap already
-              // succeeded); a leftover old image is far better than losing
-              // all images by rolling back the whole save.
-              for (const media of v.existingMedia) {
-                const deleteResult = await deleteFile(media.id);
-                if (!deleteResult.success) {
-                  console.error(
-                    `Failed to delete old media ${media.id}:`,
-                    deleteResult.error,
-                  );
-                }
-              }
-
-              mediaIds = uploadedIds;
-            } else {
-              mediaIds = existingMediaIds;
-            }
-          } else if (v.files.length > 0) {
-            hasImageChanged = true;
-            const uploadedIds = [];
-            for (const file of v.files) {
+          const finalMediaIds: string[] = [];
+          for (const item of v.media) {
+            if (item.kind === 'existing' && item.id) {
+              finalMediaIds.push(item.id);
+            } else if (item.kind === 'new' && item.file) {
               const fileData = new FormData();
-              fileData.append('file', file);
+              fileData.append('file', item.file);
               const res = await uploadFile(fileData);
-              if (!res?.success) {
-                console.error('Upload failed:', res?.error);
+              if (!res?.success || !res.data?.id) {
                 throw new Error(
                   `Failed to upload image: ${res?.error || 'Unknown error'}`,
                 );
               }
-              if (res.data?.id) {
-                uploadedIds.push(res.data.id);
-              }
+              finalMediaIds.push(res.data.id);
             }
-            mediaIds = uploadedIds;
           }
 
-          const { files, existingMedia, ...rest } = v;
+          const { media, ...rest } = v;
 
           return {
             ...rest,
             price: Number(rest.price) || 0,
             stock: Number(rest.stock) || 0,
-            media: mediaIds,
-            newMedia: mediaIds,
-            existingMedia: hasImageChanged
-              ? []
-              : existingMediaIds.map((id) => ({ id })),
-            hasImageChanged,
+            media: finalMediaIds,
           };
         }),
       );
