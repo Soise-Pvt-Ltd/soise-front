@@ -1,11 +1,14 @@
 'use client';
 
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination } from 'swiper/modules';
 import 'swiper/css';
+import 'swiper/css/pagination';
 import { LikeIcon } from './icons';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
 
@@ -72,22 +75,72 @@ export default function SwiperCarouselClient({ items: products }: any) {
                     damping: 20,
                   }}
                 >
-                  {/* Image */}
-                  <div className="flex flex-1 items-center justify-center overflow-hidden">
-                    <motion.img
-                      src={
-                        item.primary_image ||
-                        item.sample_variants?.[0]?.media?.[0]?.url ||
-                        item.images?.[0]?.url
+                  {/* Photo(s) - swipable when the variant has more than one */}
+                  <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+                    {(() => {
+                      const rawMedia =
+                        (item.sample_variants?.[0]?.media?.length &&
+                          item.sample_variants[0].media) ||
+                        (item.images?.length && item.images) ||
+                        (item.primary_image ? [{ url: item.primary_image }] : []);
+                      const photoUrls: string[] = (rawMedia ?? [])
+                        .map((m: { url?: string } | null) => m?.url)
+                        .filter((url: string | undefined): url is string => Boolean(url));
+
+                      if (photoUrls.length === 0) return null;
+
+                      if (photoUrls.length === 1) {
+                        return (
+                          <motion.img
+                            src={photoUrls[0]}
+                            alt={item.title || item.name}
+                            className="max-h-full max-w-full object-contain"
+                            whileHover={{ scale: 1.08 }}
+                            transition={{
+                              duration: 0.6,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          />
+                        );
                       }
-                      alt={item.title || item.name}
-                      className="max-h-full max-w-full object-contain"
-                      whileHover={{ scale: 1.08 }}
-                      transition={{
-                        duration: 0.6,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    />
+
+                      return (
+                        <Swiper
+                          modules={[Pagination]}
+                          pagination={{ clickable: true }}
+                          nested
+                          className="h-full w-full"
+                          style={
+                            {
+                              '--swiper-pagination-color': '#fff',
+                              '--swiper-pagination-bullet-inactive-color': '#fff',
+                              '--swiper-pagination-bullet-inactive-opacity': '0.5',
+                              '--swiper-pagination-bullet-size': '5px',
+                              '--swiper-pagination-bottom': '8px',
+                            } as CSSProperties
+                          }
+                          onClick={(_swiper, e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest('.swiper-pagination-bullet')) {
+                              e.stopPropagation();
+                            }
+                          }}
+                        >
+                          {photoUrls.map((url, photoIndex) => (
+                            <SwiperSlide
+                              key={url || photoIndex}
+                              className="flex items-center justify-center"
+                            >
+                              <img
+                                src={url}
+                                alt={item.title || item.name}
+                                className="max-h-full max-w-full object-contain"
+                              />
+                            </SwiperSlide>
+                          ))}
+                        </Swiper>
+                      );
+                    })()}
                   </div>
                 </motion.div>
               </Link>
