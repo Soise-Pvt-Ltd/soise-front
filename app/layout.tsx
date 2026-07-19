@@ -13,6 +13,7 @@ import {
   KEYWORDS,
   ORG_JSONLD,
 } from '@/lib/seo';
+import { Analytics } from '@vercel/analytics/next';
 
 const body_font = Poppins({
   subsets: ['latin'],
@@ -154,6 +155,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         <Providers initialCurrency={initialCurrency}>{children}</Providers>
         <AmbientStatue />
         <LuxeCursor />
+        <Analytics />
       </body>
     </html>
   );
