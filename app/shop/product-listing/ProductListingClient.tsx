@@ -231,11 +231,9 @@ export default function ProductListingClient({
                   </Link>
 
                   {/* Product name + price */}
-                  <div className="mt-[10px] flex items-center justify-between px-[7.5px] text-[14px] md:text-base">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate uppercase">{product.name}</p>
-                    </div>
-                    <div className="flex-shrink-0 pl-2 font-medium">
+                  <div className="mt-[10px] px-[7.5px] text-[14px] md:text-base">
+                    <p className="truncate uppercase">{product.name}</p>
+                    <div className="mt-1 font-medium">
                       {(() => {
                         const { amount, isFrom } = getDisplayPrice(product);
                         return (

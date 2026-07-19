@@ -94,15 +94,13 @@ export default function SwiperCarouselClient({ items: products }: any) {
 
               {/* Product Info */}
               <motion.div
-                className="mt-[10px] flex items-center justify-between text-[14px] md:text-base"
+                className="mt-[10px] text-[14px] md:text-base"
                 initial={{ opacity: 0 }}
                 animate={isInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
               >
-                <div className="max-w-[65%] truncate uppercase">
-                  {item.name}
-                </div>
-                <div className="font-medium whitespace-nowrap">
+                <div className="truncate uppercase">{item.name}</div>
+                <div className="mt-1 font-medium">
                   {(() => {
                     const { amount, isFrom } = getDisplayPrice(item);
                     return (
