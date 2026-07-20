@@ -182,7 +182,11 @@ export default function HomeContentClient() {
     okMsg: string,
   ): Promise<boolean> => {
     setSaving(true);
-    const res = await saveHomepageContent(nextImages, nextTexts, nextFeatured);
+    const res = await saveHomepageContent(
+      nextImages,
+      nextTexts,
+      nextFeatured ?? '',
+    );
     setSaving(false);
     if (res.success) {
       setImages(normalizeImages(nextImages));
@@ -431,9 +435,27 @@ export default function HomeContentClient() {
             <select
               id="featured_collection_id"
               value={featuredCollectionId ?? ''}
-              onChange={(e) =>
-                setFeaturedCollectionId(e.target.value || null)
-              }
+              onChange={async (e) => {
+                const next = e.target.value || null;
+                setFeaturedCollectionId(next);
+                setSaving(true);
+                const res = await saveHomepageContent(
+                  initialImages,
+                  initialTexts,
+                  next || '',
+                );
+                setSaving(false);
+                if (res.success) {
+                  setInitialFeaturedCollectionId(next);
+                  showToast('success', 'Featured collection updated.');
+                } else {
+                  setFeaturedCollectionId(initialFeaturedCollectionId);
+                  showToast(
+                    'error',
+                    res.error || 'Failed to update featured collection.',
+                  );
+                }
+              }}
               className="h-[48px] w-full rounded-[12px] border border-[#E5E5E5] bg-white px-4 text-[14px] text-[#121212] outline-none transition-colors duration-150 focus:border-[#0072BB]"
             >
               <option value="">None selected</option>
