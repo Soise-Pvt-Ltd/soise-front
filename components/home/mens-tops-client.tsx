@@ -4,14 +4,19 @@ import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { ArrowRightIcon } from '../icons';
 import Link from 'next/link';
+import type { HomepageTexts } from './hero';
 
 interface MensTopsClientProps {
   img?: string | null;
+  texts?: HomepageTexts;
 }
 
-export default function MensTopsClient({ img }: MensTopsClientProps) {
+export default function MensTopsClient({ img, texts }: MensTopsClientProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
+
+  const title = texts?.mens_tops_title || "Men's Tops";
+  const cta = texts?.mens_tops_cta || 'Explore Collection';
 
   return (
     <div
@@ -50,7 +55,7 @@ export default function MensTopsClient({ img }: MensTopsClientProps) {
                 ease: [0.22, 1, 0.36, 1],
               }}
             >
-              Men&apos;s Tops
+              {title}
             </motion.p>
           </div>
           <div className="overflow-hidden">
@@ -68,7 +73,7 @@ export default function MensTopsClient({ img }: MensTopsClientProps) {
                 className="group flex items-center justify-end gap-2 text-right text-white/60 transition-colors duration-200 hover:text-white"
               >
                 <span className="text-[13px] tracking-[0.2em] uppercase">
-                  Explore Collection
+                  {cta}
                 </span>
                 <span className="transition-transform duration-300 group-hover:translate-x-1">
                   <ArrowRightIcon />

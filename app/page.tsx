@@ -43,6 +43,13 @@ interface HomepageImages {
   gallery_3?: string | null;
 }
 
+interface HomepageTexts {
+  hero_headline?: string | null;
+  hero_subheadline?: string | null;
+  mens_tops_title?: string | null;
+  mens_tops_cta?: string | null;
+}
+
 export default async function Home() {
   let products: Product[] = [];
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -66,9 +73,10 @@ export default async function Home() {
     console.error('Error fetching products:', error);
   }
 
-  // Admin-managed homepage imagery. On ANY failure we fall back to the bundled
-  // static images so the homepage never breaks and looks identical to before.
+  // Admin-managed homepage imagery and copy. On ANY failure we fall back to
+  // bundled defaults so the homepage never breaks and looks like before.
   let homeImages: HomepageImages = {};
+  let homeTexts: HomepageTexts = {};
   try {
     if (baseUrl) {
       const res = await fetch(`${baseUrl}/content/homepage`, {
@@ -77,6 +85,7 @@ export default async function Home() {
       if (res.ok) {
         const json = await res.json();
         homeImages = json?.data?.images || {};
+        homeTexts = json?.data?.texts || {};
       }
     }
   } catch (error) {
@@ -117,11 +126,11 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
       />
-      <Hero img={homeImages.hero} />
+      <Hero img={homeImages.hero} texts={homeTexts} />
       {category1Products.length > 0 && (
         <AfterHero products={category1Products} />
       )}
-      <MensTops img={homeImages.mens_top} />
+      <MensTops img={homeImages.mens_top} texts={homeTexts} />
       {category2Products.length > 0 && (
         <BeforeExploreCollection products={category2Products} />
       )}

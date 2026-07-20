@@ -8,6 +8,8 @@ import {
   saveHomepageContent,
   type HomepageImages,
   type HomepageSlot,
+  type HomepageTexts,
+  type HomepageTextSlot,
 } from './actions';
 
 interface SlotDef {
@@ -17,6 +19,13 @@ interface SlotDef {
   fallback: string;
   // 'wide' previews render 16:9-ish; 'tall' previews render portrait gallery tiles.
   shape: 'wide' | 'tall' | 'logo';
+}
+
+interface TextSlotDef {
+  key: HomepageTextSlot;
+  label: string;
+  caption: string;
+  fallback: string;
 }
 
 const SLOTS: SlotDef[] = [
@@ -64,9 +73,37 @@ const SLOTS: SlotDef[] = [
   },
 ];
 
-const SLOT_KEYS = SLOTS.map((s) => s.key);
+const TEXT_SLOTS: TextSlotDef[] = [
+  {
+    key: 'hero_headline',
+    label: 'Hero headline',
+    caption: 'Large tagline at the bottom left of the hero banner.',
+    fallback: 'Wear the culture',
+  },
+  {
+    key: 'hero_subheadline',
+    label: 'Hero sub-headline',
+    caption: 'Second line below the hero headline.',
+    fallback: 'New Collection Available',
+  },
+  {
+    key: 'mens_tops_title',
+    label: "Men's Tops heading",
+    caption: 'Title shown over the Men’s Tops section background.',
+    fallback: 'Men\'s Tops',
+  },
+  {
+    key: 'mens_tops_cta',
+    label: "Men's Tops CTA text",
+    caption: 'Link text at the bottom of the Men’s Tops section.',
+    fallback: 'Explore Collection',
+  },
+];
 
-function normalize(images: HomepageImages): HomepageImages {
+const SLOT_KEYS = SLOTS.map((s) => s.key);
+const TEXT_SLOT_KEYS = TEXT_SLOTS.map((s) => s.key);
+
+function normalizeImages(images: HomepageImages): HomepageImages {
   const next: HomepageImages = {};
   for (const key of SLOT_KEYS) {
     next[key] = images[key] ?? null;
@@ -74,9 +111,19 @@ function normalize(images: HomepageImages): HomepageImages {
   return next;
 }
 
+function normalizeTexts(texts: HomepageTexts): HomepageTexts {
+  const next: HomepageTexts = {};
+  for (const key of TEXT_SLOT_KEYS) {
+    next[key] = texts[key] ?? null;
+  }
+  return next;
+}
+
 export default function HomeContentClient() {
-  const [images, setImages] = useState<HomepageImages>(normalize({}));
-  const [initial, setInitial] = useState<HomepageImages>(normalize({}));
+  const [images, setImages] = useState<HomepageImages>(normalizeImages({}));
+  const [texts, setTexts] = useState<HomepageTexts>(normalizeTexts({}));
+  const [initialImages, setInitialImages] = useState<HomepageImages>(normalizeImages({}));
+  const [initialTexts, setInitialTexts] = useState<HomepageTexts>(normalizeTexts({}));
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -88,9 +135,12 @@ export default function HomeContentClient() {
     setLoadError(null);
     const res = await getHomepageContent();
     if (res.success) {
-      const norm = normalize(res.images);
-      setImages(norm);
-      setInitial(norm);
+      const normImages = normalizeImages(res.images);
+      const normTexts = normalizeTexts(res.texts);
+      setImages(normImages);
+      setInitialImages(normImages);
+      setTexts(normTexts);
+      setInitialTexts(normTexts);
     } else {
       setLoadError(res.error || 'Failed to load homepage content');
     }
@@ -99,12 +149,35 @@ export default function HomeContentClient() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const dirty = SLOT_KEYS.some(
-    (k) => (images[k] ?? null) !== (initial[k] ?? null),
+  const imagesDirty = SLOT_KEYS.some(
+    (k) => (images[k] ?? null) !== (initialImages[k] ?? null),
   );
+  const textsDirty = TEXT_SLOT_KEYS.some(
+    (k) => (texts[k] ?? null) !== (initialTexts[k] ?? null),
+  );
+  const dirty = imagesDirty || textsDirty;
+
+  const persist = async (
+    nextImages: HomepageImages,
+    nextTexts: HomepageTexts,
+    okMsg: string,
+  ): Promise<boolean> => {
+    setSaving(true);
+    const res = await saveHomepageContent(nextImages, nextTexts);
+    setSaving(false);
+    if (res.success) {
+      setImages(normalizeImages(nextImages));
+      setInitialImages(normalizeImages(nextImages));
+      setTexts(normalizeTexts(nextTexts));
+      setInitialTexts(normalizeTexts(nextTexts));
+      showToast('success', okMsg);
+      return true;
+    }
+    showToast('error', res.error || 'Failed to save changes.');
+    return false;
+  };
 
   const handleUpload = async (slot: HomepageSlot, file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -124,7 +197,11 @@ export default function HomeContentClient() {
       const url: string | undefined = json?.data?.url ?? json?.url;
       if (res.ok && url) {
         // Auto-persist immediately — no separate "Save" step to forget.
-        await persist({ ...images, [slot]: url }, 'Image updated and live on the homepage.');
+        await persist(
+          { ...images, [slot]: url },
+          texts,
+          'Image updated and live on the homepage.',
+        );
       } else {
         showToast('error', json?.error || 'Upload failed. Please try again.');
       }
@@ -136,45 +213,69 @@ export default function HomeContentClient() {
   };
 
   const handleReset = async (slot: HomepageSlot) => {
-    await persist({ ...images, [slot]: null }, 'Reset to the default image.');
-  };
-
-  // Persist a full images object and reflect it locally. Used by upload, reset,
-  // and the explicit Save button so a change is never silently un-saved.
-  const persist = async (next: HomepageImages, okMsg: string): Promise<boolean> => {
-    setSaving(true);
-    const res = await saveHomepageContent(next);
-    setSaving(false);
-    if (res.success) {
-      setImages(next);
-      setInitial(normalize(next));
-      showToast('success', okMsg);
-      return true;
-    }
-    showToast('error', res.error || 'Failed to save changes.');
-    return false;
+    await persist({ ...images, [slot]: null }, texts, 'Reset to the default image.');
   };
 
   const handleSave = async () => {
-    await persist(images, 'Homepage images saved.');
+    await persist(images, texts, 'Homepage content saved.');
   };
+
+  if (loading) {
+    return (
+      <GridContainer>
+        <div className="px-2 pb-10">
+          <div className="h-6 w-1/3 animate-pulse rounded bg-[#EEE]" />
+          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {SLOTS.map((slot) => (
+              <div
+                key={slot.key}
+                className="animate-pulse rounded-[16px] border border-[#F0F0F0] p-5"
+              >
+                <div className="mb-3 h-4 w-1/2 rounded bg-[#EEE]" />
+                <div className="h-40 w-full rounded-[12px] bg-[#EEE]" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </GridContainer>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <GridContainer>
+        <div className="px-2 pb-10">
+          <div className="rounded-[16px] border border-[#E5C6BF] bg-[#FBEDE9] p-6 text-center">
+            <p className="text-[14px] text-[#991C00]">{loadError}</p>
+            <button
+              onClick={load}
+              className="mt-3 rounded-[10px] bg-[#991C00] px-4 py-2 text-[13px] font-medium text-white"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      </GridContainer>
+    );
+  }
 
   return (
     <GridContainer>
       <div className="px-2 pb-10">
-        <div className="flex flex-col gap-1 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-1 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-[22px] font-bold text-[#121212]">
               Appearance · Home Page
             </h1>
             <p className="mt-1 max-w-2xl text-[14px] text-[#8E8E93]">
-              Swap the imagery used across the public homepage. Leave a slot on its
-              default to keep the bundled design. Changes go live after you save.
+              Swap the imagery and copy used across the public homepage. Leave a
+              slot on its default to keep the bundled design. Changes go live after
+              you save.
             </p>
           </div>
           <button
             onClick={handleSave}
-            disabled={saving || loading || !dirty}
+            disabled={saving || !dirty}
             className="mt-3 inline-flex h-[44px] shrink-0 items-center justify-center gap-2 rounded-[10px] bg-[#0072BB] px-6 text-[14px] font-medium text-white transition-colors duration-150 hover:bg-[#005a96] disabled:cursor-not-allowed disabled:opacity-50 lg:mt-0"
           >
             {saving && (
@@ -187,30 +288,10 @@ export default function HomeContentClient() {
           </button>
         </div>
 
-        {loading ? (
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {SLOTS.map((slot) => (
-              <div
-                key={slot.key}
-                className="animate-pulse rounded-[16px] border border-[#F0F0F0] p-5"
-              >
-                <div className="mb-3 h-4 w-1/2 rounded bg-[#EEE]" />
-                <div className="h-40 w-full rounded-[12px] bg-[#EEE]" />
-              </div>
-            ))}
-          </div>
-        ) : loadError ? (
-          <div className="mt-6 rounded-[16px] border border-[#E5C6BF] bg-[#FBEDE9] p-6 text-center">
-            <p className="text-[14px] text-[#991C00]">{loadError}</p>
-            <button
-              onClick={load}
-              className="mt-3 rounded-[10px] bg-[#991C00] px-4 py-2 text-[13px] font-medium text-white"
-            >
-              Try again
-            </button>
-          </div>
-        ) : (
-          <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {/* Images */}
+        <section className="mt-8">
+          <h2 className="text-[16px] font-semibold text-[#121212]">Images</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {SLOTS.map((slot) => {
               const current = images[slot.key];
               const preview = current || slot.fallback;
@@ -303,7 +384,42 @@ export default function HomeContentClient() {
               );
             })}
           </div>
-        )}
+        </section>
+
+        {/* Text */}
+        <section className="mt-10">
+          <h2 className="text-[16px] font-semibold text-[#121212]">Text</h2>
+          <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+            {TEXT_SLOTS.map((slot) => {
+              const value = texts[slot.key] ?? '';
+              const fallback = slot.fallback;
+              return (
+                <div
+                  key={slot.key}
+                  className="rounded-[16px] border border-[#F0F0F0] bg-white p-5"
+                >
+                  <label
+                    htmlFor={slot.key}
+                    className="block text-[15px] font-semibold text-[#121212]"
+                  >
+                    {slot.label}
+                  </label>
+                  <p className="mb-3 mt-1 text-[12px] leading-relaxed text-[#8E8E93]">
+                    {slot.caption} Default: “{fallback}”
+                  </p>
+                  <input
+                    id={slot.key}
+                    type="text"
+                    value={value}
+                    placeholder={fallback}
+                    onChange={(e) => setTexts({ ...texts, [slot.key]: e.target.value })}
+                    className="h-[48px] w-full rounded-[12px] border border-[#E5E5E5] px-4 text-[14px] text-[#121212] outline-none transition-colors duration-150 placeholder:text-[#AEAEB2] focus:border-[#0072BB]"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </div>
     </GridContainer>
   );

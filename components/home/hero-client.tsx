@@ -1,12 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import type { HomepageTexts } from './hero';
 
 interface HeroClientProps {
   img?: string | null;
+  texts?: HomepageTexts;
 }
 
-export default function HeroClient({ img }: HeroClientProps) {
+export default function HeroClient({ img, texts }: HeroClientProps) {
+  const headline = texts?.hero_headline || 'Wear the culture';
+  const subheadline = texts?.hero_subheadline || 'New Collection Available';
+
   return (
     <>
       {/* Background image — fixed so it stays "glued" while page scrolls */}
@@ -38,7 +43,7 @@ export default function HeroClient({ img }: HeroClientProps) {
               ease: [0.22, 1, 0.36, 1],
             }}
           >
-            Wear the culture
+            {headline}
           </motion.p>
         </div>
         <div className="overflow-hidden">
@@ -52,7 +57,7 @@ export default function HeroClient({ img }: HeroClientProps) {
               ease: [0.22, 1, 0.36, 1],
             }}
           >
-            New Collection Available
+            {subheadline}
           </motion.p>
         </div>
       </div>
