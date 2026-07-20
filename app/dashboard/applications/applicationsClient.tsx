@@ -42,12 +42,24 @@ export default function ApplicationsClient({
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
-  const firstRender = useRef(true);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    status: initialStatus,
+    search: '',
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
 
   const load = async (nextStatus = status, nextSearch = search) => {
+    const id = ++fetchIdRef.current;
+    lastFetchRef.current = {
+      status: nextStatus,
+      search: nextSearch,
+      hasFetched: true,
+    };
     setStatus(nextStatus);
     setLoading(true);
     const res = await fetchApplications(nextStatus, nextSearch);
+    if (id !== fetchIdRef.current) return;
     setApps(res.success ? res.data : []);
     if (!res.success) showToast('error', res.error || 'Failed to load');
     setLoading(false);
@@ -55,14 +67,17 @@ export default function ApplicationsClient({
 
   // Debounced search by applicant name / email.
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
+    if (
+      lastFetchRef.current.hasFetched &&
+      lastFetchRef.current.status === status &&
+      lastFetchRef.current.search === search
+    ) {
       return;
     }
     const t = setTimeout(() => load(status, search), 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [search, status]);
 
   const review = async (app: Application, action: 'approve' | 'reject') => {
     if (busyId) return;

@@ -49,16 +49,20 @@ export default function CreatorsClient({
     null,
   );
   const searchParams = useSearchParams();
-  const [searchValue, setSearchValue] = useState<string>(
-    () => searchParams.get('search') ?? '',
-  );
+  const initialSearch = searchParams.get('search') ?? '';
+  const [searchValue, setSearchValue] = useState<string>(initialSearch);
   const [selectedPeriod, setSelectedPeriod] = useState('All Time');
   const [creators, setCreators] = useState<Creator[]>(initialData || []);
   const [pagination, setPagination] = useState(
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0 },
   );
   const [isLoading, setIsLoading] = useState(false);
-  const isFirstRender = useRef(true);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    search: initialSearch,
+    period: 'All Time',
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -140,8 +144,15 @@ export default function CreatorsClient({
   }, [showTierModal, closeTierModal]);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    const next = {
+      search: searchValue,
+      period: selectedPeriod,
+    };
+    if (
+      lastFetchRef.current.hasFetched &&
+      next.search === lastFetchRef.current.search &&
+      next.period === lastFetchRef.current.period
+    ) {
       return;
     }
 
@@ -150,9 +161,16 @@ export default function CreatorsClient({
     }, 500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue, selectedPeriod]);
 
   const handleFilterChange = async () => {
+    const id = ++fetchIdRef.current;
+    lastFetchRef.current = {
+      search: searchValue,
+      period: selectedPeriod,
+      hasFetched: true,
+    };
     setIsLoading(true);
     const result = await fetchServerData(
       pagination.limit,
@@ -160,6 +178,7 @@ export default function CreatorsClient({
       searchValue,
       selectedPeriod,
     );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
       setCreators(result.data);
       setPagination({ ...result.meta.pagination, offset: 0 });
@@ -169,6 +188,7 @@ export default function CreatorsClient({
 
   const handlePageChange = async (newOffset: number) => {
     if (newOffset < 0 || newOffset >= pagination.count) return;
+    const id = ++fetchIdRef.current;
     setIsLoading(true);
     const result = await fetchServerData(
       pagination.limit,
@@ -176,6 +196,7 @@ export default function CreatorsClient({
       searchValue,
       selectedPeriod,
     );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
       setCreators(result.data);
       setPagination(result.meta.pagination);

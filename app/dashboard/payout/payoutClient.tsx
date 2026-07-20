@@ -100,7 +100,13 @@ export default function PayoutClient({
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [payouts, setPayouts] = useState<Payout[]>(initialData || []);
-  const isFirstRender = useRef(true);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    search: '',
+    status: 'All',
+    period: 'All Time',
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -205,8 +211,17 @@ export default function PayoutClient({
   }, [showOtpModal]);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    const next = {
+      search: searchQuery,
+      status: activeTab,
+      period: selectedPeriod,
+    };
+    if (
+      lastFetchRef.current.hasFetched &&
+      next.search === lastFetchRef.current.search &&
+      next.status === lastFetchRef.current.status &&
+      next.period === lastFetchRef.current.period
+    ) {
       return;
     }
 
@@ -215,9 +230,17 @@ export default function PayoutClient({
     }, 500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, activeTab, selectedPeriod]);
 
   const handleFilterChange = async () => {
+    const id = ++fetchIdRef.current;
+    lastFetchRef.current = {
+      search: searchQuery,
+      status: activeTab,
+      period: selectedPeriod,
+      hasFetched: true,
+    };
     setIsLoading(true);
     const result = await fetchServerData(
       pagination.limit,
@@ -226,6 +249,7 @@ export default function PayoutClient({
       activeTab,
       selectedPeriod,
     );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
       setPayouts(result.data);
       setPagination({ ...result.meta.pagination, offset: 0 });
@@ -235,6 +259,7 @@ export default function PayoutClient({
 
   const handlePageChange = async (newOffset: number) => {
     if (newOffset < 0 || newOffset >= pagination.count) return;
+    const id = ++fetchIdRef.current;
     setIsLoading(true);
     const result = await fetchServerData(
       pagination.limit,
@@ -243,6 +268,7 @@ export default function PayoutClient({
       activeTab,
       selectedPeriod,
     );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
       setPayouts(result.data);
       setPagination(result.meta.pagination);

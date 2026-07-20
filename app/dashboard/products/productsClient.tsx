@@ -584,12 +584,9 @@ export default function ProductsPage({
 
   // List controls
   const searchParams = useSearchParams();
-  const [searchInput, setSearchInput] = useState(
-    () => searchParams.get('search') ?? '',
-  );
-  const [searchQuery, setSearchQuery] = useState(
-    () => searchParams.get('search') ?? '',
-  );
+  const initialSearch = searchParams.get('search') ?? '';
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [sortBy, setSortBy] = useState<
     'newest' | 'name' | 'price' | 'stock'
   >('newest');
@@ -683,16 +680,37 @@ export default function ProductsPage({
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Server-side filtering effect (period + search). Skip the very first run
-  // so we don't refetch data that was already provided by the server.
-  const didMountRef = useRef(false);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    search: initialSearch,
+    status: 'all',
+    period: 'All Time',
+    sortBy: 'newest',
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
+
+  // Server-side filtering effect (period + search + status + sort).
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
+    const next = {
+      search: searchQuery,
+      status: activeTab,
+      period: selectedPeriod,
+      sortBy,
+    };
+    if (
+      lastFetchRef.current.hasFetched &&
+      next.search === lastFetchRef.current.search &&
+      next.status === lastFetchRef.current.status &&
+      next.period === lastFetchRef.current.period &&
+      next.sortBy === lastFetchRef.current.sortBy
+    ) {
       return;
     }
+
     const fetchData = async () => {
       if (!fetchServerData) return;
+      const id = ++fetchIdRef.current;
+      lastFetchRef.current = { ...next, hasFetched: true };
       setIsLoading(true);
       try {
         const result = await fetchServerData(
@@ -703,6 +721,7 @@ export default function ProductsPage({
           activeTab, // server-side status filter (was client-side, page-only)
           sortBy, // server-side sort (was client-side, page-only)
         );
+        if (id !== fetchIdRef.current) return;
         if (result?.success) {
           rawDataRef.current = result.products?.data || [];
           setProducts(mapProducts(result.products?.data));
@@ -725,6 +744,7 @@ export default function ProductsPage({
 
   const handlePageChange = async (newOffset: number) => {
     if (!fetchServerData) return;
+    const id = ++fetchIdRef.current;
     setIsLoading(true);
     try {
       const result = await fetchServerData(
@@ -735,6 +755,7 @@ export default function ProductsPage({
         activeTab,
         sortBy,
       );
+      if (id !== fetchIdRef.current) return;
       if (result?.success) {
         rawDataRef.current = result.products?.data || [];
         setProducts(mapProducts(result.products?.data));

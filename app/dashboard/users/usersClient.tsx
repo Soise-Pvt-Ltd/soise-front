@@ -45,9 +45,8 @@ export default function UsersPage({
     null,
   );
   const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(
-    () => searchParams.get('search') ?? '',
-  );
+  const initialSearch = searchParams.get('search') ?? '';
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedRole, setSelectedRole] = useState('');
@@ -56,7 +55,13 @@ export default function UsersPage({
   const [pagination, setPagination] = useState(
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0 },
   );
-  const isFirstRender = useRef(true);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    search: initialSearch,
+    period: 'All Time',
+    role: 'All',
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -103,8 +108,17 @@ export default function UsersPage({
   }, [showRoleModal]);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    const next = {
+      search: searchQuery,
+      period: selectedPeriod,
+      role: roleFilter,
+    };
+    if (
+      lastFetchRef.current.hasFetched &&
+      next.search === lastFetchRef.current.search &&
+      next.period === lastFetchRef.current.period &&
+      next.role === lastFetchRef.current.role
+    ) {
       return;
     }
 
@@ -113,9 +127,17 @@ export default function UsersPage({
     }, 500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedPeriod, roleFilter]);
 
   const handleFilterChange = async () => {
+    const id = ++fetchIdRef.current;
+    lastFetchRef.current = {
+      search: searchQuery,
+      period: selectedPeriod,
+      role: roleFilter,
+      hasFetched: true,
+    };
     setIsLoading(true);
     const result = await fetchServerData(
       pagination.limit,
@@ -124,6 +146,7 @@ export default function UsersPage({
       selectedPeriod,
       roleFilter,
     );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
       setUsers(result.data);
       setPagination({ ...result.meta.pagination, offset: 0 });
@@ -133,6 +156,7 @@ export default function UsersPage({
 
   const handlePageChange = async (newOffset: number) => {
     if (newOffset < 0 || newOffset >= pagination.count) return;
+    const id = ++fetchIdRef.current;
     setIsLoading(true);
     const result = await fetchServerData(
       pagination.limit,
@@ -141,6 +165,7 @@ export default function UsersPage({
       selectedPeriod,
       roleFilter,
     );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
       setUsers(result.data);
       setPagination(result.meta.pagination);
