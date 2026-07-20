@@ -22,6 +22,11 @@ export default async function OrderHistoryPage() {
   let storeCredit = 0;
   let welcomeCreditPending = false;
   let welcomeCreditAmount = 1000;
+  let savedAddresses: any[] = [];
+  let defaultAddressId: string | null = null;
+  let prefillFirstName = '';
+  let prefillLastName = '';
+  let prefillPhone = '';
 
   try {
     if (!baseUrl) {
@@ -76,6 +81,37 @@ export default async function OrderHistoryPage() {
         // ignore — toggle simply won't show
       }
     }
+
+    // Fetch saved addresses (and name/phone for prefill) for logged-in users.
+    // Best-effort, same pattern as store credit above — checkout must still
+    // work if this fails.
+    if (isLoggedIn && accessToken) {
+      try {
+        const profileRes = await fetch(`${baseUrl}/profiles`, {
+          cache: 'no-store',
+          headers: {
+            Cookie: `access_token=${accessToken}`,
+            Accept: 'application/json',
+          },
+        });
+        if (profileRes.ok) {
+          const profileJson = await profileRes.json();
+          const profile = profileJson?.data;
+          prefillFirstName = profile?.first_name || '';
+          prefillLastName = profile?.last_name || '';
+          prefillPhone = profile?.phone || '';
+          savedAddresses = Array.isArray(profile?.addresses)
+            ? profile.addresses
+            : [];
+          const defaultAddr = savedAddresses.find(
+            (a: any) => a?.is_default,
+          );
+          defaultAddressId = defaultAddr?.id || null;
+        }
+      } catch {
+        // ignore — form just falls back to blank/manual entry
+      }
+    }
   } catch (error) {
     console.error('Order history page fetch failed:', error);
   }
@@ -108,6 +144,11 @@ export default async function OrderHistoryPage() {
         storeCredit={storeCredit}
         welcomeCreditPending={welcomeCreditPending}
         welcomeCreditAmount={welcomeCreditAmount}
+        savedAddresses={savedAddresses}
+        defaultAddressId={defaultAddressId}
+        prefillFirstName={prefillFirstName}
+        prefillLastName={prefillLastName}
+        prefillPhone={prefillPhone}
       />
     </>
   );

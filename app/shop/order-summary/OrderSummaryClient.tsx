@@ -27,6 +27,19 @@ function clearCookie(name: string) {
   document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
 }
 
+interface SavedAddress {
+  id: string;
+  label?: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  country: string;
+  postal_code: string;
+  phone?: string;
+  is_default?: boolean;
+}
+
 interface OrderSummaryClientProps {
   cart: EnrichedCartItem[];
   isLoggedIn: boolean;
@@ -35,6 +48,11 @@ interface OrderSummaryClientProps {
   // one-time welcome credit pending. Surfaced as a gentle nudge at checkout.
   welcomeCreditPending?: boolean;
   welcomeCreditAmount?: number;
+  savedAddresses?: SavedAddress[];
+  defaultAddressId?: string | null;
+  prefillFirstName?: string;
+  prefillLastName?: string;
+  prefillPhone?: string;
 }
 
 const NIGERIAN_STATES = [
@@ -83,6 +101,11 @@ export default function OrderSummaryClient({
   storeCredit = 0,
   welcomeCreditPending = false,
   welcomeCreditAmount = 1000,
+  savedAddresses = [],
+  defaultAddressId = null,
+  prefillFirstName = '',
+  prefillLastName = '',
+  prefillPhone = '',
 }: OrderSummaryClientProps) {
   const { formatPrice, currency } = useCurrency();
   const router = useRouter();
@@ -91,6 +114,16 @@ export default function OrderSummaryClient({
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  // Address selection: default to a saved address when one exists so
+  // returning customers don't have to retype anything. 'new' reveals the
+  // manual entry fields.
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(
+    defaultAddressId || (savedAddresses.length > 0 ? savedAddresses[0].id : 'new'),
+  );
+  const usingSavedAddress =
+    selectedAddressId !== 'new' &&
+    savedAddresses.some((a) => a.id === selectedAddressId);
 
   // Store-credit redemption toggle. The exact reduction is computed on the
   // backend; here we preview "up to" the lesser of the balance and the total.
@@ -160,6 +193,10 @@ export default function OrderSummaryClient({
 
     if (useStoreCredit && hasStoreCredit) {
       formData.set('use_store_credit', 'true');
+    }
+
+    if (usingSavedAddress) {
+      formData.set('selected_address_id', selectedAddressId);
     }
 
     const toastId = showToast.loading('Processing your order...');
@@ -686,18 +723,70 @@ export default function OrderSummaryClient({
                       name="email"
                       className="solid"
                       placeholder="Email address"
+                      autoComplete="email"
                       required
                     />
                   )}
-                  <select name="country" className="solid" required>
-                    <option value="">Select Country</option>
-                    <option value="Nigeria">Nigeria</option>
-                  </select>
+
+                  {savedAddresses.length > 0 && (
+                    <div className="space-y-[8px] pb-[4px]">
+                      {savedAddresses.map((addr) => (
+                        <label
+                          key={addr.id}
+                          className={`flex cursor-pointer items-start gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
+                            selectedAddressId === addr.id
+                              ? 'border-[#121212] bg-[#F7F7F7]'
+                              : 'border-[#D1D1D6]'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="address_choice"
+                            className="mt-[3px]"
+                            checked={selectedAddressId === addr.id}
+                            onChange={() => setSelectedAddressId(addr.id)}
+                          />
+                          <span>
+                            <span className="font-medium">
+                              {addr.label || 'Address'}
+                              {addr.is_default ? ' · Default' : ''}
+                            </span>
+                            <br />
+                            <span className="text-[#8E8E93]">
+                              {addr.line1}
+                              {addr.line2 ? `, ${addr.line2}` : ''},{' '}
+                              {addr.city}, {addr.state}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                      <label
+                        className={`flex cursor-pointer items-center gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
+                          selectedAddressId === 'new'
+                            ? 'border-[#121212] bg-[#F7F7F7]'
+                            : 'border-[#D1D1D6]'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="address_choice"
+                          checked={selectedAddressId === 'new'}
+                          onChange={() => setSelectedAddressId('new')}
+                        />
+                        <span className="font-medium">
+                          Use a new address
+                        </span>
+                      </label>
+                    </div>
+                  )}
+
                   <input
                     type="text"
                     name="firstName"
                     className="solid"
                     placeholder="First Name"
+                    autoComplete="given-name"
+                    defaultValue={prefillFirstName}
                     required
                   />
                   <input
@@ -705,53 +794,79 @@ export default function OrderSummaryClient({
                     name="lastName"
                     className="solid"
                     placeholder="Last Name"
+                    autoComplete="family-name"
+                    defaultValue={prefillLastName}
                     required
-                  />
-                  <input
-                    type="text"
-                    name="address"
-                    className="solid"
-                    placeholder="Address"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="city"
-                    className="solid"
-                    placeholder="City"
-                    required
-                  />
-                  <select name="state" className="solid" required>
-                    <option value="">Select State</option>
-                    {NIGERIAN_STATES.map((state) => (
-                      <option key={state} value={state}>
-                        {state}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    name="zipCode"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="ZIP code"
-                    className="solid"
-                    required
-                    onInput={(e: any) => {
-                      e.target.value = e.target.value.replace(/\D/g, '');
-                    }}
                   />
 
-                  <input
-                    type="tel"
-                    name="phone"
-                    className="solid"
-                    placeholder="Phone (max 11 digits)"
-                    required
-                    maxLength={11}
-                    pattern="[0-9]{1,11}"
-                    onInput={handlePhoneInput}
-                  />
+                  {!usingSavedAddress && (
+                    <>
+                      <select
+                        name="country"
+                        className="solid"
+                        autoComplete="country-name"
+                        defaultValue="Nigeria"
+                        required
+                      >
+                        <option value="">Select Country</option>
+                        <option value="Nigeria">Nigeria</option>
+                      </select>
+                      <input
+                        type="text"
+                        name="address"
+                        className="solid"
+                        placeholder="Address"
+                        autoComplete="address-line1"
+                        required
+                      />
+                      <input
+                        type="text"
+                        name="city"
+                        className="solid"
+                        placeholder="City"
+                        autoComplete="address-level2"
+                        required
+                      />
+                      <select
+                        name="state"
+                        className="solid"
+                        autoComplete="address-level1"
+                        required
+                      >
+                        <option value="">Select State</option>
+                        {NIGERIAN_STATES.map((state) => (
+                          <option key={state} value={state}>
+                            {state}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="ZIP code"
+                        className="solid"
+                        autoComplete="postal-code"
+                        required
+                        onInput={(e: any) => {
+                          e.target.value = e.target.value.replace(/\D/g, '');
+                        }}
+                      />
+                      <input
+                        type="tel"
+                        name="phone"
+                        className="solid"
+                        placeholder="Phone (max 11 digits)"
+                        autoComplete="tel"
+                        defaultValue={prefillPhone}
+                        required
+                        maxLength={11}
+                        pattern="[0-9]{1,11}"
+                        onInput={handlePhoneInput}
+                      />
+                    </>
+                  )}
                 </div>
 
                 <button

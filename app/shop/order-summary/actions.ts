@@ -3,17 +3,6 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 
-interface DeliveryData {
-  country: string;
-  firstName: string;
-  lastName: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  phone: string;
-}
-
 interface ApplyCodeResponse {
   status?: boolean;
   success?: boolean;
@@ -39,16 +28,53 @@ export async function checkoutAction(formData: FormData) {
   const accessToken = cookieStore.get('access_token')?.value;
   const guestId = cookieStore.get('soise_guestId')?.value;
 
-  const deliveryData: DeliveryData = {
-    country: formData.get('country') as string,
-    firstName: formData.get('firstName') as string,
-    lastName: formData.get('lastName') as string,
-    address: formData.get('address') as string,
-    city: formData.get('city') as string,
-    state: formData.get('state') as string,
-    zipCode: formData.get('zipCode') as string,
-    phone: formData.get('phone') as string,
-  };
+  const selectedAddressId = formData.get('selected_address_id') as string | null;
+  const firstName = formData.get('firstName') as string;
+  const lastName = formData.get('lastName') as string;
+
+  // Required regardless of which address path is used: who it's for.
+  if (!firstName?.trim() || !lastName?.trim()) {
+    return { success: false, error: 'firstName and lastName are required' };
+  }
+
+  let shippingPayload: Record<string, unknown>;
+
+  if (selectedAddressId) {
+    // Reusing a saved address — the backend looks it up by id and re-verifies
+    // ownership, so we don't need to (or want to) resend the full address.
+    shippingPayload = { shipping_addr: selectedAddressId };
+  } else {
+    const country = formData.get('country') as string;
+    const address = formData.get('address') as string;
+    const city = formData.get('city') as string;
+    const state = formData.get('state') as string;
+    const zipCode = formData.get('zipCode') as string;
+    const phone = formData.get('phone') as string;
+
+    const requiredManualFields = { country, address, city, state, zipCode, phone };
+    for (const [key, value] of Object.entries(requiredManualFields)) {
+      if (!value || value.trim() === '') {
+        return { success: false, error: `${key} is required` };
+      }
+    }
+
+    // Maps our form field names onto the backend's reusable address schema
+    // (label/line1/line2/city/state/country/postal_code/phone). Sending this
+    // as `shipping_address` (rather than flat top-level fields) is what
+    // actually triggers auto-save + default-address logic server-side.
+    shippingPayload = {
+      shipping_address: {
+        label: 'Home',
+        line1: address,
+        line2: '',
+        city,
+        state,
+        country,
+        postal_code: zipCode,
+        phone,
+      },
+    };
+  }
 
   const creatorCode = formData.get('creator_code') as string | null;
   const email = formData.get('email') as string | null;
@@ -56,17 +82,6 @@ export async function checkoutAction(formData: FormData) {
   // order summary. The backend reduces (or fully covers) the charge.
   const useStoreCredit =
     !!accessToken && formData.get('use_store_credit') === 'true';
-
-  // Validate required fields
-  const requiredFields = Object.entries(deliveryData);
-  for (const [key, value] of requiredFields) {
-    if (!value || value.trim() === '') {
-      return {
-        success: false,
-        error: `${key} is required`,
-      };
-    }
-  }
 
   // Email required for guest checkout
   if (!accessToken && (!email || email.trim() === '')) {
@@ -101,7 +116,9 @@ export async function checkoutAction(formData: FormData) {
         ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
       },
       body: JSON.stringify({
-        ...deliveryData,
+        first_name: firstName,
+        last_name: lastName,
+        ...shippingPayload,
         ...(creatorCode ? { creator_code: creatorCode } : {}),
         ...(!accessToken && email ? { email } : {}),
         ...(useStoreCredit ? { use_store_credit: true } : {}),

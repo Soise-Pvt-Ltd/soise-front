@@ -49,6 +49,10 @@ const FAQ_CATEGORIES: FaqCategory[] = [
         a: 'Commission lands in your creator wallet on each verified (paid) order; request a bank payout from your dashboard.',
       },
       {
+        q: 'Do I get anything besides cash commission?',
+        a: 'Yes — every 10 verified sales on your code also earns you fresh Soise gear from the current drop, on top of your commission.',
+      },
+      {
         q: 'How does store credit work?',
         a: "You earn store credit when friends' first orders are paid via your link, and you spend it at checkout.",
       },
@@ -132,6 +136,11 @@ export default function CreatorSwazLoopPage() {
                   withdrawable cash commission
                 </span>{' '}
                 on every verified (paid) order placed with your code.
+              </li>
+              <li>
+                <span className="font-medium">Every 10 verified sales</span>{' '}
+                also earns you fresh Soise gear from the current drop — on top
+                of your commission.
               </li>
               <li>
                 <span className="font-medium">Tiers raise your rate</span> — hit

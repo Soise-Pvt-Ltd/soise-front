@@ -100,6 +100,20 @@ export default async function JoinPage({
         </div>
       </section>
 
+      {/* Milestone hook */}
+      <section className="border-t border-[#1C1C1F] bg-[#121214]">
+        <div className="mx-auto max-w-[640px] px-6 py-9 text-center">
+          <p className="text-[12px] font-medium uppercase tracking-[0.28em] text-[#C4AA6E]">
+            Every 10 sales
+          </p>
+          <p className="mx-auto mt-3 max-w-[480px] text-[16px] leading-relaxed text-[#F4F1EA] sm:text-[18px]">
+            Hit 10 verified sales on your code and we send you fresh Soise gear
+            — on us. Cash commission on every sale, plus the pieces to wear
+            while you sell them.
+          </p>
+        </div>
+      </section>
+
       {/* Benefits */}
       <section className="border-t border-[#1C1C1F] bg-[#0E0E10]">
         <div className="mx-auto max-w-[980px] px-6 py-16">

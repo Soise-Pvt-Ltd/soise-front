@@ -188,6 +188,10 @@ export default function OnBoardingCreatorClient({
                 Share it, tag us, and every verified sale lands straight in
                 your wallet.
               </p>
+              <p className="mt-2 max-w-[360px] text-[13px] font-medium leading-relaxed text-[#9C6F2E]">
+                Every 10 verified sales also earns you fresh Soise gear — on
+                us.
+              </p>
             </div>
             <div className="rounded-[16px] border border-[#E4DECF] bg-white p-5">
               <ReferralCode
