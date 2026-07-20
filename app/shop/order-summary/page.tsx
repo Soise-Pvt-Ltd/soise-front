@@ -4,7 +4,6 @@ import Nav from '@/components/home/nav/Nav';
 import OrderSummaryClient from './OrderSummaryClient';
 import { cookies } from 'next/headers';
 import {
-  Product,
   ProductVariant,
   CartItem,
   EnrichedCartItem,
@@ -17,7 +16,6 @@ export default async function OrderHistoryPage() {
   const guestId = cookieStore.get('soise_guestId')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-  let productsData = { data: [] };
   let cartData = { data: [] };
   let storeCredit = 0;
   let welcomeCreditPending = false;
@@ -38,21 +36,15 @@ export default async function OrderHistoryPage() {
         ? `${baseUrl}/cart`
         : `${baseUrl}/cart${guestId ? `?session_id=${guestId}` : ''}`;
 
-    const [productsRes, cartRes] = await Promise.all([
-      fetch(`${baseUrl}/products`, {
-        cache: 'no-store',
-      }),
-      fetch(cartUrl, {
-        cache: 'no-store',
-        headers: {
-          ...(isLoggedIn && accessToken
-            ? { Cookie: `access_token=${accessToken}` }
-            : {}),
-        },
-      }),
-    ]);
+    const cartRes = await fetch(cartUrl, {
+      cache: 'no-store',
+      headers: {
+        ...(isLoggedIn && accessToken
+          ? { Cookie: `access_token=${accessToken}` }
+          : {}),
+      },
+    });
 
-    if (productsRes.ok) productsData = await productsRes.json();
     if (cartRes.ok) cartData = await cartRes.json();
 
     // Fetch the signed-in user's store-credit balance so we can offer to apply
@@ -116,22 +108,15 @@ export default async function OrderHistoryPage() {
     console.error('Order history page fetch failed:', error);
   }
 
-  // Build variants map
-  const variantsMap = new Map<string, ProductVariant>();
-  productsData.data?.forEach((product: Product) => {
-    product.sample_variants?.forEach((variant: ProductVariant) => {
-      variantsMap.set(variant.id, {
-        ...variant,
-        product_name: product.name,
-      });
-    });
-  });
-
-  // Enrich cart
+  // Cart items now arrive pre-enriched with `variant_details` (name, price,
+  // color, size, media with fallback already resolved server-side) — no
+  // more reconstructing this from /products' sample_variants, which was
+  // capped at 3 variants per product and silently missed anything outside
+  // that cap.
   const enrichedCart: EnrichedCartItem[] = Array.isArray(cartData?.data)
-    ? cartData.data.map((item: CartItem) => ({
+    ? cartData.data.map((item: CartItem & { variant_details?: ProductVariant }) => ({
         ...item,
-        variantDetails: variantsMap.get(item.variant),
+        variantDetails: item.variant_details,
       }))
     : [];
 
