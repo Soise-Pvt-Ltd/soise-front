@@ -94,7 +94,7 @@ export default function SwiperCarouselClient({ items: products }: any) {
                           <motion.img
                             src={photoUrls[0]}
                             alt={item.title || item.name}
-                            className="max-h-full max-w-full object-contain"
+                            className="h-full w-full object-contain"
                             whileHover={{ scale: 1.08 }}
                             transition={{
                               duration: 0.6,
@@ -134,7 +134,7 @@ export default function SwiperCarouselClient({ items: products }: any) {
                               <img
                                 src={url}
                                 alt={item.title || item.name}
-                                className="max-h-full max-w-full object-contain"
+                                className="h-full w-full object-contain"
                               />
                             </SwiperSlide>
                           ))}
