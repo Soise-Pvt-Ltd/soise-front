@@ -1,8 +1,31 @@
+import type { Metadata } from 'next';
 import CreatorsApplicationClient from './creatorsClient';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+
+export const metadata: Metadata = {
+  title: 'Become a Creator · Swaz Creator Program',
+  description:
+    'Apply to the Swaz Creator Program — your own SOISE code, cash commission on every sale, and first access to every drop before it’s public.',
+  alternates: { canonical: '/creators' },
+  openGraph: {
+    type: 'website',
+    title: 'Become a Creator — SOISE',
+    description:
+      'Your own code, cash commission on every sale, and first access to every drop. Apply to the Swaz Creator Program.',
+    url: '/creators',
+    images: ['/og-image.jpg'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Become a Creator — SOISE',
+    description:
+      'Your own code, cash commission on every sale, first access to every drop.',
+    images: ['/og-image.jpg'],
+  },
+};
 
 function StatusScreen({
   title,

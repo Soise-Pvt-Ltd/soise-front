@@ -94,15 +94,18 @@ export default function CreatorSwazLoopPage() {
       <CreatorNav />
       <div className="mx-auto max-w-3xl px-[20px] py-[40px] md:py-[64px]">
         {/* Hero */}
-        <div className="text-center">
-          <span className="inline-flex items-center gap-x-2 rounded-full bg-[#E8F1F9] px-3 py-1 text-[11px] font-medium tracking-wide text-[#0072BB] uppercase">
+        <div className="rounded-[24px] bg-[#0E0E10] px-6 py-14 text-center text-[#F4F1EA] sm:py-16">
+          <span className="text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
             The Swaz Loop
           </span>
-          <h1 className="font-display mt-4 text-[34px] leading-tight text-[#121212] md:text-[44px]">
+          <h1
+            className="mx-auto mt-5 max-w-[520px] text-[34px] leading-[1.1] tracking-tight md:text-[46px]"
+            style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
+          >
             Share. Sell. Earn.
           </h1>
-          <p className="mx-auto mt-4 max-w-[560px] text-[15px] leading-relaxed text-[#35373C]">
-            The Swaz Loop is how Soise rewards you for spreading the word —
+          <p className="mx-auto mt-5 max-w-[540px] text-[15px] leading-relaxed text-[#B7B2A6]">
+            The Swaz Loop is how SOISE rewards you for spreading the word —
             whether you&apos;re a creator earning withdrawable cash commission or
             a shopper earning store credit by inviting friends.
           </p>
@@ -231,22 +234,27 @@ export default function CreatorSwazLoopPage() {
         </div>
 
         {/* Footer CTA */}
-        <div className="mt-[40px] rounded-[20px] bg-gradient-to-br from-[#0072BB] to-[#2D2C54] p-8 text-center text-white">
-          <h3 className="text-[22px] font-bold">Ready to start earning?</h3>
-          <p className="mx-auto mt-2 max-w-[420px] text-[14px] text-white/85">
+        <div className="mt-[40px] rounded-[20px] bg-[#0E0E10] p-8 text-center text-[#F4F1EA]">
+          <h3
+            className="text-[24px]"
+            style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
+          >
+            Ready to start earning?
+          </h3>
+          <p className="mx-auto mt-2 max-w-[420px] text-[14px] text-[#B7B2A6]">
             Apply to become a creator for cash commission, or grab your referral
             link right now to start banking store credit.
           </p>
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/creators"
-              className="rounded-[10px] bg-white px-6 py-3 text-[13px] font-bold text-[#0072BB] uppercase transition-transform hover:scale-[1.02]"
+              className="rounded-full bg-[#C4AA6E] px-6 py-3 text-[13px] font-bold text-[#0E0E10] uppercase transition-transform hover:scale-[1.02]"
             >
               Become a creator
             </Link>
             <Link
               href="/swaz-loop"
-              className="rounded-[10px] border border-white px-6 py-3 text-[13px] font-bold text-white uppercase transition-colors hover:bg-white/10"
+              className="rounded-full border border-[#3A3A3D] px-6 py-3 text-[13px] font-bold text-[#D8D3C7] uppercase transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA]"
             >
               Invite &amp; earn credit
             </Link>
