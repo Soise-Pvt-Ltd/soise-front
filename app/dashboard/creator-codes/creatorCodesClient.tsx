@@ -47,11 +47,14 @@ export default function CreatorCodesClient({
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0, total: 0 },
   );
   const searchParams = useSearchParams();
-  const [search, setSearch] = useState(
-    () => searchParams.get('search') ?? '',
-  );
+  const initialSearch = searchParams.get('search') ?? '';
+  const [search, setSearch] = useState(initialSearch);
   const [isLoading, setIsLoading] = useState(false);
-  const isFirstRender = useRef(true);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    search: initialSearch,
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
 
   const fullName = (c: CreatorCode) =>
     `${c.owner_first_name || ''} ${c.owner_last_name || ''}`.trim() ||
@@ -65,8 +68,11 @@ export default function CreatorCodesClient({
   }, [codes, pagination.total]);
 
   const load = async (offset = 0) => {
+    const id = ++fetchIdRef.current;
+    lastFetchRef.current = { search, hasFetched: true };
     setIsLoading(true);
     const res = await fetchServerData(pagination.limit, offset, search);
+    if (id !== fetchIdRef.current) return;
     if (res.success) {
       setCodes(res.data);
       setPagination({ ...res.meta.pagination, offset });
@@ -75,8 +81,10 @@ export default function CreatorCodesClient({
   };
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (
+      lastFetchRef.current.hasFetched &&
+      lastFetchRef.current.search === search
+    ) {
       return;
     }
     const t = setTimeout(() => load(0), 450);

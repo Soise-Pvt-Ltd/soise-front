@@ -42,25 +42,40 @@ export default function TierRequestsClient({
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tierChoice, setTierChoice] = useState<Record<string, string>>({});
-  const firstRender = useRef(true);
+  const fetchIdRef = useRef(0);
+  const lastFetchRef = useRef({
+    status: 'pending',
+    search: '',
+    hasFetched: (initialData?.length ?? 0) > 0,
+  });
 
   const load = async (nextStatus = status, nextSearch = search) => {
+    const id = ++fetchIdRef.current;
+    lastFetchRef.current = {
+      status: nextStatus,
+      search: nextSearch,
+      hasFetched: true,
+    };
     setStatus(nextStatus);
     const res = await fetchTierRequests(nextStatus, nextSearch);
+    if (id !== fetchIdRef.current) return;
     setReqs(res.success ? res.data : []);
     if (!res.success) showToast('error', res.error || 'Failed to load');
   };
 
   // Debounced search by creator username / email / code.
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
+    if (
+      lastFetchRef.current.hasFetched &&
+      lastFetchRef.current.status === status &&
+      lastFetchRef.current.search === search
+    ) {
       return;
     }
     const t = setTimeout(() => load(status, search), 400);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [search, status]);
 
   const review = async (req: Req, action: 'approve' | 'reject') => {
     if (busyId) return;
