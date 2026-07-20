@@ -329,6 +329,7 @@ export async function createProduct(formData: FormData) {
       const syncResponse = await syncRes.json();
       if (!syncResponse.success) {
         console.error('Failed to sync variants:', syncResponse.message);
+        return { success: false, error: syncResponse.message };
       }
     }
   }
@@ -427,6 +428,7 @@ export async function updateProduct(formData: FormData) {
     const syncResponse = await syncRes.json();
     if (!syncResponse.success) {
       console.error('Failed to sync variants:', syncResponse.message);
+      return { success: false, error: syncResponse.message };
     }
   }
 
