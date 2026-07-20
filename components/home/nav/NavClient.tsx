@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   MenuIcon,
   BagIcon,
@@ -66,6 +66,7 @@ export default function NavClient({
 }: NavClientProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { currency, setCurrency, formatPrice, isRateLoading } = useCurrency();
   const [cart, setCart] = useState<EnrichedCartItem[]>(initialCart);
   const pendingMutations = useRef(0);
@@ -113,11 +114,18 @@ export default function NavClient({
   // it on close (a11y: focus should not be lost to <body>).
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
-  // Active-link detection. hrefs may carry query strings (e.g. collection
-  // filters), so compare on the pathname portion only.
+  // Active-link detection. Collection links include a ?collection= query, so
+  // a link only counts as active when both pathname and collection match.
   const isActive = (href: string) => {
     if (!href) return false;
-    const target = href.split('?')[0];
+    const [target, query] = href.split('?');
+
+    if (query) {
+      const targetParams = new URLSearchParams(query);
+      const currentCollection = searchParams.get('collection');
+      return pathname === target && targetParams.get('collection') === currentCollection;
+    }
+
     if (target === '/') return pathname === '/';
     return pathname === target || pathname.startsWith(`${target}/`);
   };
@@ -571,7 +579,7 @@ export default function NavClient({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                       >
-                        {searchResults.map((product: any, i: number) => (
+                        {searchResults.map((product: Product, i: number) => (
                           <motion.div
                             key={product.id}
                             initial={{ opacity: 0, y: 8 }}

@@ -61,7 +61,7 @@ export default async function ProductListingPage(props: {
   return (
     <>
       <Nav />
-      <ProductListingClient products={products} initialCategory={collection} />
+      <ProductListingClient products={products} initialCollection={collection} />
     </>
   );
 }

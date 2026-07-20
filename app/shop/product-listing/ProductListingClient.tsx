@@ -39,23 +39,24 @@ interface Product {
   sample_variants?: SampleVariant[];
   primary_image?: string | null;
   title?: string; // For alt text
+  created_at?: string;
   collection: Collection | null;
 }
 interface ProductListingClientProps {
   products: Product[];
-  initialCategory?: string;
+  initialCollection?: string;
 }
 
 export default function ProductListingClient({
   products,
-  initialCategory,
+  initialCollection,
 }: ProductListingClientProps) {
   const { formatPrice } = useCurrency();
   // Defensive: the API shape isn't guaranteed, so normalize to a safe array
   // before any .length / .map / .filter access downstream.
   const safeProducts = Array.isArray(products) ? products : [];
-  // Assuming products is an array of product objects, we can get unique categories.
-  const categories = safeProducts.length
+  // Assuming products is an array of product objects, we can get unique collections.
+  const collections = safeProducts.length
     ? [
         'All',
         ...new Set(
@@ -67,18 +68,18 @@ export default function ProductListingClient({
     : [];
 
   // Pre-select the collection passed via ?collection= when it matches a known
-  // category; otherwise fall back to the first category ("All") or a safe default.
-  const defaultCategory =
-    initialCategory && categories.includes(initialCategory)
-      ? initialCategory
-      : (categories[0] ?? 'All');
-  const [activeCategory, setActiveCategory] = useState<string>(defaultCategory);
+  // collection; otherwise fall back to the first collection ("All") or a safe default.
+  const defaultCollection =
+    initialCollection && collections.includes(initialCollection)
+      ? initialCollection
+      : (collections[0] ?? 'All');
+  const [activeCollection, setActiveCollection] = useState<string>(defaultCollection);
 
   const filteredProducts =
-    activeCategory === 'All'
+    activeCollection === 'All'
       ? safeProducts
       : safeProducts.filter(
-          (product) => product.collection?.name === activeCategory,
+          (product) => product.collection?.name === activeCollection,
         );
 
   function isNewProduct(createdAt?: string, days = 14): boolean {
@@ -93,9 +94,9 @@ export default function ProductListingClient({
     return diffInDays <= days;
   }
 
-  const productsWithNewFlag = filteredProducts.map((products: any) => ({
-    ...products,
-    isNew: isNewProduct(products.created_at, 14),
+  const productsWithNewFlag = filteredProducts.map((product: Product) => ({
+    ...product,
+    isNew: isNewProduct(product.created_at, 14),
   }));
 
   return (
@@ -105,27 +106,27 @@ export default function ProductListingClient({
           <div className="px-[18px] md:px-0">
             <motion.div
               className="font-display text-[22px] capitalize"
-              key={activeCategory}
+              key={activeCollection}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
-              {activeCategory}
+              {activeCollection === 'All' ? 'All Collections' : activeCollection}
             </motion.div>
             <div className="mb-[16px] flex items-center gap-y-[24px]">
               <FilterIcon />
-              <span className="ml-2 font-medium uppercase">Filters</span>
+              <span className="ml-2 font-medium uppercase">Collections</span>
             </div>
           </div>
           <div className="scrollbar-hide flex items-center gap-x-[8px] overflow-x-auto pl-[18px] md:pl-0">
-            {categories.map((category, index) => (
+            {collections.map((collection, index) => (
               <motion.button
                 type="button"
-                onClick={() => setActiveCategory(category)}
-                aria-pressed={activeCategory === category}
+                onClick={() => setActiveCollection(collection)}
+                aria-pressed={activeCollection === collection}
                 key={index}
                 className={`relative cursor-pointer rounded-full border-1 px-[12px] py-[6px] font-medium capitalize transition-colors duration-300 ${
-                  activeCategory === category
+                  activeCollection === collection
                     ? 'border-[#121212] bg-[#121212] text-white'
                     : 'border-[#8E8E93] text-[#8E8E93] hover:border-[#121212] hover:text-[#121212]'
                 }`}
@@ -133,7 +134,7 @@ export default function ProductListingClient({
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 17 }}
               >
-                {String(category)}
+                {String(collection)}
               </motion.button>
             ))}
           </div>
@@ -154,7 +155,7 @@ export default function ProductListingClient({
                 No products in this collection.
               </p>
               <button
-                onClick={() => setActiveCategory('All')}
+                onClick={() => setActiveCollection('All')}
                 className="mt-4 cursor-pointer text-[14px] underline hover:no-underline"
               >
                 View all products
@@ -163,10 +164,10 @@ export default function ProductListingClient({
           ) : (
             <motion.div
               className="grid grid-cols-1 grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4"
-              key={activeCategory}
+              key={activeCollection}
             >
               <AnimatePresence>
-                {productsWithNewFlag?.map((product: any, index: number) => (
+                {productsWithNewFlag?.map((product: Product & { isNew: boolean }, index: number) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 30 }}
