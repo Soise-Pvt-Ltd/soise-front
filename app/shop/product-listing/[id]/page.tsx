@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
-import ProductPageClient from './ProductPageClient';
+import ProductPageClient, { type Product } from './ProductPageClient';
 import { notFound } from 'next/navigation';
 import Nav from '@/components/home/nav/Nav';
 import { SITE_URL, SITE_NAME, productJsonLd } from '@/lib/seo';
-import { getRecommendations, getSimilarProducts } from './recs-actions';
+import {
+  getRecommendations,
+  getSimilarProducts,
+  type RecProduct,
+} from './recs-actions';
 
 async function getProducts() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -33,10 +37,13 @@ export async function generateMetadata(props: {
 
   const image = product.primary_image || product.sample_variants?.[0]?.media?.[0]?.url;
   const price = product.base_price;
-  const title = `${product.name} — Buy Online in Nigeria`;
+  const collectionName = product.collection?.name;
+  const title = collectionName
+    ? `${product.name} — ${collectionName} | ${SITE_NAME}`
+    : `${product.name} | ${SITE_NAME}`;
   const description =
     product.description?.slice(0, 155) ||
-    `Shop ${product.name} from ${SITE_NAME}. Premium Nigerian streetwear with fast delivery across Lagos & Nigeria. Starting from NGN ${price?.toLocaleString()}.`;
+    `Shop ${product.name}${collectionName ? ` from the ${collectionName} collection` : ''} at ${SITE_NAME}. Limited capsule drops and creator-led streetwear, shipped across Nigeria. Starting from NGN ${price?.toLocaleString()}.`;
 
   return {
     title,
@@ -45,7 +52,7 @@ export async function generateMetadata(props: {
       canonical: `/shop/product-listing/${slug}`,
     },
     openGraph: {
-      title: `${product.name} | ${SITE_NAME}`,
+      title,
       description,
       url: `${SITE_URL}/shop/product-listing/${slug}`,
       type: 'website',
@@ -53,7 +60,7 @@ export async function generateMetadata(props: {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${product.name} | ${SITE_NAME}`,
+      title,
       description,
       images: image ? [image] : [],
     },
@@ -82,7 +89,7 @@ export default async function ProductPage(props: {
   ]);
 
   // Backend already excludes the seed product, but dedupe defensively by id/slug.
-  const dedupe = (list: any[]) =>
+  const dedupe = (list: RecProduct[]) =>
     list.filter(
       (p) => p && p.id !== product.id && p.slug !== product.slug,
     );
@@ -101,8 +108,8 @@ export default async function ProductPage(props: {
       <Nav />
       <ProductPageClient
         product={product}
-        frequentlyBoughtTogether={frequentlyBoughtTogether}
-        similarProducts={similarProducts}
+        frequentlyBoughtTogether={frequentlyBoughtTogether as unknown as Product[]}
+        similarProducts={similarProducts as unknown as Product[]}
       />
     </>
   );
