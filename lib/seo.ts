@@ -22,16 +22,16 @@ export const KEYWORDS = [
   'online clothing store Nigeria',
   'Nigerian fashion brand',
   'African streetwear brand',
-  'mens streetwear Nigeria',
-  'womens streetwear Nigeria',
   'affordable streetwear Nigeria',
   'street fashion Nigeria',
-  'hoodies Nigeria',
-  'tees Nigeria',
-  'beanies Nigeria',
-  'denim Nigeria',
-  'joggers Nigeria',
-  'creator-led streetwear',
+  'SOISE collections',
+  'streetwear collections Nigeria',
+  'capsule collections Nigeria',
+  'limited capsule drops Nigeria',
+  'creator collaborations Nigeria',
+  'collab streetwear Nigeria',
+  'streetwear collabs Nigeria',
+  'Nigerian creator collabs',
   'Nigerian creators',
   'capsule drops Nigeria',
   'creator brand Nigeria',
@@ -48,11 +48,14 @@ export function productJsonLd(product: {
   base_price: number;
   sample_variants?: { media?: { url: string }[] }[];
   primary_image?: string | null;
+  collection?: { name?: string } | null;
 }) {
   const image =
     product.primary_image ??
     product.sample_variants?.[0]?.media?.[0]?.url ??
     `${SITE_URL}/hero.jpg`;
+
+  const collectionName = product.collection?.name;
 
   return {
     '@context': 'https://schema.org',
@@ -60,13 +63,14 @@ export function productJsonLd(product: {
     name: product.name,
     description:
       product.description ??
-      `Shop ${product.name} from SOISE — creator-led streetwear in limited capsule drops, worn by the culture. Considered, scarce, and shipped across Nigeria.`,
+      `Shop ${product.name}${collectionName ? ` from the ${collectionName} collection` : ''} from SOISE — creator-led streetwear in limited capsule drops, worn by the culture. Considered, scarce, and shipped across Nigeria.`,
     image,
     url: `${SITE_URL}/shop/product-listing/${product.slug}`,
     brand: {
       '@type': 'Brand',
       name: SITE_NAME,
     },
+    category: collectionName,
     offers: {
       '@type': 'Offer',
       priceCurrency: 'NGN',

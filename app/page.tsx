@@ -140,8 +140,8 @@ export default async function Home() {
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'SOISE Streetwear Collection',
-    description: 'Shop the latest Nigerian streetwear from SOISE',
+    name: 'SOISE Collections',
+    description: 'Shop the latest capsule drops and collabs from SOISE',
     numberOfItems: products.length,
     itemListElement: products.slice(0, 20).map((p, i) => ({
       '@type': 'ListItem',

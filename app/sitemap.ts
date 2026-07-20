@@ -60,16 +60,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Dynamic product routes
+  // Dynamic collection and product routes
   let productRoutes: MetadataRoute.Sitemap = [];
+  let collectionRoutes: MetadataRoute.Sitemap = [];
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
     if (baseUrl) {
-      const res = await fetch(`${baseUrl}/products`, {
-        next: { revalidate: 3600 },
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const [productsRes, collectionsRes] = await Promise.all([
+        fetch(`${baseUrl}/products`, {
+          next: { revalidate: 3600 },
+        }),
+        fetch(`${baseUrl}/products/collections`, {
+          next: { revalidate: 3600 },
+        }),
+      ]);
+
+      if (productsRes.ok) {
+        const data = await productsRes.json();
         const products: { slug: string; updated_at?: string }[] =
           data.data ?? [];
         productRoutes = products.map((p) => ({
@@ -79,10 +86,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           priority: 0.8,
         }));
       }
+
+      if (collectionsRes.ok) {
+        const data = await collectionsRes.json();
+        const collections: { name: string }[] = data.data ?? [];
+        collectionRoutes = collections.map((c) => ({
+          url: `${SITE_URL}/shop/product-listing?collection=${encodeURIComponent(c.name)}`,
+          lastModified: new Date(),
+          changeFrequency: 'daily' as const,
+          priority: 0.7,
+        }));
+      }
     }
   } catch {
     // Fail silently — static routes still get indexed
   }
 
-  return [...staticRoutes, ...productRoutes];
+  return [...staticRoutes, ...collectionRoutes, ...productRoutes];
 }
