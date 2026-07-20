@@ -9,7 +9,7 @@ import { ToastContainer } from './toast';
 
 interface GridContainerProps {
   children: ReactNode;
-  user?: any;
+  user?: { username?: string; [key: string]: unknown };
 }
 
 const GridContainer = ({ children, user }: GridContainerProps) => {
@@ -121,9 +121,9 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
         </>
       )}
       <>
-        <div className="bg-[#e5e5e5] p-[14px]">
-          <div className="grid grid-cols-1 rounded-3xl bg-[#f9f9f9] lg:h-screen lg:grid-cols-5 lg:overflow-hidden">
-            <div className="col-span-1 my-[12px] ml-[12px] hidden justify-center rounded-[20px] bg-white lg:inline-block">
+        <div className="min-h-screen bg-[#f9f9f9]">
+          <div className="grid grid-cols-1 lg:h-screen lg:grid-cols-5 lg:overflow-hidden">
+            <div className="col-span-1 hidden h-screen bg-white lg:inline-block">
               <button
                 className="cursor-pointer pt-[28px] pb-[24px] pl-[18px] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:ring-offset-2"
                 onClick={() => router.push('/')}
@@ -141,14 +141,14 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
               <Nav />
             </div>
 
-            <div className="scrollbar-hide col-span-1 block min-h-screen overflow-y-auto py-[12px] lg:col-span-4 lg:mx-[28px]">
-              <div className="mx-[13px] flex flex-col justify-between rounded-[20px] bg-white p-[16px] text-left lg:flex-row lg:items-center">
+            <div className="scrollbar-hide col-span-1 block min-h-screen overflow-y-auto lg:col-span-4">
+              <div className="flex flex-col justify-between p-6 text-left lg:flex-row lg:items-center">
                 <h1 className="mb-2 text-[22px] font-medium !text-[#121212] lg:mb-0">
                   Hello, {userName}!
                 </h1>
                 <AdminGlobalSearch />
               </div>
-              <div className="mx-[13px]">{children}</div>
+              <div className="px-6 pb-6">{children}</div>
             </div>
           </div>
         </div>
