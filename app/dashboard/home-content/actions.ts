@@ -13,7 +13,14 @@ export type HomepageSlot =
   | 'gallery_2'
   | 'gallery_3';
 
+export type HomepageTextSlot =
+  | 'hero_headline'
+  | 'hero_subheadline'
+  | 'mens_tops_title'
+  | 'mens_tops_cta';
+
 export type HomepageImages = Partial<Record<HomepageSlot, string | null>>;
+export type HomepageTexts = Partial<Record<HomepageTextSlot, string | null>>;
 
 async function authHeader() {
   const accessToken = (await cookies()).get('access_token')?.value;
@@ -25,10 +32,11 @@ async function authHeader() {
 export async function getHomepageContent(): Promise<{
   success: boolean;
   images: HomepageImages;
+  texts: HomepageTexts;
   error?: string;
 }> {
   const h = await authHeader();
-  if (!h) return { success: false, images: {}, error: 'Unauthorized' };
+  if (!h) return { success: false, images: {}, texts: {}, error: 'Unauthorized' };
   try {
     const res = await fetch(`${BASE_URL}/admin/content/homepage`, {
       headers: h,
@@ -39,14 +47,20 @@ export async function getHomepageContent(): Promise<{
       return {
         success: false,
         images: {},
+        texts: {},
         error: json?.message || 'Failed to load homepage content',
       };
     }
-    return { success: true, images: json?.data?.images || {} };
+    return {
+      success: true,
+      images: json?.data?.images || {},
+      texts: json?.data?.texts || {},
+    };
   } catch {
     return {
       success: false,
       images: {},
+      texts: {},
       error: 'Failed to load homepage content',
     };
   }
@@ -54,6 +68,7 @@ export async function getHomepageContent(): Promise<{
 
 export async function saveHomepageContent(
   images: HomepageImages,
+  texts: HomepageTexts,
 ): Promise<{ success: boolean; error?: string }> {
   const accessToken = (await cookies()).get('access_token')?.value;
   if (!accessToken) return { success: false, error: 'Unauthorized' };
@@ -65,13 +80,13 @@ export async function saveHomepageContent(
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify({ images }),
+      body: JSON.stringify({ images, texts }),
     });
     const json = await res.json();
     if (!res.ok) {
       return { success: false, error: json?.message || 'Failed to save' };
     }
-    // Purge the homepage cache so the new images show immediately on reload.
+    // Purge the homepage cache so the new content shows immediately on reload.
     revalidatePath('/');
     return { success: true };
   } catch {
