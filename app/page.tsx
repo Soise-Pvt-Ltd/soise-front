@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import Footer from '@/components/footer';
 import ExploreCollection from '@/components/home/explore-collection';
 import BeforeExploreCollection from '@/components/home/before-explore-collection';
-import MensTops from '@/components/home/mens-tops';
+import FeaturedCollection, {
+  type FeaturedCollection as FeaturedCollectionData,
+} from '@/components/home/featured-collection';
 import AfterHero from '@/components/home/after-hero';
 import Hero from '@/components/home/hero';
 import ImageGallerySection from '@/components/home/image-gallery-section';
@@ -50,8 +52,15 @@ interface HomepageTexts {
   mens_tops_cta?: string | null;
 }
 
+interface CollectionResponse {
+  id: string;
+  name: string;
+  banner?: { url?: string | null } | string | null;
+}
+
 export default async function Home() {
   let products: Product[] = [];
+  let collections: CollectionResponse[] = [];
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   try {
@@ -77,20 +86,43 @@ export default async function Home() {
   // bundled defaults so the homepage never breaks and looks like before.
   let homeImages: HomepageImages = {};
   let homeTexts: HomepageTexts = {};
+  let featuredCollectionId: string | null = null;
   try {
     if (baseUrl) {
-      const res = await fetch(`${baseUrl}/content/homepage`, {
-        cache: 'no-store',
-      });
-      if (res.ok) {
-        const json = await res.json();
+      const [contentRes, collectionsRes] = await Promise.all([
+        fetch(`${baseUrl}/content/homepage`, { cache: 'no-store' }),
+        fetch(`${baseUrl}/products/collections`, { cache: 'no-store' }),
+      ]);
+      if (contentRes.ok) {
+        const json = await contentRes.json();
         homeImages = json?.data?.images || {};
         homeTexts = json?.data?.texts || {};
+        featuredCollectionId = json?.data?.featured_collection_id || null;
+      }
+      if (collectionsRes.ok) {
+        const json = await collectionsRes.json();
+        collections = json?.data || [];
       }
     }
   } catch (error) {
     console.error('Error fetching homepage content:', error);
   }
+
+  const featuredCollectionRaw = featuredCollectionId
+    ? collections.find((c) => c.id === featuredCollectionId)
+    : null;
+
+  const featuredCollection: FeaturedCollectionData | null =
+    featuredCollectionRaw
+      ? {
+          id: featuredCollectionRaw.id,
+          name: featuredCollectionRaw.name,
+          bannerUrl:
+            typeof featuredCollectionRaw.banner === 'string'
+              ? featuredCollectionRaw.banner
+              : featuredCollectionRaw.banner?.url || null,
+        }
+      : null;
 
   // First 5 products
   const category1Products = products.slice(0, 5);
@@ -130,7 +162,11 @@ export default async function Home() {
       {category1Products.length > 0 && (
         <AfterHero products={category1Products} />
       )}
-      <MensTops img={homeImages.mens_top} texts={homeTexts} />
+      <FeaturedCollection
+        collection={featuredCollection}
+        img={homeImages.mens_top}
+        texts={homeTexts}
+      />
       {category2Products.length > 0 && (
         <BeforeExploreCollection products={category2Products} />
       )}

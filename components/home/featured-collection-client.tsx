@@ -5,18 +5,30 @@ import { useRef } from 'react';
 import { ArrowRightIcon } from '../icons';
 import Link from 'next/link';
 import type { HomepageTexts } from './hero';
+import type { FeaturedCollection } from './featured-collection';
 
-interface MensTopsClientProps {
+interface FeaturedCollectionClientProps {
+  collection?: FeaturedCollection | null;
   img?: string | null;
   texts?: HomepageTexts;
 }
 
-export default function MensTopsClient({ img, texts }: MensTopsClientProps) {
+export default function FeaturedCollectionClient({
+  collection,
+  img,
+  texts,
+}: FeaturedCollectionClientProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const title = texts?.mens_tops_title || "Men's Tops";
+  const title =
+    texts?.mens_tops_title || collection?.name || 'Featured Collection';
   const cta = texts?.mens_tops_cta || 'Explore Collection';
+  const backgroundImage =
+    collection?.bannerUrl || img || '/mens-top.jpg';
+  const href = collection
+    ? `/shop/product-listing?collection=${encodeURIComponent(collection.name)}`
+    : '/shop/product-listing';
 
   return (
     <div
@@ -26,7 +38,7 @@ export default function MensTopsClient({ img, texts }: MensTopsClientProps) {
       {/* Background with subtle zoom on scroll */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${img || '/mens-top.jpg'})` }}
+        style={{ backgroundImage: `url(${backgroundImage})` }}
         initial={{ scale: 1.15 }}
         animate={isInView ? { scale: 1 } : { scale: 1.15 }}
         transition={{ duration: 1.6, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -69,7 +81,7 @@ export default function MensTopsClient({ img, texts }: MensTopsClientProps) {
               }}
             >
               <Link
-                href="/shop/product-listing"
+                href={href}
                 className="group flex items-center justify-end gap-2 text-right text-white/60 transition-colors duration-200 hover:text-white"
               >
                 <span className="text-[13px] tracking-[0.2em] uppercase">

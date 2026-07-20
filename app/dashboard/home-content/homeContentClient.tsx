@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import {
+  getCollections,
   getHomepageContent,
   saveHomepageContent,
+  type CollectionOption,
   type HomepageImages,
   type HomepageSlot,
   type HomepageTexts,
@@ -38,8 +40,8 @@ const SLOTS: SlotDef[] = [
   },
   {
     key: 'mens_top',
-    label: "Men's Tops section background",
-    caption: 'Background image behind the "Men’s Tops" band. Recommended 1600×600 (landscape).',
+    label: 'Featured collection background',
+    caption: 'Background image behind the featured collection band. Recommended 1600×600 (landscape). Falls back to the collection banner.',
     fallback: '/mens-top.jpg',
     shape: 'wide',
   },
@@ -88,14 +90,14 @@ const TEXT_SLOTS: TextSlotDef[] = [
   },
   {
     key: 'mens_tops_title',
-    label: "Men's Tops heading",
-    caption: 'Title shown over the Men’s Tops section background.',
-    fallback: 'Men\'s Tops',
+    label: 'Featured collection title override',
+    caption: 'Title shown over the featured collection band. Leave empty to use the collection name.',
+    fallback: "Men's Tops",
   },
   {
     key: 'mens_tops_cta',
-    label: "Men's Tops CTA text",
-    caption: 'Link text at the bottom of the Men’s Tops section.',
+    label: 'Featured collection CTA text',
+    caption: 'Link text at the bottom of the featured collection band.',
     fallback: 'Explore Collection',
   },
 ];
@@ -122,8 +124,11 @@ function normalizeTexts(texts: HomepageTexts): HomepageTexts {
 export default function HomeContentClient() {
   const [images, setImages] = useState<HomepageImages>(normalizeImages({}));
   const [texts, setTexts] = useState<HomepageTexts>(normalizeTexts({}));
+  const [featuredCollectionId, setFeaturedCollectionId] = useState<string | null>(null);
+  const [collections, setCollections] = useState<CollectionOption[]>([]);
   const [initialImages, setInitialImages] = useState<HomepageImages>(normalizeImages({}));
   const [initialTexts, setInitialTexts] = useState<HomepageTexts>(normalizeTexts({}));
+  const [initialFeaturedCollectionId, setInitialFeaturedCollectionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -133,16 +138,25 @@ export default function HomeContentClient() {
   const load = async () => {
     setLoading(true);
     setLoadError(null);
-    const res = await getHomepageContent();
-    if (res.success) {
-      const normImages = normalizeImages(res.images);
-      const normTexts = normalizeTexts(res.texts);
+    const [contentRes, collectionsRes] = await Promise.all([
+      getHomepageContent(),
+      getCollections(),
+    ]);
+    if (contentRes.success) {
+      const normImages = normalizeImages(contentRes.images);
+      const normTexts = normalizeTexts(contentRes.texts);
+      const normFeatured = contentRes.featuredCollectionId || null;
       setImages(normImages);
       setInitialImages(normImages);
       setTexts(normTexts);
       setInitialTexts(normTexts);
+      setFeaturedCollectionId(normFeatured);
+      setInitialFeaturedCollectionId(normFeatured);
     } else {
-      setLoadError(res.error || 'Failed to load homepage content');
+      setLoadError(contentRes.error || 'Failed to load homepage content');
+    }
+    if (collectionsRes.success) {
+      setCollections(collectionsRes.collections);
     }
     setLoading(false);
   };
@@ -157,21 +171,26 @@ export default function HomeContentClient() {
   const textsDirty = TEXT_SLOT_KEYS.some(
     (k) => (texts[k] ?? null) !== (initialTexts[k] ?? null),
   );
-  const dirty = imagesDirty || textsDirty;
+  const featuredDirty =
+    (featuredCollectionId ?? null) !== (initialFeaturedCollectionId ?? null);
+  const dirty = imagesDirty || textsDirty || featuredDirty;
 
   const persist = async (
     nextImages: HomepageImages,
     nextTexts: HomepageTexts,
+    nextFeatured: string | null,
     okMsg: string,
   ): Promise<boolean> => {
     setSaving(true);
-    const res = await saveHomepageContent(nextImages, nextTexts);
+    const res = await saveHomepageContent(nextImages, nextTexts, nextFeatured);
     setSaving(false);
     if (res.success) {
       setImages(normalizeImages(nextImages));
       setInitialImages(normalizeImages(nextImages));
       setTexts(normalizeTexts(nextTexts));
       setInitialTexts(normalizeTexts(nextTexts));
+      setFeaturedCollectionId(nextFeatured ?? null);
+      setInitialFeaturedCollectionId(nextFeatured ?? null);
       showToast('success', okMsg);
       return true;
     }
@@ -200,6 +219,7 @@ export default function HomeContentClient() {
         await persist(
           { ...images, [slot]: url },
           texts,
+          featuredCollectionId,
           'Image updated and live on the homepage.',
         );
       } else {
@@ -213,11 +233,16 @@ export default function HomeContentClient() {
   };
 
   const handleReset = async (slot: HomepageSlot) => {
-    await persist({ ...images, [slot]: null }, texts, 'Reset to the default image.');
+    await persist(
+      { ...images, [slot]: null },
+      texts,
+      featuredCollectionId,
+      'Reset to the default image.',
+    );
   };
 
   const handleSave = async () => {
-    await persist(images, texts, 'Homepage content saved.');
+    await persist(images, texts, featuredCollectionId, 'Homepage content saved.');
   };
 
   if (loading) {
@@ -383,6 +408,41 @@ export default function HomeContentClient() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* Featured Collection */}
+        <section className="mt-10">
+          <h2 className="text-[16px] font-semibold text-[#121212]">
+            Featured Collection
+          </h2>
+          <div className="mt-4 rounded-[16px] border border-[#F0F0F0] bg-white p-5">
+            <label
+              htmlFor="featured_collection_id"
+              className="block text-[15px] font-semibold text-[#121212]"
+            >
+              Collection to spotlight on the homepage
+            </label>
+            <p className="mb-3 mt-1 text-[12px] leading-relaxed text-[#8E8E93]">
+              Replaces the Men’s Tops band with this collection’s name, banner,
+              and Explore Collection link. Leave empty to fall back to the
+              default image and text.
+            </p>
+            <select
+              id="featured_collection_id"
+              value={featuredCollectionId ?? ''}
+              onChange={(e) =>
+                setFeaturedCollectionId(e.target.value || null)
+              }
+              className="h-[48px] w-full rounded-[12px] border border-[#E5E5E5] bg-white px-4 text-[14px] text-[#121212] outline-none transition-colors duration-150 focus:border-[#0072BB]"
+            >
+              <option value="">None selected</option>
+              {collections.map((collection) => (
+                <option key={collection.id} value={collection.id}>
+                  {collection.name}
+                </option>
+              ))}
+            </select>
           </div>
         </section>
 
