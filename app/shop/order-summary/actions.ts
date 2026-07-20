@@ -23,7 +23,14 @@ interface ApplyCodeResponse {
   };
 }
 
-export async function checkoutAction(formData: FormData) {
+interface CheckoutResult {
+  success: boolean;
+  error?: string;
+  errorCode?: string;
+  redirectUrl?: string;
+}
+
+export async function checkoutAction(formData: FormData): Promise<CheckoutResult> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const guestId = cookieStore.get('soise_guestId')?.value;
@@ -131,6 +138,7 @@ export async function checkoutAction(formData: FormData) {
         success: false,
         error:
           errorData?.message || `Checkout failed (status ${response.status})`,
+        errorCode: errorData?.details?.code as string | undefined,
       };
     }
 

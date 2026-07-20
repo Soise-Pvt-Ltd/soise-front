@@ -221,7 +221,7 @@ export default function OrderSummaryClient({
       // belonged to this user) since the page loaded, rather than silently
       // completing an address-less order. Recover by falling back to manual
       // entry so retrying isn't just resubmitting the same dead selection.
-      if (usingSavedAddress && errorMessage.toLowerCase().includes('no longer available')) {
+      if (usingSavedAddress && result?.errorCode === 'stale_address') {
         setSelectedAddressId('new');
       }
       setPending(false);
