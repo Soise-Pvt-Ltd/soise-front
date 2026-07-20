@@ -214,8 +214,16 @@ export default function OrderSummaryClient({
         return;
       }
 
-      showToast.error(result?.error || 'Checkout failed. Please try again.');
-      setError(result?.error || 'Checkout failed');
+      const errorMessage = result?.error || 'Checkout failed';
+      showToast.error(errorMessage);
+      setError(errorMessage);
+      // The backend rejects a shipping_addr id that's been deleted (or never
+      // belonged to this user) since the page loaded, rather than silently
+      // completing an address-less order. Recover by falling back to manual
+      // entry so retrying isn't just resubmitting the same dead selection.
+      if (usingSavedAddress && errorMessage.toLowerCase().includes('no longer available')) {
+        setSelectedAddressId('new');
+      }
       setPending(false);
       submittingRef.current = false;
     } catch (err) {
