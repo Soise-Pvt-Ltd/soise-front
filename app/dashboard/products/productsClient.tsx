@@ -142,7 +142,7 @@ function VariantItem({
   errors?: { size?: string; color?: string; stock?: string };
 }) {
   const [colorInput, setColorInput] = useState('');
-  const SIZES = ['m', 'l', 'xl', '2xl'];
+  const SIZES = ['s', 'm', 'l', 'xl', '2xl'];
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dragIndexRef = useRef<number | null>(null);

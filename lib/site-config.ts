@@ -15,8 +15,8 @@ export const siteConfig = {
   registrationNumber: '8413888',
   estimatedDelivery: process.env.NEXT_PUBLIC_ESTIMATED_DELIVERY ?? '3-5 business days',
   social: {
-    instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://instagram.com/soise',
-    tiktok: process.env.NEXT_PUBLIC_TIKTOK_URL ?? 'https://tiktok.com/@soise',
-    x: process.env.NEXT_PUBLIC_X_URL ?? 'https://x.com/soise',
+    instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/soise.ng',
+    tiktok: process.env.NEXT_PUBLIC_TIKTOK_URL ?? 'https://www.tiktok.com/@soise.ng',
+    x: process.env.NEXT_PUBLIC_X_URL ?? 'https://x.com/soise_ng',
   },
 } as const;

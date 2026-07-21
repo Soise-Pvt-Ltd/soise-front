@@ -173,6 +173,9 @@ export default function FooterClient() {
             <Link href="/swaz-loop" className="transition-colors hover:text-[#121212]">
               The Swaz Loop
             </Link>
+            <Link href="/contact" className="transition-colors hover:text-[#121212]">
+              Contact
+            </Link>
           </nav>
           Copyright © {new Date().getFullYear()} {siteConfig.name}™
           <br />

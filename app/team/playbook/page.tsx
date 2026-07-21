@@ -179,20 +179,54 @@ export default function PlaybookPage() {
           </div>
         </Section>
 
-        <Section n="04" title="The message — invitation, not a blast">
+        <Section n="04" title="The hooks — lead with these, always">
+          <p>
+            Whatever else is in the message, these are what actually convert.
+            Don’t bury them in paragraph three — they&apos;re the reason someone
+            says yes.
+          </p>
+          <ul className="list-disc space-y-1.5 pl-5">
+            <li>
+              <b>Their own code.</b> Personal, shareable, theirs — this is the
+              single biggest hook. People want a code with their name on it
+              before they want anything else.
+            </li>
+            <li>
+              <b>Cash commission on every sale.</b> Real, withdrawable money,
+              not points or store credit. Say “cash” explicitly — it&apos;s the
+              word that makes it feel real.
+            </li>
+            <li>
+              <b>Every 10 verified sales = free SOISE gear.</b> This is the
+              hook that turns a one-time code into a reason to keep pushing.
+              Say the number. “Every 10 sales” is concrete and countable in a
+              way “rewards over time” isn&apos;t.
+            </li>
+            <li>
+              <b>First access to drops.</b> They wear it before it&apos;s public —
+              status, not just product.
+            </li>
+            <li>
+              <b>Founding-creator status.</b> Early means it stays with them as
+              the program grows — better terms, permanently.
+            </li>
+          </ul>
+        </Section>
+
+        <Section n="05" title="The message — invitation, not a blast">
           <p>
             1:1 IG/TikTok DM (where creators live), email as backup. Never a group
             send. Structure: a specific opener about <em>their</em> work → the
-            invitation → what’s actually in it → one low-friction step.
+            invitation → the hooks above, in order → one low-friction step.
           </p>
           <blockquote className="rounded-[12px] border-l-[3px] border-[#0072BB] bg-[#F7FAFD] px-4 py-3 text-[13.5px] italic leading-relaxed text-[#3A3A3E]">
             “Hi [name] — we’ve been watching your [specific thing, e.g.
             thrift-flip reels] and how your audience responds to the way you style
             fits. We’re opening a small first cohort of the Swaz Creator program —
-            your own code, commission on every sale, early access to drops before
-            they’re public, and founding-creator status. We’re keeping it to ~25
-            people this round and I’d like one of them to be you. Want the
-            details?”
+            your own code, cash commission on every sale, free SOISE gear every
+            10 verified sales, early access to drops before they’re public, and
+            founding-creator status. We’re keeping it to ~25 people this round
+            and I’d like one of them to be you. Want the details?”
           </blockquote>
           <p className="rounded-[10px] bg-[#FBEEEB] px-4 py-3 text-[13px] text-[#8A3320]">
             <b>What kills it:</b> 🔥💰 urgency emojis, “EARN BIG NOW,” generic “hey
@@ -200,7 +234,7 @@ export default function PlaybookPage() {
           </p>
         </Section>
 
-        <Section n="05" title="Make the program feel exclusive — operationally">
+        <Section n="06" title="Make the program feel exclusive — operationally">
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
               Send invitees to{' '}
@@ -225,7 +259,7 @@ export default function PlaybookPage() {
           </ul>
         </Section>
 
-        <Section n="06" title="Where AI helps — and where it must not">
+        <Section n="07" title="Where AI helps — and where it must not">
           <p>
             <b>AI does:</b> enrich each candidate (niche, recent posts, fit score),
             draft a personalised first line per creator, organise everyone in the
@@ -239,7 +273,7 @@ export default function PlaybookPage() {
           </p>
         </Section>
 
-        <Section n="07" title="Cadence + measure">
+        <Section n="08" title="Cadence + measure">
           <p>
             One thoughtful follow-up max, then leave them be (nagging is
             off-brand). Track reply rate → application rate →{' '}
