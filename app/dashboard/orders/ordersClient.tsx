@@ -7,7 +7,7 @@ import {
   AdminMoreVerticalIcon,
   AdminSoundLevelsIcon,
 } from '@/components/icons';
-import { updateOrderStatus } from './actions';
+import { updateOrderStatus, ShipmentDetails } from './actions';
 import { showToast } from '../toast';
 
 type Order = {
@@ -64,6 +64,20 @@ export default function OrdersPage({
   });
   const actionMenuRef = useRef<HTMLDivElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+  // "Shipped" needs real tracking info before the customer email goes out --
+  // previously there was no prompt at all, so every shipped-order email sent
+  // with placeholder N/A tracking data and a dead "#" tracking link.
+  const [shippingModalOrder, setShippingModalOrder] = useState<Order | null>(
+    null,
+  );
+  const [shipmentForm, setShipmentForm] = useState<ShipmentDetails>({
+    tracking_number: '',
+    carrier: '',
+    estimated_delivery: '',
+    tracking_url: '',
+  });
+  const COMMON_CARRIERS = ['GIG Logistics', 'Kwik', 'ShipBubble', 'DHL Express'];
 
   const statusClasses: Record<string, string> = {
     created: 'bg-[#C0CBF2] text-[#0072BB] border border-[#C0CBF2] rounded-full',
@@ -208,10 +222,14 @@ export default function OrdersPage({
       (o.customer_email || o.guest_email || 'G')[0]
     ).toUpperCase();
 
-  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+  const handleUpdateStatus = async (
+    orderId: string,
+    newStatus: string,
+    shipmentDetails?: ShipmentDetails,
+  ) => {
     setIsUpdating(true);
     try {
-      const result = await updateOrderStatus(orderId, newStatus);
+      const result = await updateOrderStatus(orderId, newStatus, shipmentDetails);
       if (result.success) {
         setActiveActionMenuId(null);
         setOrders((prevOrders) =>
@@ -227,6 +245,36 @@ export default function OrdersPage({
       showToast('error', 'An error occurred while updating the order status');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleShipmentSubmit = async () => {
+    if (!shippingModalOrder) return;
+    if (!shipmentForm.tracking_number?.trim() || !shipmentForm.carrier?.trim()) {
+      showToast('error', 'Tracking number and carrier are required');
+      return;
+    }
+    await handleUpdateStatus(shippingModalOrder.id, 'shipped', {
+      tracking_number: shipmentForm.tracking_number.trim(),
+      carrier: shipmentForm.carrier.trim(),
+      estimated_delivery: shipmentForm.estimated_delivery?.trim() || undefined,
+      tracking_url: shipmentForm.tracking_url?.trim() || undefined,
+    });
+    setShippingModalOrder(null);
+    setShipmentForm({
+      tracking_number: '',
+      carrier: '',
+      estimated_delivery: '',
+      tracking_url: '',
+    });
+  };
+
+  const handleMarkStatusClick = (order: Order, status: string) => {
+    if (status === 'shipped') {
+      setShippingModalOrder(order);
+      setActiveActionMenuId(null);
+    } else {
+      handleUpdateStatus(order.id, status);
     }
   };
 
@@ -336,9 +384,7 @@ export default function OrdersPage({
                                 <button
                                   key={status}
                                   className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 capitalize hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                  onClick={() =>
-                                    handleUpdateStatus(order.id, status)
-                                  }
+                                  onClick={() => handleMarkStatusClick(order, status)}
                                   disabled={isUpdating}
                                 >
                                   Mark as {status.replace('_', ' ')}
@@ -553,6 +599,105 @@ export default function OrdersPage({
           </div>
         )}
       </div>
+
+      {shippingModalOrder && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-[420px] rounded-[12px] bg-white p-6 shadow-lg">
+            <h3 className="text-[16px] font-semibold text-[#121212]">
+              Shipment details
+            </h3>
+            <p className="mt-1 text-[13px] text-[#8E8E93]">
+              Order #{shortRef(shippingModalOrder.id)} — this goes straight
+              into the customer's shipped-order email.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-y-4">
+              <div>
+                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                  Tracking number *
+                </label>
+                <input
+                  type="text"
+                  value={shipmentForm.tracking_number}
+                  onChange={(e) =>
+                    setShipmentForm({ ...shipmentForm, tracking_number: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  placeholder="e.g. GIG123456789"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                  Carrier *
+                </label>
+                <input
+                  type="text"
+                  list="carrier-options"
+                  value={shipmentForm.carrier}
+                  onChange={(e) =>
+                    setShipmentForm({ ...shipmentForm, carrier: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  placeholder="e.g. GIG Logistics"
+                />
+                <datalist id="carrier-options">
+                  {COMMON_CARRIERS.map((c) => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                  Estimated delivery
+                </label>
+                <input
+                  type="text"
+                  value={shipmentForm.estimated_delivery}
+                  onChange={(e) =>
+                    setShipmentForm({ ...shipmentForm, estimated_delivery: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  placeholder="e.g. 2-3 business days"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                  Tracking link
+                </label>
+                <input
+                  type="text"
+                  value={shipmentForm.tracking_url}
+                  onChange={(e) =>
+                    setShipmentForm({ ...shipmentForm, tracking_url: e.target.value })
+                  }
+                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-x-3">
+              <button
+                onClick={() => setShippingModalOrder(null)}
+                className="rounded-[8px] px-4 py-2 text-[14px] font-medium text-[#5C5C5C] hover:bg-gray-100"
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleShipmentSubmit}
+                className="rounded-[8px] bg-[#121212] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isUpdating}
+              >
+                {isUpdating ? 'Marking as shipped…' : 'Mark as shipped'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </GridContainer>
   );
 }

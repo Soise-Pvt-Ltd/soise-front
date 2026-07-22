@@ -91,7 +91,18 @@ export async function fetchOrders(
   }
 }
 
-export async function updateOrderStatus(orderId: string, status: string) {
+export interface ShipmentDetails {
+  tracking_number?: string;
+  carrier?: string;
+  estimated_delivery?: string;
+  tracking_url?: string;
+}
+
+export async function updateOrderStatus(
+  orderId: string,
+  status: string,
+  shipmentDetails?: ShipmentDetails,
+) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
@@ -103,7 +114,7 @@ export async function updateOrderStatus(orderId: string, status: string) {
         'Content-Type': 'application/json',
         Cookie: `access_token=${accessToken}`,
       },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...shipmentDetails }),
     });
 
     if (!response.ok) {
