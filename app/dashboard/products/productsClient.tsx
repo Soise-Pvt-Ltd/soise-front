@@ -2198,7 +2198,7 @@ export default function ProductsPage({
               onClick={handleSaveProduct}
               disabled={isSaving}
               aria-busy={isSaving}
-              className={`btn_creators_solid mt-[24px] flex items-center justify-center gap-x-2 focus-visible:ring-2 focus-visible:ring-[#0072BB] ${isSaving ? 'cursor-not-allowed opacity-60' : ''}`}
+              className={`btn_creators_solid flex items-center justify-center gap-x-2 focus-visible:ring-2 focus-visible:ring-[#0072BB] ${isSaving ? 'cursor-not-allowed opacity-60' : ''}`}
             >
               {isSaving && <Spinner />}
               {isSaving
