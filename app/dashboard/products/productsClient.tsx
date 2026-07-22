@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import GridContainer from '../gridContainer';
+import RowActionMenu from '@/components/admin/RowActionMenu';
 import { useDropzone } from 'react-dropzone';
 import {
   ArrowLeftIcon,
@@ -580,7 +581,7 @@ export default function ProductsPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
-  const [actionMenuOpensUp, setActionMenuOpensUp] = useState(false);
+  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
 
   // List controls
   const searchParams = useSearchParams();
@@ -809,15 +810,16 @@ export default function ProductsPage({
   };
 
   // Close any open popover menu on Escape or outside click (keyboard a11y).
+  // activeActionMenuId's own close-on-outside-click/Escape is handled by
+  // RowActionMenu itself (it's portaled to body, so it isn't reachable via
+  // the data-menu-root closest() check below).
   useEffect(() => {
-    const anyOpen =
-      isDropdownOpen || isAddDropdownOpen || activeActionMenuId !== null;
+    const anyOpen = isDropdownOpen || isAddDropdownOpen;
     if (!anyOpen) return;
 
     const closeAll = () => {
       setIsDropdownOpen(false);
       setIsAddDropdownOpen(false);
-      setActiveActionMenuId(null);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeAll();
@@ -832,7 +834,7 @@ export default function ProductsPage({
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('mousedown', onClick);
     };
-  }, [isDropdownOpen, isAddDropdownOpen, activeActionMenuId]);
+  }, [isDropdownOpen, isAddDropdownOpen]);
 
   // Close the delete-confirm dialog on Escape.
   useEffect(() => {
@@ -1763,21 +1765,18 @@ export default function ProductsPage({
                           <td className="td">
                             <div className="relative" data-menu-root>
                               <motion.button
-                                onClick={(e) => {
-                                  if (activeActionMenuId === product.id) {
-                                    setActiveActionMenuId(null);
-                                    return;
-                                  }
-                                  const rect =
-                                    e.currentTarget.getBoundingClientRect();
-                                  const MENU_HEIGHT = 96; // ~2 items, roughly
-                                  setActionMenuOpensUp(
-                                    window.innerHeight - rect.bottom <
-                                      MENU_HEIGHT &&
-                                      rect.top > MENU_HEIGHT,
-                                  );
-                                  setActiveActionMenuId(product.id);
-                                }}
+                                ref={
+                                  activeActionMenuId === product.id
+                                    ? actionMenuTriggerRef
+                                    : undefined
+                                }
+                                onClick={() =>
+                                  setActiveActionMenuId(
+                                    activeActionMenuId === product.id
+                                      ? null
+                                      : product.id,
+                                  )
+                                }
                                 whileTap={{ scale: 0.88 }}
                                 aria-haspopup="menu"
                                 aria-expanded={activeActionMenuId === product.id}
@@ -1786,42 +1785,31 @@ export default function ProductsPage({
                               >
                                 <AdminMoreVerticalIcon />
                               </motion.button>
-                              <AnimatePresence>
-                                {activeActionMenuId === product.id && (
-                                  <motion.div
-                                    role="menu"
-                                    initial={{ opacity: 0, scale: 0.92, y: actionMenuOpensUp ? 6 : -6 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.92, y: actionMenuOpensUp ? 6 : -6 }}
-                                    transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                                    className={`ring-opacity-5 absolute right-0 z-60 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
-                                      actionMenuOpensUp ? 'bottom-full mb-2' : 'mt-2'
-                                    }`}
-                                  >
-                                    <div className="py-1">
-                                      <button
-                                        role="menuitem"
-                                        onClick={() => {
-                                          handleEditClick(product.id);
-                                          setActiveActionMenuId(null);
-                                        }}
-                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
-                                      >
-                                        Edit
-                                      </button>
-                                      <button
-                                        role="menuitem"
-                                        onClick={() =>
-                                          requestDeleteProduct(product.id)
-                                        }
-                                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
-                                      >
-                                        Delete
-                                      </button>
-                                    </div>
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
+                              <RowActionMenu
+                                open={activeActionMenuId === product.id}
+                                onClose={() => setActiveActionMenuId(null)}
+                                anchorRef={actionMenuTriggerRef}
+                              >
+                                <button
+                                  role="menuitem"
+                                  onClick={() => {
+                                    handleEditClick(product.id);
+                                    setActiveActionMenuId(null);
+                                  }}
+                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  role="menuitem"
+                                  onClick={() =>
+                                    requestDeleteProduct(product.id)
+                                  }
+                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                >
+                                  Delete
+                                </button>
+                              </RowActionMenu>
                             </div>
                           </td>
                         </tr>

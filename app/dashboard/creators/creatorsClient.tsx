@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
+import RowActionMenu from '@/components/admin/RowActionMenu';
 import {
   AdminSoundLevelsIcon,
   AdminMoreVerticalIcon,
@@ -63,7 +64,7 @@ export default function CreatorsClient({
     period: 'All Time',
     hasFetched: (initialData?.length ?? 0) > 0,
   });
-  const actionMenuRef = useRef<HTMLDivElement>(null);
+  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const [showTierModal, setShowTierModal] = useState(false);
@@ -121,9 +122,6 @@ export default function CreatorsClient({
   }, []);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
-      setActiveActionMenuId(null);
-    }
     if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
       setIsDropdownOpen(false);
     }
@@ -372,8 +370,13 @@ export default function CreatorsClient({
                 <td className="td">{creator.email}</td>
                 <td className="td">₦{creator.sales_generated}</td>
                 <td className="td">
-                  <div ref={activeActionMenuId === creator.id ? actionMenuRef : undefined} className="relative">
+                  <div className="relative">
                     <button
+                      ref={
+                        activeActionMenuId === creator.id
+                          ? actionMenuTriggerRef
+                          : undefined
+                      }
                       onClick={() =>
                         setActiveActionMenuId(
                           activeActionMenuId === creator.id ? null : creator.id,
@@ -385,38 +388,34 @@ export default function CreatorsClient({
                     >
                       <AdminMoreVerticalIcon />
                     </button>
-                    {activeActionMenuId === creator.id && (
-                      <div
-                        className={`ring-opacity-5 absolute right-0 z-50 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
-                          index === arr.length - 1 ? 'bottom-full mb-2' : 'mt-2'
-                        }`}
+                    <RowActionMenu
+                      open={activeActionMenuId === creator.id}
+                      onClose={() => setActiveActionMenuId(null)}
+                      anchorRef={actionMenuTriggerRef}
+                    >
+                      <button
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => {
+                          setAssigningCreator(creator);
+                          setSelectedTierIdForAssign('');
+                          loadTiers();
+                          setShowAssignModal(true);
+                          setActiveActionMenuId(null);
+                        }}
                       >
-                        <div className="py-1">
-                          <button
-                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => {
-                              setAssigningCreator(creator);
-                              setSelectedTierIdForAssign('');
-                              loadTiers();
-                              setShowAssignModal(true);
-                              setActiveActionMenuId(null);
-                            }}
-                          >
-                            Update tier
-                          </button>
-                          <button
-                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => {
-                              setCodeModalCreator(creator);
-                              setCodeInput('');
-                              setActiveActionMenuId(null);
-                            }}
-                          >
-                            Change code
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                        Update tier
+                      </button>
+                      <button
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => {
+                          setCodeModalCreator(creator);
+                          setCodeInput('');
+                          setActiveActionMenuId(null);
+                        }}
+                      >
+                        Change code
+                      </button>
+                    </RowActionMenu>
                   </div>
                 </td>
               </tr>

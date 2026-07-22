@@ -8,6 +8,7 @@ import {
   CloseIconTags,
 } from '@/components/icons';
 import GridContainer from '../gridContainer';
+import RowActionMenu from '@/components/admin/RowActionMenu';
 import { updateUserRole } from './actions';
 import { showToast } from '../toast';
 
@@ -62,7 +63,7 @@ export default function UsersPage({
     role: 'All',
     hasFetched: (initialData?.length ?? 0) > 0,
   });
-  const actionMenuRef = useRef<HTMLDivElement>(null);
+  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const roleClasses: Record<string, string> = {
@@ -85,9 +86,6 @@ export default function UsersPage({
   const roleOptions = ['All', 'user', 'creator', 'outreach', 'admin'];
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
-      setActiveActionMenuId(null);
-    }
     if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
       setIsDropdownOpen(false);
     }
@@ -315,8 +313,13 @@ export default function UsersPage({
                       ₦{(user.total_spent || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="td">
-                      <div ref={activeActionMenuId === user.id ? actionMenuRef : undefined} className="relative">
+                      <div className="relative">
                         <button
+                          ref={
+                            activeActionMenuId === user.id
+                              ? actionMenuTriggerRef
+                              : undefined
+                          }
                           onClick={() =>
                             setActiveActionMenuId(
                               activeActionMenuId === user.id ? null : user.id,
@@ -328,29 +331,23 @@ export default function UsersPage({
                         >
                           <AdminMoreVerticalIcon />
                         </button>
-                        {activeActionMenuId === user.id && (
-                          <div
-                            className={`ring-opacity-5 absolute right-0 z-60 w-32 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
-                              index === arr.length - 1
-                                ? 'bottom-full mb-2'
-                                : 'mt-2'
-                            }`}
+                        <RowActionMenu
+                          open={activeActionMenuId === user.id}
+                          onClose={() => setActiveActionMenuId(null)}
+                          anchorRef={actionMenuTriggerRef}
+                        >
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setSelectedRole(user.role);
+                              setShowRoleModal(true);
+                              setActiveActionMenuId(null);
+                            }}
+                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                           >
-                            <div className="py-1">
-                              <button
-                                onClick={() => {
-                                  setSelectedUser(user);
-                                  setSelectedRole(user.role);
-                                  setShowRoleModal(true);
-                                  setActiveActionMenuId(null);
-                                }}
-                                className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                Change Role
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                            Change Role
+                          </button>
+                        </RowActionMenu>
                       </div>
                     </td>
                   </tr>

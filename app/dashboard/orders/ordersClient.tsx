@@ -1,6 +1,7 @@
 'use client';
 
 import GridContainer from '../gridContainer';
+import RowActionMenu from '@/components/admin/RowActionMenu';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -62,7 +63,7 @@ export default function OrdersPage({
     period: 'All Time',
     hasFetched: (initialData?.length ?? 0) > 0,
   });
-  const actionMenuRef = useRef<HTMLDivElement>(null);
+  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   // "Shipped" needs real tracking info before the customer email goes out --
@@ -115,9 +116,6 @@ export default function OrdersPage({
   ];
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
-    if (actionMenuRef.current && !actionMenuRef.current.contains(e.target as Node)) {
-      setActiveActionMenuId(null);
-    }
     if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
       setIsDropdownOpen(false);
     }
@@ -356,8 +354,13 @@ export default function OrdersPage({
                     {order.created_at ? formatDate(order.created_at) : '—'}
                   </td>
                   <td className="td">
-                    <div ref={activeActionMenuId === order.id ? actionMenuRef : undefined} className="relative">
+                    <div className="relative">
                       <button
+                        ref={
+                          activeActionMenuId === order.id
+                            ? actionMenuTriggerRef
+                            : undefined
+                        }
                         onClick={() =>
                           setActiveActionMenuId(
                             activeActionMenuId === order.id ? null : order.id,
@@ -370,34 +373,29 @@ export default function OrdersPage({
                       >
                         <AdminMoreVerticalIcon />
                       </button>
-                      {activeActionMenuId === order.id && (
-                        <div
-                          className={`ring-opacity-5 absolute right-0 z-[100] w-40 origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] focus:outline-none ${
-                            index >= arr.length - 2
-                              ? 'bottom-full mb-2'
-                              : 'mt-2'
-                          }`}
-                        >
-                          <div className="py-1">
-                            {(validTransitions[order.status] || []).length > 0 ? (
-                              (validTransitions[order.status] || []).map((status) => (
-                                <button
-                                  key={status}
-                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 capitalize hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                  onClick={() => handleMarkStatusClick(order, status)}
-                                  disabled={isUpdating}
-                                >
-                                  Mark as {status.replace('_', ' ')}
-                                </button>
-                              ))
-                            ) : (
-                              <div className="px-4 py-2 text-sm text-gray-400 italic">
-                                No transitions available
-                              </div>
-                            )}
+                      <RowActionMenu
+                        open={activeActionMenuId === order.id}
+                        onClose={() => setActiveActionMenuId(null)}
+                        anchorRef={actionMenuTriggerRef}
+                        widthClass="w-40"
+                      >
+                        {(validTransitions[order.status] || []).length > 0 ? (
+                          (validTransitions[order.status] || []).map((status) => (
+                            <button
+                              key={status}
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 capitalize hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              onClick={() => handleMarkStatusClick(order, status)}
+                              disabled={isUpdating}
+                            >
+                              Mark as {status.replace('_', ' ')}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-sm text-gray-400 italic">
+                            No transitions available
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </RowActionMenu>
                     </div>
                   </td>
                 </tr>
