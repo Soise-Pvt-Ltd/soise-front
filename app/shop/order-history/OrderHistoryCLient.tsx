@@ -27,6 +27,11 @@ interface Variant {
   }>;
   product: string;
   sku: string;
+  // Backend-resolved fallback: this variant's own media, or (if empty) a
+  // same-color sibling's media, or any sibling's media. Prefer this over
+  // `media` when rendering - `media` alone can be legitimately empty for a
+  // variant that inherits its photos from the product's cover variant.
+  display_media?: Variant['media'];
 }
 
 interface OrderItem {
@@ -221,9 +226,13 @@ function OrderHistoryItem({
     0,
   );
   
-  // Get first item's variant image
-  const firstItemImage = item.items[0]?.variant?.media?.[0]?.variants?.medium;
-  const firstItemAlt = item.items[0]?.variant?.media?.[0]?.alt_text || 'Product image';
+  // Get first item's variant image, falling back to a sibling variant's
+  // photos if this exact color/size hasn't been shot yet.
+  const firstItemMedia =
+    item.items[0]?.variant?.display_media?.[0] ??
+    item.items[0]?.variant?.media?.[0];
+  const firstItemImage = firstItemMedia?.variants?.medium;
+  const firstItemAlt = firstItemMedia?.alt_text || 'Product image';
   
   const { formatPrice } = useCurrency();
   

@@ -96,6 +96,7 @@ export interface ShipmentDetails {
   carrier?: string;
   estimated_delivery?: string;
   tracking_url?: string;
+  delivered_date?: string;
 }
 
 export async function updateOrderStatus(

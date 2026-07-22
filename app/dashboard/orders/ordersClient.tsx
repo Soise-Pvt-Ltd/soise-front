@@ -80,6 +80,15 @@ export default function OrdersPage({
   });
   const COMMON_CARRIERS = ['GIG Logistics', 'Kwik', 'ShipBubble', 'DHL Express'];
 
+  // "Delivered" needs an actual date -- this used to have no prompt at all,
+  // so the delivered-order email always defaulted to the literal string
+  // "Today" regardless of when delivery actually happened.
+  const [deliveredModalOrder, setDeliveredModalOrder] = useState<Order | null>(
+    null,
+  );
+  const todayIso = () => new Date().toISOString().slice(0, 10);
+  const [deliveredDate, setDeliveredDate] = useState(todayIso());
+
   const statusClasses: Record<string, string> = {
     created: 'bg-[#C0CBF2] text-[#0072BB] border border-[#C0CBF2] rounded-full',
     pending_payment: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
@@ -267,9 +276,22 @@ export default function OrdersPage({
     });
   };
 
+  const handleDeliveredSubmit = async () => {
+    if (!deliveredModalOrder) return;
+    await handleUpdateStatus(deliveredModalOrder.id, 'delivered', {
+      delivered_date: deliveredDate,
+    });
+    setDeliveredModalOrder(null);
+    setDeliveredDate(todayIso());
+  };
+
   const handleMarkStatusClick = (order: Order, status: string) => {
     if (status === 'shipped') {
       setShippingModalOrder(order);
+      setActiveActionMenuId(null);
+    } else if (status === 'delivered') {
+      setDeliveredModalOrder(order);
+      setDeliveredDate(todayIso());
       setActiveActionMenuId(null);
     } else {
       handleUpdateStatus(order.id, status);
@@ -606,7 +628,7 @@ export default function OrdersPage({
             </h3>
             <p className="mt-1 text-[13px] text-[#8E8E93]">
               Order #{shortRef(shippingModalOrder.id)} — this goes straight
-              into the customer's shipped-order email.
+              into the customer&apos;s shipped-order email.
             </p>
 
             <div className="mt-5 flex flex-col gap-y-4">
@@ -691,6 +713,50 @@ export default function OrdersPage({
                 disabled={isUpdating}
               >
                 {isUpdating ? 'Marking as shipped…' : 'Mark as shipped'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deliveredModalOrder && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-[420px] rounded-[12px] bg-white p-6 shadow-lg">
+            <h3 className="text-[16px] font-semibold text-[#121212]">
+              Delivery date
+            </h3>
+            <p className="mt-1 text-[13px] text-[#8E8E93]">
+              Order #{shortRef(deliveredModalOrder.id)} — this goes straight
+              into the customer&apos;s delivered-order email.
+            </p>
+
+            <div className="mt-5">
+              <label className="text-[12px] font-medium text-[#5C5C5C]">
+                Delivered on *
+              </label>
+              <input
+                type="date"
+                value={deliveredDate}
+                max={todayIso()}
+                onChange={(e) => setDeliveredDate(e.target.value)}
+                className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+              />
+            </div>
+
+            <div className="mt-6 flex justify-end gap-x-3">
+              <button
+                onClick={() => setDeliveredModalOrder(null)}
+                className="rounded-[8px] px-4 py-2 text-[14px] font-medium text-[#5C5C5C] hover:bg-gray-100"
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeliveredSubmit}
+                className="rounded-[8px] bg-[#121212] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={isUpdating || !deliveredDate}
+              >
+                {isUpdating ? 'Marking as delivered…' : 'Mark as delivered'}
               </button>
             </div>
           </div>

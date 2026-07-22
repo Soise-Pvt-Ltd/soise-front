@@ -1042,7 +1042,9 @@ function BagItem({
   const color = item.variantDetails?.color ?? 'N/A';
   const size = item.variantDetails?.size ?? 'N/A';
   const price = item.variantDetails?.price ?? 0;
-  const image = item.variantDetails?.media?.[0]?.url;
+  const image =
+    item.variantDetails?.display_media?.[0]?.url ??
+    item.variantDetails?.media?.[0]?.url;
 
   return (
     <div className="mb-[24px] flex h-[120px] justify-between">
