@@ -14,6 +14,7 @@ import {
   ORG_JSONLD,
 } from '@/lib/seo';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const body_font = Poppins({
   subsets: ['latin'],
@@ -156,6 +157,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         <AmbientStatue />
         <LuxeCursor />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
