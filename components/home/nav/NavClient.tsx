@@ -23,6 +23,7 @@ import {
   getNavSession,
 } from './actions';
 import { onCartChanged } from '@/lib/cart-events';
+import CurrencyToggle from './CurrencyToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
@@ -85,7 +86,7 @@ export default function NavClient({ collections = [] }: NavClientProps) {
       new URLSearchParams(window.location.search).get('collection'),
     );
   }, [pathname]);
-  const { currency, setCurrency, formatPrice, isRateLoading } = useCurrency();
+  const { formatPrice } = useCurrency();
   const [cart, setCart] = useState<EnrichedCartItem[]>([]);
   const pendingMutations = useRef(0);
 
@@ -385,7 +386,7 @@ export default function NavClient({ collections = [] }: NavClientProps) {
     <>
       {/* Top Navbar */}
       <motion.nav
-        className="flex items-center justify-between px-[20px] pt-[65px] pb-[40px] md:px-[40px]"
+        className="flex items-center justify-between px-[20px] pt-[28px] pb-[24px] md:px-[40px] md:pt-[65px] md:pb-[40px]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -442,6 +443,8 @@ export default function NavClient({ collections = [] }: NavClientProps) {
         </motion.div>
 
         <div className="flex items-center gap-x-[6px]">
+          {/* Always-visible currency toggle (one-tap on any page, incl. mobile). */}
+          <CurrencyToggle className="mr-[2px]" />
           <motion.button
             type="button"
             onClick={(e) => {
@@ -925,41 +928,6 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                   ))}
                 </div>
 
-                {/* Currency toggle */}
-                <div className="mt-auto flex items-center gap-x-[18px] pt-[40px]">
-                  {/* Currency toggle */}
-                  <motion.button
-                    type="button"
-                    onClick={() =>
-                      setCurrency(currency === 'NGN' ? 'USD' : 'NGN')
-                    }
-                    className="relative flex h-[26px] items-center rounded-full border border-[#AEAEB2] bg-white px-[3px] text-[10px] font-medium tracking-wide hover:cursor-pointer focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
-                    title={`Switch to ${currency === 'NGN' ? 'USD' : 'NGN'}`}
-                    whileTap={{ scale: 0.93 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                    aria-label={`Switch currency to ${currency === 'NGN' ? 'USD' : 'NGN'}`}
-                  >
-                    <motion.span
-                      className="absolute top-[2px] h-[20px] w-[28px] rounded-full bg-black"
-                      animate={{ left: currency === 'NGN' ? 3 : 31 }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 500,
-                        damping: 30,
-                      }}
-                    />
-                    <span
-                      className={`relative z-10 w-[28px] text-center transition-colors duration-200 ${currency === 'NGN' ? 'text-white' : 'text-[#8E8E93]'}`}
-                    >
-                      ₦
-                    </span>
-                    <span
-                      className={`relative z-10 w-[28px] text-center transition-colors duration-200 ${currency === 'USD' ? 'text-white' : 'text-[#8E8E93]'}`}
-                    >
-                      $
-                    </span>
-                  </motion.button>
-                </div>
               </div>
             )}
           </FullscreenPanel>
