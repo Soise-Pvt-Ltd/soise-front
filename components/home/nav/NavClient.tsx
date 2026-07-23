@@ -31,6 +31,7 @@ export interface Collection {
   id: string;
   name: string;
   slug?: string;
+  coming_soon?: boolean;
 }
 
 // Shared nav icon-button styling: ≥44×44 tap target + focus-visible ring.
@@ -278,6 +279,7 @@ export default function NavClient({
     // Route to the product listing pre-filtered by collection name (the
     // listing groups by collection.name). There is no /collections/[slug] route.
     href: `/shop/product-listing?collection=${encodeURIComponent(collection.name)}`,
+    disabled: !!collection.coming_soon,
   }));
 
   const menu_2 = [
@@ -497,14 +499,26 @@ export default function NavClient({
                         ease: [0.22, 1, 0.36, 1],
                       }}
                     >
-                      <Link
-                        href={item.href}
-                        aria-current={isActive(item.href) ? 'page' : undefined}
-                        onClick={closePanel}
-                        className={`inline-block transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer aria-[current=page]:underline aria-[current=page]:underline-offset-4 ${LINK_FOCUS}`}
-                      >
-                        {item.name}
-                      </Link>
+                      {item.disabled ? (
+                        <div
+                          aria-disabled="true"
+                          className="flex cursor-not-allowed items-center gap-2 text-[#8E8E93]"
+                        >
+                          {item.name}
+                          <span className="text-[11px] uppercase tracking-wide">
+                            Coming soon
+                          </span>
+                        </div>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          aria-current={isActive(item.href) ? 'page' : undefined}
+                          onClick={closePanel}
+                          className={`inline-block transition-transform duration-200 hover:translate-x-1 hover:cursor-pointer aria-[current=page]:underline aria-[current=page]:underline-offset-4 ${LINK_FOCUS}`}
+                        >
+                          {item.name}
+                        </Link>
+                      )}
                     </motion.div>
                   ))}
                 </div>

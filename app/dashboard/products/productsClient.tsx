@@ -567,6 +567,7 @@ export default function ProductsPage({
   >('list');
   const [collectionName, setCollectionName] = useState('');
   const [collectionDescription, setCollectionDescription] = useState('');
+  const [collectionComingSoon, setCollectionComingSoon] = useState(false);
   const [editingCollectionId, setEditingCollectionId] = useState<string | null>(
     null,
   );
@@ -1184,6 +1185,7 @@ export default function ProductsPage({
       const formData = new FormData();
       formData.append('name', collectionName);
       formData.append('description', collectionDescription);
+      formData.append('coming_soon', String(collectionComingSoon));
       const result = await createCollection(formData);
 
       if (result.success) {
@@ -1191,6 +1193,7 @@ export default function ProductsPage({
         setShowCollectionModal(false);
         setCollectionName('');
         setCollectionDescription('');
+        setCollectionComingSoon(false);
         setSelectedPeriod('All Time');
       } else {
         showToast('error', `Failed to create collection: ${result.error || 'Unknown error'}`);
@@ -1210,6 +1213,7 @@ export default function ProductsPage({
       formData.append('id', editingCollectionId);
       formData.append('name', collectionName);
       formData.append('description', collectionDescription);
+      formData.append('coming_soon', String(collectionComingSoon));
       const result = await updateCollection(formData);
 
       if (result.success) {
@@ -1217,6 +1221,7 @@ export default function ProductsPage({
         setShowCollectionModal(false);
         setCollectionName('');
         setCollectionDescription('');
+        setCollectionComingSoon(false);
         setEditingCollectionId(null);
         setSelectedPeriod('All Time');
       } else {
@@ -2334,8 +2339,13 @@ export default function ProductsPage({
                         key={collection.id}
                         className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0"
                       >
-                        <span className="text-[#121212]">
+                        <span className="flex items-center gap-2 text-[#121212]">
                           {collection.name}
+                          {collection.coming_soon && (
+                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500">
+                              Coming soon
+                            </span>
+                          )}
                         </span>
                         <div className="flex gap-2">
                           <button
@@ -2344,6 +2354,9 @@ export default function ProductsPage({
                               setCollectionName(collection.name);
                               setCollectionDescription(
                                 collection.description || '',
+                              );
+                              setCollectionComingSoon(
+                                !!collection.coming_soon,
                               );
                               setCollectionView('edit');
                             }}
@@ -2371,6 +2384,7 @@ export default function ProductsPage({
                       onClick={() => {
                         setCollectionName('');
                         setCollectionDescription('');
+                        setCollectionComingSoon(false);
                         setCollectionView('create');
                       }}
                       className="btn_creators_solid w-full justify-center"
@@ -2405,12 +2419,23 @@ export default function ProductsPage({
                       placeholder="Enter collection description"
                     />
                   </div>
+                  <label className="flex items-center gap-2 text-sm text-[#121212]">
+                    <input
+                      type="checkbox"
+                      checked={collectionComingSoon}
+                      onChange={(e) => setCollectionComingSoon(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    Coming soon (greyed out in the storefront menu, not yet
+                    shoppable)
+                  </label>
                   <div className="flex gap-3 pt-2">
                     <button
                       onClick={() => {
                         setCollectionView('list');
                         setCollectionName('');
                         setCollectionDescription('');
+                        setCollectionComingSoon(false);
                       }}
                       className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                     >

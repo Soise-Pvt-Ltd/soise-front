@@ -508,6 +508,7 @@ export async function createCollection(formData: FormData) {
 
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
+  const coming_soon = formData.get('coming_soon') === 'true';
 
   try {
     const res = await fetch(
@@ -518,7 +519,7 @@ export async function createCollection(formData: FormData) {
           'Content-Type': 'application/json',
           Cookie: `access_token=${accessToken}`,
         },
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({ name, description, coming_soon }),
       },
     );
 
@@ -541,9 +542,10 @@ export async function updateCollection(formData: FormData) {
   const id = formData.get('id') as string;
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
+  const coming_soon = formData.get('coming_soon') === 'true';
 
   try {
-    const payload = { name, description };
+    const payload = { name, description, coming_soon };
 
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/admin/collections/${id}`,
