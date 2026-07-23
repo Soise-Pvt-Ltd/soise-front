@@ -22,6 +22,7 @@ import {
   updateCartItemQuantity,
   getNavSession,
 } from './actions';
+import { onCartChanged } from '@/lib/cart-events';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
@@ -237,9 +238,20 @@ export default function NavClient({ collections = [] }: NavClientProps) {
     }
   };
 
-  // Hydrate session (cart + auth) once on mount.
+  // Hydrate session (cart + auth) once on mount, then keep the badge/panel in
+  // sync when the cart changes elsewhere (add-to-bag on a product page) or when
+  // the tab regains focus (cart edited in another tab).
   useEffect(() => {
     loadSession();
+    const unsubscribe = onCartChanged(() => loadSession());
+    const onFocus = () => {
+      if (document.visibilityState === 'visible') loadSession();
+    };
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      unsubscribe();
+      document.removeEventListener('visibilitychange', onFocus);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

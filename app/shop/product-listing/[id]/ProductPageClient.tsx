@@ -9,6 +9,7 @@ import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
 import { addToBag as addToBagAction } from './actions';
 import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/actions';
+import { notifyCartChanged } from '@/lib/cart-events';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
@@ -201,6 +202,8 @@ export default function ProductPageClient({
     const result = await addToBagAction(selectedVariant.id, quantity);
     showToast.dismiss(toastId);
     if (result.success) {
+      // Tell the Nav (client-side, static shell) to refresh its bag badge/panel.
+      notifyCartChanged();
       showToast.success(`Added ${quantity} item${quantity > 1 ? 's' : ''} to bag!`);
     } else {
       showToast.error(result.message || 'Failed to add item to bag. Please try again.');

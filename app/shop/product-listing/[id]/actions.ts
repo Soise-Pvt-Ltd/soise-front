@@ -1,7 +1,6 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
 
 type AddToBagSuccess = {
   success: true;
@@ -107,7 +106,8 @@ export async function addToBag(
 
           if (migrateRes.ok) {
             cookieStore.delete('soise_guestId');
-            revalidatePath('/', 'layout');
+            // Nav badge refresh is handled client-side via notifyCartChanged();
+            // no revalidatePath here (it would purge the whole ISR cache).
             return { success: true, sessionId: undefined, shouldMigrate: true };
           } else {
             const errBody = await migrateRes.text().catch(() => '');
@@ -121,8 +121,7 @@ export async function addToBag(
       cookieStore.delete('soise_guestId');
     }
 
-    revalidatePath('/', 'layout');
-
+    // Nav badge refresh is handled client-side via notifyCartChanged().
     return {
       success: true,
       sessionId: newSessionId,
