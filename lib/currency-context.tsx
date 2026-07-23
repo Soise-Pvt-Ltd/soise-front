@@ -42,12 +42,23 @@ export function CurrencyProvider({
   const [usdRate, setUsdRate] = useState<number>(FALLBACK_USD_RATE);
   const [isRateLoading, setIsRateLoading] = useState(false);
 
-  // Migration fallback: clients that only have the old localStorage pref (no
-  // cookie yet) get restored here and we backfill the cookie for next load.
+  // Restore the saved currency client-side. The root layout no longer reads the
+  // cookie server-side (so pages stay statically generated), so this is now the
+  // sole restore path: prefer the cookie, fall back to the legacy localStorage
+  // pref, and backfill both. NGN users see no change; a USD user may see a brief
+  // NGN→USD correction on first paint — the trade for static, CDN-served pages.
   useEffect(() => {
-    const saved = localStorage.getItem(PREF_KEY);
+    const fromCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith(`${PREF_KEY}=`))
+      ?.split('=')[1];
+    const saved: Currency | null =
+      fromCookie === 'NGN' || fromCookie === 'USD'
+        ? (fromCookie as Currency)
+        : (localStorage.getItem(PREF_KEY) as Currency | null);
     if ((saved === 'NGN' || saved === 'USD') && saved !== currency) {
       setCurrencyState(saved);
+      localStorage.setItem(PREF_KEY, saved);
       document.cookie = `${PREF_KEY}=${saved}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

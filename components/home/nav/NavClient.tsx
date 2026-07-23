@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   MenuIcon,
   BagIcon,
@@ -16,7 +16,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import BrandMark from '@/components/brand/BrandMark';
 import { EnrichedCartItem, Product } from './types';
-import { logout, removeFromCart, updateCartItemQuantity } from './actions';
+import {
+  logout,
+  removeFromCart,
+  updateCartItemQuantity,
+  getNavSession,
+} from './actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
@@ -43,34 +48,68 @@ const LINK_FOCUS =
   'rounded-[4px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none';
 
 interface NavClientProps {
-  cart: EnrichedCartItem[];
-  isLoggedIn: boolean;
   collections?: Collection[];
-  admin?: boolean;
-  storeCredit?: number | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  email?: string | null;
-  avatar?: string | null;
 }
 
-export default function NavClient({
-  cart: initialCart,
-  isLoggedIn,
-  collections = [],
-  admin = false,
-  storeCredit = null,
-  firstName = null,
-  lastName = null,
-  email = null,
-  avatar = null,
-}: NavClientProps) {
+interface NavSessionState {
+  isLoggedIn: boolean;
+  admin: boolean;
+  storeCredit: number | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  avatar: string | null;
+}
+
+const EMPTY_SESSION: NavSessionState = {
+  isLoggedIn: false,
+  admin: false,
+  storeCredit: null,
+  firstName: null,
+  lastName: null,
+  email: null,
+  avatar: null,
+};
+
+export default function NavClient({ collections = [] }: NavClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  // Collection query param, read client-side only. Calling useSearchParams()
+  // here would opt every page that renders the Nav out of static generation
+  // (CSR bailout). Active-link highlighting is enhancement-only, so we read the
+  // query after mount and re-read on path change instead.
+  const [collectionParam, setCollectionParam] = useState<string | null>(null);
+  useEffect(() => {
+    setCollectionParam(
+      new URLSearchParams(window.location.search).get('collection'),
+    );
+  }, [pathname]);
   const { currency, setCurrency, formatPrice, isRateLoading } = useCurrency();
-  const [cart, setCart] = useState<EnrichedCartItem[]>(initialCart);
+  const [cart, setCart] = useState<EnrichedCartItem[]>([]);
   const pendingMutations = useRef(0);
+
+  // Session data (cart/auth/identity) is fetched client-side after hydration so
+  // the Nav server shell stays static and its pages can be CDN cache hits. The
+  // initial render is the logged-out/empty state (matches the static HTML, so
+  // no hydration mismatch); real state arrives from getNavSession() on mount.
+  const [session, setSession] = useState<NavSessionState>(EMPTY_SESSION);
+  const { isLoggedIn, admin, storeCredit, firstName, lastName, email, avatar } =
+    session;
+
+  const loadSession = async () => {
+    const data = await getNavSession();
+    setSession({
+      isLoggedIn: data.isLoggedIn,
+      admin: data.admin,
+      storeCredit: data.storeCredit,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      avatar: data.avatar,
+    });
+    // Don't clobber optimistic cart edits that are still in flight.
+    if (pendingMutations.current === 0) setCart(data.cart ?? []);
+  };
   const [openMenu, setOpenMenu] = useState<
     null | 'menu' | 'search' | 'bag' | 'wishlist' | 'user'
   >(null);
@@ -123,7 +162,7 @@ export default function NavClient({
 
     if (query) {
       const targetParams = new URLSearchParams(query);
-      const currentCollection = searchParams.get('collection');
+      const currentCollection = collectionParam;
       return pathname === target && targetParams.get('collection') === currentCollection;
     }
 
@@ -198,11 +237,11 @@ export default function NavClient({
     }
   };
 
+  // Hydrate session (cart + auth) once on mount.
   useEffect(() => {
-    if (pendingMutations.current === 0) {
-      setCart(initialCart);
-    }
-  }, [initialCart]);
+    loadSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRemoveItem = async (cartItemId: string) => {
     const previousCart = cart;
@@ -214,7 +253,8 @@ export default function NavClient({
       setCart(previousCart);
     }
     if (pendingMutations.current === 0) {
-      router.refresh();
+      // Reconcile with server truth (client-side, keeps Nav static).
+      loadSession();
     }
   };
 
@@ -241,12 +281,14 @@ export default function NavClient({
       setCart(previousCart);
     }
     if (pendingMutations.current === 0) {
-      router.refresh();
+      // Reconcile with server truth (client-side, keeps Nav static).
+      loadSession();
     }
   };
 
   const handleLogout = async () => {
     await logout();
+    await loadSession();
     router.push('/');
   };
 

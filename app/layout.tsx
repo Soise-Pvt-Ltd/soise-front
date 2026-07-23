@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { cookies } from 'next/headers';
 import { Poppins, Molle, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
@@ -121,13 +120,10 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const savedCurrency = cookieStore.get('soise_currency')?.value;
-  const initialCurrency =
-    savedCurrency === 'USD' || savedCurrency === 'NGN'
-      ? savedCurrency
-      : undefined;
-
+  // No cookies()/headers() here: reading them would opt every route into
+  // dynamic rendering. The saved currency preference is restored client-side in
+  // CurrencyProvider (from the soise_currency cookie) so all pages under this
+  // layout can be statically generated and served as CDN cache hits.
   return (
     <html
       lang="en-NG"
@@ -153,7 +149,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
         />
       </head>
       <body className="font-body 4xl:mx-auto 4xl:max-w-screen-4x mx-auto max-w-screen-2xl antialiased">
-        <Providers initialCurrency={initialCurrency}>{children}</Providers>
+        <Providers>{children}</Providers>
         <AmbientStatue />
         <LuxeCursor />
         <Analytics />

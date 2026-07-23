@@ -9,6 +9,26 @@ import {
   type RecProduct,
 } from './recs-actions';
 
+// Prerender a static page per product at build time, and keep them fresh with
+// 60s ISR. New products (not in the build-time list) render on-demand and cache.
+// Static product pages are the fastest to serve and the best for crawlers.
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) return [];
+  try {
+    const res = await fetch(`${baseUrl}/products`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.data ?? [])
+      .filter((p: { slug?: string }) => p.slug)
+      .map((p: { slug: string }) => ({ id: String(p.slug) }));
+  } catch {
+    return [];
+  }
+}
+
 async function getProducts() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (!baseUrl) return [];
