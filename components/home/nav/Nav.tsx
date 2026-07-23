@@ -20,11 +20,15 @@ export default async function Nav() {
   try {
     if (baseUrl) {
       const [productsRes, collectionRes, cartRes] = await Promise.all([
+        // Catalog data is public and identical for every visitor — cache it so
+        // Nav (rendered on every page) stops re-fetching the full product list
+        // and collections from origin on every request. Cart below stays
+        // per-request since it's user/session-specific.
         fetch(`${baseUrl}/products`, {
-          cache: 'no-store',
+          next: { revalidate: 60 },
         }),
         fetch(`${baseUrl}/products/collections`, {
-          cache: 'no-store',
+          next: { revalidate: 60 },
         }),
         fetch(
           `${baseUrl}/cart${!accessToken && guestId ? `?session_id=${guestId}` : ''}`,

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ProductPageClient, { type Product } from './ProductPageClient';
 import { notFound } from 'next/navigation';
 import Nav from '@/components/home/nav/Nav';
-import { SITE_URL, SITE_NAME, productJsonLd } from '@/lib/seo';
+import { SITE_URL, SITE_NAME, productJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 import {
   getRecommendations,
   getSimilarProducts,
@@ -13,7 +13,7 @@ async function getProducts() {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (!baseUrl) return [];
   try {
-    const res = await fetch(`${baseUrl}/products`, { cache: 'no-store' });
+    const res = await fetch(`${baseUrl}/products`, { next: { revalidate: 60 } });
     if (!res.ok) return [];
     const data = await res.json();
     return data.data ?? [];
@@ -98,12 +98,30 @@ export default async function ProductPage(props: {
   const similarProducts = dedupe(similar);
 
   const jsonLd = productJsonLd(product);
+  const collectionName = product.collection?.name;
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Shop', path: '/shop/product-listing' },
+    ...(collectionName
+      ? [
+          {
+            name: collectionName,
+            path: `/shop/product-listing?collection=${encodeURIComponent(collectionName)}`,
+          },
+        ]
+      : []),
+    { name: product.name, path: `/shop/product-listing/${slug}` },
+  ]);
 
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
       />
       <Nav />
       <ProductPageClient

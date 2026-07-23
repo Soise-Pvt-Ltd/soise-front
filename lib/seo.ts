@@ -85,6 +85,27 @@ export function productJsonLd(product: {
   };
 }
 
+/**
+ * Build a BreadcrumbList JSON-LD blob. Gives Google the page's position in the
+ * site hierarchy, which renders as a breadcrumb trail in search results (higher
+ * CTR) and reinforces topical structure. Pass items in order, root first.
+ */
+export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      // Google recommends omitting `item` on the last (current) crumb.
+      ...(i < items.length - 1
+        ? { item: `${SITE_URL}${item.path}` }
+        : {}),
+    })),
+  };
+}
+
 /** Organization + WebSite JSON-LD for the root layout. */
 export const ORG_JSONLD = {
   '@context': 'https://schema.org',

@@ -20,7 +20,7 @@ async function fetchProductList(path: string): Promise<RecProduct[]> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (!baseUrl) return [];
   try {
-    const res = await fetch(`${baseUrl}${path}`, { cache: 'no-store' });
+    const res = await fetch(`${baseUrl}${path}`, { next: { revalidate: 60 } });
     if (!res.ok) return [];
     const data = await res.json().catch(() => null);
     return Array.isArray(data?.data) ? data.data : [];

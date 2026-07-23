@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const res = await fetch(`${BASE_URL}/products`, { cache: 'no-store' });
+    const res = await fetch(`${BASE_URL}/products`, { next: { revalidate: 60 } });
     if (!res.ok) {
       return NextResponse.json(
         { success: false, error: 'Search failed', data: [] },

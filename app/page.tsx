@@ -10,6 +10,12 @@ import Hero from '@/components/home/hero';
 import ImageGallerySection from '@/components/home/image-gallery-section';
 import { SITE_URL, SITE_NAME } from '@/lib/seo';
 
+// Serve a cached, statically-rendered homepage and revalidate the catalog data
+// in the background at most once a minute. Turns a per-request dynamic render
+// (3 backend round-trips, 0.6–2.2s TTFB) into a CDN cache hit (~50ms), which is
+// also a direct Core Web Vitals / SEO ranking win. Catalog edits appear within 60s.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
   description:
@@ -69,7 +75,7 @@ export default async function Home() {
     }
 
     const response = await fetch(`${baseUrl}/products`, {
-      cache: 'no-store',
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
@@ -90,8 +96,8 @@ export default async function Home() {
   try {
     if (baseUrl) {
       const [contentRes, collectionsRes] = await Promise.all([
-        fetch(`${baseUrl}/content/homepage`, { cache: 'no-store' }),
-        fetch(`${baseUrl}/products/collections`, { cache: 'no-store' }),
+        fetch(`${baseUrl}/content/homepage`, { next: { revalidate: 60 } }),
+        fetch(`${baseUrl}/products/collections`, { next: { revalidate: 60 } }),
       ]);
       if (contentRes.ok) {
         const json = await contentRes.json();

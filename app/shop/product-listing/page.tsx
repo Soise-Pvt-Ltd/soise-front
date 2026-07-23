@@ -1,9 +1,13 @@
 export const runtime = 'nodejs';
 
+// Revalidate the catalog fetch at most once a minute so repeat visits are served
+// from Next's Data Cache instead of hitting the backend every time (CWV/SEO win).
+export const revalidate = 60;
+
 import type { Metadata } from 'next';
 import Nav from '@/components/home/nav/Nav';
 import ProductListingClient from './ProductListingClient';
-import { SITE_NAME } from '@/lib/seo';
+import { SITE_NAME, breadcrumbJsonLd } from '@/lib/seo';
 
 export async function generateMetadata(props: {
   searchParams: Promise<{ collection?: string }>;
@@ -45,7 +49,7 @@ export default async function ProductListingPage(props: {
   try {
     if (baseUrl) {
       const res = await fetch(`${baseUrl}/products`, {
-        cache: 'no-store',
+        next: { revalidate: 60 },
       });
       if (res.ok) {
         const data = await res.json();
@@ -58,8 +62,25 @@ export default async function ProductListingPage(props: {
     console.error('Failed to fetch products:', error);
   }
 
+  const breadcrumbLd = breadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    ...(collection
+      ? [
+          { name: 'Shop', path: '/shop/product-listing' },
+          {
+            name: decodeURIComponent(collection),
+            path: `/shop/product-listing?collection=${encodeURIComponent(collection)}`,
+          },
+        ]
+      : [{ name: 'Shop', path: '/shop/product-listing' }]),
+  ]);
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <Nav />
       <ProductListingClient products={products} initialCollection={collection} />
     </>
