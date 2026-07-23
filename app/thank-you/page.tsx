@@ -6,6 +6,7 @@ import { siteConfig } from '@/lib/site-config';
 import ReferralPromoCard from '@/components/ReferralPromoCard';
 import RecommendationCarousel from '@/components/RecommendationCarousel';
 import { getRecommendations, getFeaturedProducts } from '@/app/shop/product-listing/[id]/recs-actions';
+import ClearPendingOrderMarker from './ClearPendingOrderMarker';
 
 export default async function ThankYouPage({
   searchParams,
@@ -55,6 +56,9 @@ export default async function ThankYouPage({
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Payment confirmed (or store-credit covered): drop the resume marker so
+          the order-summary page stops nudging to pay for this order. */}
+      {showConfirmed && <ClearPendingOrderMarker />}
       {/* Navigation */}
       <header className="relative h-[607px] w-full overflow-hidden" role="banner">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0072BB] to-[#2D2C54]" aria-hidden="true" />

@@ -7,12 +7,17 @@ import { Toaster } from 'sonner';
 import { ArrowUpIcon } from '@/components/icons';
 import Footer from '@/components/footer';
 import { EnrichedCartItem } from '@/components/home/nav/types';
-import { checkoutAction, applyDiscountCodeAction } from './actions';
+import {
+  checkoutAction,
+  applyDiscountCodeAction,
+  resumePaymentAction,
+} from './actions';
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
+import { PENDING_ORDER_KEY } from './pending-order';
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -114,6 +119,11 @@ export default function OrderSummaryClient({
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  // A pending order whose Paystack redirect never landed. When set, we surface
+  // a "Complete your payment" banner so the shopper can resume without the cart
+  // (which checkout already cleared) and without creating a duplicate order.
+  const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
+  const [resuming, setResuming] = useState(false);
 
   // Address selection: default to a saved address when one exists so
   // returning customers don't have to retype anything. 'new' reveals the
@@ -206,11 +216,42 @@ export default function OrderSummaryClient({
 
       showToast.dismiss(toastId);
 
+      // The order now exists server-side. Remember it before we navigate so a
+      // dropped redirect is recoverable on reload (see the resume banner).
+      if (result?.orderId) {
+        try {
+          sessionStorage.setItem(PENDING_ORDER_KEY, result.orderId);
+        } catch {
+          /* private mode / storage disabled — banner just won't show */
+        }
+      }
+
       if (result?.success && result.redirectUrl) {
         // Success: navigate to Paystack (external) or the thank-you page.
         // Keep `pending` true so the button stays locked through navigation.
         showToast.success('Order placed! Taking you to secure checkout…');
         window.location.href = result.redirectUrl;
+        return;
+      }
+
+      // Order created but no payment link came back (dropped/empty response):
+      // don't dead-end — resume straight from the order we just recorded.
+      if (result?.error === 'no_payment_link' && result?.orderId) {
+        const resumed = await resumePaymentAction(result.orderId);
+        if (resumed?.success && resumed.redirectUrl) {
+          showToast.success('Taking you to secure checkout…');
+          window.location.href = resumed.redirectUrl;
+          return;
+        }
+        setPendingOrderId(result.orderId);
+        const msg =
+          resumed?.error && resumed.error !== 'no_payment_link'
+            ? resumed.error
+            : 'We saved your order but couldn’t open payment. Tap “Complete payment” to try again.';
+        showToast.error(msg);
+        setError(msg);
+        setPending(false);
+        submittingRef.current = false;
         return;
       }
 
@@ -232,7 +273,65 @@ export default function OrderSummaryClient({
       setError('An unexpected error occurred');
       setPending(false);
       submittingRef.current = false;
+      // A thrown checkoutAction means we never learned the order id — but the
+      // order may well have committed before the response dropped. Surface any
+      // pending order recorded on a previous attempt so payment stays reachable.
+      try {
+        const stored = sessionStorage.getItem(PENDING_ORDER_KEY);
+        if (stored) setPendingOrderId(stored);
+      } catch {
+        /* storage disabled */
+      }
       console.error('Checkout error:', err);
+    }
+  }
+
+  // On load, if a prior checkout left a pending order behind (redirect dropped,
+  // tab closed, shopper bailed on Paystack), offer to resume it. Verifying it's
+  // still payable happens server-side when they tap the banner.
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(PENDING_ORDER_KEY);
+      if (stored) setPendingOrderId(stored);
+    } catch {
+      /* storage disabled */
+    }
+  }, []);
+
+  async function handleResume() {
+    if (!pendingOrderId || resuming) return;
+    setResuming(true);
+    const toastId = showToast.loading('Reopening secure checkout…');
+    try {
+      const resumed = await resumePaymentAction(pendingOrderId);
+      showToast.dismiss(toastId);
+      if (resumed?.success && resumed.redirectUrl) {
+        // If it already settled, resume returns /thank-you — clear the marker.
+        if (resumed.redirectUrl === '/thank-you') {
+          try {
+            sessionStorage.removeItem(PENDING_ORDER_KEY);
+          } catch {
+            /* storage disabled */
+          }
+        }
+        window.location.href = resumed.redirectUrl;
+        return;
+      }
+      // Order no longer awaiting payment (paid elsewhere / cancelled): drop it.
+      try {
+        sessionStorage.removeItem(PENDING_ORDER_KEY);
+      } catch {
+        /* storage disabled */
+      }
+      setPendingOrderId(null);
+      showToast.error(
+        resumed?.error || 'This order can no longer be paid for.',
+      );
+    } catch {
+      showToast.dismiss(toastId);
+      showToast.error('Could not reopen checkout. Please try again.');
+    } finally {
+      setResuming(false);
     }
   }
 
@@ -361,6 +460,32 @@ export default function OrderSummaryClient({
   return (
     <>
       <Toaster position="top-center" richColors />
+      {pendingOrderId && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto flex flex-col gap-y-3 border-b border-[#F0C36B] bg-[#FFF8EC] px-[20px] py-[16px] normal-case md:max-w-7xl md:flex-row md:items-center md:justify-between"
+        >
+          <div className="flex-1">
+            <p className="text-[13px] font-semibold text-[#121212]">
+              You have an order awaiting payment
+            </p>
+            <p className="mt-[2px] text-[12px] leading-relaxed text-[#7A6320]">
+              Your items are saved. Pick up where you left off — you won’t be
+              charged twice.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleResume}
+            disabled={resuming}
+            className="btn_black w-full shrink-0 px-[20px] py-[10px] text-[12px] uppercase disabled:opacity-60 md:w-auto"
+          >
+            {resuming ? 'Opening…' : 'Complete payment'}
+          </button>
+        </motion.div>
+      )}
       <div className="mx-auto md:max-w-7xl">
         <div className="pb-[50px]">
           <motion.div

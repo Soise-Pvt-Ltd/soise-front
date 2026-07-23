@@ -28,6 +28,9 @@ interface CheckoutResult {
   error?: string;
   errorCode?: string;
   redirectUrl?: string;
+  // The order id (== Paystack reference). Returned so the client can persist a
+  // pending order and resume its payment if the post-checkout redirect fails.
+  orderId?: string;
 }
 
 export async function checkoutAction(formData: FormData): Promise<CheckoutResult> {
@@ -157,11 +160,22 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     // "An error occurred during checkout" toast — even though the navigation
     // to Paystack still happened. Returning the URL lets the client do a clean
     // window.location navigation with no spurious error.
+    // The order id doubles as the Paystack reference. Hand it back so the
+    // client can persist it and resume payment (see resumePaymentAction) if the
+    // redirect below never lands — the order + a payable URL already exist
+    // server-side, so a dropped redirect must not strand the shopper.
+    const orderId = data?.data?.order?.id as string | undefined;
+
     if (authUrl) {
-      return { success: true as const, redirectUrl: authUrl as string };
+      return { success: true as const, redirectUrl: authUrl as string, orderId };
     }
     if (fullyCovered) {
-      return { success: true as const, redirectUrl: '/thank-you' };
+      return { success: true as const, redirectUrl: '/thank-you', orderId };
+    }
+    // 201 but no URL: the order exists and its authorization_url is stored on
+    // the payment record — recover via resume rather than dead-ending.
+    if (orderId) {
+      return { success: false as const, error: 'no_payment_link', orderId };
     }
     return {
       success: false,
@@ -173,6 +187,73 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
       success: false,
       error:
         error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+}
+
+/**
+ * Resume payment for an existing pending order.
+ *
+ * The durable fix for a failed post-checkout redirect: the order and a payable
+ * Paystack URL already exist server-side, so recovery is just "hand me that URL
+ * again." Idempotent — no new order, no new Paystack transaction. Works for
+ * guests and authenticated users alike (keyed on the order id / reference).
+ */
+export async function resumePaymentAction(
+  orderId: string,
+): Promise<CheckoutResult> {
+  if (!orderId) return { success: false, error: 'Missing order reference' };
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) return { success: false, error: 'API base URL is not configured' };
+
+  try {
+    const response = await fetch(`${baseUrl}/payments/initialize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ reference: orderId }),
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error:
+          data?.message ||
+          `Could not resume payment (status ${response.status})`,
+        orderId,
+      };
+    }
+
+    // Already settled while we were away — go straight to the thank-you page.
+    if (data?.data?.status === 'paid') {
+      return { success: true as const, redirectUrl: '/thank-you', orderId };
+    }
+
+    const authUrl = data?.data?.checkout_metadata?.authorization_url as
+      | string
+      | undefined;
+    if (authUrl) {
+      return { success: true as const, redirectUrl: authUrl, orderId };
+    }
+
+    return {
+      success: false,
+      error: 'No payment link is available for this order.',
+      orderId,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'Could not resume payment',
+      orderId,
     };
   }
 }
