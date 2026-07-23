@@ -13,6 +13,7 @@ import { showToast } from '../toast';
 
 type Order = {
   id: string;
+  order_number?: number;
   created_at: string;
   status: string;
   currency: string;
@@ -214,10 +215,13 @@ export default function OrdersPage({
     return o.user ? 'Registered customer' : 'Guest';
   };
   const customerEmail = (o: Order) => o.customer_email || o.guest_email || '—';
-  const shortRef = (id: string) => String(id ?? '').split(':').pop() ?? id;
+  const shortRef = (order: Order) =>
+    order.order_number != null
+      ? String(order.order_number).padStart(4, '0')
+      : (String(order.id ?? '').split(':').pop() ?? order.id);
   const copyRef = async (o: Order) => {
     try {
-      await navigator.clipboard.writeText(shortRef(o.id));
+      await navigator.clipboard.writeText(shortRef(o));
       showToast('success', 'Order ID copied');
     } catch {
       showToast('error', 'Could not copy');
@@ -357,7 +361,7 @@ export default function OrdersPage({
                       title="Copy full order ID"
                       className="rounded-[6px] bg-[#F5F5F5] px-[8px] py-[3px] font-mono text-[12px] text-[#121212] transition-colors hover:bg-[#EBEBEB]"
                     >
-                      #{shortRef(order.id)}
+                      #{shortRef(order)}
                     </button>
                   </td>
                   <td className="td">{order.item_count ?? 0}</td>
@@ -627,7 +631,7 @@ export default function OrdersPage({
               Shipment details
             </h3>
             <p className="mt-1 text-[13px] text-[#8E8E93]">
-              Order #{shortRef(shippingModalOrder.id)} — this goes straight
+              Order #{shortRef(shippingModalOrder)} — this goes straight
               into the customer&apos;s shipped-order email.
             </p>
 
@@ -726,7 +730,7 @@ export default function OrdersPage({
               Delivery date
             </h3>
             <p className="mt-1 text-[13px] text-[#8E8E93]">
-              Order #{shortRef(deliveredModalOrder.id)} — this goes straight
+              Order #{shortRef(deliveredModalOrder)} — this goes straight
               into the customer&apos;s delivered-order email.
             </p>
 

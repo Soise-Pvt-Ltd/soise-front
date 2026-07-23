@@ -480,7 +480,7 @@ export default function ProductPageClient({
           <FadeIn direction="up" delay={0.1}>
             <div>
               <div className="mb-[24px] text-[16px] font-bold uppercase">Description</div>
-              <div className="text-[13px] font-medium">{product.description}</div>
+              <div className="whitespace-pre-wrap text-[13px] font-medium">{product.description}</div>
             </div>
           </FadeIn>
           {/* Frequently bought together — co-purchase recommendations. Hidden

@@ -44,6 +44,7 @@ interface OrderItem {
 
 interface Order {
   id: string;
+  order_number?: number;
   created_at: string;
   total: number;
   currency: string;
@@ -272,7 +273,10 @@ function OrderHistoryItem({
         <div className="w-full py-[3px]">
           <div className="mb-[16px] flex items-center justify-between">
             <div className="flex-wrap truncate font-medium uppercase">
-              Order #{(item.id ?? '').toString().substring(0, 7)}
+              Order #
+              {item.order_number != null
+                ? String(item.order_number).padStart(4, '0')
+                : (item.id ?? '').toString().substring(0, 7)}
             </div>
             <div className="font-medium">{formatPrice(item.total)}</div>
           </div>
