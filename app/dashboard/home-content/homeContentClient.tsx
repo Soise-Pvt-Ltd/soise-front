@@ -401,7 +401,10 @@ export default function HomeContentClient() {
                     className={`relative mt-3 w-full overflow-hidden rounded-[12px] border border-[#F0F0F0] ${
                       slot.shape === 'tall'
                         ? 'aspect-[3/4]'
-                        : slot.shape === 'logo'
+                        : // The logo slot only keeps its dark, letterboxed look
+                          // for the bundled default; a custom upload fills the
+                          // panel edge-to-edge just like it does on the site.
+                          slot.shape === 'logo' && !isCustom
                           ? 'aspect-video bg-[#040000]'
                           : 'aspect-video bg-[#F5F5F5]'
                     }`}
@@ -411,7 +414,9 @@ export default function HomeContentClient() {
                       src={preview}
                       alt={`${slot.label} preview`}
                       className={`h-full w-full ${
-                        slot.shape === 'logo' ? 'object-contain p-6' : 'object-cover'
+                        slot.shape === 'logo' && !isCustom
+                          ? 'object-contain p-6'
+                          : 'object-cover'
                       }`}
                     />
                     {isUploading && (
