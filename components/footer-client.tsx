@@ -2,15 +2,45 @@
 
 import { motion, useInView } from 'framer-motion';
 import Link from 'next/link';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ChevronRightIcon, InstagramIcon, TiktokIcon, XIcon } from './icons';
 import { siteConfig } from '@/lib/site-config';
+import { showToast } from '@/lib/toast-utils';
+import { subscribeNewsletter } from './newsletter-actions';
 
 export default function FooterClient() {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
   const bottomRef = useRef<HTMLDivElement>(null);
   const bottomInView = useInView(bottomRef, { once: true, amount: 0.3 });
+
+  const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    if (!email.trim()) {
+      showToast.error('Please enter your email address.');
+      return;
+    }
+    setSubmitting(true);
+    const toastId = showToast.loading('Adding you to the list…');
+    try {
+      const res = await subscribeNewsletter(email, consent);
+      showToast.dismiss(toastId);
+      if (res.success) {
+        showToast.success(res.message);
+        setEmail('');
+        setConsent(false);
+      } else {
+        showToast.error(res.message);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -133,42 +163,59 @@ export default function FooterClient() {
               ease: [0.22, 1, 0.36, 1],
             }}
           >
-            <div className="relative flex items-center">
-              <input
-                type="text"
-                aria-label="Email address"
-                className="h-[40px] w-full rounded-[10px] border border-[#AEAEB2] pr-[42px] pl-[10px] transition-all duration-300 focus:border-[#121212] focus:shadow-[0_0_0_1px_#121212]"
-                placeholder="EMAIL"
-              />
-              <motion.button
-                className="absolute top-1/2 right-[6px] flex size-[30px] -translate-y-1/2 items-center justify-center rounded-md bg-[#121212]"
-                whileHover={{
-                  scale: 1.1,
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                }}
-                whileTap={{ scale: 0.9 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 400,
-                  damping: 17,
-                }}
-              >
-                <ChevronRightIcon className="size-[14px]" />
-              </motion.button>
-            </div>
-
-            <div className="flex gap-x-[10px]">
-              <input
-                type="checkbox"
-                aria-label="I consent to the processing of my personal data for marketing purposes"
-                className="form-checkbox size-[17px]"
-              />
-              <div className="text-[13px] leading-[18px] text-[#2F2F2F]">
-                I have read the Privacy Policy and consent to the processing of
-                my personal data for marketing purposes (Newsletters, News and
-                Promotions)
+            <form onSubmit={handleSubscribe} className="space-y-[24px]" noValidate>
+              <div className="relative flex items-center">
+                <input
+                  type="email"
+                  aria-label="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={submitting}
+                  className="h-[40px] w-full rounded-[10px] border border-[#AEAEB2] pr-[42px] pl-[10px] transition-all duration-300 focus:border-[#121212] focus:shadow-[0_0_0_1px_#121212] disabled:opacity-60"
+                  placeholder="EMAIL"
+                />
+                <motion.button
+                  type="submit"
+                  disabled={submitting}
+                  aria-label="Subscribe to the mailing list"
+                  className="absolute top-1/2 right-[6px] flex size-[30px] -translate-y-1/2 items-center justify-center rounded-md bg-[#121212] disabled:opacity-60"
+                  whileHover={{
+                    scale: 1.1,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 400,
+                    damping: 17,
+                  }}
+                >
+                  {submitting ? (
+                    <span
+                      className="size-[14px] animate-spin rounded-full border-2 border-white/40 border-t-white"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <ChevronRightIcon className="size-[14px]" />
+                  )}
+                </motion.button>
               </div>
-            </div>
+
+              <div className="flex gap-x-[10px]">
+                <input
+                  type="checkbox"
+                  aria-label="I consent to the processing of my personal data for marketing purposes"
+                  checked={consent}
+                  onChange={(e) => setConsent(e.target.checked)}
+                  className="form-checkbox size-[17px]"
+                />
+                <div className="text-[13px] leading-[18px] text-[#2F2F2F]">
+                  I have read the Privacy Policy and consent to the processing of
+                  my personal data for marketing purposes (Newsletters, News and
+                  Promotions)
+                </div>
+              </div>
+            </form>
           </motion.div>
         </div>
       </div>
