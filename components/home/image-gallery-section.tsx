@@ -38,7 +38,7 @@ export default function ImageGallerySection({
             <motion.img
               src={src}
               alt={`Before Explore ${index + 1}`}
-              className="h-full w-full object-contain"
+              className="h-full w-full object-cover"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             />

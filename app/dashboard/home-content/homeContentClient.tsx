@@ -14,6 +14,48 @@ import {
   type HomepageTextSlot,
 } from './actions';
 
+// Downscale + re-encode large images client-side before upload. Full-width
+// hero/featured backgrounds are routinely >10MB, which the server's body-size
+// limit rejects with a 413 ("upload failed"); they also render as the raw
+// uploaded URL on the homepage, so shrinking them keeps that page fast. The
+// transparent-logo slot is skipped so its alpha channel survives.
+const MAX_UPLOAD_DIMENSION = 2560;
+const COMPRESS_THRESHOLD_BYTES = 1_500_000; // ~1.5MB — below this, not worth it
+
+async function compressImage(file: File): Promise<File> {
+  if (file.type === 'image/svg+xml' || file.size <= COMPRESS_THRESHOLD_BYTES) {
+    return file;
+  }
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  } catch {
+    return file; // Unsupported/corrupt — let the server validate it.
+  }
+  const scale = Math.min(
+    1,
+    MAX_UPLOAD_DIMENSION / Math.max(bitmap.width, bitmap.height),
+  );
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    bitmap.close();
+    return file;
+  }
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', 0.85),
+  );
+  if (!blob || blob.size >= file.size) return file;
+  const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+  return new File([blob], name, { type: 'image/jpeg' });
+}
+
 interface SlotDef {
   key: HomepageSlot;
   label: string;
@@ -209,8 +251,12 @@ export default function HomeContentClient() {
     }
     setUploading(slot);
     try {
+      // Keep the transparent logo untouched; compress everything else so large
+      // background photos don't trip the server's upload size limit.
+      const uploadFile =
+        slot === 'explore_collection' ? file : await compressImage(file);
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', uploadFile);
       const res = await fetch('/api/media/upload', {
         method: 'POST',
         body: formData,
