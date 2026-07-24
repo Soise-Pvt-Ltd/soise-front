@@ -55,6 +55,24 @@ export default function FooterClient() {
               </motion.div>
             </div>
 
+            <motion.a
+              href={siteConfig.social.swazChannel}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-fit items-center gap-x-[8px] rounded-[10px] bg-[#121212] px-[16px] py-[10px] text-[13px] text-white uppercase transition-opacity hover:opacity-90"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{
+                duration: 0.6,
+                delay: 0.15,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              Join the Swaz Channel
+            </motion.a>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}

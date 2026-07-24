@@ -18,5 +18,8 @@ export const siteConfig = {
     instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/soise.ng',
     tiktok: process.env.NEXT_PUBLIC_TIKTOK_URL ?? 'https://www.tiktok.com/@soise.ng',
     x: process.env.NEXT_PUBLIC_X_URL ?? 'https://x.com/soise_ng',
+    swazChannel:
+      process.env.NEXT_PUBLIC_SWAZ_CHANNEL_URL ??
+      'https://www.instagram.com/channel/AbYt4--G-jL1eyFC/',
   },
 } as const;
