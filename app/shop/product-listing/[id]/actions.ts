@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { apiForwardCookie } from '@/lib/tracking';
 
 type AddToBagSuccess = {
   success: true;
@@ -38,10 +39,16 @@ export async function addToBag(
       ? `${baseUrl}/cart/items`
       : `${baseUrl}/cart/items?session_id=${existingGuestId || ''}`;
 
+    // Forward the TikTok attribution cookies (_ttp / ttclid) alongside the
+    // auth cookie so the backend can attribute this AddToCart to the ad that
+    // drove the visit. Guests (every ad visitor) previously sent no Cookie
+    // header at all, so their conversions were invisible to TikTok.
+    const forwardCookie = await apiForwardCookie();
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+        ...(forwardCookie ? { Cookie: forwardCookie } : {}),
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },

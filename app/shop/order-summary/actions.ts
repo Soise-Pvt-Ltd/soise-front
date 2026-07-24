@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { apiForwardCookie } from '@/lib/tracking';
 
 interface ApplyCodeResponse {
   status?: boolean;
@@ -119,11 +120,16 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
       ? `${baseUrl}/cart/checkout`
       : `${baseUrl}/cart/checkout?session_id=${guestId || ''}`;
 
+    // Forward TikTok attribution cookies (_ttp / ttclid) so the backend can
+    // attribute this InitiateCheckout to the ad that drove the visit. Without
+    // this, guest checkouts reached TikTok with no click id.
+    const forwardCookie = await apiForwardCookie();
+
     const response = await fetch(checkoutUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+        ...(forwardCookie ? { Cookie: forwardCookie } : {}),
       },
       body: JSON.stringify({
         first_name: firstName,

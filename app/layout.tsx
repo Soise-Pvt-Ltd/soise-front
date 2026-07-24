@@ -4,6 +4,7 @@ import './globals.css';
 import Providers from './providers';
 import LuxeCursor from '@/components/cursor/LuxeCursor';
 import AmbientStatue from '@/components/brand/AmbientStatue';
+import TikTokClickId from '@/components/tracking/TikTokClickId';
 import {
   SITE_URL,
   SITE_NAME,
@@ -150,6 +151,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
       </head>
       <body className="font-body 4xl:mx-auto 4xl:max-w-screen-4x mx-auto max-w-screen-2xl antialiased">
         <Providers>{children}</Providers>
+        <TikTokClickId />
         <AmbientStatue />
         <LuxeCursor />
         <Analytics />

@@ -7,6 +7,7 @@ import ReferralPromoCard from '@/components/ReferralPromoCard';
 import RecommendationCarousel from '@/components/RecommendationCarousel';
 import { getRecommendations, getFeaturedProducts } from '@/app/shop/product-listing/[id]/recs-actions';
 import ClearPendingOrderMarker from './ClearPendingOrderMarker';
+import { apiForwardCookie } from '@/lib/tracking';
 
 export default async function ThankYouPage({
   searchParams,
@@ -24,6 +25,12 @@ export default async function ThankYouPage({
   let paymentConfirmed = false;
   if (orderRef) {
     try {
+      // Forward TikTok attribution cookies (_ttp / ttclid) so the Purchase
+      // event this verify call fires server-side is attributed to the ad that
+      // drove the sale. The webhook is the backup confirmation path, but it has
+      // no browser cookies, so this client verify is the only path that can
+      // attribute revenue to the ad.
+      const forwardCookie = await apiForwardCookie();
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL}/payments/verify`,
         {
@@ -31,6 +38,7 @@ export default async function ThankYouPage({
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            ...(forwardCookie ? { Cookie: forwardCookie } : {}),
           },
           body: JSON.stringify({ reference: orderRef }),
           cache: 'no-store',
