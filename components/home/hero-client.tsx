@@ -14,9 +14,9 @@ export default function HeroClient({ img, texts }: HeroClientProps) {
 
   return (
     <>
-      {/* Background image — fixed so it stays "glued" while page scrolls */}
+      {/* Background image */}
       <motion.div
-        className="absolute inset-0 bg-cover bg-fixed bg-center"
+        className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${img || '/hero.jpg'})` }}
         initial={{ scale: 1.1 }}
         animate={{ scale: 1 }}
