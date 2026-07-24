@@ -15,12 +15,9 @@ export default function HeroClient({ img, texts }: HeroClientProps) {
   return (
     <>
       {/* Background image */}
-      <motion.div
+      <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${img || '/hero.jpg'})` }}
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
       />
       {/* Gradient overlay for depth */}
       <motion.div
