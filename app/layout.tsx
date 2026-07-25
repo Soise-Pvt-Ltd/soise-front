@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Poppins, Molle, Playfair_Display } from 'next/font/google';
+import { Poppins, Instrument_Serif, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import LuxeCursor from '@/components/cursor/LuxeCursor';
@@ -22,9 +22,13 @@ const body_font = Poppins({
   variable: '--font-body',
 });
 
-const display_font = Molle({
+// Editorial display serif — sharp, high-fashion, internet-native. Replaces the
+// old script font (Molle), which read as playful/hand-made and undercut the
+// quiet-luxury positioning. One weight + italic keeps the payload small.
+const display_font = Instrument_Serif({
   subsets: ['latin'],
   weight: ['400'],
+  style: ['normal', 'italic'],
   variable: '--font-display',
 });
 
