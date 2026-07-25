@@ -17,11 +17,13 @@ export default function ImageGallerySection({
     <div ref={ref} className="bg-[#F5F5F5] py-23">
       {/* Mobile: edge-to-edge snap strip (was a fixed-width row that overflowed
           the viewport and dragged the whole page sideways). Desktop: 3-up grid.
-          These are raw, untrimmed renders on purpose — no Cloudinary crop, no
-          local pre-crop. object-contain guarantees the full render is always
-          visible with zero cropping, whatever its actual aspect ratio turns
-          out to be; a card shaped to *guess* that aspect and object-cover
-          was what caused every crop/zoom bug in this section so far. */}
+          Full renders, zero cropping -- object-contain guarantees that.
+          Cloudinary uploads get e_trim only (lib/cloudinary.ts): removes the
+          dead transparent canvas margin around the subject, keeps 100% of
+          the subject. Bundled /public fallbacks are pre-trimmed the same
+          way. Trimming the empty margin is not the same thing as cropping
+          into the subject -- that distinction is why this card is still
+          object-contain and not object-cover. */}
       <div className="scrollbar-hide flex snap-x snap-mandatory gap-[16px] overflow-x-auto px-[16px] md:grid md:snap-none md:grid-cols-3 md:gap-[48px] md:overflow-visible md:px-[32px] xl:gap-[64px] xl:px-[64px]">
         {images.map((src, index) => (
           <motion.div
