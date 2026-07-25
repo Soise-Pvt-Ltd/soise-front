@@ -4,7 +4,6 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { LikeIcon } from './icons';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
@@ -76,7 +75,12 @@ export default function SwiperCarouselClient({ items: products }: any) {
                   }}
                 >
                   {/* Photo(s) - swipable when the variant has more than one */}
-                  <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+                  <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-[#F5F5F5]">
+                    {item.isNew && (
+                      <span className="absolute top-3 left-3 z-10 text-[10px] tracking-[0.25em] text-[#121212] uppercase">
+                        New
+                      </span>
+                    )}
                     {(() => {
                       const rawMedia =
                         (item.sample_variants?.[0]?.media?.length &&
@@ -147,13 +151,15 @@ export default function SwiperCarouselClient({ items: products }: any) {
 
               {/* Product Info */}
               <motion.div
-                className="mt-[10px] text-[14px] md:text-base"
+                className="mt-[12px]"
                 initial={{ opacity: 0 }}
                 animate={isInView ? { opacity: 1 } : { opacity: 0 }}
                 transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
               >
-                <div className="truncate uppercase">{item.name}</div>
-                <div className="mt-1 font-medium">
+                <div className="truncate text-[12px] tracking-[0.08em] text-[#121212] uppercase">
+                  {item.name}
+                </div>
+                <div className="mt-1 text-[13px] font-medium text-[#3A3A3C]">
                   {(() => {
                     const { amount, isFrom } = getDisplayPrice(item);
                     return (

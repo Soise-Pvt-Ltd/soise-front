@@ -15,7 +15,7 @@ interface HeroProps {
 
 export default function Hero({ img, texts }: HeroProps) {
   return (
-    <div className="relative h-[607px] w-full overflow-hidden">
+    <div className="relative h-[86svh] min-h-[560px] w-full overflow-hidden">
       <HeroClient img={img} texts={texts} />
       <div className="relative z-10 h-full">
         <Nav />
