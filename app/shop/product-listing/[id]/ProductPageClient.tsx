@@ -10,6 +10,7 @@ import { showToast } from '@/lib/toast-utils';
 import { addToBag as addToBagAction } from './actions';
 import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/actions';
 import { notifyCartChanged } from '@/lib/cart-events';
+import { trackViewContent } from '@/lib/tracking-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
@@ -85,6 +86,23 @@ export default function ProductPageClient({
   const [isAdding, setIsAdding] = useState(false);
   const [wishlistPending, setWishlistPending] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Report ViewContent from the browser. This page is statically prerendered
+  // with ISR, so the backend's server-side ViewContent (GET /products/:id) is
+  // never reached by a real visitor — see lib/tracking-client.ts. Keyed on the
+  // product id so client-side navigation between products reports each one, and
+  // a re-render of the same product does not double-count.
+  const productId = product?.id;
+  const productName = product?.name;
+  const productPrice = product?.base_price;
+  useEffect(() => {
+    if (!productId) return;
+    trackViewContent({
+      id: productId,
+      name: productName ?? '',
+      base_price: productPrice ?? 0,
+    });
+  }, [productId, productName, productPrice]);
 
   // Mobile sticky buy bar: shown whenever the primary Add-to-bag button is
   // off-screen, so the purchase affordance never disappears while browsing
