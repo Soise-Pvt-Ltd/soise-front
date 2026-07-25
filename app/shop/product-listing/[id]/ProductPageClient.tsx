@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Footer from '@/components/footer';
 import { MinusIcon, PlusIcon, LikeIcon, LikeIconSolid } from '@/components/icons';
@@ -85,6 +85,22 @@ export default function ProductPageClient({
   const [isAdding, setIsAdding] = useState(false);
   const [wishlistPending, setWishlistPending] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Mobile sticky buy bar: shown whenever the primary Add-to-bag button is
+  // off-screen, so the purchase affordance never disappears while browsing
+  // the description or recommendation rows.
+  const buyButtonRef = useRef<HTMLButtonElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  useEffect(() => {
+    const el = buyButtonRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   const variants = useMemo(() => product?.sample_variants || [], [product?.sample_variants]);
 
@@ -285,7 +301,7 @@ export default function ProductPageClient({
 
             {/* Product Details Section */}
             <motion.div
-              className="px-[16px] md:col-span-2"
+              className="px-[16px] md:col-span-2 md:sticky md:top-24 md:self-start"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
@@ -301,16 +317,17 @@ export default function ProductPageClient({
               </motion.div>
 
               <motion.div
-                className="flex items-center justify-between text-[16px]"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
               >
-                <h1 className="font-bold uppercase">{product.name}</h1>
+                <h1 className="font-display text-[28px] leading-[1.1] text-[#121212] uppercase md:text-[32px]">
+                  {product.name}
+                </h1>
                 <AnimatePresence mode="wait">
                   <motion.p
                     key={currentPrice}
-                    className="text-[14px] font-medium"
+                    className="mt-2 text-[15px] font-medium text-[#3A3A3C]"
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
@@ -408,6 +425,7 @@ export default function ProductPageClient({
                   <div className="mb-2 text-[11px] text-[#AEAEB2] uppercase">Quantity</div>
                   <div className="flex h-[36px] w-[96px] items-center justify-between rounded-[4px] border border-[#AEAEB2] px-2">
                     <motion.button
+                      aria-label="Decrease quantity"
                       onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                       className="p-1"
                       whileHover={{ scale: 1.2 }}
@@ -428,6 +446,7 @@ export default function ProductPageClient({
                       </motion.span>
                     </AnimatePresence>
                     <motion.button
+                      aria-label="Increase quantity"
                       onClick={() =>
                         setQuantity((q) => Math.min(q + 1, maxQty ?? 999))
                       }
@@ -439,10 +458,20 @@ export default function ProductPageClient({
                     </motion.button>
                   </div>
                 </div>
+
+                {/* Quiet scarcity — only when it's genuinely true. */}
+                {typeof selectedVariant?.stock === 'number' &&
+                  selectedVariant.stock > 0 &&
+                  selectedVariant.stock <= 5 && (
+                    <p className="text-[11px] tracking-[0.15em] text-[#9A3412] uppercase">
+                      Only {selectedVariant.stock} left
+                    </p>
+                  )}
               </motion.div>
 
               <motion.button
-                className="btn_black !mt-[36px] !mb-[56px] disabled:cursor-not-allowed disabled:opacity-40"
+                ref={buyButtonRef}
+                className="btn_black !mt-[36px] disabled:cursor-not-allowed disabled:opacity-40"
                 onClick={addToBag}
                 disabled={isAdding || !selectedVariant || isOutOfStock}
                 whileHover={
@@ -459,6 +488,11 @@ export default function ProductPageClient({
                     ? 'Adding...'
                     : 'Add to bag'}
               </motion.button>
+
+              {/* Checkout confidence — factual, quiet, right where doubt lives. */}
+              <p className="mt-3 mb-[32px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
+                Secure checkout via Paystack&ensp;·&ensp;Ships across Nigeria
+              </p>
 
               <motion.button
                 type="button"
@@ -482,8 +516,8 @@ export default function ProductPageClient({
         <div className="mt-[56px] px-[16px]">
           <FadeIn direction="up" delay={0.1}>
             <div>
-              <div className="mb-[24px] text-[16px] font-bold uppercase">Description</div>
-              <div className="whitespace-pre-wrap text-[13px] font-medium">{product.description}</div>
+              <div className="font-display mb-[24px] text-[24px] text-[#121212]">Description</div>
+              <div className="max-w-[65ch] whitespace-pre-wrap text-[13px] leading-[1.9] text-[#3A3A3C]">{product.description}</div>
             </div>
           </FadeIn>
           {/* Frequently bought together — co-purchase recommendations. Hidden
@@ -493,9 +527,9 @@ export default function ProductPageClient({
               <FadeIn direction="up" delay={0.2}>
                 <h2
                   id="freq-bought-heading"
-                  className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]"
+                  className="font-display mt-[56px] mb-[24px] text-[24px] text-[#121212] md:mt-[112px]"
                 >
-                  frequently bought together
+                  Frequently bought together
                 </h2>
               </FadeIn>
               <SwiperCarouselClient items={frequentlyBoughtTogether} />
@@ -508,9 +542,9 @@ export default function ProductPageClient({
               <FadeIn direction="up" delay={0.2}>
                 <h2
                   id="similar-heading"
-                  className="mt-[56px] mb-[24px] text-[16px] font-bold uppercase md:mt-[112px]"
+                  className="font-display mt-[56px] mb-[24px] text-[24px] text-[#121212] md:mt-[112px]"
                 >
-                  products like this
+                  Products like this
                 </h2>
               </FadeIn>
               <SwiperCarouselClient items={similarProducts} />
@@ -518,6 +552,38 @@ export default function ProductPageClient({
           )}
         </div>
       </div>
+
+      {/* Mobile sticky buy bar — the purchase affordance follows the reader. */}
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div
+            className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E5E5E5] bg-white/95 px-[16px] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] backdrop-blur-md md:hidden"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] tracking-[0.08em] text-[#121212] uppercase">
+                  {product.name}
+                </p>
+                <p className="text-[13px] font-medium text-[#3A3A3C]">
+                  {formatPrice(currentPrice)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addToBag}
+                disabled={isAdding || !selectedVariant || isOutOfStock}
+                className="h-[46px] shrink-0 cursor-pointer rounded-[10px] bg-[#121212] px-6 text-[12px] font-bold text-white uppercase transition-all duration-300 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isOutOfStock ? 'Sold out' : isAdding ? 'Adding...' : 'Add to bag'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </>
