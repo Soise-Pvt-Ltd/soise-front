@@ -23,10 +23,16 @@ export function withCloudinaryTransform(url: string, transform: string): string 
  * around a tiny subject instead.
  *
  * e_trim crops server-side to the actual non-transparent content's bounding
- * box; c_fill,g_auto then reframes that trimmed subject to a sane portrait
- * aspect using content-aware gravity instead of a blind center-crop. The
- * component still applies its own object-cover on top, so exact target
- * dimensions here just need to be "close enough" for a clean source image.
+ * box (full standing figure, ~1:3). c_fill,g_auto then reframes that to
+ * ar_3:4 using content-aware gravity instead of a blind center-crop.
+ *
+ * IMPORTANT: 3:4 is not arbitrary — it must match the gallery card's own
+ * aspect ratio exactly (see aspect-[3/4] in image-gallery-section.tsx). If
+ * the card's CSS box is a different aspect, object-cover performs a SECOND,
+ * independent crop on top of this one, and the two compound into a much
+ * tighter crop than either alone (this shipped once already: a near-square
+ * card cropping an already-3:4 image down to a torso close-up). Change
+ * this ratio and the component's ratio together, never one alone.
  */
 export function cloudinaryGalleryFill(url: string): string {
   return withCloudinaryTransform(
