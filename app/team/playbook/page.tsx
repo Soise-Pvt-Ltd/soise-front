@@ -2,28 +2,18 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'The Creator Playbook',
   description:
     'How the Swaz Creator Program is built — the way we find, score, and invite the creators shaping how Nigeria wears SOISE. Our rubric, our principles, our standard.',
-  alternates: { canonical: '/team/playbook' },
-  openGraph: {
-    type: 'article',
-    title: 'The Swaz Creator Playbook — SOISE',
-    description:
-      'How we find, score, and invite the creators shaping how Nigeria wears SOISE.',
-    url: '/team/playbook',
-    images: ['/og-image.jpg'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'The Swaz Creator Playbook — SOISE',
-    description:
-      'How we find, score, and invite the creators shaping how Nigeria wears SOISE.',
-    images: ['/og-image.jpg'],
-  },
-};
+  path: '/team/playbook',
+  type: 'article',
+  ogTitle: 'The Swaz Creator Playbook — SOISE',
+  ogDescription:
+    'How we find, score, and invite the creators shaping how Nigeria wears SOISE.',
+});
 
 const SCORECARD = [
   {

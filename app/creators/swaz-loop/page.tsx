@@ -4,14 +4,23 @@ import CreatorNav from '@/components/creators/CreatorNav';
 import Footer from '@/components/footer';
 import { ArrowUpRightIcon, WalletIcon, TagIcon } from '@/components/icons';
 import FaqAccordion, { type FaqCategory } from './FaqAccordion';
+import { pageMetadata } from '@/lib/seo';
 
 export const runtime = 'nodejs';
 
-export const metadata: Metadata = {
-  title: 'The Swaz Loop — Earn with Soise',
+// The public, logged-out explainer for the Swaz Loop (middleware whitelists it
+// in PUBLIC_PATHS). This is the page that should rank for "earn with Soise" /
+// "creator commission Nigeria" — the signed-in /swaz-loop dashboard is
+// noindexed so the two don't compete.
+export const metadata: Metadata = pageMetadata({
+  title: 'The Swaz Loop — Earn with SOISE',
   description:
-    'How the Swaz Loop works for creators (cash commission) and everyday users (store credit). Share, sell, and earn with Soise.',
-};
+    'How the Swaz Loop works for creators (cash commission on every sale) and for everyday shoppers (store credit for referrals). Share, sell, and earn with SOISE in Nigeria.',
+  path: '/creators/swaz-loop',
+  ogTitle: 'The Swaz Loop — Earn with SOISE',
+  ogDescription:
+    'Cash commission for creators, store credit for everyone. How earning with SOISE works.',
+});
 
 const FAQ_CATEGORIES: FaqCategory[] = [
   {
@@ -92,9 +101,29 @@ const FAQ_CATEGORIES: FaqCategory[] = [
   },
 ];
 
+// FAQPage structured data, generated from the same array that renders the
+// accordion so the markup and the visible answers can never disagree (Google
+// penalises FAQ schema whose content isn't on the page). Eligible for the FAQ
+// rich result, which expands the SERP listing and lifts CTR.
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: FAQ_CATEGORIES.flatMap((category) =>
+    category.items.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a },
+    })),
+  ),
+};
+
 export default function CreatorSwazLoopPage() {
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <CreatorNav />
       <div className="mx-auto max-w-3xl px-[20px] py-[40px] md:py-[64px]">
         {/* Hero */}

@@ -2,7 +2,14 @@ import type { Metadata } from 'next';
 import ProductPageClient, { type Product } from './ProductPageClient';
 import { notFound } from 'next/navigation';
 import Nav from '@/components/home/nav/Nav';
-import { SITE_URL, SITE_NAME, productJsonLd, breadcrumbJsonLd } from '@/lib/seo';
+import {
+  SITE_NAME,
+  productJsonLd,
+  breadcrumbJsonLd,
+  pageMetadata,
+  NOINDEX,
+  snippet,
+} from '@/lib/seo';
 import {
   getRecommendations,
   getSimilarProducts,
@@ -52,7 +59,9 @@ export async function generateMetadata(props: {
   );
 
   if (!product) {
-    return { title: 'Product Not Found' };
+    // A 404 must never be indexable, and must never inherit the site's OG card
+    // — otherwise a dead product link still previews as a valid page.
+    return { title: 'Product Not Found', ...NOINDEX };
   }
 
   const image = product.primary_image || product.sample_variants?.[0]?.media?.[0]?.url;
@@ -61,30 +70,21 @@ export async function generateMetadata(props: {
   const title = collectionName
     ? `${product.name} — ${collectionName} | ${SITE_NAME}`
     : `${product.name} | ${SITE_NAME}`;
-  const description =
-    product.description?.slice(0, 155) ||
-    `Shop ${product.name}${collectionName ? ` from the ${collectionName} collection` : ''} at ${SITE_NAME}. Limited capsule drops and creator-led streetwear, shipped across Nigeria. Starting from NGN ${price?.toLocaleString()}.`;
+  // `snippet` collapses the CMS copy's \r\n paragraph breaks and cuts on a word
+  // boundary — a raw 155-char slice was ending snippets mid-word ("…from ligh").
+  const description = product.description
+    ? snippet(product.description)
+    : `Shop ${product.name}${collectionName ? ` from the ${collectionName} collection` : ''} at ${SITE_NAME}. Limited capsule drops and creator-led streetwear, shipped across Nigeria. Starting from NGN ${price?.toLocaleString()}.`;
 
-  return {
+  // `images: []` is NOT the same as omitting it — an empty array emits no
+  // og:image and blocks the fallback, so a product without a photo used to
+  // share as a bare link. Passing undefined lets the brand card take over.
+  return pageMetadata({
     title,
     description,
-    alternates: {
-      canonical: `/shop/product-listing/${slug}`,
-    },
-    openGraph: {
-      title,
-      description,
-      url: `${SITE_URL}/shop/product-listing/${slug}`,
-      type: 'website',
-      images: image ? [{ url: image, alt: product.name }] : [],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: image ? [image] : [],
-    },
-  };
+    path: `/shop/product-listing/${slug}`,
+    images: image ? [{ url: image, alt: product.name }] : undefined,
+  });
 }
 
 export default async function ProductPage(props: {

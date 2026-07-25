@@ -8,7 +8,7 @@ import FeaturedCollection, {
 import AfterHero from '@/components/home/after-hero';
 import Hero from '@/components/home/hero';
 import ImageGallerySection from '@/components/home/image-gallery-section';
-import { SITE_URL, SITE_NAME } from '@/lib/seo';
+import { SITE_URL, SITE_NAME, pageMetadata } from '@/lib/seo';
 
 // Serve a cached, statically-rendered homepage and revalidate the catalog data
 // in the background at most once a minute. Turns a per-request dynamic render
@@ -16,18 +16,20 @@ import { SITE_URL, SITE_NAME } from '@/lib/seo';
 // also a direct Core Web Vitals / SEO ranking win. Catalog edits appear within 60s.
 export const revalidate = 60;
 
-export const metadata: Metadata = {
+// NOTE: this previously hand-wrote `openGraph: { title, description, url }`.
+// Next.js REPLACES the root layout's `openGraph` block rather than merging it,
+// so that override silently stripped og:image, og:type, og:site_name and
+// og:locale from the single most-shared URL on the site — which is why
+// WhatsApp, Facebook, LinkedIn and iMessage rendered a bare text link with no
+// image. `pageMetadata` always emits the complete set.
+export const metadata: Metadata = pageMetadata({
   title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
   description:
     'Fashion moves on what you see the culture wearing. SOISE is creator-led streetwear — hoodies, tees, beanies and denim in considered, limited capsule drops, worn first by Nigeria\'s creatives. Say less, look more.',
-  alternates: { canonical: '/' },
-  openGraph: {
-    title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
-    description:
-      'Creator-led streetwear, worn first by the creatives shaping the culture. Considered capsule drops, deliberately limited — a stage for Nigeria\'s stylists, artists and designers. Say less, look more.',
-    url: SITE_URL,
-  },
-};
+  path: '/',
+  ogDescription:
+    'Creator-led streetwear, worn first by the creatives shaping the culture. Considered capsule drops, deliberately limited — a stage for Nigeria\'s stylists, artists and designers. Say less, look more.',
+});
 
 interface Product {
   id: string | number;

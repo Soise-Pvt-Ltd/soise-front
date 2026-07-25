@@ -1,4 +1,11 @@
 import { requireRole } from '@/lib/require-role';
+import type { Metadata } from 'next';
+import { NOINDEX } from '@/lib/seo';
+
+// robots.txt stops crawling, not indexing: a URL discovered from any inbound
+// link can still be indexed URL-only. An explicit noindex is the only thing
+// that keeps authenticated areas out of search results entirely.
+export const metadata: Metadata = NOINDEX;
 
 export const dynamic = 'force-dynamic';
 

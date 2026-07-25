@@ -2,27 +2,18 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { siteConfig } from '@/lib/site-config';
+import { pageMetadata } from '@/lib/seo';
 import { InstagramIcon, TiktokIcon, XIcon } from '@/components/icons';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'Contact Us',
   description:
-    'Get in touch with SOISE — questions about an order, the Swaz Creator Program, or anything else.',
-  alternates: { canonical: '/contact' },
-  openGraph: {
-    type: 'website',
-    title: 'Contact Us — SOISE',
-    description: 'Get in touch with SOISE.',
-    url: '/contact',
-    images: ['/og-image.jpg'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Contact Us — SOISE',
-    description: 'Get in touch with SOISE.',
-    images: ['/og-image.jpg'],
-  },
-};
+    'Get in touch with SOISE — questions about an order, delivery across Nigeria, returns, or the Swaz Creator Program. We reply within one business day.',
+  path: '/contact',
+  ogTitle: 'Contact SOISE',
+  ogDescription:
+    'Questions about an order, delivery, returns or the Swaz Creator Program? Get in touch with the SOISE team.',
+});
 
 const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 

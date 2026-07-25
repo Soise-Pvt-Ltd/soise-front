@@ -7,7 +7,7 @@ export const revalidate = 60;
 import type { Metadata } from 'next';
 import Nav from '@/components/home/nav/Nav';
 import ProductListingClient from './ProductListingClient';
-import { SITE_NAME, breadcrumbJsonLd } from '@/lib/seo';
+import { SITE_NAME, breadcrumbJsonLd, pageMetadata } from '@/lib/seo';
 
 export async function generateMetadata(props: {
   searchParams: Promise<{ collection?: string }>;
@@ -24,19 +24,8 @@ export async function generateMetadata(props: {
   const canonical = collectionName
     ? `/shop/product-listing?collection=${encodeURIComponent(collectionName)}`
     : '/shop/product-listing';
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
 
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: {
-      title,
-      description,
-      url: `${siteUrl}${canonical}`,
-      type: 'website',
-    },
-  };
+  return pageMetadata({ title, description, path: canonical });
 }
 
 export default async function ProductListingPage(props: {

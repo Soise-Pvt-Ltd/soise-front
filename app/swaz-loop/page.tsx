@@ -5,13 +5,18 @@ import Nav from '@/components/home/nav/Nav';
 import Footer from '@/components/footer';
 import { getMyReferral } from './actions';
 import SwazLoopClient from './SwazLoopClient';
+import { NOINDEX } from '@/lib/seo';
 
 export const runtime = 'nodejs';
 
+// This page is the signed-in Swaz Loop dashboard: it reads cookies and renders
+// the visitor's own referral link, so there is nothing stable for a crawler to
+// index. /creators/swaz-loop is the public explainer that ranks for the topic.
 export const metadata: Metadata = {
   title: 'Swaz Loop — Invite friends, earn store credit',
   description:
     'Share your link. When a friend places their first paid order, you earn 10% of it as store credit (up to ₦10,000). They get ₦1,000 off too.',
+  ...NOINDEX,
 };
 
 function CenteredMessage({

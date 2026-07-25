@@ -4,28 +4,17 @@ import Link from 'next/link';
 import Nav from '@/components/home/nav/Nav';
 import Footer from '@/components/footer';
 import StatueWatermark from '@/components/brand/StatueWatermark';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: 'About',
   description:
     'SOISE is creator-led streetwear built on a simple truth — people wear what they see the culture wearing. Considered capsule drops, quiet luxury, and a stage for the creatives shaping what comes next. Say less, look more.',
-  alternates: { canonical: '/about' },
-  openGraph: {
-    type: 'website',
-    title: 'About SOISE — Worn by the Culture',
-    description:
-      'Creator-led streetwear, considered capsule drops, and a stage for the creatives shaping the culture. Say less, look more.',
-    url: '/about',
-    images: ['/og-image.jpg'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'About SOISE — Worn by the Culture',
-    description:
-      'Creator-led streetwear and a stage for the creatives shaping the culture. Say less, look more.',
-    images: ['/og-image.jpg'],
-  },
-};
+  path: '/about',
+  ogTitle: 'About SOISE — Worn by the Culture',
+  ogDescription:
+    'Creator-led streetwear, considered capsule drops, and a stage for the creatives shaping the culture. Say less, look more.',
+});
 
 const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 

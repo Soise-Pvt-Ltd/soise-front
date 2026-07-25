@@ -8,6 +8,13 @@ import {
   CartItem,
   EnrichedCartItem,
 } from '@/components/home/nav/types';
+import type { Metadata } from 'next';
+import { NOINDEX } from '@/lib/seo';
+
+// Personalised / transactional page — no search value, and indexing it would
+// expose order-flow URLs. Explicit noindex (robots.txt alone can't prevent
+// URL-only indexing of a linked page).
+export const metadata: Metadata = NOINDEX;
 
 export default async function OrderHistoryPage() {
   const cookieStore = await cookies();

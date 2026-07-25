@@ -1,11 +1,17 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import StatueWatermark from '@/components/brand/StatueWatermark';
+import { NOINDEX } from '@/lib/seo';
 
+// A private invite landing page that duplicates the public /creators pitch.
+// Indexing it would split ranking signals between two near-identical pages and
+// publish a link that is supposed to feel personal — so /creators is the one
+// that competes in search, and this stays out.
 export const metadata: Metadata = {
   title: 'You’re Invited · Swaz Creator Program',
   description:
     'A private invitation to the Swaz Creator Program — your own code, commission on every sale, and early access to drops before anyone else.',
+  ...NOINDEX,
 };
 
 const BENEFITS = [

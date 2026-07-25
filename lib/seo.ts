@@ -3,9 +3,173 @@
  * Single source of truth for all search-engine-facing copy.
  */
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://soise.ng';
+import type { Metadata } from 'next';
+import { siteConfig } from './site-config';
+
+// Canonical host. Must match the host the site actually serves on (apex
+// redirects to www), otherwise og:url / canonical point at a 308 and social
+// scrapers resolve the wrong page.
+export const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.soise.ng';
 export const SITE_NAME = 'SOISE';
 export const SITE_TAGLINE = 'Wear the Culture';
+export const SITE_LOCALE = 'en_NG';
+
+/** X/Twitter handle, derived from the real profile URL in site-config. */
+export const X_HANDLE = `@${siteConfig.social.x.split('/').filter(Boolean).pop()}`;
+
+/**
+ * The social share card. Generated from the live homepage hero (see
+ * `app/og/route.tsx`) so a WhatsApp/iMessage/X preview shows the same image a
+ * visitor lands on. `/og-image.jpg` remains as a static, never-fails fallback.
+ */
+export const OG_IMAGE = {
+  url: '/og',
+  width: 1200,
+  height: 630,
+  type: 'image/png',
+  alt: `${SITE_NAME} — creator-led streetwear from Nigeria`,
+} as const;
+
+/**
+ * Turn arbitrary CMS body copy into a clean meta description.
+ *
+ * Raw product copy arrives with `\r\n` paragraph breaks and gets hard-sliced
+ * mid-word ("…engineered from ligh"), which is what both the SERP snippet and
+ * the WhatsApp preview then show. This collapses whitespace and cuts on a word
+ * boundary just under Google's ~155-character display limit.
+ */
+export function snippet(text: string, max = 155): string {
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[,;:.\-—]$/, '')}…`;
+}
+
+/**
+ * Ask Cloudinary for a landscape share card instead of the raw asset.
+ *
+ * Product photography is portrait or square and can be several megabytes.
+ * Handed to a scraper as-is it renders as a small cropped thumbnail (and
+ * WhatsApp simply drops anything oversized). This returns a 1200×630,
+ * subject-aware, ~100KB JPEG. Non-Cloudinary URLs pass through untouched.
+ */
+export function cloudinaryCard(url: string): string {
+  const marker = '/image/upload/';
+  const i = url.indexOf(marker);
+  if (i === -1) return url;
+  const transform =
+    'c_fill,g_auto,w_1200,h_630,q_80,f_jpg,fl_progressive:none';
+  return `${url.slice(0, i + marker.length)}${transform}/${url.slice(i + marker.length)}`;
+}
+
+/**
+ * Build a COMPLETE Open Graph block.
+ *
+ * Next.js does NOT deep-merge `openGraph` between a layout and a page: a page
+ * that sets `openGraph: { title }` REPLACES the layout's entire block, silently
+ * dropping `images`, `type`, `siteName` and `locale`. That is what left the
+ * homepage — the most-shared URL on the site — with no `og:image` at all, so
+ * WhatsApp/Facebook/LinkedIn rendered a bare text link.
+ *
+ * Every page must go through this helper so the required tags can never be
+ * dropped by an override again.
+ */
+export function buildOpenGraph(opts: {
+  title: string;
+  description: string;
+  path: string;
+  images?: { url: string; alt?: string }[];
+  type?: 'website' | 'article';
+}): Metadata['openGraph'] {
+  return {
+    type: opts.type ?? 'website',
+    siteName: SITE_NAME,
+    locale: SITE_LOCALE,
+    url: `${SITE_URL}${opts.path}`,
+    title: opts.title,
+    description: opts.description,
+    images: opts.images?.length
+      ? opts.images.map((img) => {
+          const url = cloudinaryCard(img.url);
+          // Only declare dimensions we actually know. Cloudinary-transformed
+          // URLs are exactly 1200×630; for anything else, asserting those
+          // numbers would make scrapers lay the card out wrong.
+          const isCard = url !== img.url;
+          return {
+            url,
+            ...(isCard ? { width: 1200, height: 630 } : {}),
+            alt: img.alt ?? opts.title,
+          };
+        })
+      : [OG_IMAGE],
+  };
+}
+
+/** Build a complete Twitter/X card block. Same replacement hazard as above. */
+export function buildTwitter(opts: {
+  title: string;
+  description: string;
+  images?: string[];
+}): Metadata['twitter'] {
+  return {
+    card: 'summary_large_image',
+    site: X_HANDLE,
+    creator: X_HANDLE,
+    title: opts.title,
+    description: opts.description,
+    images: opts.images?.length ? opts.images : [OG_IMAGE.url],
+  };
+}
+
+/**
+ * Convenience wrapper for a standard public page — guarantees canonical +
+ * complete OG + complete Twitter from a single description.
+ */
+export function pageMetadata(opts: {
+  title: string;
+  description: string;
+  path: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  images?: { url: string; alt?: string }[];
+  type?: 'website' | 'article';
+}): Metadata {
+  const ogTitle = opts.ogTitle ?? opts.title;
+  const ogDescription = opts.ogDescription ?? opts.description;
+  return {
+    title: opts.title,
+    description: opts.description,
+    alternates: { canonical: opts.path },
+    openGraph: buildOpenGraph({
+      title: ogTitle,
+      description: ogDescription,
+      path: opts.path,
+      images: opts.images,
+      type: opts.type,
+    }),
+    twitter: buildTwitter({
+      title: ogTitle,
+      description: ogDescription,
+      images: opts.images?.map((i) => cloudinaryCard(i.url)),
+    }),
+  };
+}
+
+/**
+ * Metadata for pages that must never appear in search: authenticated areas,
+ * transactional flows and personalised pages. robots.txt only stops crawling —
+ * a URL discovered via a link can still be indexed URL-only without this.
+ */
+export const NOINDEX: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false },
+  },
+};
 
 export const DEFAULT_DESCRIPTION =
   'Creator-led streetwear in considered, limited capsule drops — worn first by the creatives shaping the culture. Quiet luxury, deliberately scarce; a stage for Nigeria\'s stylists, artists and designers. Say less, look more.';
@@ -123,16 +287,24 @@ export const ORG_JSONLD = {
         height: 1000,
         caption: 'SOISE — Say less, look more.',
       },
-      image: `${SITE_URL}/og-image.jpg`,
+      image: `${SITE_URL}${OG_IMAGE.url}`,
       slogan: SITE_TAGLINE,
+      description: DEFAULT_DESCRIPTION,
+      // Must be the REAL profile URLs — Google uses sameAs to bind the site to
+      // its social entities. Pointing at handles the brand doesn't own breaks
+      // that link (and the knowledge panel). Sourced from site-config so the
+      // footer links and the structured data can never drift apart.
       sameAs: [
-        'https://instagram.com/soise',
-        'https://tiktok.com/@soise',
-        'https://x.com/soise',
+        siteConfig.social.instagram,
+        siteConfig.social.tiktok,
+        siteConfig.social.x,
       ],
+      // Legal entity — SOISE PVT. LTD, CAC RC 8413888.
+      legalName: 'SOISE PVT. LTD',
+      identifier: siteConfig.registrationNumber,
       contactPoint: {
         '@type': 'ContactPoint',
-        email: 'hello@soise.ng',
+        email: siteConfig.supportEmail,
         contactType: 'customer service',
         areaServed: 'NG',
         availableLanguage: 'English',

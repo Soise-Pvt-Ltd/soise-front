@@ -4,6 +4,13 @@ import Link from 'next/link';
 import { requireRole } from '@/lib/require-role';
 import { fetchProspectStats, fetchProspects } from './prospects/actions';
 
+import type { Metadata } from 'next';
+import { NOINDEX } from '@/lib/seo';
+// Personalised / transactional page — no search value, and indexing it would
+// expose order-flow URLs. Explicit noindex (robots.txt alone can't prevent
+// URL-only indexing of a linked page).
+export const metadata: Metadata = NOINDEX;
+
 const STAGES = [
   { key: 'sourced', label: 'Sourced' },
   { key: 'contacted', label: 'Contacted' },
