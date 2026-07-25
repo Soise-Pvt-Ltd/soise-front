@@ -26,7 +26,7 @@ export default function FooterClient() {
       return;
     }
     setSubmitting(true);
-    const toastId = showToast.loading('Adding you to the list…');
+    const toastId = showToast.loading('Sending your confirmation link…');
     try {
       const res = await subscribeNewsletter(email, consent);
       showToast.dismiss(toastId);

@@ -8,10 +8,11 @@ export interface SubscribeResult {
 }
 
 /**
- * Add an email to the SOISE mailing list. Talks to the backend
- * `POST /newsletter/subscribe`, which stores the subscriber and syncs them
- * into the Resend audience. Never throws — always returns a result the footer
- * can turn into a toast.
+ * Start a double opt-in signup for the SOISE mailing list. Talks to the backend
+ * `POST /newsletter/subscribe`, which validates the address (syntax + MX),
+ * stores it as pending and emails a confirmation link. The address only reaches
+ * the Resend audience once that link is clicked. Never throws — always returns
+ * a result the footer can turn into a toast.
  */
 export async function subscribeNewsletter(
   email: string,
@@ -33,7 +34,7 @@ export async function subscribeNewsletter(
     if (res.ok && json?.status !== false) {
       return {
         success: true,
-        message: json?.message || "You're on the list! Enjoy 10% off your first order.",
+        message: json?.message || 'Almost there — check your inbox and confirm your email.',
       };
     }
     return {
