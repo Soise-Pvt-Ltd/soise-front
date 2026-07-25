@@ -9,6 +9,7 @@ import AfterHero from '@/components/home/after-hero';
 import Hero from '@/components/home/hero';
 import ImageGallerySection from '@/components/home/image-gallery-section';
 import { SITE_URL, SITE_NAME, pageMetadata } from '@/lib/seo';
+import { cloudinaryGalleryFill } from '@/lib/cloudinary';
 
 // Serve a cached, statically-rendered homepage and revalidate the catalog data
 // in the background at most once a minute. Turns a per-request dynamic render
@@ -139,9 +140,15 @@ export default async function Home() {
   const category2Products = products.slice(5, 10);
 
   const images = [
-    homeImages.gallery_1 || '/before-explore-collection-1.png',
-    homeImages.gallery_2 || '/before-explore-collection-2.png',
-    homeImages.gallery_3 || '/before-explore-collection-3.png',
+    homeImages.gallery_1
+      ? cloudinaryGalleryFill(homeImages.gallery_1)
+      : '/before-explore-collection-1.png',
+    homeImages.gallery_2
+      ? cloudinaryGalleryFill(homeImages.gallery_2)
+      : '/before-explore-collection-2.png',
+    homeImages.gallery_3
+      ? cloudinaryGalleryFill(homeImages.gallery_3)
+      : '/before-explore-collection-3.png',
   ];
 
   // ItemList JSON-LD — gives Google a structured product carousel
