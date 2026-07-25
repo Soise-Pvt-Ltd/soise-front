@@ -83,12 +83,16 @@ export async function fetchCreators(
   };
 }
 
-export async function fetchTiers() {
+export async function fetchTiers(): Promise<{
+  success: boolean;
+  data: unknown[];
+  error?: string;
+}> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
 
   if (!accessToken) {
-    return { success: false, data: [] };
+    return { success: false, data: [], error: 'Your session expired. Sign in again.' };
   }
 
   const res = await fetch(`${BASE_URL}/tiers/admin/tiers`, {
@@ -102,7 +106,8 @@ export async function fetchTiers() {
   });
 
   if (!res.ok) {
-    return { success: false, data: [] };
+    // Surface it — an empty dropdown with no explanation reads as "no tiers exist".
+    return { success: false, data: [], error: `Could not load tiers (${res.status})` };
   }
 
   const json = await res.json();

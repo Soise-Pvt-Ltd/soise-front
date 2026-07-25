@@ -18,6 +18,7 @@ import { showToast } from '../toast';
 type Creator = {
   id: string;
   creator_code_id?: string;
+  creator_code?: string;
   full_name: string;
   avatar: string;
   tier: {
@@ -70,6 +71,7 @@ export default function CreatorsClient({
   const [showTierModal, setShowTierModal] = useState(false);
   const [tierView, setTierView] = useState<'list' | 'create' | 'edit'>('list');
   const [tiers, setTiers] = useState<any[]>([]);
+  const [isTiersLoading, setIsTiersLoading] = useState(false);
   const [tierName, setTierName] = useState('');
   const [tierLevel, setTierLevel] = useState('');
   const [tierDescription, setTierDescription] = useState('');
@@ -99,6 +101,9 @@ export default function CreatorsClient({
       showToast('success', `Code updated to ${res.data?.code ?? 'new code'}`);
       setCodeModalCreator(null);
       setCodeInput('');
+      // Without this the table keeps showing the old code until the admin
+      // reloads — the one mutation here that used to leave a stale row.
+      refresh();
     } else {
       showToast('error', res.error || 'Could not change code');
     }
@@ -202,10 +207,37 @@ export default function CreatorsClient({
     setIsLoading(false);
   };
 
-  const loadTiers = async () => {
-    const result = await fetchTiers();
+  // Re-fetch the page the admin is currently looking at. Mutations used to call
+  // handleFilterChange(), which snaps back to offset 0 and silently throws away
+  // the admin's place in the list.
+  const refresh = async () => {
+    const id = ++fetchIdRef.current;
+    setIsLoading(true);
+    const result = await fetchServerData(
+      pagination.limit,
+      pagination.offset,
+      searchValue,
+      selectedPeriod,
+    );
+    if (id !== fetchIdRef.current) return;
     if (result.success) {
-      setTiers(result.data);
+      setCreators(result.data);
+      setPagination(result.meta.pagination);
+    }
+    setIsLoading(false);
+  };
+
+  const loadTiers = async () => {
+    setIsTiersLoading(true);
+    try {
+      const result = await fetchTiers();
+      if (result.success) {
+        setTiers(result.data);
+      } else {
+        showToast('error', result.error || 'Could not load tiers');
+      }
+    } finally {
+      setIsTiersLoading(false);
     }
   };
 
@@ -230,7 +262,7 @@ export default function CreatorsClient({
       if (result.success) {
         showToast('success', 'Tier created successfully');
         closeTierModal();
-        handleFilterChange();
+        refresh();
       } else {
         showToast('error', `Failed to create tier: ${result.error || 'Unknown error'}`);
       }
@@ -257,7 +289,7 @@ export default function CreatorsClient({
       if (result.success) {
         showToast('success', 'Tier updated successfully');
         closeTierModal();
-        handleFilterChange();
+        refresh();
       } else {
         showToast('error', `Failed to update tier: ${result.error || 'Unknown error'}`);
       }
@@ -281,7 +313,7 @@ export default function CreatorsClient({
         setShowAssignModal(false);
         setAssigningCreator(null);
         setSelectedTierIdForAssign('');
-        handleFilterChange();
+        refresh();
       } else {
         showToast('error', result.error || 'Failed to assign tier');
       }
@@ -305,6 +337,9 @@ export default function CreatorsClient({
             </th>
             <th scope="col" className="thead">
               Tier
+            </th>
+            <th scope="col" className="thead">
+              Code
             </th>
             <th scope="col" className="thead">
               Email
@@ -367,6 +402,15 @@ export default function CreatorsClient({
                     )}
                   </div>
                 </td>
+                <td className="td">
+                  {creator.creator_code ? (
+                    <span className="font-mono tracking-wide text-[#121212]">
+                      {creator.creator_code}
+                    </span>
+                  ) : (
+                    <span className="text-[#8E8E93]">—</span>
+                  )}
+                </td>
                 <td className="td">{creator.email}</td>
                 <td className="td">₦{creator.sales_generated}</td>
                 <td className="td">
@@ -413,7 +457,7 @@ export default function CreatorsClient({
                           setActiveActionMenuId(null);
                         }}
                       >
-                        Change code
+                        {creator.creator_code_id ? 'Change code' : 'Assign code'}
                       </button>
                     </RowActionMenu>
                   </div>
@@ -615,7 +659,11 @@ export default function CreatorsClient({
         >
           <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg font-medium">Change creator code</h2>
+              <h2 className="text-lg font-medium">
+                {codeModalCreator.creator_code_id
+                  ? 'Change creator code'
+                  : 'Assign creator code'}
+              </h2>
               <button
                 onClick={() => setCodeModalCreator(null)}
                 aria-label="Close"
@@ -629,7 +677,18 @@ export default function CreatorsClient({
               <span className="font-medium text-[#121212]">
                 {codeModalCreator.full_name}
               </span>
-              , or randomize one. This overrides the 24-hour limit.
+              , or randomize one.{' '}
+              {codeModalCreator.creator_code_id ? (
+                <>
+                  Current code:{' '}
+                  <span className="font-mono text-[#121212]">
+                    {codeModalCreator.creator_code}
+                  </span>
+                  . This overrides the 24-hour limit.
+                </>
+              ) : (
+                'This creator has no code yet — one will be created.'
+              )}
             </p>
             <input
               value={codeInput}
@@ -686,7 +745,8 @@ export default function CreatorsClient({
             </p>
             {!assigningCreator.creator_code_id ? (
               <p className="text-sm text-red-500">
-                This creator has no active creator code and cannot be assigned a tier.
+                This creator has no active creator code, so there is nothing to
+                attach a tier to. Use &ldquo;Assign code&rdquo; on the row first.
               </p>
             ) : (
               <>
@@ -694,14 +754,26 @@ export default function CreatorsClient({
                   value={selectedTierIdForAssign}
                   onChange={(e) => setSelectedTierIdForAssign(e.target.value)}
                   className="adminsolid w-full"
+                  disabled={isTiersLoading || tiers.length === 0}
                 >
-                  <option value="">Select a tier</option>
+                  <option value="">
+                    {isTiersLoading
+                      ? 'Loading tiers…'
+                      : tiers.length === 0
+                        ? 'No tiers exist yet'
+                        : 'Select a tier'}
+                  </option>
                   {tiers.map((tier) => (
                     <option key={tier.id} value={tier.id}>
                       {tier.name} (Level {tier.level})
                     </option>
                   ))}
                 </select>
+                {!isTiersLoading && tiers.length === 0 && (
+                  <p className="mt-2 text-sm text-[#8E8E93]">
+                    Close this and use the “Tier” button to create one.
+                  </p>
+                )}
                 <div className="mt-4 flex gap-3">
                   <button
                     onClick={() => {
