@@ -111,7 +111,9 @@ export default function CreatorsClient({
     if (res.success) {
       showToast(
         'success',
-        `${revokingCreator.full_name || 'Creator'} can no longer earn — they can re-apply any time`,
+        res.data?.role_demoted === false && revokingCreator.role !== 'creator'
+          ? `Code revoked — ${revokingCreator.full_name || 'they'} keeps ${revokingCreator.role} access`
+          : `${revokingCreator.full_name || 'Creator'} can no longer earn — they can re-apply any time`,
       );
       setRevokingCreator(null);
       setRevokeReason('');
@@ -496,21 +498,18 @@ export default function CreatorsClient({
                       >
                         {creator.creator_code_id ? 'Change code' : 'Assign code'}
                       </button>
-                      {/* The backend refuses to revoke an admin, so don't
-                          offer it — an action that can only ever error is
-                          worse than no action. */}
-                      {creator.role !== 'admin' && (
-                        <button
-                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                          onClick={() => {
-                            setRevokingCreator(creator);
-                            setRevokeReason('');
-                            setActiveActionMenuId(null);
-                          }}
-                        >
-                          Revoke creator status
-                        </button>
-                      )}
+                      <button
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          setRevokingCreator(creator);
+                          setRevokeReason('');
+                          setActiveActionMenuId(null);
+                        }}
+                      >
+                        {creator.role === 'creator'
+                          ? 'Revoke creator status'
+                          : 'Revoke code'}
+                      </button>
                     </RowActionMenu>
                   </div>
                 </td>
@@ -776,7 +775,11 @@ export default function CreatorsClient({
         >
           <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg font-medium">Revoke creator status</h2>
+              <h2 className="text-lg font-medium">
+                {revokingCreator.role === 'creator'
+                  ? 'Revoke creator status'
+                  : 'Revoke code'}
+              </h2>
               <button
                 onClick={() => setRevokingCreator(null)}
                 aria-label="Close"
@@ -803,6 +806,17 @@ export default function CreatorsClient({
               )}{' '}
               Any balance they&rsquo;ve already earned stays payable, and they
               can apply again at any time with no waiting period.
+              {revokingCreator.role && revokingCreator.role !== 'creator' && (
+                <>
+                  {' '}
+                  Their{' '}
+                  <span className="font-medium text-[#121212] capitalize">
+                    {revokingCreator.role}
+                  </span>{' '}
+                  account and its access are not affected — only the code is
+                  revoked.
+                </>
+              )}
             </p>
             <input
               value={revokeReason}
