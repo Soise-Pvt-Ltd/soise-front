@@ -23,12 +23,17 @@ export default function ImageGallerySection({
           the subject. Bundled /public fallbacks are pre-trimmed the same
           way. Trimming the empty margin is not the same thing as cropping
           into the subject -- that distinction is why this card is still
-          object-contain and not object-cover. */}
+          object-contain and not object-cover.
+          The cards deliberately have NO background of their own. The renders
+          are transparent PNGs and e_trim leaves a ~1:3 subject inside a 3:4
+          card, so any card colour shows as a large slab either side of the
+          model -- which is what the black #0B0B0C was doing. Letting the
+          section's #F5F5F5 show through reads as a cutout instead. */}
       <div className="scrollbar-hide flex snap-x snap-mandatory gap-[16px] overflow-x-auto px-[16px] md:grid md:snap-none md:grid-cols-3 md:gap-[48px] md:overflow-visible md:px-[32px] xl:gap-[64px] xl:px-[64px]">
         {images.map((src, index) => (
           <motion.div
             key={index}
-            className="relative aspect-[3/4] w-[72vw] flex-shrink-0 snap-center overflow-hidden bg-[#0B0B0C] md:w-auto"
+            className="relative aspect-[3/4] w-[72vw] flex-shrink-0 snap-center overflow-hidden md:w-auto"
             initial={{ opacity: 0, y: 60, scale: 0.95 }}
             animate={
               isInView
