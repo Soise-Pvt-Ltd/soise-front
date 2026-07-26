@@ -49,12 +49,22 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
     revenue: { total: 0, percentage_change: 0, ...(d.revenue || {}) },
     payout: { total: 0, percentage_change: 0, ...(d.payout || {}) },
     products: { total: 0, active: 0, ...(d.products || {}) },
-    items_sold: { current_month: 0, percentage_change: 0, ...(d.items_sold || {}) },
+    items_sold: {
+      current_month: 0,
+      current_week: 0,
+      current_year: 0,
+      percentage_change: 0,
+      ...(d.items_sold || {}),
+    },
     users: { total: 0, new_this_month: 0, creators: 0, ...(d.users || {}) },
     monthly_sales: Array.isArray(d.monthly_sales) ? d.monthly_sales : [],
     latest_orders: Array.isArray(d.latest_orders) ? d.latest_orders : [],
     top_products: Array.isArray(d.top_products) ? d.top_products : [],
   };
+
+  const [itemsPeriod, setItemsPeriod] = useState<'week' | 'month' | 'year'>(
+    'month',
+  );
 
   const doughnutData = {
     labels: ['Social Media', 'Creators', 'Ads', 'Purchased'],
@@ -310,13 +320,29 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
             </div>
             <div className="flex items-center justify-between">
               <div className="text-[22px] font-medium">
-                {getCount(data.items_sold.current_month)}
+                {getCount(
+                  itemsPeriod === 'week'
+                    ? data.items_sold.current_week
+                    : itemsPeriod === 'year'
+                      ? data.items_sold.current_year
+                      : data.items_sold.current_month,
+                )}
               </div>
               <div>
-                <select className="cursor-pointer rounded-[6px] border-2 border-[#F6F6F6] px-2 py-1 pr-8 text-[13px] text-[#AFB1B0] outline-none">
-                  <option>Weekly</option>
-                  <option>Monthly</option>
-                  <option>Yearly</option>
+                {/* This select had no value, no onChange and no state behind
+                    it — it rendered the 30-day figure whichever period was
+                    chosen. */}
+                <select
+                  value={itemsPeriod}
+                  onChange={(e) =>
+                    setItemsPeriod(e.target.value as 'week' | 'month' | 'year')
+                  }
+                  aria-label="Items sold period"
+                  className="cursor-pointer rounded-[6px] border-2 border-[#F6F6F6] px-2 py-1 pr-8 text-[13px] text-[#AFB1B0] outline-none"
+                >
+                  <option value="week">Weekly</option>
+                  <option value="month">Monthly</option>
+                  <option value="year">Yearly</option>
                 </select>
               </div>
             </div>
