@@ -64,7 +64,7 @@ export default function OrdersPage({
     period: 'All Time',
     hasFetched: (initialData?.length ?? 0) > 0,
   });
-  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   // "Shipped" needs real tracking info before the customer email goes out --
@@ -382,16 +382,12 @@ export default function OrdersPage({
                   <td className="td">
                     <div className="relative">
                       <button
-                        ref={
-                          activeActionMenuId === order.id
-                            ? actionMenuTriggerRef
-                            : undefined
-                        }
-                        onClick={() =>
-                          setActiveActionMenuId(
-                            activeActionMenuId === order.id ? null : order.id,
-                          )
-                        }
+                        onClick={(e) => {
+                          const next =
+                            activeActionMenuId === order.id ? null : order.id;
+                          setMenuAnchorEl(next ? e.currentTarget : null);
+                          setActiveActionMenuId(next);
+                        }}
                         className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB] disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isUpdating}
                         aria-label={`Actions for order ${order.id}`}
@@ -401,8 +397,11 @@ export default function OrdersPage({
                       </button>
                       <RowActionMenu
                         open={activeActionMenuId === order.id}
-                        onClose={() => setActiveActionMenuId(null)}
-                        anchorRef={actionMenuTriggerRef}
+                        onClose={() => {
+                          setActiveActionMenuId(null);
+                          setMenuAnchorEl(null);
+                        }}
+                        anchorEl={menuAnchorEl}
                         widthClass="w-40"
                       >
                         {(validTransitions[order.status] || []).length > 0 ? (

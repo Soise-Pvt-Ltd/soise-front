@@ -582,7 +582,7 @@ export default function ProductsPage({
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
-  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
 
   // List controls
   const searchParams = useSearchParams();
@@ -1770,18 +1770,17 @@ export default function ProductsPage({
                           <td className="td">
                             <div className="relative" data-menu-root>
                               <motion.button
-                                ref={
-                                  activeActionMenuId === product.id
-                                    ? actionMenuTriggerRef
-                                    : undefined
-                                }
-                                onClick={() =>
-                                  setActiveActionMenuId(
+                                onClick={(e) => {
+                                  const next =
                                     activeActionMenuId === product.id
                                       ? null
-                                      : product.id,
-                                  )
-                                }
+                                      : product.id;
+                                  // Capture the trigger element here rather
+                                  // than relying on a conditionally-attached
+                                  // shared ref.
+                                  setMenuAnchorEl(next ? e.currentTarget : null);
+                                  setActiveActionMenuId(next);
+                                }}
                                 whileTap={{ scale: 0.88 }}
                                 aria-haspopup="menu"
                                 aria-expanded={activeActionMenuId === product.id}
@@ -1792,8 +1791,11 @@ export default function ProductsPage({
                               </motion.button>
                               <RowActionMenu
                                 open={activeActionMenuId === product.id}
-                                onClose={() => setActiveActionMenuId(null)}
-                                anchorRef={actionMenuTriggerRef}
+                                onClose={() => {
+                                  setActiveActionMenuId(null);
+                                  setMenuAnchorEl(null);
+                                }}
+                                anchorEl={menuAnchorEl}
                               >
                                 <button
                                   role="menuitem"

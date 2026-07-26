@@ -73,7 +73,7 @@ export default function CreatorsClient({
     period: 'All Time',
     hasFetched: (initialData?.length ?? 0) > 0,
   });
-  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const [showTierModal, setShowTierModal] = useState(false);
@@ -455,16 +455,12 @@ export default function CreatorsClient({
                 <td className="td">
                   <div className="relative">
                     <button
-                      ref={
-                        activeActionMenuId === creator.id
-                          ? actionMenuTriggerRef
-                          : undefined
-                      }
-                      onClick={() =>
-                        setActiveActionMenuId(
-                          activeActionMenuId === creator.id ? null : creator.id,
-                        )
-                      }
+                      onClick={(e) => {
+                        const next =
+                          activeActionMenuId === creator.id ? null : creator.id;
+                        setMenuAnchorEl(next ? e.currentTarget : null);
+                        setActiveActionMenuId(next);
+                      }}
                       className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                       aria-label={`Actions for ${creator.full_name}`}
                       aria-expanded={activeActionMenuId === creator.id}
@@ -473,8 +469,11 @@ export default function CreatorsClient({
                     </button>
                     <RowActionMenu
                       open={activeActionMenuId === creator.id}
-                      onClose={() => setActiveActionMenuId(null)}
-                      anchorRef={actionMenuTriggerRef}
+                      onClose={() => {
+                        setActiveActionMenuId(null);
+                        setMenuAnchorEl(null);
+                      }}
+                      anchorEl={menuAnchorEl}
                     >
                       <button
                         className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"

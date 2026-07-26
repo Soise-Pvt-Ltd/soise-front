@@ -63,7 +63,7 @@ export default function UsersPage({
     role: 'All',
     hasFetched: (initialData?.length ?? 0) > 0,
   });
-  const actionMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   const roleClasses: Record<string, string> = {
@@ -315,16 +315,12 @@ export default function UsersPage({
                     <td className="td">
                       <div className="relative">
                         <button
-                          ref={
-                            activeActionMenuId === user.id
-                              ? actionMenuTriggerRef
-                              : undefined
-                          }
-                          onClick={() =>
-                            setActiveActionMenuId(
-                              activeActionMenuId === user.id ? null : user.id,
-                            )
-                          }
+                          onClick={(e) => {
+                            const next =
+                              activeActionMenuId === user.id ? null : user.id;
+                            setMenuAnchorEl(next ? e.currentTarget : null);
+                            setActiveActionMenuId(next);
+                          }}
                           className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
                           aria-label={`Actions for ${user.first_name} ${user.last_name}`}
                           aria-expanded={activeActionMenuId === user.id}
@@ -333,8 +329,11 @@ export default function UsersPage({
                         </button>
                         <RowActionMenu
                           open={activeActionMenuId === user.id}
-                          onClose={() => setActiveActionMenuId(null)}
-                          anchorRef={actionMenuTriggerRef}
+                          onClose={() => {
+                            setActiveActionMenuId(null);
+                            setMenuAnchorEl(null);
+                          }}
+                          anchorEl={menuAnchorEl}
                         >
                           <button
                             onClick={() => {
