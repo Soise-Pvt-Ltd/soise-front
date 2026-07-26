@@ -26,6 +26,7 @@ type Creator = {
   id: string;
   creator_code_id?: string;
   creator_code?: string;
+  role?: string;
   full_name: string;
   avatar: string;
   tier: {
@@ -400,6 +401,11 @@ export default function CreatorsClient({
                       className="size-8 rounded-full object-cover"
                     />
                     <div className="truncate">{creator.full_name}</div>
+                    {creator.role && creator.role !== 'creator' && (
+                      <span className="shrink-0 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[11px] font-medium text-[#8E8E93] capitalize">
+                        {creator.role}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="td">
@@ -490,16 +496,21 @@ export default function CreatorsClient({
                       >
                         {creator.creator_code_id ? 'Change code' : 'Assign code'}
                       </button>
-                      <button
-                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          setRevokingCreator(creator);
-                          setRevokeReason('');
-                          setActiveActionMenuId(null);
-                        }}
-                      >
-                        Revoke creator status
-                      </button>
+                      {/* The backend refuses to revoke an admin, so don't
+                          offer it — an action that can only ever error is
+                          worse than no action. */}
+                      {creator.role !== 'admin' && (
+                        <button
+                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            setRevokingCreator(creator);
+                            setRevokeReason('');
+                            setActiveActionMenuId(null);
+                          }}
+                        >
+                          Revoke creator status
+                        </button>
+                      )}
                     </RowActionMenu>
                   </div>
                 </td>
