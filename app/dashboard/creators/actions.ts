@@ -215,6 +215,40 @@ export async function changeCreatorCodeAdmin(userId: string, customCode?: string
   return { success: true, data: json?.data ?? json };
 }
 
+/**
+ * Strip a creator of their code and creator status. They keep any wallet
+ * balance already earned, and can apply again from scratch with no cooldown.
+ */
+export async function revokeCreatorAdmin(userId: string, reason?: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+  if (!userId) return { success: false, error: 'Missing creator user id' };
+
+  const res = await fetch(
+    `${BASE_URL}/admin/creators/${encodeURIComponent(userId)}/revoke`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(reason?.trim() ? { reason: reason.trim() } : {}),
+    },
+  );
+
+  const json = await res.json().catch(() => null);
+  if (!res.ok)
+    return {
+      success: false,
+      error: json?.message || 'Failed to revoke creator status',
+    };
+  return { success: true, data: json?.data ?? json };
+}
+
 export async function updateTier(formData: FormData) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;

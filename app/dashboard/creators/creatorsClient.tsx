@@ -12,7 +12,14 @@ import {
   AdminPlusCircleIcon,
   CloseIconTags,
 } from '@/components/icons';
-import { fetchTiers, createTier, updateTier, assignTierToCreator, changeCreatorCodeAdmin } from './actions';
+import {
+  fetchTiers,
+  createTier,
+  updateTier,
+  assignTierToCreator,
+  changeCreatorCodeAdmin,
+  revokeCreatorAdmin,
+} from './actions';
 import { showToast } from '../toast';
 
 type Creator = {
@@ -88,6 +95,30 @@ export default function CreatorsClient({
   const [codeModalCreator, setCodeModalCreator] = useState<Creator | null>(null);
   const [codeInput, setCodeInput] = useState('');
   const [isChangingCode, setIsChangingCode] = useState(false);
+
+  // Revoke creator status. Confirmed explicitly because it deactivates their
+  // code and demotes the account -- not something to fire off a menu click.
+  const [revokingCreator, setRevokingCreator] = useState<Creator | null>(null);
+  const [revokeReason, setRevokeReason] = useState('');
+  const [isRevoking, setIsRevoking] = useState(false);
+
+  const submitRevoke = async () => {
+    if (!revokingCreator || isRevoking) return;
+    setIsRevoking(true);
+    const res = await revokeCreatorAdmin(revokingCreator.id, revokeReason);
+    setIsRevoking(false);
+    if (res.success) {
+      showToast(
+        'success',
+        `${revokingCreator.full_name || 'Creator'} can no longer earn — they can re-apply any time`,
+      );
+      setRevokingCreator(null);
+      setRevokeReason('');
+      refresh();
+    } else {
+      showToast('error', res.error || 'Could not revoke creator status');
+    }
+  };
 
   const submitCodeChange = async (randomize: boolean) => {
     if (!codeModalCreator || isChangingCode) return;
@@ -459,6 +490,16 @@ export default function CreatorsClient({
                       >
                         {creator.creator_code_id ? 'Change code' : 'Assign code'}
                       </button>
+                      <button
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          setRevokingCreator(creator);
+                          setRevokeReason('');
+                          setActiveActionMenuId(null);
+                        }}
+                      >
+                        Revoke creator status
+                      </button>
                     </RowActionMenu>
                   </div>
                 </td>
@@ -710,6 +751,67 @@ export default function CreatorsClient({
                 className="rounded-[10px] border border-[#0072BB] px-4 py-2.5 text-[14px] font-medium text-[#0072BB] transition-colors hover:bg-[#0072BB] hover:text-white disabled:opacity-40"
               >
                 Randomize
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {revokingCreator && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-lg font-medium">Revoke creator status</h2>
+              <button
+                onClick={() => setRevokingCreator(null)}
+                aria-label="Close"
+                className="text-[#8E8E93] hover:text-[#121212]"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="mb-3 text-[13px] text-[#8E8E93]">
+              <span className="font-medium text-[#121212]">
+                {revokingCreator.full_name}
+              </span>
+              {revokingCreator.creator_code ? (
+                <>
+                  {' '}
+                  loses{' '}
+                  <span className="font-mono text-[#121212]">
+                    {revokingCreator.creator_code}
+                  </span>{' '}
+                  and stops earning immediately.
+                </>
+              ) : (
+                ' loses creator status immediately.'
+              )}{' '}
+              Any balance they&rsquo;ve already earned stays payable, and they
+              can apply again at any time with no waiting period.
+            </p>
+            <input
+              value={revokeReason}
+              onChange={(e) => setRevokeReason(e.target.value)}
+              placeholder="Reason (optional, internal)"
+              className="mb-4 w-full rounded-[10px] border border-[#E5E5E5] px-3 py-2 text-[14px] outline-none focus:border-[#0072BB]"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRevokingCreator(null)}
+                className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitRevoke}
+                disabled={isRevoking}
+                className="flex-1 rounded-[10px] bg-red-600 px-4 py-2.5 text-[14px] font-medium text-white hover:bg-red-700 disabled:opacity-40"
+              >
+                {isRevoking ? 'Revoking…' : 'Revoke'}
               </button>
             </div>
           </div>
