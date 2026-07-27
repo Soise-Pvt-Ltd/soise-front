@@ -140,7 +140,7 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
           }}
         />
       </head>
-      <body className="font-body 4xl:mx-auto 4xl:max-w-screen-4x mx-auto max-w-screen-2xl antialiased">
+      <body className="font-body shell-max antialiased">
         <Providers>{children}</Providers>
         <TikTokClickId />
         <AmbientStatue />

@@ -45,7 +45,7 @@ export default function WishlistClient({ items }: { items: WishlistItem[] }) {
   return (
     <>
       <Toaster position="top-center" />
-      <div className="mx-auto md:max-w-7xl">
+      <div className="page-shell">
         <div className="px-[16px] pt-[8px] pb-[35px]">
           <motion.div
             className="font-display text-[22px] capitalize"
@@ -76,7 +76,7 @@ export default function WishlistClient({ items }: { items: WishlistItem[] }) {
           </div>
         ) : (
           <div className="pb-[50px]">
-            <div className="grid grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 4xl:grid-cols-6">
               <AnimatePresence>
                 {list.map((product, index) => {
                   const href = product.slug

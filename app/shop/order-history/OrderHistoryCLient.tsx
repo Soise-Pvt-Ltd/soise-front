@@ -80,7 +80,7 @@ export default function OrderHistoryClient({
 
   return (
     <>
-      <div className="mx-auto px-[16px] md:max-w-7xl">
+      <div className="page-shell px-[16px]">
         <div className="pb-[50px]">
           <motion.div
             className="flex justify-between pt-[12px] pb-[36px]"

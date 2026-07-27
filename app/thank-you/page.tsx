@@ -83,7 +83,7 @@ export default async function ThankYouPage({
       </header>
 
       {/* Main Content */}
-      <main className="relative -mt-[400px] z-20 mx-auto max-w-screen-2xl px-4 pb-20" role="main">
+      <main className="shell-max relative -mt-[400px] z-20 px-4 pb-20" role="main">
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             {/* Success Icon */}

@@ -17,11 +17,15 @@ export default function AmbientStatue() {
   if (EXCLUDE.some((p) => path.startsWith(p))) return null;
 
   return (
-    <StatueWatermark
-      tone="dark"
-      width={400}
-      opacity={0.035}
-      className="fixed right-[-90px] bottom-[-40px] z-0 hidden lg:block"
-    />
+    // Anchored to the content column, not the viewport — on a wide monitor a
+    // viewport-fixed watermark strands itself out in the empty side rail.
+    <div className="shell-max pointer-events-none fixed inset-0 z-0 hidden lg:block">
+      <StatueWatermark
+        tone="dark"
+        width={400}
+        opacity={0.035}
+        className="absolute right-[-90px] bottom-[-40px]"
+      />
+    </div>
   );
 }

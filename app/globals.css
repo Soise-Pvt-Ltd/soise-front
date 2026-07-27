@@ -4,6 +4,23 @@
 @theme {
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
+
+  /* Tailwind ships nothing above 2xl (96rem/1536px), so every layout decision
+     silently stopped there and wide monitors got dead margin instead of page. */
+  --breakpoint-3xl: 100rem; /* 1600px */
+  --breakpoint-4xl: 120rem; /* 1920px */
+}
+
+/* Full page frame — the outer bound of the site. Grows past 1536px instead of
+   parking the whole storefront in a centred column with empty rails. */
+@utility shell-max {
+  @apply mx-auto max-w-screen-2xl 3xl:max-w-screen-3xl 4xl:max-w-screen-4xl;
+}
+
+/* Content column inside the frame. Still caps line length, but keeps a
+   proportional gutter on wide displays rather than a fixed 1280px. */
+@utility page-shell {
+  @apply mx-auto max-w-7xl 3xl:max-w-[88rem] 4xl:max-w-[104rem];
 }
 
 html {

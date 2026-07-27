@@ -152,7 +152,7 @@ export default function UserClient({ account }: { account?: any }) {
   return (
     <>
       <Toaster position="top-center" richColors />
-      <div className="profile mx-auto space-y-[38px] px-[16px] md:max-w-7xl">
+      <div className="profile page-shell space-y-[38px] px-[16px]">
         {/* Account Management */}
         <motion.div custom={0} variants={sectionVariant} initial="hidden" animate="show">
           <h1 className="text-[16px] uppercase">Account Management</h1>

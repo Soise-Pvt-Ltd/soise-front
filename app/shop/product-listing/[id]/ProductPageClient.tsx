@@ -252,7 +252,7 @@ export default function ProductPageClient({
   return (
     <>
       <Toaster position="bottom-center" richColors />
-      <div className="mx-auto md:max-w-7xl">
+      <div className="page-shell">
         <div>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-5">
             {/* Image Gallery Section */}

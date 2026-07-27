@@ -39,7 +39,7 @@ export default function CreatorDashboard({
     return (
       <div className="min-h-screen bg-[#f9f9f9]">
         <CreatorNav balance={0} />
-        <div className="mx-auto max-w-7xl px-[16px] py-[80px] text-center text-[16px] text-[#8E8E93]">
+        <div className="page-shell px-[16px] py-[80px] text-center text-[16px] text-[#8E8E93]">
           We couldn&apos;t load your creator dashboard. Please refresh, or sign
           in again.
         </div>
@@ -211,7 +211,7 @@ export default function CreatorDashboard({
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
       <CreatorNav balance={balance} />
-      <div className="mx-auto flex flex-col gap-[16px] px-[16px] py-[24px] md:max-w-7xl md:px-0">
+      <div className="page-shell flex flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
         {/* Payout setup CTA */}
         {needsPayoutSetup && (
           <Link

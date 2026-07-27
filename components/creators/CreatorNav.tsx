@@ -89,7 +89,7 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
       <div className="sticky top-0 z-40 px-[12px] pt-[12px] md:px-[20px] md:pt-[16px]">
         <nav
           aria-label="Creator portal"
-          className="relative mx-auto flex max-w-7xl items-center justify-between gap-x-3 overflow-hidden rounded-[18px] border border-white/50 bg-white/55 px-[14px] py-[10px] shadow-[0_8px_32px_rgba(15,23,42,0.10)] ring-1 ring-white/40 backdrop-blur-xl backdrop-saturate-150 md:px-[20px]"
+          className="page-shell relative flex items-center justify-between gap-x-3 overflow-hidden rounded-[18px] border border-white/50 bg-white/55 px-[14px] py-[10px] shadow-[0_8px_32px_rgba(15,23,42,0.10)] ring-1 ring-white/40 backdrop-blur-xl backdrop-saturate-150 md:px-[20px]"
         >
           {/* Refractive top highlight — a soft inset gradient hairline that gives
               the glass its "lit edge" without hurting legibility. */}

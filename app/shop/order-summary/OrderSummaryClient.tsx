@@ -465,7 +465,7 @@ export default function OrderSummaryClient({
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto flex flex-col gap-y-3 border-b border-[#F0C36B] bg-[#FFF8EC] px-[20px] py-[16px] normal-case md:max-w-7xl md:flex-row md:items-center md:justify-between"
+          className="page-shell flex flex-col gap-y-3 border-b border-[#F0C36B] bg-[#FFF8EC] px-[20px] py-[16px] normal-case md:flex-row md:items-center md:justify-between"
         >
           <div className="flex-1">
             <p className="text-[13px] font-semibold text-[#121212]">
@@ -486,7 +486,7 @@ export default function OrderSummaryClient({
           </button>
         </motion.div>
       )}
-      <div className="mx-auto md:max-w-7xl">
+      <div className="page-shell">
         <div className="pb-[50px]">
           <motion.div
             className="flex items-center justify-between border-y border-[#AEAEB2] px-[20px] py-[25px]"

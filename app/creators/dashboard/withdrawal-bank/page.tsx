@@ -118,7 +118,7 @@ export default function WithdrawalBankPage() {
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
       <CreatorNav balance={balance} />
-      <div className="mx-auto flex flex-col gap-[16px] px-[16px] py-[24px] md:max-w-7xl md:px-0">
+      <div className="page-shell flex flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
         <div
           className="flex items-center gap-x-2 hover:cursor-pointer"
           onClick={() => router.back()}

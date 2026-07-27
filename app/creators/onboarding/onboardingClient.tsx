@@ -67,7 +67,7 @@ export default function OnBoardingCreatorClient({
     <div className="min-h-screen bg-[#F4F1EA] text-[#14110E]">
       <Toaster position="top-center" richColors />
       <CreatorNav />
-      <div className="profile mx-auto mt-[24px] mb-[119px] px-[16px] md:max-w-7xl">
+      <div className="profile page-shell mt-[24px] mb-[119px] px-[16px]">
         {step === 1 && (
           <div className="mt-[96px] flex flex-col items-center justify-center text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#9C6F2E] text-[22px] text-[#9C6F2E]">

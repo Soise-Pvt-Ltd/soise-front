@@ -101,7 +101,7 @@ export default function ProductListingClient({
 
   return (
     <>
-      <div className="mx-auto md:max-w-7xl">
+      <div className="page-shell">
         <div className="pb-[33px]">
           <div className="px-[18px] md:px-0">
             <motion.div
@@ -163,7 +163,7 @@ export default function ProductListingClient({
             </div>
           ) : (
             <motion.div
-              className="grid grid-cols-1 grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4"
+              className="grid grid-cols-2 gap-x-[10px] gap-y-[24px] md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 4xl:grid-cols-6"
               key={activeCollection}
             >
               <AnimatePresence>
