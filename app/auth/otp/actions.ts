@@ -1,5 +1,6 @@
 'use server';
 import { cookies } from 'next/headers';
+import { migrateGuestCart } from '@/lib/cart-migrate';
 
 interface VerifyOtpPayload {
   code: string;
@@ -67,6 +68,9 @@ export async function verifyOtp(payload: VerifyOtpPayload) {
         sameSite: 'lax',
       });
     }
+
+    // Verifying email signs the shopper in, so the guest bag has to come along.
+    await migrateGuestCart();
 
     return { success: true, data };
   } catch (err) {

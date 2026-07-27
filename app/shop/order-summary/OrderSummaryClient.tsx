@@ -17,7 +17,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
-import { PENDING_ORDER_KEY } from './pending-order';
+import {
+  readPendingOrder,
+  writePendingOrder,
+  clearPendingOrder,
+} from './pending-order';
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -58,6 +62,12 @@ interface OrderSummaryClientProps {
   prefillFirstName?: string;
   prefillLastName?: string;
   prefillPhone?: string;
+  // The cart fetch failed (vs. genuinely empty) — render a retry, not an
+  // empty-bag message that reads as "we lost your cart".
+  cartLoadFailed?: boolean;
+  // Only set when the backend actually charges shipping. Shown as its own line
+  // so the total here matches what Paystack collects.
+  shippingFee?: number | null;
 }
 
 const NIGERIAN_STATES = [
@@ -111,6 +121,8 @@ export default function OrderSummaryClient({
   prefillFirstName = '',
   prefillLastName = '',
   prefillPhone = '',
+  cartLoadFailed = false,
+  shippingFee = null,
 }: OrderSummaryClientProps) {
   const { formatPrice, currency } = useCurrency();
   const router = useRouter();
@@ -162,9 +174,14 @@ export default function OrderSummaryClient({
   // Store credit can cover at most the current total. Only preview a reduction
   // when the toggle is on and the user actually has a balance.
   const hasStoreCredit = isLoggedIn && storeCredit > 0;
+  // Shipping is charged on top of the goods, so it has to land in the total
+  // before credit is applied — otherwise credit could appear to cover an
+  // amount that Paystack then exceeds.
+  const shipping = typeof shippingFee === 'number' && shippingFee > 0 ? shippingFee : 0;
+  const totalWithShipping = total + shipping;
   const creditApplied =
-    useStoreCredit && hasStoreCredit ? Math.min(storeCredit, total) : 0;
-  const totalAfterCredit = Math.max(total - creditApplied, 0);
+    useStoreCredit && hasStoreCredit ? Math.min(storeCredit, totalWithShipping) : 0;
+  const totalAfterCredit = Math.max(totalWithShipping - creditApplied, 0);
 
   async function handleRemoveItem(itemId: string) {
     if (!itemId || removingId) return;
@@ -220,7 +237,7 @@ export default function OrderSummaryClient({
       // dropped redirect is recoverable on reload (see the resume banner).
       if (result?.orderId) {
         try {
-          sessionStorage.setItem(PENDING_ORDER_KEY, result.orderId);
+          writePendingOrder(result.orderId);
         } catch {
           /* private mode / storage disabled — banner just won't show */
         }
@@ -276,12 +293,8 @@ export default function OrderSummaryClient({
       // A thrown checkoutAction means we never learned the order id — but the
       // order may well have committed before the response dropped. Surface any
       // pending order recorded on a previous attempt so payment stays reachable.
-      try {
-        const stored = sessionStorage.getItem(PENDING_ORDER_KEY);
-        if (stored) setPendingOrderId(stored);
-      } catch {
-        /* storage disabled */
-      }
+      const stored = readPendingOrder();
+      if (stored) setPendingOrderId(stored);
       console.error('Checkout error:', err);
     }
   }
@@ -290,12 +303,8 @@ export default function OrderSummaryClient({
   // tab closed, shopper bailed on Paystack), offer to resume it. Verifying it's
   // still payable happens server-side when they tap the banner.
   useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem(PENDING_ORDER_KEY);
-      if (stored) setPendingOrderId(stored);
-    } catch {
-      /* storage disabled */
-    }
+    const stored = readPendingOrder();
+    if (stored) setPendingOrderId(stored);
   }, []);
 
   async function handleResume() {
@@ -308,21 +317,13 @@ export default function OrderSummaryClient({
       if (resumed?.success && resumed.redirectUrl) {
         // If it already settled, resume returns /thank-you — clear the marker.
         if (resumed.redirectUrl === '/thank-you') {
-          try {
-            sessionStorage.removeItem(PENDING_ORDER_KEY);
-          } catch {
-            /* storage disabled */
-          }
+          clearPendingOrder();
         }
         window.location.href = resumed.redirectUrl;
         return;
       }
       // Order no longer awaiting payment (paid elsewhere / cancelled): drop it.
-      try {
-        sessionStorage.removeItem(PENDING_ORDER_KEY);
-      } catch {
-        /* storage disabled */
-      }
+      clearPendingOrder();
       setPendingOrderId(null);
       showToast.error(
         resumed?.error || 'This order can no longer be paid for.',
@@ -541,6 +542,30 @@ export default function OrderSummaryClient({
                       removing={removingId === item.id}
                     />
                   ))
+                ) : cartLoadFailed ? (
+                  // Never tell a shopper their bag is empty when we simply
+                  // failed to read it — that reads as "my cart is gone" and
+                  // they leave instead of retrying.
+                  <motion.div
+                    className="flex flex-col items-center justify-center gap-y-[12px] text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <p className="text-[14px] text-[#121212]">
+                      We couldn&apos;t load your bag just now.
+                    </p>
+                    <p className="text-[12px] text-[#8E8E93] normal-case">
+                      Nothing has been lost — your items are still saved.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => router.refresh()}
+                      className="mt-[4px] rounded-[10px] bg-[#121212] px-[20px] py-[10px] text-[12px] font-bold text-white uppercase transition-all duration-300 ease-out hover:bg-[#2a2a2a]"
+                    >
+                      Try again
+                    </button>
+                  </motion.div>
                 ) : (
                   <motion.div
                     className="flex-col items-center justify-center text-center text-xl text-[#8E8E93]"
@@ -813,6 +838,12 @@ export default function OrderSummaryClient({
                 </motion.div>
               )}
             </AnimatePresence>
+            {shipping > 0 && (
+              <div className="flex items-center justify-between pt-[8px] text-[12px] text-[#8E8E93]">
+                <div>Shipping</div>
+                <div>{formatPrice(shipping)}</div>
+              </div>
+            )}
             <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
               <div>Total</div>
               <AnimatePresence mode="wait">
@@ -934,16 +965,9 @@ export default function OrderSummaryClient({
 
                   {!usingSavedAddress && (
                     <>
-                      <select
-                        name="country"
-                        className="solid"
-                        autoComplete="country-name"
-                        defaultValue="Nigeria"
-                        required
-                      >
-                        <option value="">Select Country</option>
-                        <option value="Nigeria">Nigeria</option>
-                      </select>
+                      {/* Country was a required <select> with exactly one
+                          option. Nothing to choose, so it was pure friction —
+                          checkoutAction now supplies Nigeria server-side. */}
                       <input
                         type="text"
                         name="address"
@@ -973,15 +997,17 @@ export default function OrderSummaryClient({
                           </option>
                         ))}
                       </select>
+                      {/* Optional: Nigerian postal codes are barely used, and
+                          most shoppers can't produce one. Requiring it was a
+                          field with no answer sitting between them and paying. */}
                       <input
                         type="text"
                         name="zipCode"
                         inputMode="numeric"
                         pattern="[0-9]*"
-                        placeholder="ZIP code"
+                        placeholder="ZIP code (optional)"
                         className="solid"
                         autoComplete="postal-code"
-                        required
                         onInput={(e: any) => {
                           e.target.value = e.target.value.replace(/\D/g, '');
                         }}

@@ -3,7 +3,11 @@ import type { NextRequest } from 'next/server';
 
 // Define protected paths outside the function to avoid recreating the array on every request
 const USER_PROTECTED_PATHS = [
-  '/shop/checkout',
+  // NB: checkout itself is deliberately absent. It lives at
+  // /shop/order-summary and must stay reachable for guests — gating it behind
+  // a login is the single most expensive thing you can do to conversion.
+  // (There was a '/shop/checkout' entry here guarding a route that has never
+  // existed.)
   '/shop/wishlist',
   '/creators',
   '/shop/order-history',

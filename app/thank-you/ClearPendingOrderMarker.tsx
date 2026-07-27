@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { PENDING_ORDER_KEY } from '@/app/shop/order-summary/pending-order';
+import { clearPendingOrder } from '@/app/shop/order-summary/pending-order';
 
 /**
  * Clears the pending-order resume marker once payment is confirmed, so the
@@ -10,11 +10,7 @@ import { PENDING_ORDER_KEY } from '@/app/shop/order-summary/pending-order';
  */
 export default function ClearPendingOrderMarker() {
   useEffect(() => {
-    try {
-      sessionStorage.removeItem(PENDING_ORDER_KEY);
-    } catch {
-      /* storage disabled — nothing to clear */
-    }
+    clearPendingOrder();
   }, []);
   return null;
 }

@@ -1,6 +1,7 @@
 'use server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { migrateGuestCart } from '@/lib/cart-migrate';
 
 export async function login(
   email: string,
@@ -96,6 +97,10 @@ export async function login(
           maxAge: 60 * 60 * 24,
         });
       }
+
+      // Carry whatever they put in the bag as a guest onto the account —
+      // signing in mid-checkout must not look like the cart was emptied.
+      await migrateGuestCart(accessToken);
     }
   } catch (err) {
     if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) {

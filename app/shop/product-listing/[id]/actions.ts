@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { apiForwardCookie } from '@/lib/tracking';
+import { migrateGuestCart } from '@/lib/cart-migrate';
 
 type AddToBagSuccess = {
   success: true;
@@ -81,50 +82,18 @@ export async function addToBag(
       });
     }
 
-    // Handle migration: If user just logged in and has items in guest cart
+    // Handle migration: If user just logged in and has items in guest cart.
+    // Shared with every auth entry point (see lib/cart-migrate) so the bag
+    // follows the shopper regardless of where they signed in.
     if (accessToken && existingGuestId) {
-      const guestCartRes = await fetch(
-        `${baseUrl}/cart/items?session_id=${existingGuestId}`,
-        {
-          headers: { Accept: 'application/json' },
-          cache: 'no-store',
-        },
-      );
-
-      if (guestCartRes.ok) {
-        const guestCartData = await guestCartRes
-          .json()
-          .catch(() => ({}) as any);
-        const hasItems =
-          Array.isArray(guestCartData?.data) && guestCartData.data.length > 0;
-
-        if (hasItems) {
-          const migrateRes = await fetch(
-            `${baseUrl}/cart/migrate?session_id=${encodeURIComponent(existingGuestId)}`,
-            {
-              method: 'POST',
-              headers: {
-                Cookie: `access_token=${accessToken}`,
-                Accept: 'application/json',
-              },
-              cache: 'no-store',
-            },
-          );
-
-          if (migrateRes.ok) {
-            cookieStore.delete('soise_guestId');
-            // Nav badge refresh is handled client-side via notifyCartChanged();
-            // no revalidatePath here (it would purge the whole ISR cache).
-            return { success: true, sessionId: undefined, shouldMigrate: true };
-          } else {
-            const errBody = await migrateRes.text().catch(() => '');
-            console.error('Migration error:', errBody);
-            // optionally: decide whether to keep or delete the cookie here
-          }
-        }
+      const migrated = await migrateGuestCart(accessToken);
+      if (migrated) {
+        // Nav badge refresh is handled client-side via notifyCartChanged();
+        // no revalidatePath here (it would purge the whole ISR cache).
+        return { success: true, sessionId: undefined, shouldMigrate: true };
       }
 
-      // No items or fetch failed — clean up guest cookie anyway
+      // Nothing to move (or the move failed) — clean up guest cookie anyway
       cookieStore.delete('soise_guestId');
     }
 

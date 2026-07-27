@@ -55,14 +55,17 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     // ownership, so we don't need to (or want to) resend the full address.
     shippingPayload = { shipping_addr: selectedAddressId };
   } else {
-    const country = formData.get('country') as string;
     const address = formData.get('address') as string;
     const city = formData.get('city') as string;
     const state = formData.get('state') as string;
-    const zipCode = formData.get('zipCode') as string;
     const phone = formData.get('phone') as string;
+    // Optional: Nigerian postal codes are rarely known, and gating payment on
+    // one loses shoppers who have nothing valid to type.
+    const zipCode = ((formData.get('zipCode') as string) || '').trim();
+    // The form no longer asks — it only ever offered Nigeria.
+    const country = ((formData.get('country') as string) || 'Nigeria').trim();
 
-    const requiredManualFields = { country, address, city, state, zipCode, phone };
+    const requiredManualFields = { address, city, state, phone };
     for (const [key, value] of Object.entries(requiredManualFields)) {
       if (!value || value.trim() === '') {
         return { success: false, error: `${key} is required` };

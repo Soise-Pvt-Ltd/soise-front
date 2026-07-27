@@ -10,6 +10,7 @@ import {
 } from '@/components/home/nav/types';
 import type { Metadata } from 'next';
 import { NOINDEX } from '@/lib/seo';
+import { migrateGuestCart } from '@/lib/cart-migrate';
 
 // Personalised / transactional page — no search value, and indexing it would
 // expose order-flow URLs. Explicit noindex (robots.txt alone can't prevent
@@ -23,7 +24,12 @@ export default async function OrderHistoryPage() {
   const guestId = cookieStore.get('soise_guestId')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
-  let cartData = { data: [] };
+  let cartData: any = { data: [] };
+  // Distinguishes "your bag is empty" from "we couldn't load your bag". Showing
+  // the empty state for a failed fetch tells a shopper their cart vanished, and
+  // they leave instead of retrying.
+  let cartLoadFailed = false;
+  let shippingFee: number | null = null;
   let storeCredit = 0;
   let welcomeCreditPending = false;
   let welcomeCreditAmount = 1000;
@@ -36,6 +42,13 @@ export default async function OrderHistoryPage() {
   try {
     if (!baseUrl) {
       throw new Error('Base URL is not configured');
+    }
+
+    // Defensive: if the shopper signed in somewhere that predates the shared
+    // migration helper (or it failed then), move the guest bag now rather than
+    // showing them an empty checkout.
+    if (isLoggedIn && accessToken && guestId) {
+      await migrateGuestCart(accessToken);
     }
 
     const cartUrl =
@@ -52,7 +65,23 @@ export default async function OrderHistoryPage() {
       },
     });
 
-    if (cartRes.ok) cartData = await cartRes.json();
+    if (cartRes.ok) {
+      cartData = await cartRes.json();
+      // Surface a shipping fee only when the backend actually charges one, so
+      // the total on this page matches the amount Paystack asks for. An
+      // unexpected cost at the payment step is the most common reason a
+      // shopper walks away.
+      const fee =
+        cartData?.meta?.shipping_fee ??
+        cartData?.meta?.shipping ??
+        cartData?.shipping_fee;
+      if (typeof fee === 'number' && fee > 0) shippingFee = fee;
+    } else if (cartRes.status !== 404) {
+      // 404 is the backend's "this cart doesn't exist yet" — a genuinely empty
+      // bag, not a failure. Anything else (5xx, auth, network) is us failing to
+      // read a cart that may well have items in it.
+      cartLoadFailed = true;
+    }
 
     // Fetch the signed-in user's store-credit balance so we can offer to apply
     // it at checkout. Best-effort — never block checkout on it. Guests have no
@@ -112,7 +141,8 @@ export default async function OrderHistoryPage() {
       }
     }
   } catch (error) {
-    console.error('Order history page fetch failed:', error);
+    console.error('Order summary page fetch failed:', error);
+    cartLoadFailed = true;
   }
 
   // Cart items now arrive pre-enriched with `variant_details` (name, price,
@@ -141,6 +171,8 @@ export default async function OrderHistoryPage() {
         prefillFirstName={prefillFirstName}
         prefillLastName={prefillLastName}
         prefillPhone={prefillPhone}
+        cartLoadFailed={cartLoadFailed}
+        shippingFee={shippingFee}
       />
     </>
   );
