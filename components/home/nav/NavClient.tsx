@@ -799,10 +799,12 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                   </div>
                   {/* Said here, before they commit to checkout — an unknown
                       delivery cost is a reason to close the bag and think
-                      about it. */}
+                      about it. Qualified, because the bag has no address yet
+                      and free delivery is a Nigeria-only promise: Soise also
+                      ships to diaspora customers. */}
                   <div className="mt-[6px] flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
                     <div>Shipping:</div>
-                    <div className="text-green-600">Free</div>
+                    <div className="text-green-600">Free in Nigeria</div>
                   </div>
                   <motion.button
                     className="btn_outline mt-4 disabled:cursor-not-allowed disabled:opacity-40"
