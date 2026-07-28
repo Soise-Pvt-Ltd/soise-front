@@ -33,6 +33,16 @@ interface CheckoutResult {
   // The order id (== Paystack reference). Returned so the client can persist a
   // pending order and resume its payment if the post-checkout redirect fails.
   orderId?: string;
+  // Paystack access code from the server-side transaction initialize. Lets the
+  // client open Paystack's inline checkout in an overlay rather than sending
+  // the shopper away to a hosted page.
+  //
+  // Deliberately the access code and NOT an amount: resumeTransaction() resumes
+  // a transaction whose value was fixed on the server, so the price stays
+  // server-authoritative. Paystack's other entry point, newTransaction(), takes
+  // an `amount` from the browser — which would reintroduce exactly the
+  // client-sets-its-own-price hole that shipping_total already was.
+  accessCode?: string;
 }
 
 export async function checkoutAction(formData: FormData): Promise<CheckoutResult> {
@@ -167,7 +177,9 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
 
     const data = await response.json();
 
-    const authUrl = data?.data?.payment?.checkout_metadata?.authorization_url;
+    const checkoutMeta = data?.data?.payment?.checkout_metadata;
+    const authUrl = checkoutMeta?.authorization_url;
+    const accessCode = checkoutMeta?.access_code as string | undefined;
     // When store credit fully covers the order, the backend marks it paid and
     // returns no Paystack URL — go straight to the thank-you page.
     const fullyCovered =
@@ -187,9 +199,15 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     const orderId = data?.data?.order?.id as string | undefined;
 
     if (authUrl) {
-      return { success: true as const, redirectUrl: authUrl as string, orderId };
+      return {
+        success: true as const,
+        redirectUrl: authUrl as string,
+        accessCode,
+        orderId,
+      };
     }
     if (fullyCovered) {
+      // Store credit covered everything — there is no Paystack step at all.
       return { success: true as const, redirectUrl: '/thank-you', orderId };
     }
     // 201 but no URL: the order exists and its authorization_url is stored on
@@ -256,11 +274,11 @@ export async function resumePaymentAction(
       return { success: true as const, redirectUrl: '/thank-you', orderId };
     }
 
-    const authUrl = data?.data?.checkout_metadata?.authorization_url as
-      | string
-      | undefined;
+    const meta = data?.data?.checkout_metadata;
+    const authUrl = meta?.authorization_url as string | undefined;
+    const accessCode = meta?.access_code as string | undefined;
     if (authUrl) {
-      return { success: true as const, redirectUrl: authUrl, orderId };
+      return { success: true as const, redirectUrl: authUrl, accessCode, orderId };
     }
 
     return {

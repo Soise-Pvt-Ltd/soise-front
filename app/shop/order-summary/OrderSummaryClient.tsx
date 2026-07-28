@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
+import { openInlineCheckout } from '@/lib/paystack-inline';
 import {
   readPendingOrder,
   writePendingOrder,
@@ -214,6 +215,65 @@ export default function OrderSummaryClient({
     }
   }
 
+  /**
+   * Take the shopper to payment.
+   *
+   * Inline overlay first: every order this store has created reached the
+   * Paystack redirect and none were paid, and a full-page bounce to another
+   * domain is the step that loses people. The hosted page stays as the
+   * fallback for anything that stops the overlay running — a blocked script,
+   * an ad blocker, an older build with no access code — because the order
+   * already exists server-side either way.
+   *
+   * Payment is NEVER trusted from the browser. onSuccess only routes to
+   * /thank-you, which verifies against Paystack server-side before showing
+   * anything (see app/thank-you/page.tsx) — same as the redirect path always
+   * did.
+   */
+  async function goToPayment(result: {
+    redirectUrl?: string;
+    accessCode?: string;
+    orderId?: string;
+  }) {
+    // Store credit covered the whole order: no Paystack step at all.
+    if (result.redirectUrl === '/thank-you') {
+      showToast.success('Order placed!');
+      window.location.href = result.redirectUrl;
+      return;
+    }
+
+    if (result.accessCode) {
+      const outcome = await openInlineCheckout(result.accessCode);
+
+      if (outcome.kind === 'success') {
+        showToast.success('Payment received — confirming…');
+        const ref = outcome.reference || result.orderId || '';
+        window.location.href = ref
+          ? `/thank-you?reference=${encodeURIComponent(ref)}`
+          : '/thank-you';
+        return;
+      }
+
+      if (outcome.kind === 'cancelled') {
+        // They closed the overlay. The order is real and still payable, so
+        // surface the resume banner rather than dead-ending them.
+        if (result.orderId) setPendingOrderId(result.orderId);
+        setPending(false);
+        submittingRef.current = false;
+        showToast.error('Payment cancelled. Your order is saved — tap “Complete payment” when you’re ready.');
+        return;
+      }
+
+      // Overlay unavailable: fall through to the hosted page.
+      console.error('Paystack inline unavailable:', outcome.reason);
+    }
+
+    if (result.redirectUrl) {
+      showToast.success('Taking you to secure checkout…');
+      window.location.href = result.redirectUrl;
+    }
+  }
+
   async function handleSubmit(formData: FormData) {
     // Re-entrancy guard: block a second submit firing before `pending` renders,
     // preventing duplicate orders / duplicate /cart/checkout POSTs.
@@ -252,10 +312,7 @@ export default function OrderSummaryClient({
       }
 
       if (result?.success && result.redirectUrl) {
-        // Success: navigate to Paystack (external) or the thank-you page.
-        // Keep `pending` true so the button stays locked through navigation.
-        showToast.success('Order placed! Taking you to secure checkout…');
-        window.location.href = result.redirectUrl;
+        await goToPayment(result);
         return;
       }
 
@@ -264,8 +321,7 @@ export default function OrderSummaryClient({
       if (result?.error === 'no_payment_link' && result?.orderId) {
         const resumed = await resumePaymentAction(result.orderId);
         if (resumed?.success && resumed.redirectUrl) {
-          showToast.success('Taking you to secure checkout…');
-          window.location.href = resumed.redirectUrl;
+          await goToPayment(resumed);
           return;
         }
         setPendingOrderId(result.orderId);
