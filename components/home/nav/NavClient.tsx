@@ -732,7 +732,7 @@ export default function NavClient({ collections = [] }: NavClientProps) {
 
             {openMenu === 'bag' && (
               <div className="flex h-full flex-col px-[24px]">
-                <div className="scrollbar-hide flex-1 overflow-y-auto">
+                <div className="scrollbar-hide min-h-0 flex-1 overflow-y-auto">
                   <AnimatePresence>
                     {cart.length > 0 ? (
                       cart.map((item, i) => (
@@ -787,8 +787,10 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                     </motion.section>
                   )}
                 </div>
+                {/* Pinned action bar. Always visible with the panel open, so
+                    Checkout is never something you have to go looking for. */}
                 <motion.div
-                  className="mt-auto pt-[32px]"
+                  className="mt-auto shrink-0 border-t border-[#EFEFEF] bg-white pt-[20px] pb-[8px]"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.4 }}
@@ -1028,7 +1030,13 @@ function FullscreenPanel({
         aria-modal="true"
         aria-label={title}
         onKeyDown={handleKeyDown}
-        className="text-primary fixed inset-0 z-50 flex min-h-screen w-full flex-col bg-white"
+        // h-dvh, not min-h-screen: `fixed inset-0` already gives viewport
+        // height, and min-h-screen let the panel GROW past it whenever the
+        // content was tall. The bag's action bar sits at the end of that
+        // content, so a full bag plus "Complete the look" pushed Checkout
+        // below the fold and the shopper had to scroll to find it.
+        // dvh rather than vh so mobile browser chrome doesn't clip it.
+        className="text-primary fixed inset-0 z-50 flex h-dvh w-full flex-col bg-white"
         initial={{ x: openMenu === 'menu' ? '-100%' : '100%' }}
         animate={{ x: 0 }}
         exit={{ x: openMenu === 'menu' ? '-100%' : '100%' }}
@@ -1039,7 +1047,7 @@ function FullscreenPanel({
           mass: 0.8,
         }}
       >
-        <div className="flex justify-between px-[24px] pt-[70px] pb-[64px]">
+        <div className="flex shrink-0 justify-between px-[24px] pt-[44px] pb-[28px]">
           <motion.div
             className="font-display text-[22px]"
             initial={{ opacity: 0, y: 10 }}
@@ -1067,7 +1075,12 @@ function FullscreenPanel({
             <CloseIcon />
           </motion.button>
         </div>
-        <div className="flex-grow overflow-y-auto pb-[24px]">{children}</div>
+        {/* min-h-0 is load-bearing: without it a flex child won't shrink
+            below its content height, so overflow-y-auto never engages and the
+            panel grows instead of scrolling. */}
+        <div className="min-h-0 flex-grow overflow-y-auto pb-[24px]">
+          {children}
+        </div>
       </motion.div>
     </motion.div>
   );
@@ -1092,8 +1105,11 @@ function BagItem({
     item.variantDetails?.media?.[0]?.url;
 
   return (
-    <div className="mb-[24px] flex h-[120px] justify-between">
-      <div className="flex gap-x-[16px]">
+    // min-w-0 throughout: without it the fixed-width left group refuses to
+    // shrink, so on a narrow viewport the whole row overflows and the price /
+    // REMOVE column is clipped off the right edge of the panel.
+    <div className="mb-[24px] flex h-[120px] justify-between gap-x-[12px]">
+      <div className="flex min-w-0 flex-1 gap-x-[16px]">
         <div className="relative h-[120px] w-[120px] overflow-hidden rounded-[6px] bg-[#f5f5f5]">
           {image && (
             // Remote product image URLs are not whitelisted in next.config
@@ -1109,15 +1125,15 @@ function BagItem({
             />
           )}
         </div>
-        <div className="flex w-[105px] flex-col justify-between py-[3px] text-[14px]">
-          <div className="truncate font-medium text-nowrap uppercase">
+        <div className="flex min-w-0 flex-1 flex-col justify-between py-[3px] text-[14px]">
+          <div className="truncate font-medium text-nowrap uppercase" title={name}>
             {name}
           </div>
-          <div className="text-[#8E8E93]">
-            <div>
+          <div className="min-w-0 text-[#8E8E93]">
+            <div className="truncate">
               Color: <span className="uppercase">{color}</span>
             </div>
-            <div>
+            <div className="truncate">
               Size: <span className="uppercase">{size}</span>
             </div>
           </div>
@@ -1149,13 +1165,13 @@ function BagItem({
           </div>
         </div>
       </div>
-      <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
-        <div>{formatPrice(price)}</div>
+      <div className="flex shrink-0 flex-col justify-between py-[3px] text-right text-[14px]">
+        <div className="whitespace-nowrap">{formatPrice(price)}</div>
         <button
           type="button"
           onClick={() => onRemove(item.id)}
           aria-label={`Remove ${name} from bag`}
-          className="cursor-pointer rounded-[3px] text-right uppercase underline hover:no-underline focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:outline-none"
+          className="cursor-pointer rounded-[3px] text-right whitespace-nowrap uppercase underline hover:no-underline focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:outline-none"
         >
           Remove
         </button>
