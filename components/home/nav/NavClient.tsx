@@ -815,7 +815,7 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                     whileHover={cart.length > 0 ? { scale: 1.02 } : {}}
                     whileTap={cart.length > 0 ? { scale: 0.98 } : {}}
                   >
-                    Checkout
+                    Tap To Checkout
                   </motion.button>
                 </motion.div>
               </div>
