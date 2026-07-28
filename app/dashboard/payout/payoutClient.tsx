@@ -187,12 +187,26 @@ export default function PayoutClient({
   // reading "Total paid" and "Awaiting transfer".
   const stats = useMemo(() => {
     const c = statusCounts || {};
+    // Same independent-deploy caveat as the product badges: if the backend
+    // isn't sending status_counts yet, fall back to the old page-derived
+    // numbers rather than reporting a confident zero.
+    if (!Object.keys(c).length) {
+      return {
+        completed: payouts.filter(
+          (p) => p.status === 'completed' || p.status === 'paid',
+        ).length,
+        requested: payouts.filter(
+          (p) => p.status === 'requested' || p.status === 'processing',
+        ).length,
+        failed: payouts.filter((p) => p.status === 'failed').length,
+      };
+    }
     return {
       completed: (c.completed ?? 0) + (c.paid ?? 0),
       requested: (c.requested ?? 0) + (c.processing ?? 0),
       failed: c.failed ?? 0,
     };
-  }, [statusCounts]);
+  }, [statusCounts, payouts]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {

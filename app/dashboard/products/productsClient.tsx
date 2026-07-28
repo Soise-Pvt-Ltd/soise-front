@@ -897,16 +897,27 @@ export default function ProductsPage({
   // page, and selecting a tab applies a server-side status filter — so the
   // Active tab reported "Draft 0", implying there was nothing in drafts.
   const tabCounts = useMemo(() => {
+    const safe = Array.isArray(products) ? products : [];
     const counts = statusCounts || {};
-    const draft = (counts.draft ?? 0) + (counts.archived ?? 0);
+    // The frontend deploys independently of the backend, so status_counts may
+    // simply not be there yet. Fall back to counting the page — wrong in the
+    // old way rather than confidently reporting zero, which would read as
+    // "there are no drafts".
+    if (!Object.keys(counts).length) {
+      return {
+        all: safe.length,
+        active: safe.filter((p) => p.status === 'live').length,
+        draft: safe.filter((p) => p.status === 'draft').length,
+      };
+    }
     return {
       all: totalRows(pagination),
       active: counts.active ?? 0,
       // mapProducts collapses archived into the draft label, so the badge has
       // to match what the tab actually shows.
-      draft,
+      draft: (counts.draft ?? 0) + (counts.archived ?? 0),
     };
-  }, [statusCounts, pagination]);
+  }, [statusCounts, pagination, products]);
 
   const filteredProducts = useMemo(() => {
     const safe = Array.isArray(products) ? products : [];
