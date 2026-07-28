@@ -838,12 +838,17 @@ export default function OrderSummaryClient({
                 </motion.div>
               )}
             </AnimatePresence>
-            {shipping > 0 && (
-              <div className="flex items-center justify-between pt-[8px] text-[12px] text-[#8E8E93]">
-                <div>Shipping</div>
+            {/* Always shown, including when it's free. A shopper who can't see
+                a shipping line assumes one is coming at the payment step — say
+                it plainly here instead. */}
+            <div className="flex items-center justify-between pt-[8px] text-[12px] text-[#8E8E93]">
+              <div>Shipping</div>
+              {shipping > 0 ? (
                 <div>{formatPrice(shipping)}</div>
-              </div>
-            )}
+              ) : (
+                <div className="font-medium text-green-600">Free</div>
+              )}
+            </div>
             <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
               <div>Total</div>
               <AnimatePresence mode="wait">
@@ -859,6 +864,11 @@ export default function OrderSummaryClient({
                 </motion.div>
               </AnimatePresence>
             </div>
+            {shipping === 0 && (
+              <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
+                Free delivery anywhere in Nigeria. Nothing is added at payment.
+              </p>
+            )}
             {currency === 'USD' && (
               <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
                 * Displayed in USD for reference. Payment is processed in NGN.

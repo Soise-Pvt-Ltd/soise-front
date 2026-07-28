@@ -67,15 +67,11 @@ export default async function OrderHistoryPage() {
 
     if (cartRes.ok) {
       cartData = await cartRes.json();
-      // Surface a shipping fee only when the backend actually charges one, so
-      // the total on this page matches the amount Paystack asks for. An
-      // unexpected cost at the payment step is the most common reason a
-      // shopper walks away.
-      const fee =
-        cartData?.meta?.shipping_fee ??
-        cartData?.meta?.shipping ??
-        cartData?.shipping_fee;
-      if (typeof fee === 'number' && fee > 0) shippingFee = fee;
+      // No shipping fee is read here on purpose. GET /cart's `meta` carries
+      // only `session_id`, and the backend has no shipping pricing at all —
+      // checkout hardcodes shipping to zero. If that changes, surface the fee
+      // here so the total on this page matches what Paystack collects; the
+      // Shipping line in OrderSummaryClient is already wired for it.
     } else if (cartRes.status !== 404) {
       // 404 is the backend's "this cart doesn't exist yet" — a genuinely empty
       // bag, not a failure. Anything else (5xx, auth, network) is us failing to
