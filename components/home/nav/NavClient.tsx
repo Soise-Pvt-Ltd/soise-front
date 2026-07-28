@@ -244,7 +244,13 @@ export default function NavClient({ collections = [] }: NavClientProps) {
   // the tab regains focus (cart edited in another tab).
   useEffect(() => {
     loadSession();
-    const unsubscribe = onCartChanged(() => loadSession());
+    const unsubscribe = onCartChanged((detail) => {
+      loadSession();
+      // "Add to bag" asks for this. Adding used to leave the shopper on the
+      // product page with a toast, so getting to checkout meant finding and
+      // opening the bag themselves — Tap To Checkout is now one tap away.
+      if (detail?.openBag) setOpenMenu('bag');
+    });
     const onFocus = () => {
       if (document.visibilityState === 'visible') loadSession();
     };

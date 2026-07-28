@@ -222,7 +222,18 @@ export default function ProductPageClient({
     }
   };
 
-  const addToBag = async () => {
+  /**
+   * Add the selected variant to the bag.
+   *
+   * `then` decides where the shopper lands:
+   *   'bag'      — open the bag panel, so Tap To Checkout is one tap away
+   *   'checkout' — skip the bag entirely and go straight to the order summary
+   *
+   * Adding used to do neither: it fired a toast and left the shopper on the
+   * product page, so reaching checkout meant noticing the badge, finding the
+   * bag icon, opening it, and only then tapping through.
+   */
+  const addToBag = async (then: 'bag' | 'checkout' = 'bag') => {
     if (!selectedVariant) {
       showToast.error('Please select a variant before adding to bag.');
       return;
@@ -236,9 +247,16 @@ export default function ProductPageClient({
     const result = await addToBagAction(selectedVariant.id, quantity);
     showToast.dismiss(toastId);
     if (result.success) {
-      // Tell the Nav (client-side, static shell) to refresh its bag badge/panel.
-      notifyCartChanged();
-      showToast.success(`Added ${quantity} item${quantity > 1 ? 's' : ''} to bag!`);
+      if (then === 'checkout') {
+        // Nav still needs to know, even though we're navigating away.
+        notifyCartChanged();
+        router.push('/shop/order-summary');
+        return;
+      }
+      // Tell the Nav (client-side, static shell) to refresh AND open the bag.
+      // No success toast: the bag sliding open is the confirmation, and a
+      // toast on top of it is just noise covering the button.
+      notifyCartChanged({ openBag: true });
     } else {
       showToast.error(result.message || 'Failed to add item to bag. Please try again.');
     }
@@ -490,7 +508,7 @@ export default function ProductPageClient({
               <motion.button
                 ref={buyButtonRef}
                 className="btn_black !mt-[36px] disabled:cursor-not-allowed disabled:opacity-40"
-                onClick={addToBag}
+                onClick={() => addToBag('bag')}
                 disabled={isAdding || !selectedVariant || isOutOfStock}
                 whileHover={
                   isOutOfStock
@@ -505,6 +523,19 @@ export default function ProductPageClient({
                   : isAdding
                     ? 'Adding...'
                     : 'Add to bag'}
+              </motion.button>
+
+              {/* Straight to the order summary for someone who has already
+                  decided. Skips the bag entirely: two taps become one. */}
+              <motion.button
+                className="btn_outline disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={() => addToBag('checkout')}
+                disabled={isAdding || !selectedVariant || isOutOfStock}
+                whileHover={isOutOfStock ? {} : { scale: 1.02 }}
+                whileTap={isOutOfStock ? {} : { scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              >
+                Buy it now
               </motion.button>
 
               {/* Checkout confidence — factual, quiet, right where doubt lives. */}
@@ -592,7 +623,7 @@ export default function ProductPageClient({
               </div>
               <button
                 type="button"
-                onClick={addToBag}
+                onClick={() => addToBag('bag')}
                 disabled={isAdding || !selectedVariant || isOutOfStock}
                 className="h-[46px] shrink-0 cursor-pointer rounded-[10px] bg-[#121212] px-6 text-[12px] font-bold text-white uppercase transition-all duration-300 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
