@@ -10,6 +10,8 @@ import {
 } from '@/components/icons';
 import { updateOrderStatus, ShipmentDetails } from './actions';
 import { showToast } from '../toast';
+import { totalRows } from '@/lib/pagination';
+import { VALID_ORDER_TRANSITIONS } from '@/lib/order-transitions';
 
 type Order = {
   id: string;
@@ -102,17 +104,9 @@ export default function OrdersPage({
     failed: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
   };
 
-  // Must match backend VALID_ORDER_TRANSITIONS
-  const validTransitions: Record<string, string[]> = {
-    created: ['pending_payment', 'cancelled'],
-    pending_payment: ['paid', 'cancelled'],
-    paid: ['processing', 'cancelled', 'refunded'],
-    processing: ['shipped', 'cancelled'],
-    shipped: ['delivered'],
-    delivered: ['refunded'],
-    cancelled: [],
-    refunded: [],
-  };
+  // Shared with the home dashboard's quick-action menu so the two screens
+  // can't drift apart again. Mirrors backend VALID_ORDER_TRANSITIONS.
+  const validTransitions = VALID_ORDER_TRANSITIONS;
 
   const [selectedPeriod, setSelectedPeriod] = useState('All Time');
   const periodOptions = ['All Time', 'Daily', 'Weekly', 'Monthly'];
@@ -179,12 +173,17 @@ export default function OrdersPage({
     if (result.success) {
       setOrders(result.data);
       setPagination({ ...result.meta.pagination, offset: 0 });
+    } else {
+      // Without this the spinner simply stops and the previous rows stay on
+      // screen under the newly-selected tab, so a failed refetch is
+      // indistinguishable from a filter that returned those rows.
+      showToast('error', 'Could not refresh the list. Showing the previous results.');
     }
     setIsLoading(false);
   };
 
   const handlePageChange = async (newOffset: number) => {
-    if (newOffset < 0 || newOffset >= pagination.count) return;
+    if (newOffset < 0 || newOffset >= totalRows(pagination)) return;
     const id = ++fetchIdRef.current;
     setIsLoading(true);
     const result = await fetchServerData(
@@ -198,6 +197,8 @@ export default function OrdersPage({
     if (result.success) {
       setOrders(result.data);
       setPagination(result.meta.pagination);
+    } else {
+      showToast('error', 'Could not load that page. Please try again.');
     }
     setIsLoading(false);
   };
@@ -525,7 +526,7 @@ export default function OrdersPage({
           </div>
         )}
         {/* Pagination Controls */}
-        {pagination.count > 0 && (
+        {totalRows(pagination) > 0 && (
           <div className="flex items-center justify-between px-4 py-3 sm:px-6">
             <div className="flex flex-1 justify-between sm:hidden">
               <button
@@ -542,7 +543,7 @@ export default function OrdersPage({
                   handlePageChange(pagination.offset + pagination.limit)
                 }
                 disabled={
-                  pagination.offset + pagination.limit >= pagination.count ||
+                  pagination.offset + pagination.limit >= totalRows(pagination) ||
                   isLoading
                 }
                 className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
@@ -559,10 +560,10 @@ export default function OrdersPage({
                   <span className="font-medium">
                     {Math.min(
                       pagination.offset + pagination.limit,
-                      pagination.count,
+                      totalRows(pagination),
                     )}
                   </span>{' '}
-                  of <span className="font-medium">{pagination.count}</span>{' '}
+                  of <span className="font-medium">{totalRows(pagination)}</span>{' '}
                   results
                 </p>
               </div>
@@ -598,7 +599,7 @@ export default function OrdersPage({
                     }
                     disabled={
                       pagination.offset + pagination.limit >=
-                        pagination.count || isLoading
+                        totalRows(pagination) || isLoading
                     }
                     className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >

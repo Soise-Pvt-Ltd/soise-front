@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner';
 import { requireRole } from '@/lib/require-role';
 import type { Metadata } from 'next';
 import { NOINDEX } from '@/lib/seo';
@@ -22,5 +23,14 @@ export default async function AdminDashboardLayout({
     reason: 'admin-only',
     loginCallback: '/dashboard',
   });
-  return <>{children}</>;
+  return (
+    <>
+      {/* sonner renders nothing unless a Toaster is mounted. The dashboard's
+          own toast system (./toast) is separate and does not receive anything
+          sent through @/lib/toast-utils, which OrderActionsMenu uses — so
+          every failed order-status change here was silent. */}
+      <Toaster position="top-center" richColors />
+      {children}
+    </>
+  );
 }

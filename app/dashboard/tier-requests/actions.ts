@@ -12,17 +12,21 @@ async function authHeader() {
 export async function fetchTierRequests(
   status: string = 'pending',
   search: string = '',
+  limit: number = 50,
+  offset: number = 0,
 ) {
   const h = await authHeader();
   if (!h) return { success: false, data: [], error: 'Unauthorized' };
-  const qs = new URLSearchParams();
+  // limit/offset were never sent, so the backend applied its default of 50 and
+  // the screen simply ended there — with 80 requests, 30 were unreachable.
+  const qs = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   if (status && status !== 'all') qs.set('status', status);
   if (search && search.trim()) qs.set('search', search.trim());
   try {
     const res = await fetch(`${BASE_URL}/admin/tier-upgrade-requests?${qs}`, { headers: h, cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) return { success: false, data: [], error: json.message };
-    return { success: true, data: json.data || [] };
+    return { success: true, data: json.data || [], meta: json.meta };
   } catch {
     return { success: false, data: [], error: 'Failed to load requests' };
   }

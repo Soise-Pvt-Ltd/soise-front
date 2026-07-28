@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchApplications, reviewApplication, allowReapplication } from './actions';
+import PaginationBar from '../PaginationBar';
+import type { PaginationMeta } from '@/lib/pagination';
 
 type Application = {
   id: string;
@@ -42,6 +44,13 @@ export default function ApplicationsClient({
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // This screen had no paging at all: it took the backend's default 50 and the
+  // table simply stopped, so older applications were unreachable.
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    limit: 50,
+    offset: 0,
+    count: initialData?.length ?? 0,
+  });
   const fetchIdRef = useRef(0);
   const lastFetchRef = useRef({
     status: initialStatus,
@@ -49,7 +58,11 @@ export default function ApplicationsClient({
     hasFetched: (initialData?.length ?? 0) > 0,
   });
 
-  const load = async (nextStatus = status, nextSearch = search) => {
+  const load = async (
+    nextStatus = status,
+    nextSearch = search,
+    nextOffset = 0,
+  ) => {
     const id = ++fetchIdRef.current;
     lastFetchRef.current = {
       status: nextStatus,
@@ -58,9 +71,17 @@ export default function ApplicationsClient({
     };
     setStatus(nextStatus);
     setLoading(true);
-    const res = await fetchApplications(nextStatus, nextSearch);
+    const res = await fetchApplications(
+      nextStatus,
+      nextSearch,
+      pagination.limit,
+      nextOffset,
+    );
     if (id !== fetchIdRef.current) return;
     setApps(res.success ? res.data : []);
+    if (res.success && res.meta?.pagination) {
+      setPagination({ ...res.meta.pagination, offset: nextOffset });
+    }
     if (!res.success) showToast('error', res.error || 'Failed to load');
     setLoading(false);
   };
@@ -221,6 +242,12 @@ export default function ApplicationsClient({
             </tbody>
           </table>
         </div>
+        <PaginationBar
+          pagination={pagination}
+          onChange={(offset) => load(status, search, offset)}
+          disabled={loading}
+          noun="applications"
+        />
       </div>
     </GridContainer>
   );

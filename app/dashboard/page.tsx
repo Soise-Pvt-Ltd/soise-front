@@ -17,8 +17,10 @@ export default async function DashboardPage() {
     });
 
     if (!res.ok) {
-      // Degrade to an empty dashboard rather than crashing the whole admin.
-      return <HomeClient data={null} />;
+      // Degrade rather than crash — but say so. Rendering the empty dashboard
+      // silently showed an admin "Total Revenue 0.00 / No recent orders",
+      // which is indistinguishable from a brand-new store.
+      return <HomeClient data={null} loadFailed />;
     }
 
     const data = await res.json();
@@ -28,6 +30,6 @@ export default async function DashboardPage() {
     return <HomeClient data={data?.data} />;
   } catch (error) {
     console.error('Failed to fetch dashboard data:', error);
-    return <HomeClient data={null} />;
+    return <HomeClient data={null} loadFailed />;
   }
 }

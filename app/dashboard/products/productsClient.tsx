@@ -27,6 +27,7 @@ import {
   deleteVariant,
 } from './actions';
 import { showToast } from '../toast';
+import { totalRows } from '@/lib/pagination';
 import {
   COLOR_PRESETS,
   COLOR_FINISHES,
@@ -532,11 +533,16 @@ type Product = {
 interface Pagination {
   limit: number;
   offset: number;
+  /** Rows on this page. */
   count: number;
+  /** Every row matching the filters — what pagination must be driven from. */
+  total?: number;
 }
 
 interface Meta {
   pagination: Pagination;
+  /** Whole-catalogue counts keyed by status, for the tab badges. */
+  status_counts?: Record<string, number>;
 }
 
 export default function ProductsPage({
@@ -673,6 +679,11 @@ export default function ProductsPage({
   const [pagination, setPagination] = useState<Pagination>(
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0 },
   );
+  // Whole-catalogue counts per status, for the tab badges. Server-supplied so
+  // they describe the catalogue rather than whatever page is on screen.
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>(
+    initialMeta?.status_counts || {},
+  );
 
   // Debounce the search input into the committed search query (300ms).
   useEffect(() => {
@@ -730,6 +741,9 @@ export default function ProductsPage({
           if (result.meta?.pagination) {
             setPagination(result.meta.pagination);
           }
+          if (result.meta?.status_counts) {
+            setStatusCounts(result.meta.status_counts);
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -763,6 +777,9 @@ export default function ProductsPage({
         setProducts(mapProducts(result.products?.data));
         if (result.meta?.pagination) {
           setPagination(result.meta.pagination);
+        }
+        if (result.meta?.status_counts) {
+          setStatusCounts(result.meta.status_counts);
         }
       }
     } catch (error) {
@@ -875,15 +892,21 @@ export default function ProductsPage({
     ? products.find((p) => p.id === pendingDeleteId)
     : null;
 
-  // Per-tab counts (search/period are already applied server-side).
+  // Per-tab counts come from the backend, across the whole catalogue.
+  // Counting the rows on screen was wrong twice over: it only ever saw one
+  // page, and selecting a tab applies a server-side status filter — so the
+  // Active tab reported "Draft 0", implying there was nothing in drafts.
   const tabCounts = useMemo(() => {
-    const safe = Array.isArray(products) ? products : [];
+    const counts = statusCounts || {};
+    const draft = (counts.draft ?? 0) + (counts.archived ?? 0);
     return {
-      all: safe.length,
-      active: safe.filter((p) => p.status === 'live').length,
-      draft: safe.filter((p) => p.status === 'draft').length,
+      all: totalRows(pagination),
+      active: counts.active ?? 0,
+      // mapProducts collapses archived into the draft label, so the badge has
+      // to match what the tab actually shows.
+      draft,
     };
-  }, [products]);
+  }, [statusCounts, pagination]);
 
   const filteredProducts = useMemo(() => {
     const safe = Array.isArray(products) ? products : [];
@@ -893,25 +916,15 @@ export default function ProductsPage({
       return true; // 'all'
     });
 
-    const sorted = [...byTab].sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return (a.name || '').localeCompare(b.name || '');
-        case 'price': {
-          const pa = a.minVariantPrice ?? a.basePrice;
-          const pb = b.minVariantPrice ?? b.basePrice;
-          return pa - pb;
-        }
-        case 'stock':
-          return a.inventory - b.inventory;
-        case 'newest':
-        default:
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-      }
-    });
-    return sorted;
+    // No client-side re-sort. The server already ordered the full catalogue
+    // and handed back the right page; re-sorting those rows here only
+    // reshuffled one page and made the order look global when it wasn't.
+    // `stock` is the one exception the backend can't express (it's an
+    // aggregate over variants), so it stays a within-page refinement.
+    if (sortBy === 'stock') {
+      return [...byTab].sort((a, b) => a.inventory - b.inventory);
+    }
+    return byTab;
   }, [products, activeTab, sortBy]);
 
   const addVariant = () => {
@@ -1827,7 +1840,7 @@ export default function ProductsPage({
               </div>
             </div>
             {/* Pagination Controls */}
-            {pagination.count > 0 && (
+            {totalRows(pagination) > 0 && (
               <div className="flex items-center justify-between px-4 py-3 sm:px-6">
                 <div className="flex flex-1 justify-between sm:hidden">
                   <button
@@ -1845,7 +1858,7 @@ export default function ProductsPage({
                     }
                     disabled={
                       pagination.offset + pagination.limit >=
-                        pagination.count || isLoading
+                        totalRows(pagination) || isLoading
                     }
                     className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                   >
@@ -1863,10 +1876,10 @@ export default function ProductsPage({
                       <span className="font-medium">
                         {Math.min(
                           pagination.offset + pagination.limit,
-                          pagination.count,
+                          totalRows(pagination),
                         )}
                       </span>{' '}
-                      of <span className="font-medium">{pagination.count}</span>{' '}
+                      of <span className="font-medium">{totalRows(pagination)}</span>{' '}
                       results
                     </p>
                   </div>
@@ -1902,7 +1915,7 @@ export default function ProductsPage({
                         }
                         disabled={
                           pagination.offset + pagination.limit >=
-                            pagination.count || isLoading
+                            totalRows(pagination) || isLoading
                         }
                         className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                       >

@@ -14,6 +14,7 @@ import {
   getPayoutBreakdown,
 } from './actions';
 import { showToast } from '../toast';
+import { totalRows } from '@/lib/pagination';
 
 type PayoutStatus =
   | 'requested'
@@ -97,6 +98,10 @@ export default function PayoutClient({
   const [pagination, setPagination] = useState(
     initialMeta?.pagination || { limit: 50, offset: 0, count: 0 },
   );
+  // Whole-table counts by status, for the summary cards.
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>(
+    initialMeta?.status_counts || {},
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [payouts, setPayouts] = useState<Payout[]>(initialData || []);
@@ -173,18 +178,21 @@ export default function PayoutClient({
     return `${user.first_name} ${user.last_name}`;
   };
 
-  // Calculate statistics
+  // Summary cards, from whole-table counts supplied by the backend.
+  //
+  // These used to be counted from `payouts` — the rows currently on screen.
+  // That made the cards lie in two ways: switching to the Requested tab sends
+  // pending=true, so Confirmed dropped to 0; and past the first page both
+  // numbers silently described only the newest 50 payouts, under labels
+  // reading "Total paid" and "Awaiting transfer".
   const stats = useMemo(() => {
-    const completed = payouts.filter(
-      (p) => p.status === 'completed' || p.status === 'paid',
-    ).length;
-    const requested = payouts.filter(
-      (p) => p.status === 'requested' || p.status === 'processing',
-    ).length;
-    const failed = payouts.filter((p) => p.status === 'failed').length;
-
-    return { completed, requested, failed };
-  }, [payouts]);
+    const c = statusCounts || {};
+    return {
+      completed: (c.completed ?? 0) + (c.paid ?? 0),
+      requested: (c.requested ?? 0) + (c.processing ?? 0),
+      failed: c.failed ?? 0,
+    };
+  }, [statusCounts]);
 
   const handleClickOutside = useCallback((e: MouseEvent) => {
     if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
@@ -253,12 +261,17 @@ export default function PayoutClient({
     if (result.success) {
       setPayouts(result.data);
       setPagination({ ...result.meta.pagination, offset: 0 });
+      if (result.meta?.status_counts) setStatusCounts(result.meta.status_counts);
+    } else {
+      // Without this the spinner just stops and the old rows stay put under
+      // the new tab label, so a failed refetch reads as a filter result.
+      showToast('error', 'Could not refresh the list. Showing the previous results.');
     }
     setIsLoading(false);
   };
 
   const handlePageChange = async (newOffset: number) => {
-    if (newOffset < 0 || newOffset >= pagination.count) return;
+    if (newOffset < 0 || newOffset >= totalRows(pagination)) return;
     const id = ++fetchIdRef.current;
     setIsLoading(true);
     const result = await fetchServerData(
@@ -272,6 +285,9 @@ export default function PayoutClient({
     if (result.success) {
       setPayouts(result.data);
       setPagination(result.meta.pagination);
+      if (result.meta?.status_counts) setStatusCounts(result.meta.status_counts);
+    } else {
+      showToast('error', 'Could not load that page. Please try again.');
     }
     setIsLoading(false);
   };
@@ -595,7 +611,7 @@ export default function PayoutClient({
           {renderContent()}
         </div>
         {/* Pagination Controls */}
-        {pagination.count > 0 && (
+        {totalRows(pagination) > 0 && (
           <div className="flex items-center justify-between px-4 py-3 sm:px-6">
             <div className="flex flex-1 justify-between sm:hidden">
               <button
@@ -612,7 +628,7 @@ export default function PayoutClient({
                   handlePageChange(pagination.offset + pagination.limit)
                 }
                 disabled={
-                  pagination.offset + pagination.limit >= pagination.count ||
+                  pagination.offset + pagination.limit >= totalRows(pagination) ||
                   isLoading
                 }
                 className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
@@ -629,10 +645,10 @@ export default function PayoutClient({
                   <span className="font-medium">
                     {Math.min(
                       pagination.offset + pagination.limit,
-                      pagination.count,
+                      totalRows(pagination),
                     )}
                   </span>{' '}
-                  of <span className="font-medium">{pagination.count}</span>{' '}
+                  of <span className="font-medium">{totalRows(pagination)}</span>{' '}
                   results
                 </p>
               </div>
@@ -668,7 +684,7 @@ export default function PayoutClient({
                     }
                     disabled={
                       pagination.offset + pagination.limit >=
-                        pagination.count || isLoading
+                        totalRows(pagination) || isLoading
                     }
                     className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >

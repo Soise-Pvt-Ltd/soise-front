@@ -6,25 +6,19 @@ import Link from 'next/link';
 import { updateOrderStatus } from '../orders/actions';
 import { showToast } from '@/lib/toast-utils';
 import { AdminMoreHorizontalIcon } from '@/components/icons';
-
-// Sensible next-step transitions per current status (keeps the quick-actions
-// contextual rather than offering every status everywhere).
-const NEXT_STATUSES: Record<string, string[]> = {
-  created: ['processing', 'cancelled'],
-  pending_payment: ['cancelled'],
-  paid: ['processing', 'shipped', 'cancelled'],
-  processing: ['shipped', 'cancelled'],
-  shipped: ['delivered'],
-  delivered: [],
-  cancelled: [],
-  refunded: [],
-};
+import {
+  quickTransitionsFor,
+  detailedTransitionsFor,
+} from '@/lib/order-transitions';
 
 const LABELS: Record<string, string> = {
+  pending_payment: 'Mark as awaiting payment',
+  paid: 'Mark as paid',
   processing: 'Mark as processing',
   shipped: 'Mark as shipped',
   delivered: 'Mark as delivered',
   cancelled: 'Cancel order',
+  refunded: 'Mark as refunded',
 };
 
 export default function OrderActionsMenu({
@@ -42,7 +36,14 @@ export default function OrderActionsMenu({
   // The dashboard payload may carry the full record id ("orders:abc"); the
   // status route wants just the key.
   const id = String(orderId).split(':').pop() || orderId;
-  const transitions = NEXT_STATUSES[status] ?? [];
+  // One-click transitions only. This menu used to carry its own status table
+  // that disagreed with the backend's, so "Mark as processing" on a created
+  // order and "Mark as shipped" on a paid one both 400'd. It now shares the
+  // real table, minus the transitions that need shipment details — those get
+  // a link to the Orders page and its modal instead of silently emailing the
+  // customer "tracking number: N/A".
+  const transitions = quickTransitionsFor(status);
+  const needsDetails = detailedTransitionsFor(status);
 
   useEffect(() => {
     if (!open) return;
@@ -106,7 +107,9 @@ export default function OrderActionsMenu({
             View in Orders
           </Link>
 
-          {transitions.length > 0 && <div className="my-1 h-px bg-[#F0F0F0]" />}
+          {(transitions.length > 0 || needsDetails.length > 0) && (
+            <div className="my-1 h-px bg-[#F0F0F0]" />
+          )}
 
           {transitions.map((s) => (
             <button
@@ -123,7 +126,24 @@ export default function OrderActionsMenu({
             </button>
           ))}
 
-          {transitions.length === 0 && (
+          {needsDetails.map((s) => (
+            <Link
+              key={s}
+              href="/dashboard/orders"
+              role="menuitem"
+              className="block px-4 py-2.5 text-[13px] text-[#121212] transition-colors hover:bg-[#F6F6F6]"
+              onClick={() => setOpen(false)}
+            >
+              {LABELS[s] || s}
+              <span className="mt-0.5 block text-[11px] text-[#AFB1B0]">
+                {s === 'shipped'
+                  ? 'Needs tracking details'
+                  : 'Needs a delivery date'}
+              </span>
+            </Link>
+          ))}
+
+          {transitions.length === 0 && needsDetails.length === 0 && (
             <div className="px-4 py-2.5 text-[12px] text-[#AFB1B0]">
               No further actions
             </div>

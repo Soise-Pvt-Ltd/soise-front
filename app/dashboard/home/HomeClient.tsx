@@ -38,9 +38,14 @@ const getCount = (val: any) => {
 
 type HomeClientProps = {
   data: any;
+  /** The dashboard fetch failed — the zeros below are placeholders, not facts. */
+  loadFailed?: boolean;
 };
 
-export default function HomeClient({ data: rawData }: HomeClientProps) {
+export default function HomeClient({
+  data: rawData,
+  loadFailed = false,
+}: HomeClientProps) {
   // Normalize the payload to a guaranteed shape so a missing/partial/error
   // response from the backend can never crash the admin dashboard.
   const d = rawData && typeof rawData === 'object' ? rawData : {};
@@ -237,6 +242,32 @@ export default function HomeClient({ data: rawData }: HomeClientProps) {
   return (
     <GridContainer>
       <main className="mt-[22px] !text-[#35373C]" role="main">
+        {/* Without this an unreachable backend renders a fully-populated
+            dashboard reading zero revenue, zero products and "no recent
+            orders" — identical to a store that has never sold anything. */}
+        {loadFailed && (
+          <div
+            role="alert"
+            className="mb-[24px] flex flex-col gap-y-3 rounded-[16px] border border-[#E5C6BF] bg-[#FDF4F2] px-[20px] py-[16px] sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div>
+              <div className="text-[14px] font-medium text-[#991C00]">
+                Couldn&apos;t load dashboard data
+              </div>
+              <div className="mt-1 text-[12px] text-[#8B5E3C]">
+                The figures below are placeholders, not real numbers. Nothing
+                has been lost.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.refresh()}
+              className="shrink-0 cursor-pointer rounded-[10px] bg-[#991C00] px-[18px] py-[9px] text-[12px] font-bold text-white uppercase transition-colors hover:bg-[#7d1700]"
+            >
+              Try again
+            </button>
+          </div>
+        )}
         {/* First layer */}
         <div className="grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-3 lg:grid-cols-4 lg:space-y-0">
           {/* 1st grid - Total Revenue */}

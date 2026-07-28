@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner';
 import { getCurrentRole } from '@/lib/require-role';
 import TeamNav from './TeamNav';
 import StatueWatermark from '@/components/brand/StatueWatermark';
@@ -18,6 +19,11 @@ export default async function TeamLayout({
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#FAFBFC]">
+      {/* sonner is a no-op without a mounted Toaster. /team calls showToast
+          from @/lib/toast-utils (prospect create/delete), so every success and
+          every error here rendered nothing at all — a failed delete removed
+          the row optimistically, said nothing, then refresh() put it back. */}
+      <Toaster position="top-center" richColors />
       {/* Ambient Soise statue — quiet brand presence, never forefront. */}
       <StatueWatermark
         tone="dark"

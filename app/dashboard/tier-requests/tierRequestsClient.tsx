@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchTierRequests, reviewTierRequest } from './actions';
+import PaginationBar from '../PaginationBar';
+import type { PaginationMeta } from '@/lib/pagination';
 
 type Req = {
   id: string;
@@ -42,6 +44,14 @@ export default function TierRequestsClient({
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tierChoice, setTierChoice] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  // Previously unpaginated: the action sent no limit/offset, the backend
+  // defaulted to 50, and the table just ended there.
+  const [pagination, setPagination] = useState<PaginationMeta>({
+    limit: 50,
+    offset: 0,
+    count: initialData?.length ?? 0,
+  });
   const fetchIdRef = useRef(0);
   const lastFetchRef = useRef({
     status: 'pending',
@@ -49,7 +59,11 @@ export default function TierRequestsClient({
     hasFetched: (initialData?.length ?? 0) > 0,
   });
 
-  const load = async (nextStatus = status, nextSearch = search) => {
+  const load = async (
+    nextStatus = status,
+    nextSearch = search,
+    nextOffset = 0,
+  ) => {
     const id = ++fetchIdRef.current;
     lastFetchRef.current = {
       status: nextStatus,
@@ -57,10 +71,20 @@ export default function TierRequestsClient({
       hasFetched: true,
     };
     setStatus(nextStatus);
-    const res = await fetchTierRequests(nextStatus, nextSearch);
+    setLoading(true);
+    const res = await fetchTierRequests(
+      nextStatus,
+      nextSearch,
+      pagination.limit,
+      nextOffset,
+    );
     if (id !== fetchIdRef.current) return;
     setReqs(res.success ? res.data : []);
+    if (res.success && res.meta?.pagination) {
+      setPagination({ ...res.meta.pagination, offset: nextOffset });
+    }
     if (!res.success) showToast('error', res.error || 'Failed to load');
+    setLoading(false);
   };
 
   // Debounced search by creator username / email / code.
@@ -200,6 +224,12 @@ export default function TierRequestsClient({
             </tbody>
           </table>
         </div>
+        <PaginationBar
+          pagination={pagination}
+          onChange={(offset) => load(status, search, offset)}
+          disabled={loading}
+          noun="requests"
+        />
       </div>
     </GridContainer>
   );

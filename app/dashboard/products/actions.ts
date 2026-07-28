@@ -16,12 +16,18 @@ type FormVariantRow = {
   finish?: string;
 };
 
-// Map the UI sort options to the backend's supported sort fields.
-const SORT_MAP: Record<string, string> = {
-  newest: 'created_at',
-  name: 'name',
-  price: 'base_price',
-  stock: 'created_at', // backend can't sort by aggregate stock; client refines
+// Map the UI sort options to the backend's supported sort fields AND the
+// direction each one implies. The direction used to be omitted, so the backend
+// applied its DESC default to every sort while the client re-sorted the page
+// ascending — "sort by price" showed the 50 most expensive products displayed
+// cheapest-first, and "sort by name" never surfaced anything starting with A.
+const SORT_MAP: Record<string, { field: string; order: 'ASC' | 'DESC' }> = {
+  newest: { field: 'created_at', order: 'DESC' },
+  name: { field: 'name', order: 'ASC' },
+  price: { field: 'base_price', order: 'ASC' },
+  // The backend can't ORDER BY an aggregate over variants, so this is a
+  // documented approximation rather than a real stock sort.
+  stock: { field: 'created_at', order: 'DESC' },
 };
 
 export async function fetchProducts(
@@ -50,7 +56,9 @@ export async function fetchProducts(
 
   if (search) queryParams.append('q', search);
   if (status && status !== 'all') queryParams.append('status', status);
-  queryParams.append('sort_by', SORT_MAP[sortBy] ?? 'created_at');
+  const sort = SORT_MAP[sortBy] ?? SORT_MAP.newest;
+  queryParams.append('sort_by', sort.field);
+  queryParams.append('sort_order', sort.order);
 
   if (period && period !== 'All Time') {
     const now = new Date();
