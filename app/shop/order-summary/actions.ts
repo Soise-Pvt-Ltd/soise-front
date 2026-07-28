@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { apiForwardCookie } from '@/lib/tracking';
+import { DEFAULT_COUNTRY, isDomestic } from '@/lib/countries';
 
 interface ApplyCodeResponse {
   status?: boolean;
@@ -59,17 +60,27 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     const city = formData.get('city') as string;
     const state = formData.get('state') as string;
     const phone = formData.get('phone') as string;
-    // Optional: Nigerian postal codes are rarely known, and gating payment on
-    // one loses shoppers who have nothing valid to type.
     const zipCode = ((formData.get('zipCode') as string) || '').trim();
-    // The form no longer asks — it only ever offered Nigeria.
-    const country = ((formData.get('country') as string) || 'Nigeria').trim();
+    // Soise ships to diaspora customers, so country is a real choice and must
+    // come from the form. It defaults to Nigeria only when absent entirely.
+    const country =
+      ((formData.get('country') as string) || DEFAULT_COUNTRY).trim();
 
-    const requiredManualFields = { address, city, state, phone };
+    const requiredManualFields = { country, address, city, state, phone };
     for (const [key, value] of Object.entries(requiredManualFields)) {
       if (!value || value.trim() === '') {
         return { success: false, error: `${key} is required` };
       }
+    }
+
+    // Postal code is optional in Nigeria, where it's rarely known and gating
+    // payment on it loses shoppers with nothing valid to type. Everywhere else
+    // a parcel genuinely cannot be delivered without one.
+    if (!isDomestic(country) && !zipCode) {
+      return {
+        success: false,
+        error: 'A postal / ZIP code is required for international delivery',
+      };
     }
 
     // Maps our form field names onto the backend's reusable address schema

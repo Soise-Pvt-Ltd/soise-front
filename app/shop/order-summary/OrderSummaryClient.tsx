@@ -23,6 +23,12 @@ import {
   writePendingOrder,
   clearPendingOrder,
 } from './pending-order';
+import {
+  SHIPPING_COUNTRIES,
+  NIGERIAN_STATES,
+  DEFAULT_COUNTRY,
+  isDomestic,
+} from '@/lib/countries';
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -71,45 +77,40 @@ interface OrderSummaryClientProps {
   shippingFee?: number | null;
 }
 
-const NIGERIAN_STATES = [
-  'Abia',
-  'Adamawa',
-  'Akwa Ibom',
-  'Anambra',
-  'Bauchi',
-  'Bayelsa',
-  'Benue',
-  'Borno',
-  'Cross River',
-  'Delta',
-  'Ebonyi',
-  'Edo',
-  'Ekiti',
-  'Enugu',
-  'FCT',
-  'Gombe',
-  'Imo',
-  'Jigawa',
-  'Kaduna',
-  'Kano',
-  'Katsina',
-  'Kebbi',
-  'Kogi',
-  'Kwara',
-  'Lagos',
-  'Nasarawa',
-  'Niger',
-  'Ogun',
-  'Ondo',
-  'Osun',
-  'Oyo',
-  'Plateau',
-  'Rivers',
-  'Sokoto',
-  'Taraba',
-  'Yobe',
-  'Zamfara',
-];
+/**
+ * A labelled form field.
+ *
+ * Every checkout input used to be placeholder-only. Placeholders disappear the
+ * moment someone types, so a half-filled form gives no clue what each box was
+ * for — and screen readers get no accessible name at all. The label is real and
+ * stays put.
+ */
+function Field({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="w-full">
+      <label
+        htmlFor={htmlFor}
+        className="mb-[6px] block text-[12px] font-medium text-[#35373C] normal-case"
+      >
+        {label}
+        {hint && (
+          <span className="ml-[6px] font-normal text-[#8E8E93]">{hint}</span>
+        )}
+      </label>
+      {children}
+    </div>
+  );
+}
 
 export default function OrderSummaryClient({
   cart,
@@ -147,6 +148,12 @@ export default function OrderSummaryClient({
   const usingSavedAddress =
     selectedAddressId !== 'new' &&
     savedAddresses.some((a) => a.id === selectedAddressId);
+
+  // Country drives the state/postal/phone rules below. Defaults to Nigeria
+  // (the bulk of orders) but must remain changeable — Soise ships to diaspora
+  // customers, and hardcoding this locked them out of checkout entirely.
+  const [country, setCountry] = useState<string>(DEFAULT_COUNTRY);
+  const domestic = isDomestic(country);
 
   // Store-credit redemption toggle. The exact reduction is computed on the
   // backend; here we preview "up to" the lesser of the balance and the total.
@@ -474,8 +481,9 @@ export default function OrderSummaryClient({
               You have an order awaiting payment
             </p>
             <p className="mt-[2px] text-[12px] leading-relaxed text-[#7A6320]">
-              Your items are saved. Pick up where you left off — you won’t be
-              charged twice.
+              Your order is saved and nothing has been charged yet. Reopening
+              checkout continues that same order — it will not create a
+              second one.
             </p>
           </div>
           <button
@@ -846,8 +854,13 @@ export default function OrderSummaryClient({
               <div>Shipping</div>
               {shipping > 0 ? (
                 <div>{formatPrice(shipping)}</div>
-              ) : (
+              ) : domestic ? (
                 <div className="font-medium text-green-600">Free</div>
+              ) : (
+                // Free delivery is a Nigeria-only promise. The backend charges
+                // zero shipping for every order, so an international address
+                // would otherwise be shown "Free" — a claim nobody made.
+                <div className="text-[#8E8E93]">Confirmed after order</div>
               )}
             </div>
             <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
@@ -865,9 +878,15 @@ export default function OrderSummaryClient({
                 </motion.div>
               </AnimatePresence>
             </div>
-            {shipping === 0 && (
+            {shipping === 0 && domestic && (
               <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
                 Free delivery anywhere in Nigeria. Nothing is added at payment.
+              </p>
+            )}
+            {shipping === 0 && !domestic && (
+              <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
+                International delivery — we&apos;ll confirm shipping with you
+                after you order.
               </p>
             )}
             {currency === 'USD' && (
@@ -893,11 +912,16 @@ export default function OrderSummaryClient({
 
                 <div className="mt-[24px] mb-[18px] space-y-[10px]">
                   {!isLoggedIn && (
+                    <Field
+                      label="Email address"
+                      htmlFor="email"
+                      hint="For your receipt and delivery updates"
+                    >
                     <input
+                      id="email"
                       type="email"
                       name="email"
                       className="solid"
-                      placeholder="Email address"
                       autoComplete="email"
                       required
                       // Save it on blur, not just on submit. A shopper who
@@ -911,6 +935,7 @@ export default function OrderSummaryClient({
                         }
                       }}
                     />
+                    </Field>
                   )}
 
                   {savedAddresses.length > 0 && (
@@ -965,86 +990,164 @@ export default function OrderSummaryClient({
                     </div>
                   )}
 
-                  <input
-                    type="text"
-                    name="firstName"
-                    className="solid"
-                    placeholder="First Name"
-                    autoComplete="given-name"
-                    defaultValue={prefillFirstName}
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="lastName"
-                    className="solid"
-                    placeholder="Last Name"
-                    autoComplete="family-name"
-                    defaultValue={prefillLastName}
-                    required
-                  />
+                  {/* Paired: two short related fields in one full-width
+                      column each made the form read far longer than it is. */}
+                  <div className="grid gap-[10px] sm:grid-cols-2">
+                    <Field label="First name" htmlFor="firstName">
+                      <input
+                        id="firstName"
+                        type="text"
+                        name="firstName"
+                        className="solid"
+                        autoComplete="given-name"
+                        defaultValue={prefillFirstName}
+                        required
+                      />
+                    </Field>
+                    <Field label="Last name" htmlFor="lastName">
+                      <input
+                        id="lastName"
+                        type="text"
+                        name="lastName"
+                        className="solid"
+                        autoComplete="family-name"
+                        defaultValue={prefillLastName}
+                        required
+                      />
+                    </Field>
+                  </div>
 
                   {!usingSavedAddress && (
                     <>
-                      {/* Country was a required <select> with exactly one
-                          option. Nothing to choose, so it was pure friction —
-                          checkoutAction now supplies Nigeria server-side. */}
-                      <input
-                        type="text"
-                        name="address"
-                        className="solid"
-                        placeholder="Address"
-                        autoComplete="address-line1"
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="city"
-                        className="solid"
-                        placeholder="City"
-                        autoComplete="address-level2"
-                        required
-                      />
-                      <select
-                        name="state"
-                        className="solid"
-                        autoComplete="address-level1"
-                        required
+                      {/* Country drives everything below it. Soise ships to
+                          diaspora customers, so this cannot be assumed. */}
+                      <Field label="Country" htmlFor="country">
+                        <select
+                          id="country"
+                          name="country"
+                          className="solid"
+                          autoComplete="country-name"
+                          value={country}
+                          onChange={(e) => setCountry(e.target.value)}
+                          required
+                        >
+                          {SHIPPING_COUNTRIES.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Street address" htmlFor="address">
+                        <input
+                          id="address"
+                          type="text"
+                          name="address"
+                          className="solid"
+                          placeholder="House number and street"
+                          autoComplete="address-line1"
+                          required
+                        />
+                      </Field>
+                      <div className="grid gap-[10px] sm:grid-cols-2">
+                      <Field label="City" htmlFor="city">
+                        <input
+                          id="city"
+                          type="text"
+                          name="city"
+                          className="solid"
+                          autoComplete="address-level2"
+                          required
+                        />
+                      </Field>
+                      {/* A fixed list only works for Nigeria. Everywhere else
+                          gets free text — no single list covers county,
+                          province, prefecture and emirate at once. */}
+                      <Field
+                        label={domestic ? 'State' : 'State / Province / Region'}
+                        htmlFor="state"
                       >
-                        <option value="">Select State</option>
-                        {NIGERIAN_STATES.map((state) => (
-                          <option key={state} value={state}>
-                            {state}
-                          </option>
-                        ))}
-                      </select>
-                      {/* Optional: Nigerian postal codes are barely used, and
-                          most shoppers can't produce one. Requiring it was a
-                          field with no answer sitting between them and paying. */}
-                      <input
-                        type="text"
-                        name="zipCode"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="ZIP code (optional)"
-                        className="solid"
-                        autoComplete="postal-code"
-                        onInput={(e: any) => {
-                          e.target.value = e.target.value.replace(/\D/g, '');
-                        }}
-                      />
-                      <input
-                        type="tel"
-                        name="phone"
-                        className="solid"
-                        placeholder="Phone (max 11 digits)"
-                        autoComplete="tel"
-                        defaultValue={prefillPhone}
-                        required
-                        maxLength={11}
-                        pattern="[0-9]{1,11}"
-                        onInput={handlePhoneInput}
-                      />
+                        {domestic ? (
+                          <select
+                            id="state"
+                            name="state"
+                            className="solid"
+                            autoComplete="address-level1"
+                            required
+                          >
+                            <option value="">Select state</option>
+                            {NIGERIAN_STATES.map((state) => (
+                              <option key={state} value={state}>
+                                {state}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            id="state"
+                            type="text"
+                            name="state"
+                            className="solid"
+                            autoComplete="address-level1"
+                            required
+                          />
+                        )}
+                      </Field>
+                      </div>
+                      <div className="grid gap-[10px] sm:grid-cols-2">
+                      {/* Optional in Nigeria, where postal codes are barely
+                          used and requiring one is a field with no answer.
+                          Required everywhere else, where a parcel genuinely
+                          cannot be delivered without it — and not digits-only,
+                          because UK and Canadian codes contain letters. */}
+                      <Field
+                        label="Postal / ZIP code"
+                        htmlFor="zipCode"
+                        hint={domestic ? 'Optional' : undefined}
+                      >
+                        <input
+                          id="zipCode"
+                          type="text"
+                          name="zipCode"
+                          inputMode={domestic ? 'numeric' : 'text'}
+                          className="solid"
+                          autoComplete="postal-code"
+                          required={!domestic}
+                          onInput={
+                            domestic
+                              ? (e: any) => {
+                                  e.target.value = e.target.value.replace(/\D/g, '');
+                                }
+                              : undefined
+                          }
+                        />
+                      </Field>
+                      <Field
+                        label="Phone number"
+                        htmlFor="phone"
+                        hint={
+                          domestic
+                            ? '11 digits'
+                            : 'Include your country code'
+                        }
+                      >
+                        <input
+                          id="phone"
+                          type="tel"
+                          name="phone"
+                          className="solid"
+                          autoComplete="tel"
+                          defaultValue={prefillPhone}
+                          required
+                          // 11 digits is the Nigerian format. An international
+                          // number is up to 15 digits (E.164) and may be typed
+                          // with a leading +, so the domestic cap would
+                          // silently truncate a diaspora shopper's number.
+                          maxLength={domestic ? 11 : 16}
+                          onInput={domestic ? handlePhoneInput : undefined}
+                        />
+                      </Field>
+                      </div>
                     </>
                   )}
                 </div>
@@ -1054,7 +1157,9 @@ export default function OrderSummaryClient({
                   className="btn_black"
                   disabled={pending || cart.length === 0}
                 >
-                  {pending ? 'Processing...' : 'pay now'}
+                  {pending
+                    ? 'Processing...'
+                    : `Pay ${formatPrice(totalAfterCredit)}`}
                 </button>
               </div>
             </form>

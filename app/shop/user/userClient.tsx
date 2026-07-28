@@ -12,6 +12,11 @@ import {
   setDefaultAddress,
   deleteAddress,
 } from './actions';
+import {
+  SHIPPING_COUNTRIES,
+  DEFAULT_COUNTRY,
+  isDomestic,
+} from '@/lib/countries';
 
 const sectionVariant = {
   hidden: { opacity: 0, y: 25 },
@@ -102,22 +107,32 @@ export default function UserClient({ account }: { account?: any }) {
     state: '',
     postal_code: '',
     label: '',
+    country: DEFAULT_COUNTRY,
   });
   const [addingAddr, setAddingAddr] = useState(false);
   const [busyAddrId, setBusyAddrId] = useState<string | null>(null);
 
   async function handleAddAddress() {
-    if (!addr.line1 || !addr.city || !addr.state || !addr.postal_code) {
-      showToast.error('Address, city, state and ZIP are required.');
+    // Postal code is optional for Nigeria (rarely known) but required abroad,
+    // where a parcel can't be delivered without one.
+    const domestic = isDomestic(addr.country);
+    if (!addr.line1 || !addr.city || !addr.state) {
+      showToast.error('Address, city and state are required.');
+      return;
+    }
+    if (!domestic && !addr.postal_code) {
+      showToast.error('A postal / ZIP code is required for this country.');
       return;
     }
     setAddingAddr(true);
-    const r = await addAddress({ ...addr, country: 'Nigeria' });
+    // Was hardcoded to Nigeria, which silently rewrote a diaspora customer's
+    // country to Nigeria on every saved address.
+    const r = await addAddress({ ...addr, country: addr.country || DEFAULT_COUNTRY });
     setAddingAddr(false);
     if (r.success) {
       const created = r.data as Address | null;
       if (created) setAddresses((prev) => [...prev, created]);
-      setAddr({ line1: '', city: '', state: '', postal_code: '', label: '' });
+      setAddr({ line1: '', city: '', state: '', postal_code: '', label: '', country: DEFAULT_COUNTRY });
       showToast.success('Address added.');
     } else {
       showToast.error(r.error);
@@ -319,8 +334,20 @@ export default function UserClient({ account }: { account?: any }) {
 
           {/* Add a new address */}
           <div className="mt-[24px] mb-[18px] space-y-[10px] py-[20px]">
-            <select className="solid" value="Nigeria" disabled>
-              <option>Nigeria</option>
+            {/* Was a disabled "Nigeria" box. Soise ships to diaspora
+                customers, so this has to be a real choice. */}
+            <select
+              className="solid"
+              value={addr.country || DEFAULT_COUNTRY}
+              onChange={(e) =>
+                setAddr((a) => ({ ...a, country: e.target.value }))
+              }
+            >
+              {SHIPPING_COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
             </select>
             <input
               type="text"
