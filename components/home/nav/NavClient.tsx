@@ -766,6 +766,40 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                     )}
                   </AnimatePresence>
 
+                  {/* Totals and the primary action sit directly under the
+                      items, ABOVE "Complete the look" — buy first, browse more
+                      second. Sticky so it stays put once the recommendations are
+                      scrolled into view. */}
+                  <motion.div
+                    className="sticky bottom-0 z-10 shrink-0 border-t border-[#EFEFEF] bg-white pt-[20px] pb-[12px]"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                  >
+                    <div className="flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
+                      <div>Subtotal:</div>
+                      <div>{formatPrice(subtotal)}</div>
+                    </div>
+                    {/* Said here, before they commit to checkout — an unknown
+                        delivery cost is a reason to close the bag and think
+                        about it. Qualified, because the bag has no address yet
+                        and free delivery is a Nigeria-only promise: Soise also
+                        ships to diaspora customers. */}
+                    <div className="mt-[6px] flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
+                      <div>Shipping:</div>
+                      <div className="text-green-600">Free in Nigeria</div>
+                    </div>
+                    <motion.button
+                      className="btn_outline mt-4 disabled:cursor-not-allowed disabled:opacity-40"
+                      onClick={() => router.push('/shop/order-summary')}
+                      disabled={cart.length === 0}
+                      whileHover={cart.length > 0 ? { scale: 1.02 } : {}}
+                      whileTap={cart.length > 0 ? { scale: 0.98 } : {}}
+                    >
+                      Tap To Checkout
+                    </motion.button>
+                  </motion.div>
+
                   {/* Complete the look — recommendations seeded from the first
                       bag item. Hidden entirely when empty so it never pushes an
                       empty row above the subtotal. */}
@@ -787,37 +821,6 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                     </motion.section>
                   )}
                 </div>
-                {/* Pinned action bar. Always visible with the panel open, so
-                    Checkout is never something you have to go looking for. */}
-                <motion.div
-                  className="mt-auto shrink-0 border-t border-[#EFEFEF] bg-white pt-[20px] pb-[8px]"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.4 }}
-                >
-                  <div className="flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
-                    <div>Subtotal:</div>
-                    <div>{formatPrice(subtotal)}</div>
-                  </div>
-                  {/* Said here, before they commit to checkout — an unknown
-                      delivery cost is a reason to close the bag and think
-                      about it. Qualified, because the bag has no address yet
-                      and free delivery is a Nigeria-only promise: Soise also
-                      ships to diaspora customers. */}
-                  <div className="mt-[6px] flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
-                    <div>Shipping:</div>
-                    <div className="text-green-600">Free in Nigeria</div>
-                  </div>
-                  <motion.button
-                    className="btn_outline mt-4 disabled:cursor-not-allowed disabled:opacity-40"
-                    onClick={() => router.push('/shop/order-summary')}
-                    disabled={cart.length === 0}
-                    whileHover={cart.length > 0 ? { scale: 1.02 } : {}}
-                    whileTap={cart.length > 0 ? { scale: 0.98 } : {}}
-                  >
-                    Tap To Checkout
-                  </motion.button>
-                </motion.div>
               </div>
             )}
 
