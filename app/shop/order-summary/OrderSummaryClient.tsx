@@ -8,6 +8,7 @@ import { ArrowUpIcon } from '@/components/icons';
 import Footer from '@/components/footer';
 import { EnrichedCartItem } from '@/components/home/nav/types';
 import {
+  captureCartEmailAction,
   checkoutAction,
   applyDiscountCodeAction,
   resumePaymentAction,
@@ -899,6 +900,16 @@ export default function OrderSummaryClient({
                       placeholder="Email address"
                       autoComplete="email"
                       required
+                      // Save it on blur, not just on submit. A shopper who
+                      // types their email and then leaves is exactly who an
+                      // abandoned-cart reminder is for — and until now they
+                      // left no address behind at all.
+                      onBlur={(e) => {
+                        const value = e.target.value.trim();
+                        if (value.includes('@')) {
+                          void captureCartEmailAction(value);
+                        }
+                      }}
                     />
                   )}
 

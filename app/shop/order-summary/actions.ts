@@ -335,3 +335,45 @@ export async function applyDiscountCodeAction(code: string) {
     };
   }
 }
+
+/**
+ * Attach the shopper's email to their cart as soon as they type it, rather
+ * than waiting for checkout submit.
+ *
+ * That timing is the entire point. Email used to reach the backend only in the
+ * submit payload, so every shopper who filled a bag and left — the majority —
+ * was unreachable, and an abandoned cart was a dead end. Captured here, it
+ * becomes recoverable.
+ *
+ * Deliberately silent: this is a background nicety and must never interrupt
+ * checkout. A failure here is invisible to the shopper by design.
+ */
+export async function captureCartEmailAction(email: string): Promise<void> {
+  if (!email || !email.includes('@')) return;
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const guestId = cookieStore.get('soise_guestId')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!baseUrl) return;
+  if (!accessToken && !guestId) return;
+
+  const url = accessToken
+    ? `${baseUrl}/cart/email`
+    : `${baseUrl}/cart/email?session_id=${encodeURIComponent(guestId || '')}`;
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ email: email.trim() }),
+      cache: 'no-store',
+    });
+  } catch {
+    /* best-effort — never block or surface anything at checkout */
+  }
+}

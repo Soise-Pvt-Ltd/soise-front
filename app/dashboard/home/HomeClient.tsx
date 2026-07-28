@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import GridContainer from '../gridContainer';
 import { AdminEditIcon } from '@/components/icons';
 import OrderActionsMenu from './OrderActionsMenu';
+import FunnelCard from './FunnelCard';
 import StatCardMenu from './StatCardMenu';
 
 ChartJS.register(
@@ -40,11 +41,14 @@ type HomeClientProps = {
   data: any;
   /** The dashboard fetch failed — the zeros below are placeholders, not facts. */
   loadFailed?: boolean;
+  /** Cart-to-purchase funnel; null when unavailable. */
+  funnel?: any;
 };
 
 export default function HomeClient({
   data: rawData,
   loadFailed = false,
+  funnel = null,
 }: HomeClientProps) {
   // Normalize the payload to a guaranteed shape so a missing/partial/error
   // response from the backend can never crash the admin dashboard.
@@ -379,6 +383,8 @@ export default function HomeClient({
             </div>
           </div>
         </div>
+
+        <FunnelCard funnel={funnel} />
 
         {/* Second layer */}
         <div className="my-[38px] space-y-[24px] gap-x-[16px] md:space-y-0">
