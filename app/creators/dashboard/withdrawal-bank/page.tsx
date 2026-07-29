@@ -4,7 +4,12 @@ import { useRouter } from 'next/navigation';
 import CreatorNav from '@/components/creators/CreatorNav';
 import { ArrowLeftIcon, CopyIconSolidWhite } from '@/components/icons';
 import { useState, useEffect } from 'react';
-import { getWallet, getBanks, savePayoutAccount } from '../request-payout/actions';
+import {
+  getWallet,
+  getBanks,
+  savePayoutAccount,
+  resolveAccount,
+} from '../request-payout/actions';
 import { showToast } from '@/lib/toast-utils';
 
 interface Bank {
@@ -22,6 +27,7 @@ export default function WithdrawalBankPage() {
   const [balance, setBalance] = useState(0);
   const [hasBank, setHasBank] = useState(false);
   const [bankName, setBankName] = useState('');
+  const [bankCode, setBankCode] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
 
@@ -29,8 +35,13 @@ export default function WithdrawalBankPage() {
   const [form, setForm] = useState({
     bankCode: '',
     accountNumber: '',
-    accountName: '',
   });
+
+  // The verified holder name, straight from the bank. Null until the pair
+  // resolves — and saving is blocked until it does.
+  const [resolvedName, setResolvedName] = useState<string | null>(null);
+  const [isResolving, setIsResolving] = useState(false);
+  const [resolveError, setResolveError] = useState('');
 
   const loadWallet = async () => {
     const result = await getWallet();
@@ -41,6 +52,11 @@ export default function WithdrawalBankPage() {
       if (details.bank_name) {
         setHasBank(true);
         setBankName(details.bank_name);
+        // Keep the CODE, not just the name. Prefilling the edit form used to
+        // match the saved bank by NAME against Paystack's list; any drift in
+        // spelling or spacing meant the select silently fell back to "Select
+        // your bank" and the creator had to find their bank again.
+        setBankCode(details.bank_code || '');
         setAccountNumber(details.account_number || '');
         setAccountName(details.account_name || '');
       } else {
@@ -71,15 +87,48 @@ export default function WithdrawalBankPage() {
   };
 
   const beginEdit = () => {
-    // Prefill the form from the currently saved details.
-    const matched = banks.find((b) => b.name === bankName);
+    // Prefill from the saved code, falling back to a name match only for
+    // accounts saved before bank_code was persisted.
+    const fallback = banks.find((b) => b.name === bankName)?.code || '';
     setForm({
-      bankCode: matched?.code || '',
+      bankCode: bankCode || fallback,
       accountNumber: accountNumber || '',
-      accountName: accountName || '',
     });
+    setResolvedName(null);
+    setResolveError('');
     setIsEditing(true);
   };
+
+  // Resolve as soon as both halves are present. Debounced so typing the tenth
+  // digit doesn't fire a request per keystroke.
+  useEffect(() => {
+    if (!isEditing) return;
+    const { bankCode: code, accountNumber: number } = form;
+
+    setResolvedName(null);
+    setResolveError('');
+
+    if (!code || !/^\d{10}$/.test(number)) return;
+
+    let cancelled = false;
+    setIsResolving(true);
+    const timer = setTimeout(async () => {
+      const res = await resolveAccount(number, code);
+      if (cancelled) return;
+      setIsResolving(false);
+      if (res.success && res.data?.account_name) {
+        setResolvedName(res.data.account_name);
+      } else {
+        setResolveError(res.error || "We couldn't verify that account");
+      }
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      setIsResolving(false);
+    };
+  }, [form, isEditing]);
 
   const handleSave = async () => {
     const selectedBank = banks.find((b) => b.code === form.bankCode);
@@ -92,8 +141,11 @@ export default function WithdrawalBankPage() {
       showToast.error('Account number must be exactly 10 digits');
       return;
     }
-    if (!form.accountName.trim()) {
-      showToast.error('Please enter the account name');
+    // The name is the bank's answer, never the creator's typing. If it hasn't
+    // resolved there is no verified account to save, and saving anyway is how
+    // a transfer ends up at a stranger's account.
+    if (!resolvedName) {
+      showToast.error('Confirm your account details before saving');
       return;
     }
 
@@ -102,12 +154,12 @@ export default function WithdrawalBankPage() {
       bank_name: selectedBank.name,
       bank_code: selectedBank.code,
       account_number: form.accountNumber,
-      account_name: form.accountName.trim(),
+      account_name: resolvedName,
     });
     setIsSaving(false);
 
     if (res.success) {
-      showToast.success('Payout account saved successfully');
+      showToast.success('Payout account saved');
       setIsEditing(false);
       await loadWallet();
     } else {
@@ -118,7 +170,8 @@ export default function WithdrawalBankPage() {
   return (
     <div className="min-h-screen bg-[#f9f9f9]">
       <CreatorNav balance={balance} />
-      <div className="page-shell flex flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
+      {/* Reading-width column: this is a form, not a dashboard. */}
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
         <div
           className="flex items-center gap-x-2 hover:cursor-pointer"
           onClick={() => router.back()}
@@ -126,39 +179,45 @@ export default function WithdrawalBankPage() {
           <ArrowLeftIcon />{' '}
           <span className="font-bold uppercase">Payout account</span>
         </div>
+        {/* "Funds would be sent in a few minutes" was not true and set the
+            wrong expectation: a payout request is queued at status
+            'requested' and an admin initiates the Paystack transfer by hand
+            (a creator must never be able to trigger the transfer OTP). The
+            request-payout page already says one business day; these two now
+            agree. */}
         <div className="pt-[13px] text-[#8E8E93]">
-          This is where your total earnings will be sent to when you initiate a
-          withdrawal. Funds would be sent in a few minutes.
+          This is where your earnings are sent when you withdraw. Our team
+          reviews and sends each transfer, usually within one business day.
         </div>
 
         {isLoading ? (
-          <div className="rounded-[10px] bg-[#B3D5EB] px-[16px] py-[24px] text-center text-sm text-white">
-            Loading payout details...
-          </div>
+          <div className="h-[104px] animate-pulse rounded-[10px] bg-black/5" />
         ) : (
           <>
-            {/* Saved account card (only when a bank is set and not editing) */}
+            {/* Saved account card (only when a bank is set and not editing).
+                Ink, not the old #B3D5EB — white text on that pale blue was
+                about 1.4:1, so the account number was barely readable. */}
             {hasBank && !isEditing && (
               <div className="space-y-[24px]">
-                <div className="space-y-[30px] rounded-[10px] bg-[#B3D5EB] px-[16px] py-[24px] text-sm">
-                  <div className="flex items-center justify-between">
-                    <div className="text-white">
-                      <span className="text-[16px] font-medium">
-                        {bankName}
-                      </span>
-                      <p>{accountNumber}</p>
+                <div className="rounded-2xl bg-[#121212] px-[20px] py-[24px]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 text-white">
+                      <p className="text-[16px] font-medium">{bankName}</p>
+                      <p className="mt-[2px] text-[15px] text-white/80 tabular-nums">
+                        {accountNumber}
+                      </p>
                       {accountName && (
-                        <p className="mt-1 text-xs text-white/70">
+                        <p className="mt-[6px] text-[13px] text-white/60">
                           {accountName}
                         </p>
                       )}
                     </div>
                     <button
                       onClick={handleCopy}
-                      className="cursor-pointer text-green-500"
+                      className="shrink-0 cursor-pointer rounded-[8px] px-[10px] py-[6px] text-[12px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                       aria-label="Copy account number"
                     >
-                      {isCopied ? 'Copied!' : <CopyIconSolidWhite />}
+                      {isCopied ? 'Copied' : <CopyIconSolidWhite />}
                     </button>
                   </div>
                 </div>
@@ -182,11 +241,9 @@ export default function WithdrawalBankPage() {
                 </div>
                 <button
                   onClick={() => {
-                    setForm({
-                      bankCode: '',
-                      accountNumber: '',
-                      accountName: '',
-                    });
+                    setForm({ bankCode: '', accountNumber: '' });
+                    setResolvedName(null);
+                    setResolveError('');
                     setIsEditing(true);
                   }}
                   className="btn_creators_solid"
@@ -235,34 +292,55 @@ export default function WithdrawalBankPage() {
                     }
                     type="text"
                     inputMode="numeric"
+                    autoComplete="off"
                     className="solid"
                     placeholder="0123456789"
                     maxLength={10}
+                    aria-describedby="account_status"
                   />
                 </div>
 
-                <div>
-                  <label htmlFor="account_name">Account Name</label>
-                  <input
-                    id="account_name"
-                    name="accountName"
-                    value={form.accountName}
-                    onChange={(e) =>
-                      setForm({ ...form, accountName: e.target.value })
-                    }
-                    type="text"
-                    className="solid"
-                    placeholder="John Sosie"
-                  />
+                {/* The account holder, per the bank. Not a field — there is
+                    nothing here for the creator to author. */}
+                <div id="account_status" aria-live="polite">
+                  {isResolving && (
+                    <div className="rounded-[10px] bg-[#F6F6F6] px-[14px] py-[13px] text-[14px] text-[#8E8E93]">
+                      Checking account…
+                    </div>
+                  )}
+                  {!isResolving && resolvedName && (
+                    <div className="rounded-[10px] bg-[#CCEAD6] px-[14px] py-[13px]">
+                      <p className="text-[12px] tracking-[0.08em] text-[#1B7A3D] uppercase">
+                        Account name
+                      </p>
+                      <p className="mt-[2px] text-[16px] font-medium text-[#12602F]">
+                        {resolvedName}
+                      </p>
+                      <p className="mt-[4px] text-[12px] text-[#1B7A3D]">
+                        Check this is you — transfers can&apos;t be reversed.
+                      </p>
+                    </div>
+                  )}
+                  {!isResolving && resolveError && (
+                    <div className="rounded-[10px] bg-[#E5C6BF] px-[14px] py-[13px] text-[14px] text-[#991C00]">
+                      {resolveError}
+                    </div>
+                  )}
+                  {!isResolving && !resolvedName && !resolveError && (
+                    <div className="rounded-[10px] bg-[#F6F6F6] px-[14px] py-[13px] text-[14px] text-[#8E8E93]">
+                      Pick your bank and enter your 10-digit account number —
+                      we&apos;ll confirm the name on the account.
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-3 pt-[8px] sm:flex-row">
                   <button
                     onClick={handleSave}
-                    disabled={isSaving}
+                    disabled={isSaving || !resolvedName}
                     className="btn_creators_solid disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isSaving ? 'Saving...' : 'Save payout account'}
+                    {isSaving ? 'Saving…' : 'Save payout account'}
                   </button>
                   {hasBank && (
                     <button

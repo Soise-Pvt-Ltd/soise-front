@@ -98,6 +98,59 @@ export async function getBanks() {
   }
 }
 
+/**
+ * Ask the bank who actually owns an account number.
+ *
+ * The account name used to be a free-text box the creator filled in
+ * themselves, saved verbatim and handed to Paystack as the transfer
+ * recipient. One mistyped digit made a valid recipient pointing at a
+ * stranger, and transfers don't come back. Now the name is something the
+ * bank returns and the creator confirms.
+ */
+export async function resolveAccount(accountNumber: string, bankCode: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+
+  if (!/^\d{10}$/.test(accountNumber) || !bankCode) {
+    return { success: false, error: 'Enter a 10-digit account number and pick a bank' };
+  }
+
+  try {
+    const res = await fetch(
+      `${BASE_URL}/payments/resolve-account?account_number=${encodeURIComponent(
+        accountNumber,
+      )}&bank_code=${encodeURIComponent(bankCode)}`,
+      {
+        method: 'GET',
+        headers: {
+          Cookie: `access_token=${accessToken}`,
+          Accept: 'application/json',
+        },
+        cache: 'no-store',
+      },
+    );
+
+    const json = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      return {
+        success: false,
+        // The backend distinguishes "that account doesn't exist" from "we
+        // couldn't reach the bank", and the creator's next move differs.
+        error:
+          json?.message || "We couldn't verify that account. Check the number and bank.",
+      };
+    }
+
+    return { success: true, data: json?.data as { account_name: string } };
+  } catch (error) {
+    console.error('Error resolving account:', error);
+    return { success: false, error: 'Could not verify the account right now' };
+  }
+}
+
 export async function savePayoutAccount(payload: {
   bank_name: string;
   bank_code: string;

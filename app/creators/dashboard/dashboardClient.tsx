@@ -78,14 +78,37 @@ export default function CreatorDashboard({
 
   const currentMonthIndex = new Date().getMonth();
 
+  // `month` arrives as an INTEGER 1-12 — the backend groups by
+  // `time::month(created_at)`, not by a date. This used to do
+  // `new Date(item.month).getMonth()`, which reads 7 as 7 *milliseconds* after
+  // the epoch: 1 Jan 1970, month index 0. Every month therefore landed on the
+  // January bar, and because the write was an assignment rather than a sum,
+  // each row overwrote the last — so the chart showed one January column
+  // holding whichever month happened to sort last.
+  //
+  // Still tolerant of a date string, in case the grouping ever changes shape.
   const monthlyEarnings = new Array(12).fill(0);
-  if (
-    dashboard.earnings?.monthly_breakdown &&
-    dashboard.earnings.monthly_breakdown.length > 0
-  ) {
+  if (Array.isArray(dashboard.earnings?.monthly_breakdown)) {
     dashboard.earnings.monthly_breakdown.forEach((item: any) => {
-      const monthIndex = new Date(item.month).getMonth();
-      monthlyEarnings[monthIndex] = item.earnings || item.amount || 0;
+      const raw = item?.month;
+      let index = -1;
+
+      if (typeof raw === 'number' && raw >= 1 && raw <= 12) {
+        index = raw - 1;
+      } else if (typeof raw === 'string') {
+        const asNumber = Number(raw);
+        if (Number.isInteger(asNumber) && asNumber >= 1 && asNumber <= 12) {
+          index = asNumber - 1;
+        } else {
+          const parsed = new Date(raw);
+          if (!Number.isNaN(parsed.getTime())) index = parsed.getMonth();
+        }
+      }
+
+      if (index < 0 || index > 11) return;
+      // Accumulate: the window is 365 days, so two rows can share a month
+      // index across a year boundary and one must not erase the other.
+      monthlyEarnings[index] += Number(item.earnings ?? item.amount ?? 0) || 0;
     });
   }
 
@@ -203,7 +226,10 @@ export default function CreatorDashboard({
     {
       icon: <DollarIcon />,
       label: 'Commission earned',
-      hint: 'Paid into your wallet',
+      // "Paid into your wallet" read as the withdrawable figure, which it is
+      // not — this is lifetime commission credited, before any withdrawals.
+      // The available balance is stated separately, below the chart.
+      hint: 'Lifetime, before withdrawals',
       value: naira(totalEarnings),
     },
   ];
