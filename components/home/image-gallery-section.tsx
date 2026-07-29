@@ -49,6 +49,10 @@ export default function ImageGallerySection({
             <motion.img
               src={src}
               alt={`SOISE editorial ${index + 1}`}
+              // Below the fold, and previously eager: three full-resolution
+              // renders downloading in parallel with the LCP hero.
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-contain object-center"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

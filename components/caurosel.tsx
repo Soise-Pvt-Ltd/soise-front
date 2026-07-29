@@ -10,6 +10,7 @@ import { useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
+import { cloudinaryContent } from '@/lib/cloudinary';
 
 export default function SwiperCarouselClient({ items: products }: any) {
   const { formatPrice } = useCurrency();
@@ -87,8 +88,18 @@ export default function SwiperCarouselClient({ items: products }: any) {
                           item.sample_variants[0].media) ||
                         (item.images?.length && item.images) ||
                         (item.primary_image ? [{ url: item.primary_image }] : []);
+                      // Prefer the pre-generated variants. The backend already
+                      // emits c_scale,f_auto,q_auto at w_1200/w_800, but this
+                      // read `.url` — the untransformed original. One product
+                      // render was shipping 1.4MB of PNG into a card, and
+                      // Swiper preloads the first slide, so it landed ahead of
+                      // the LCP hero. Falls back to a transform on .url for
+                      // payloads that predate variants.
                       const photoUrls: string[] = (rawMedia ?? [])
-                        .map((m: { url?: string } | null) => m?.url)
+                        .map((m: { url?: string; variants?: { medium?: string; large?: string } } | null) =>
+                          m?.variants?.medium || m?.variants?.large ||
+                          (m?.url ? cloudinaryContent(m.url, 900) : undefined),
+                        )
                         .filter((url: string | undefined): url is string => Boolean(url));
 
                       if (photoUrls.length === 0) return null;

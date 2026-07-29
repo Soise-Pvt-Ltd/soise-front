@@ -9,7 +9,7 @@ import AfterHero from '@/components/home/after-hero';
 import Hero from '@/components/home/hero';
 import ImageGallerySection from '@/components/home/image-gallery-section';
 import { SITE_URL, SITE_NAME, pageMetadata } from '@/lib/seo';
-import { cloudinaryGalleryTrim } from '@/lib/cloudinary';
+import { cloudinaryGalleryTrim, cloudinaryContent } from '@/lib/cloudinary';
 
 // Serve a cached, statically-rendered homepage and revalidate the catalog data
 // in the background at most once a minute. Turns a per-request dynamic render
@@ -179,14 +179,20 @@ export default async function Home() {
       )}
       <FeaturedCollection
         collection={featuredCollection}
-        img={homeImages.mens_top}
+        img={homeImages.mens_top ? cloudinaryContent(homeImages.mens_top) : homeImages.mens_top}
         texts={homeTexts}
       />
       {category2Products.length > 0 && (
         <BeforeExploreCollection products={category2Products} />
       )}
       <ImageGallerySection images={images} />
-      <ExploreCollection image={homeImages.explore_collection} />
+      <ExploreCollection
+        image={
+          homeImages.explore_collection
+            ? cloudinaryContent(homeImages.explore_collection)
+            : homeImages.explore_collection
+        }
+      />
       <Footer />
     </>
   );

@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import type { HomepageTexts } from './hero';
+import { cloudinaryHero } from '@/lib/cloudinary';
 
 interface HeroClientProps {
   img?: string | null;
@@ -15,12 +16,20 @@ export default function HeroClient({ img, texts }: HeroClientProps) {
   const headline = texts?.hero_headline || 'Wear the culture';
   const subheadline = texts?.hero_subheadline || 'New Collection Available';
 
+  // The LCP element. Two problems it used to have: the raw 309KB original was
+  // served untransformed, and a CSS background-image can't be discovered until
+  // the stylesheet has parsed — so the single most important pixel on the site
+  // started downloading last. f_auto cuts it to ~107KB and the preload lets the
+  // browser start it immediately.
+  const heroSrc = cloudinaryHero(img || '/hero.jpg');
+
   return (
     <>
+      <link rel="preload" as="image" href={heroSrc} fetchPriority="high" />
       {/* Background image with a slow, expensive-feeling settle */}
       <motion.div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${img || '/hero.jpg'})` }}
+        style={{ backgroundImage: `url(${heroSrc})` }}
         initial={reduceMotion ? false : { scale: 1.08 }}
         animate={{ scale: 1 }}
         transition={{ duration: 2.4, ease: EASE }}

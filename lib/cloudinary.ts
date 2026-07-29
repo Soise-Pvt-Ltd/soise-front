@@ -27,5 +27,36 @@ export function withCloudinaryTransform(url: string, transform: string): string 
  * and it's not what was asked for here.
  */
 export function cloudinaryGalleryTrim(url: string): string {
-  return withCloudinaryTransform(url, 'e_trim,q_80');
+  // f_auto is doing the heavy lifting here, not q_80. These are photographic
+  // PNG cutouts, and q_80 on a PNG is close to a no-op — the three gallery
+  // renders were shipping at 837KB, 553KB and 789KB. Serving WebP/AVIF instead
+  // takes each to roughly a quarter of that, and both formats keep the alpha
+  // channel the cutouts depend on.
+  return withCloudinaryTransform(url, 'e_trim,f_auto,q_auto');
+}
+
+/**
+ * Optimise any CMS-managed image that isn't the hero or a gallery cutout.
+ *
+ * Same reasoning: uploads arrive as full-resolution PNGs — one of the homepage
+ * images was 2.1MB — and are served untransformed. c_limit caps the long edge
+ * without upscaling or cropping, so framing is untouched.
+ */
+export function cloudinaryContent(url: string, width = 1400): string {
+  return withCloudinaryTransform(url, `f_auto,q_auto,c_limit,w_${width}`);
+}
+
+/**
+ * Optimise a full-bleed hero for delivery.
+ *
+ * The homepage hero is the LCP element and was served as the raw Cloudinary
+ * original — 309KB of JPEG. `f_auto` alone gets that to 160KB of WebP (AVIF
+ * where supported); capping the width at what a hero actually needs takes it
+ * to ~107KB. On a Nigerian mobile connection that difference is seconds.
+ *
+ * `c_limit` never upscales and never crops — it only caps the long edge — so
+ * the framing the CMS chose is preserved exactly.
+ */
+export function cloudinaryHero(url: string, width = 1600): string {
+  return withCloudinaryTransform(url, `f_auto,q_auto,c_limit,w_${width}`);
 }

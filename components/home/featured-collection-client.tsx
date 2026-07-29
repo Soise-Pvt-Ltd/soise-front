@@ -6,6 +6,7 @@ import { ArrowRightIcon } from '../icons';
 import Link from 'next/link';
 import type { HomepageTexts } from './hero';
 import type { FeaturedCollection } from './featured-collection';
+import { cloudinaryContent } from '@/lib/cloudinary';
 
 interface FeaturedCollectionClientProps {
   collection?: FeaturedCollection | null;
@@ -26,7 +27,12 @@ export default function FeaturedCollectionClient({
   const cta = texts?.mens_tops_cta || 'Explore Collection';
   // An admin-uploaded background wins; otherwise fall back to the selected
   // collection's banner, then the bundled default.
-  const backgroundImage = img || collection?.bannerUrl || '/mens-top.jpg';
+  // Every branch here needs optimising, not just the CMS one: the collection
+  // banner was arriving as a 1.4MB untransformed PNG and rendering as a
+  // full-bleed background. cloudinaryContent no-ops on the bundled fallback.
+  const backgroundImage = cloudinaryContent(
+    img || collection?.bannerUrl || '/mens-top.jpg',
+  );
   const href = collection
     ? `/shop/product-listing?collection=${encodeURIComponent(collection.name)}`
     : '/shop/product-listing';

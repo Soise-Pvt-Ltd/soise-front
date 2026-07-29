@@ -18,10 +18,15 @@ import {
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
+// Only the weights the storefront actually uses. All nine were declared, which
+// meant nine woff2 files downloaded AND preloaded on every page — competing for
+// bandwidth with the LCP image. 100/200/300/800/900 have zero occurrences
+// across app/ and components/.
 const body_font = Poppins({
   subsets: ['latin'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-body',
+  display: 'swap',
 });
 
 // Editorial display serif — sharp, high-fashion, internet-native. Replaces the
