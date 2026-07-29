@@ -182,9 +182,9 @@ export default function CreatorsApplicationClient() {
                   Every 10 sales
                 </p>
                 <p className="mx-auto mt-3 max-w-[480px] text-[16px] leading-relaxed text-[#F4F1EA] sm:text-[18px]">
-                  Hit 10 verified sales on your code and we send you fresh
-                  Soise gear — on us. Cash commission on every sale, plus the
-                  pieces to wear while you sell them.
+                  Hit 10 verified sales on your code and you unlock ₦100,000 on
+                  top of your commission — added to your payout when you
+                  withdraw — plus fresh Soise gear from the drop, on us.
                 </p>
               </div>
             </section>

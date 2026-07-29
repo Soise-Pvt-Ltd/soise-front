@@ -17,11 +17,11 @@ import { updateProfile } from './actions';
 
 export default function ProfileClient({ dashboard }: any) {
   const router = useRouter();
-  const [copiedReferralCode, setCopiedReferralCode] = useState(false);
+  const [copiedCreatorCode, setCopiedCreatorCode] = useState(false);
 
   // Extract data from dashboard prop
   const initialProfile = dashboard?.profile ?? {};
-  const referralCode = dashboard?.creator_code?.code || 'N/A';
+  const creatorCode = dashboard?.creator_code?.code || 'N/A';
   const tier = dashboard?.tier || {};
   const withdrawalBank = dashboard?.withdrawal_bank || {};
   const currentBalance = dashboard?.earnings?.current_balance || 0;
@@ -104,12 +104,12 @@ export default function ProfileClient({ dashboard }: any) {
     }
   };
 
-  const handleCopyReferralCode = async () => {
+  const handleCopyCreatorCode = async () => {
     try {
-      await navigator.clipboard.writeText(referralCode);
-      setCopiedReferralCode(true);
+      await navigator.clipboard.writeText(creatorCode);
+      setCopiedCreatorCode(true);
       setTimeout(() => {
-        setCopiedReferralCode(false);
+        setCopiedCreatorCode(false);
       }, 2000);
     } catch (err) {
       console.error('Failed to copy text: ', err);
@@ -226,17 +226,17 @@ export default function ProfileClient({ dashboard }: any) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <div>Referral Code</div>
+            <div>Creator Code</div>
             <div className="flex items-center gap-x-[8px] text-[#AEAEB2]">
-              <div>{referralCode}</div>
+              <div>{creatorCode}</div>
               <button
                 type="button"
                 className="flex cursor-pointer items-center gap-x-1"
-                onClick={handleCopyReferralCode}
-                title="Copy referral code"
-                aria-label="Copy referral code"
+                onClick={handleCopyCreatorCode}
+                title="Copy creator code"
+                aria-label="Copy creator code"
               >
-                {copiedReferralCode ? (
+                {copiedCreatorCode ? (
                   <span className="text-green-600">Copied!</span>
                 ) : (
                   <CopyIcon />

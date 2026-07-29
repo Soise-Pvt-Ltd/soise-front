@@ -55,11 +55,11 @@ const FAQ_CATEGORIES: FaqCategory[] = [
       },
       {
         q: 'When and how do I get paid?',
-        a: 'Commission lands in your creator wallet on each verified (paid) order; request a bank payout from your dashboard.',
+        a: 'Commission lands in your creator wallet on each verified (paid) order; request a bank payout from your dashboard. Any ₦100,000 milestone bonuses you have earned are added to that payout.',
       },
       {
         q: 'Do I get anything besides cash commission?',
-        a: 'Yes — every 10 verified sales on your code also earns you fresh Soise gear from the current drop, on top of your commission.',
+        a: 'Yes — every 10 verified sales on your code unlocks a ₦100,000 milestone bonus on top of your commission, plus fresh Soise gear from the current drop. We add the bonus to your payout when you withdraw.',
       },
       {
         q: 'How does store credit work?',
@@ -91,7 +91,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     items: [
       {
         q: 'How do I track performance?',
-        a: 'Your creator dashboard shows earnings, referrals, and tier progress.',
+        a: 'Your creator dashboard shows earnings, orders placed with your creator code, and tier progress.',
       },
       {
         q: 'What content performs best?',
@@ -168,8 +168,9 @@ export default function CreatorSwazLoopPage() {
               </li>
               <li>
                 <span className="font-medium">Every 10 verified sales</span>{' '}
-                also earns you fresh Soise gear from the current drop — on top
-                of your commission.
+                unlocks a <span className="font-medium">₦100,000 bonus</span> on
+                top of your commission, plus fresh Soise gear from the current
+                drop. We add the bonus to your payout when you withdraw.
               </li>
               <li>
                 <span className="font-medium">Tiers raise your rate</span> — hit

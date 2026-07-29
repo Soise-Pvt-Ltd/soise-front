@@ -187,10 +187,12 @@ export default function PlaybookPage() {
               word that makes it feel real.
             </li>
             <li>
-              <b>Every 10 verified sales = free SOISE gear.</b> This is the
-              hook that turns a one-time code into a reason to keep pushing.
-              Say the number. “Every 10 sales” is concrete and countable in a
-              way “rewards over time” isn&apos;t.
+              <b>Every 10 verified sales = ₦100,000 + free SOISE gear.</b> We
+              add the bonus by hand to their payout when they withdraw — it is
+              not automatic, so check their order count before you process one.
+              This is the hook that turns a one-time code into a reason to keep
+              pushing. Say the number. “Every 10 sales” is concrete and
+              countable in a way “rewards over time” isn&apos;t.
             </li>
             <li>
               <b>First access to drops.</b> They wear it before it&apos;s public —
@@ -213,8 +215,9 @@ export default function PlaybookPage() {
             “Hi [name] — we’ve been watching your [specific thing, e.g.
             thrift-flip reels] and how your audience responds to the way you style
             fits. We’re opening a small first cohort of the Swaz Creator program —
-            your own code, cash commission on every sale, free SOISE gear every
-            10 verified sales, early access to drops before they’re public, and
+            your own code, cash commission on every sale, a ₦100,000 bonus plus
+            free SOISE gear every 10 verified sales, early access to drops
+            before they’re public, and
             founding-creator status. We’re keeping it to ~25 people this round
             and I’d like one of them to be you. Want the details?”
           </blockquote>
