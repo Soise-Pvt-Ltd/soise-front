@@ -19,7 +19,6 @@ import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
 import { openInlineCheckout } from '@/lib/paystack-inline';
-import { paystackFee } from '@/lib/paystack-fee';
 import {
   readPendingOrder,
   writePendingOrder,
@@ -193,16 +192,11 @@ export default function OrderSummaryClient({
     useStoreCredit && hasStoreCredit ? Math.min(storeCredit, totalWithShipping) : 0;
   const totalAfterCredit = Math.max(totalWithShipping - creditApplied, 0);
 
-  // This Paystack account passes its transaction fee to the customer, so the
-  // amount actually charged is higher than the order value. Shown as its own
-  // line: quoting one number and collecting another at the payment step is the
-  // most-cited reason people abandon checkout, and it is exactly where every
-  // order this store has created has died.
-  //
-  // Zero when store credit covers everything, because that never reaches
-  // Paystack at all.
-  const paymentFee = paystackFee(totalAfterCredit);
-  const amountCharged = totalAfterCredit + paymentFee;
+  // No fee line: the Paystack transaction fee is absorbed by the merchant, so
+  // the order total IS the amount charged. It briefly wasn't — the account
+  // passed the fee on, and checkout quoted 150,000 while Paystack collected
+  // 152,000. If that setting is ever flipped back, the fee must be surfaced
+  // again rather than left as a surprise at the payment step.
 
   async function handleRemoveItem(itemId: string) {
     if (!itemId || removingId) return;
@@ -936,29 +930,18 @@ export default function OrderSummaryClient({
                 <div className="text-[#8E8E93]">Confirmed after order</div>
               )}
             </div>
-            {paymentFee > 0 && (
-              <div className="flex items-start justify-between pt-[8px] text-[12px] text-[#8E8E93]">
-                <div>
-                  Card fee
-                  <span className="ml-[6px] normal-case">
-                    (charged by Paystack)
-                  </span>
-                </div>
-                <div>{formatPrice(paymentFee)}</div>
-              </div>
-            )}
             <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
               <div>Total</div>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={amountCharged}
+                  key={totalAfterCredit}
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 6 }}
                   transition={{ duration: 0.25 }}
                   className={showSavingsPulse ? 'text-green-600' : ''}
                 >
-                  {formatPrice(amountCharged)}
+                  {formatPrice(totalAfterCredit)}
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -1243,7 +1226,7 @@ export default function OrderSummaryClient({
                 >
                   {pending
                     ? 'Processing...'
-                    : `Pay ${formatPrice(amountCharged)}`}
+                    : `Pay ${formatPrice(totalAfterCredit)}`}
                 </button>
               </div>
             </form>
