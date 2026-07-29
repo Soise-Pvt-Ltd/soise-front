@@ -174,27 +174,33 @@ export default function CreatorDashboard({
   };
 
   // Tier progress toward the next milestone (from /tiers/dashboard).
-  // `sales_needed` is the ABSOLUTE monthly-sales threshold of the next tier,
-  // not a remaining amount — so remaining = needed - current. The bar is
+  // The ladder is keyed on LIFETIME PAID ORDERS (`usage_count`), not naira:
+  // monthly sales reset on the 1st, so the old bar emptied itself every month
+  // and told a creator they had gone backwards.
+  // `orders_needed` is the ABSOLUTE order threshold of the next tier, not a
+  // remaining count — so remaining = needed - current. The bar is
   // tier-relative: progress within the current band (floor → next threshold),
-  // not from zero. `tier.min_monthly_sales` is the current band's floor.
-  const monthlySales = tiers?.monthly_sales ?? 0;
-  const tierFloor = tiers?.tier?.min_monthly_sales ?? 0;
+  // not from zero. `tier.min_orders` is the current band's floor.
+  const ordersPlaced = tiers?.usage_count ?? 0;
+  const tierFloor = tiers?.tier?.min_orders ?? 0;
   const nextTierName = tiers?.next_milestone?.tier_name as string | undefined;
-  const salesNeeded = tiers?.next_milestone?.sales_needed as number | undefined;
+  const ordersNeeded = tiers?.next_milestone?.orders_needed as
+    | number
+    | undefined;
+  const nextTierRate = tiers?.next_milestone?.rate as number | undefined;
   const hasNextMilestone =
     hasTier &&
     !!nextTierName &&
-    typeof salesNeeded === 'number' &&
-    salesNeeded > 0;
-  const remainingSales = hasNextMilestone
-    ? Math.max(0, (salesNeeded as number) - monthlySales)
+    typeof ordersNeeded === 'number' &&
+    ordersNeeded > 0;
+  const remainingOrders = hasNextMilestone
+    ? Math.max(0, (ordersNeeded as number) - ordersPlaced)
     : 0;
   const tierBand = hasNextMilestone
-    ? Math.max(1, (salesNeeded as number) - tierFloor)
+    ? Math.max(1, (ordersNeeded as number) - tierFloor)
     : 1;
   const tierProgress = hasNextMilestone
-    ? Math.min(1, Math.max(0, (monthlySales - tierFloor) / tierBand))
+    ? Math.min(1, Math.max(0, (ordersPlaced - tierFloor) / tierBand))
     : 0;
   const atTopTier = hasTier && !!tiers && !nextTierName;
 
@@ -299,7 +305,10 @@ export default function CreatorDashboard({
           {hasNextMilestone && (
             <div className="mt-[16px]">
               <div className="flex items-center justify-between text-[12px] text-white/60">
-                <span>{naira(monthlySales)} this month</span>
+                <span>
+                  {ordersPlaced.toLocaleString()}{' '}
+                  {ordersPlaced === 1 ? 'order' : 'orders'} so far
+                </span>
                 <span>Next: {nextTierName}</span>
               </div>
               <div className="mt-[8px] h-[6px] overflow-hidden rounded-full bg-white/15">
@@ -309,8 +318,13 @@ export default function CreatorDashboard({
                 />
               </div>
               <p className="mt-[8px] text-[12px] text-white/70">
-                {naira(remainingSales)} more in sales this month to reach{' '}
-                {nextTierName} and a higher commission rate.
+                {remainingOrders.toLocaleString()} more{' '}
+                {remainingOrders === 1 ? 'order' : 'orders'} to reach{' '}
+                {nextTierName}
+                {typeof nextTierRate === 'number'
+                  ? ` and ${fmtPct(nextTierRate)} commission`
+                  : ' and a higher commission rate'}
+                . Orders count for life — you never drop a tier.
               </p>
             </div>
           )}

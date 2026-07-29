@@ -51,7 +51,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     items: [
       {
         q: 'How much do creators earn?',
-        a: "Commission starts at your tier's base rate and increases as you hit follower/sales milestones, up to your tier cap.",
+        a: 'Every tier pays a flat rate: Soise I 10%, Soise II 12%, Soise III 14%, Soise IV 17%, Soise V 20%. You always know exactly what you earn.',
       },
       {
         q: 'When and how do I get paid?',
@@ -77,7 +77,7 @@ const FAQ_CATEGORIES: FaqCategory[] = [
     items: [
       {
         q: 'How do I level up my tier?',
-        a: 'Submit a tier-upgrade request with your follower count and social handle; an admin reviews it. Higher tiers earn higher commission.',
+        a: 'By selling. Tiers move automatically on the number of paid orders placed with your code, counted for life: Soise I from 0, Soise II at 10 orders, Soise III at 50, Soise IV at 150, Soise V at 500. Not followers — orders. You can never drop a tier once you reach it.',
       },
       {
         q: 'Do my followers get anything?',
@@ -173,17 +173,19 @@ export default function CreatorSwazLoopPage() {
                 drop. We add the bonus to your payout when you withdraw.
               </li>
               <li>
-                <span className="font-medium">Tiers raise your rate</span> — hit
-                follower/sales milestones to climb, up to your tier cap.
+                <span className="font-medium">Tiers raise your rate</span> —
+                Soise I to Soise V at 10, 50, 150 and 500 paid orders. Flat
+                rates: 10%, 12%, 14%, 17%, 20%.
+              </li>
+              <li>
+                <span className="font-medium">Orders count for life</span> and
+                move you up automatically. Not followers, and you never drop a
+                tier once you have reached it.
               </li>
               <li>
                 Commission lands in your{' '}
                 <span className="font-medium">creator wallet</span>; request a
                 bank payout from your dashboard.
-              </li>
-              <li>
-                Submit a <span className="font-medium">tier-upgrade request</span>{' '}
-                with your follower count — an admin reviews it.
               </li>
             </ul>
             <div className="mt-6 flex flex-wrap gap-3">
