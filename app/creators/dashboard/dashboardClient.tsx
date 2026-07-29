@@ -164,8 +164,14 @@ export default function CreatorDashboard({
     !!tierName &&
     !['no tier', 'unassigned'].includes(tierName.toLowerCase());
   const discountPct = dashboard.creator_code?.discount_percentage ?? 10;
-  const fmtPct = (n: number) =>
-    Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
+  // Same shape as ReferralCode's, and hardened for the same reason: the API
+  // sends explicit nulls for an unassigned tier or code. The callers here do
+  // guard with ??, but this is the function that took the dashboard down once.
+  const fmtPct = (n: unknown) => {
+    const value = Number(n);
+    if (!Number.isFinite(value)) return '—';
+    return Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`;
+  };
 
   // Tier progress toward the next milestone (from /tiers/dashboard).
   // `sales_needed` is the ABSOLUTE monthly-sales threshold of the next tier,

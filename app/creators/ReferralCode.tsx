@@ -20,11 +20,11 @@ interface ReferralCodeProps {
    */
   codeCreatedAt?: string | null;
   /** % the customer saves when they redeem the code */
-  discountPercentage?: number;
+  discountPercentage?: number | null;
   /** % the creator earns on every order placed with the code */
-  commissionRate?: number;
+  commissionRate?: number | null;
   /** how many times the code has been used so far */
-  usageCount?: number;
+  usageCount?: number | null;
   /** the creator's current tier name, if any */
   tierName?: string;
 }
@@ -34,11 +34,22 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 export default function ReferralCode({
   code,
   codeCreatedAt,
-  discountPercentage = 10,
-  commissionRate = 10,
-  usageCount = 0,
+  // Deliberately NOT default parameters. A default only fills in `undefined`,
+  // and this data comes from the API as explicit `null` — the dashboard query
+  // returns creator_code as {code: null, discount_percentage: null, ...} for
+  // any creator without an ACTIVE code. `null` sailed past the defaults, so
+  // fmtPct called (null).toFixed(1) and threw, which the route error boundary
+  // turned into "We hit an unexpected error" for the WHOLE dashboard — a
+  // creator with no active code could not see their dashboard at all.
+  // Normalised with ?? below instead, which catches null and undefined.
+  discountPercentage: discountPercentageProp,
+  commissionRate: commissionRateProp,
+  usageCount: usageCountProp,
   tierName,
 }: ReferralCodeProps) {
+  const discountPercentage = discountPercentageProp ?? 10;
+  const commissionRate = commissionRateProp ?? 10;
+  const usageCount = usageCountProp ?? 0;
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -58,8 +69,14 @@ export default function ReferralCode({
       )
     : 0;
 
-  const fmtPct = (n: number) =>
-    Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
+  // Belt and braces: this renders inside the dashboard's only error boundary,
+  // so anything that throws here costs the creator the entire page. A bad
+  // number should degrade to a dash, not to a stack trace.
+  const fmtPct = (n: unknown) => {
+    const value = Number(n);
+    if (!Number.isFinite(value)) return '—';
+    return Number.isInteger(value) ? `${value}%` : `${value.toFixed(1)}%`;
+  };
 
   const hasTier =
     !!tierName &&
@@ -148,6 +165,25 @@ export default function ReferralCode({
     setShowModal(false);
     setCustomCode('');
   };
+
+  // No active code yet. Everything below assumes one exists: the share URL
+  // becomes `?code=null`, the share message reads "my creator code null", and
+  // Copy puts the string "null" on the clipboard. Say so plainly instead of
+  // handing out a broken link.
+  if (!code) {
+    return (
+      <div>
+        <p className="text-[#8E8E93]">Your creator code</p>
+        <p className="mt-[8px] text-[16px] font-medium text-[#121212]">
+          You don&apos;t have an active code yet
+        </p>
+        <p className="mt-[4px] text-[13px] text-[#8E8E93]">
+          Once your creator code is issued it appears here, along with your
+          shareable link. Contact us if you think this is a mistake.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
