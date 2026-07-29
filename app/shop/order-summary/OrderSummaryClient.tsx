@@ -423,9 +423,30 @@ export default function OrderSummaryClient({
         setPendingOrderId(null);
         showToast.success('Order cancelled. Nothing was charged.');
         router.refresh();
-      } else {
-        showToast.error(result.error || 'Could not cancel this order.');
+        return;
       }
+
+      // The server couldn't cancel it. If that's because the order is gone or
+      // is no longer awaiting payment, the marker in this browser is stale and
+      // keeping it only pins an undismissable banner to the checkout page —
+      // which is the one-way door this button exists to remove. Clear it.
+      //
+      // handleResume already does exactly this on the same failure; cancel not
+      // doing it meant an order deleted server-side left the shopper with a
+      // banner that no button could clear.
+      const stale =
+        /not found|cannot be cancelled|no longer/i.test(result.error || '');
+      if (stale) {
+        clearPendingOrder();
+        setPendingOrderId(null);
+        showToast.success('That order is no longer active — cleared.');
+        router.refresh();
+        return;
+      }
+
+      // A genuine failure (network, server error): keep the marker, because
+      // the order really may still be awaiting payment.
+      showToast.error(result.error || 'Could not cancel this order.');
     } finally {
       setCancelling(false);
     }
