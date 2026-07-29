@@ -14,7 +14,7 @@ import { Bar } from 'react-chartjs-2';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChainIcon, TagIcon, DollarIcon } from '@/components/icons';
-import ReferralCode from '../ReferralCode';
+import CreatorCode from '../CreatorCode';
 import CreatorNav from '@/components/creators/CreatorNav';
 import { getWallet } from './request-payout/actions';
 
@@ -164,7 +164,7 @@ export default function CreatorDashboard({
     !!tierName &&
     !['no tier', 'unassigned'].includes(tierName.toLowerCase());
   const discountPct = dashboard.creator_code?.discount_percentage ?? 10;
-  // Same shape as ReferralCode's, and hardened for the same reason: the API
+  // Same shape as CreatorCode's, and hardened for the same reason: the API
   // sends explicit nulls for an unassigned tier or code. The callers here do
   // guard with ??, but this is the function that took the dashboard down once.
   const fmtPct = (n: unknown) => {
@@ -266,7 +266,7 @@ export default function CreatorDashboard({
 
         {/* Creator code — the centerpiece */}
         <div className="rounded-2xl bg-white p-[16px]">
-          <ReferralCode
+          <CreatorCode
             code={dashboard.creator_code?.code}
             codeCreatedAt={codeCreatedAt}
             discountPercentage={dashboard.creator_code?.discount_percentage}

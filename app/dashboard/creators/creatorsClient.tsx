@@ -753,7 +753,7 @@ export default function CreatorsClient({
             <input
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-              placeholder="e.g. SOISE-STAR (blank = randomize)"
+              placeholder="e.g. SWAZ-STAR (blank = randomize)"
               className="mb-4 w-full rounded-[10px] border border-[#E5E5E5] px-3 py-2 text-[14px] uppercase outline-none focus:border-[#0072BB]"
             />
             <div className="flex gap-3">

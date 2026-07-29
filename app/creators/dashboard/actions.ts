@@ -1,6 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { buildCreatorCode, creatorSuffixError } from '@/lib/creator-code';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -8,6 +9,10 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
  * Change the creator's own code. Only succeeds within 24h of the active code's
  * creation (enforced by the backend). Pass a `customCode` to request a specific
  * code, or omit it to have the backend randomize a new one.
+ *
+ * A creator only chooses the suffix — whatever arrives here is normalised back
+ * under the `SWAZ-` prefix, so a caller that skips the dashboard still can't
+ * mint an off-brand code. The backend does the same on its side.
  */
 export async function changeCreatorCode(customCode?: string) {
   const cookieStore = await cookies();
@@ -18,13 +23,9 @@ export async function changeCreatorCode(customCode?: string) {
   const trimmed = customCode?.trim();
   const body: Record<string, string> = {};
   if (trimmed) {
-    if (!/^[A-Za-z0-9-]{3,30}$/.test(trimmed)) {
-      return {
-        success: false,
-        error: 'Code must be 3–30 letters, numbers, or dashes.',
-      };
-    }
-    body.custom_code = trimmed;
+    const error = creatorSuffixError(trimmed);
+    if (error) return { success: false, error };
+    body.custom_code = buildCreatorCode(trimmed);
   }
 
   try {

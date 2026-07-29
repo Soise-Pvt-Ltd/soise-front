@@ -10,9 +10,16 @@ import {
   DollarIcon,
 } from '@/components/icons';
 import { showToast } from '@/lib/toast-utils';
+import {
+  CREATOR_CODE_PREFIX,
+  CREATOR_SUFFIX_MAX,
+  buildCreatorCode,
+  creatorSuffixError,
+  sanitizeCreatorSuffix,
+} from '@/lib/creator-code';
 import { changeCreatorCode } from './dashboard/actions';
 
-interface ReferralCodeProps {
+interface CreatorCodeProps {
   code: string;
   /**
    * ISO timestamp of when the active code was created. The creator may only
@@ -31,7 +38,7 @@ interface ReferralCodeProps {
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
-export default function ReferralCode({
+export default function CreatorCode({
   code,
   codeCreatedAt,
   // Deliberately NOT default parameters. A default only fills in `undefined`,
@@ -46,7 +53,7 @@ export default function ReferralCode({
   commissionRate: commissionRateProp,
   usageCount: usageCountProp,
   tierName,
-}: ReferralCodeProps) {
+}: CreatorCodeProps) {
   const discountPercentage = discountPercentageProp ?? 10;
   const commissionRate = commissionRateProp ?? 10;
   const usageCount = usageCountProp ?? 0;
@@ -54,7 +61,9 @@ export default function ReferralCode({
   const [isCopied, setIsCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [customCode, setCustomCode] = useState('');
+  // Only the tail of the code is the creator's to choose — the `SWAZ-` prefix
+  // is fixed and rendered beside the field, never typed.
+  const [codeSuffix, setCodeSuffix] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 24h gate, computed once on render. We only surface the "change" affordance
@@ -150,7 +159,7 @@ export default function ReferralCode({
             : 'A new creator code has been generated.',
         );
         setShowModal(false);
-        setCustomCode('');
+        setCodeSuffix('');
         router.refresh();
       } else {
         showToast.error(result.error || 'Could not change your code.');
@@ -163,8 +172,10 @@ export default function ReferralCode({
   const closeModal = () => {
     if (isSubmitting) return;
     setShowModal(false);
-    setCustomCode('');
+    setCodeSuffix('');
   };
+
+  const suffixError = creatorSuffixError(codeSuffix);
 
   // No active code yet. Everything below assumes one exists: the share URL
   // becomes `?code=null`, the share message reads "my creator code null", and
@@ -308,8 +319,8 @@ export default function ReferralCode({
         </button>
       </div>
       <p className="mt-[10px] text-[13px] text-[#8E8E93]">
-        Your link applies the discount automatically at checkout — they never
-        have to type the code.
+        Your link applies your creator code automatically at checkout — they
+        never have to type it.
       </p>
 
       {/* Change-code modal */}
@@ -344,36 +355,65 @@ export default function ReferralCode({
             </div>
 
             <p className="mb-4 text-[13px] text-[#8E8E93]">
-              Pick a custom code or let us randomize one for you. You can only do
-              this within 24 hours of onboarding — after that your code is locked.
+              Every code starts with{' '}
+              <span className="font-medium text-[#121212]">
+                {CREATOR_CODE_PREFIX}
+              </span>{' '}
+              — you pick what comes after it. You can only do this within 24
+              hours of onboarding; after that your code is locked.
             </p>
 
             <label
-              htmlFor="custom-code"
+              htmlFor="code-suffix"
               className="mb-2 block text-[12px] font-medium text-[#121212]"
             >
-              Preferred code (optional)
+              Your ending
             </label>
-            <input
-              id="custom-code"
-              type="text"
-              value={customCode}
-              onChange={(e) => setCustomCode(e.target.value.toUpperCase())}
-              placeholder="E.G. JANE10"
-              maxLength={30}
-              autoFocus
-              disabled={isSubmitting}
-              className="w-full rounded-[10px] border border-gray-200 bg-[#F5F5F5] px-3 py-2 text-[14px] tracking-widest uppercase outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB] disabled:opacity-50"
-            />
-            <p className="mt-1 text-[11px] text-[#8E8E93]">
-              3–30 characters: letters, numbers, or dashes. Must be unique.
+            <div className="flex items-stretch overflow-hidden rounded-[10px] border border-gray-200 bg-[#F5F5F5] focus-within:ring-2 focus-within:ring-[#0072BB]">
+              {/* Not aria-hidden: it is the first half of the code, and a
+                  screen reader user needs to hear it to make sense of the
+                  field. Unselectable so a copy of the field is just the tail. */}
+              <span className="flex select-none items-center border-r border-gray-200 bg-[#ECECEC] px-3 text-[14px] font-semibold tracking-widest text-[#8E8E93]">
+                {CREATOR_CODE_PREFIX}
+              </span>
+              <input
+                id="code-suffix"
+                type="text"
+                value={codeSuffix}
+                onChange={(e) =>
+                  setCodeSuffix(sanitizeCreatorSuffix(e.target.value))
+                }
+                placeholder="JANE10"
+                maxLength={CREATOR_SUFFIX_MAX}
+                autoFocus
+                disabled={isSubmitting}
+                aria-describedby="code-suffix-hint"
+                className="w-full bg-transparent px-3 py-2 text-[14px] tracking-widest uppercase outline-none disabled:opacity-50"
+              />
+            </div>
+            <p id="code-suffix-hint" className="mt-1 text-[11px] text-[#8E8E93]">
+              {codeSuffix ? (
+                suffixError ? (
+                  suffixError
+                ) : (
+                  <>
+                    Your code will be{' '}
+                    <span className="font-medium text-[#121212]">
+                      {buildCreatorCode(codeSuffix)}
+                    </span>
+                    . Must be unique.
+                  </>
+                )
+              ) : (
+                `2–${CREATOR_SUFFIX_MAX} characters: letters, numbers, or dashes. Must be unique.`
+              )}
             </p>
 
             <div className="mt-5 flex flex-col gap-2">
               <button
                 type="button"
-                onClick={() => submitChange(customCode.trim() || undefined)}
-                disabled={isSubmitting || customCode.trim().length === 0}
+                onClick={() => submitChange(buildCreatorCode(codeSuffix))}
+                disabled={isSubmitting || !!suffixError}
                 className="btn_black flex items-center justify-center !text-[13px] !font-medium disabled:opacity-50"
               >
                 {isSubmitting ? 'Saving…' : 'Use this code'}

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import ReferralCode from '../ReferralCode';
+import CreatorCode from '../CreatorCode';
 import CreatorNav from '@/components/creators/CreatorNav';
 import { savePaymentInformation } from './actions';
 import { useRouter } from 'next/navigation';
@@ -194,7 +194,7 @@ export default function OnBoardingCreatorClient({
               </p>
             </div>
             <div className="rounded-[16px] border border-[#E4DECF] bg-white p-5">
-              <ReferralCode
+              <CreatorCode
                 code={Array.isArray(codes) ? codes[0]?.code : codes?.code}
               />
             </div>
