@@ -55,7 +55,10 @@ export function trackViewContent(product: {
     contents: [
       {
         content_id: product.id,
-        content_type: 'product',
+        // A product id, which groups its variants — AddToCart and Purchase
+        // report the variant itself. Must match the taxonomy the server events
+        // use or the funnel won't join.
+        content_type: 'product_group',
         content_name: product.name,
       },
     ],
