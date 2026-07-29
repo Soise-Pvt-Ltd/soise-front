@@ -29,6 +29,12 @@ export default function StatueWatermark({
       alt=""
       aria-hidden="true"
       draggable={false}
+      // 60KB of decoration at 3.5% opacity, and `hidden lg:block` means phones
+      // never show it at all — but it was still being fetched, and preloaded
+      // ahead of the LCP hero. Nothing about this should race the product.
+      loading="lazy"
+      decoding="async"
+      fetchPriority="low"
       className={`pointer-events-none select-none ${className}`}
       style={{
         width,

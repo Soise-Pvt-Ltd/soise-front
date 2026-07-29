@@ -42,9 +42,12 @@ const display_font = Instrument_Serif({
 // High-contrast editorial serif reserved for the LVMH-style private wardrobe
 // (the immersive customer profile). Loaded as a CSS variable so it never alters
 // the storefront's Poppins body type — it's opt-in via `var(--font-luxe)`.
+// 400 and 500 only. Four weights x two styles is eight woff2 files preloaded
+// on every page, and --font-luxe is only ever used at the default weight,
+// font-medium, and once in italic — 600 and 700 are never reached.
 const luxe_font = Playfair_Display({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500'],
   style: ['normal', 'italic'],
   variable: '--font-luxe',
   display: 'swap',
