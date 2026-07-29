@@ -8,6 +8,7 @@ import { ArrowUpIcon } from '@/components/icons';
 import Footer from '@/components/footer';
 import { EnrichedCartItem } from '@/components/home/nav/types';
 import {
+  cancelPendingOrderAction,
   captureCartEmailAction,
   checkoutAction,
   applyDiscountCodeAction,
@@ -139,6 +140,7 @@ export default function OrderSummaryClient({
   // (which checkout already cleared) and without creating a duplicate order.
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Address selection: default to a saved address when one exists so
   // returning customers don't have to retype anything. 'new' reveals the
@@ -411,6 +413,24 @@ export default function OrderSummaryClient({
     }
   }
 
+  async function handleCancelPending() {
+    if (!pendingOrderId || resuming || cancelling) return;
+    setCancelling(true);
+    try {
+      const result = await cancelPendingOrderAction(pendingOrderId);
+      if (result.success) {
+        clearPendingOrder();
+        setPendingOrderId(null);
+        showToast.success('Order cancelled. Nothing was charged.');
+        router.refresh();
+      } else {
+        showToast.error(result.error || 'Could not cancel this order.');
+      }
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   async function applyCode(code: string, { silent = false } = {}) {
     setDiscountPending(true);
 
@@ -541,9 +561,14 @@ export default function OrderSummaryClient({
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="page-shell flex flex-col gap-y-3 border-b border-[#F0C36B] bg-[#FFF8EC] px-[20px] py-[16px] normal-case md:flex-row md:items-center md:justify-between"
+          className="page-shell flex flex-col gap-y-4 border-b border-[#F0C36B] bg-[#FFF8EC] px-[20px] py-[16px] normal-case md:flex-row md:items-center md:gap-x-6"
         >
-          <div className="flex-1">
+          {/* min-w-0 so the copy can actually use the space. Previously the
+              action was .btn_black, which carries w-full from an UNLAYERED
+              rule in globals.css — that beats the md:w-auto utility, so the
+              button never shrank and squeezed this column to about 90px, one
+              word per line. These buttons are styled inline for that reason. */}
+          <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-[#121212]">
               You have an order awaiting payment
             </p>
@@ -553,14 +578,27 @@ export default function OrderSummaryClient({
               second one.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleResume}
-            disabled={resuming}
-            className="btn_black w-full shrink-0 px-[20px] py-[10px] text-[12px] uppercase disabled:opacity-60 md:w-auto"
-          >
-            {resuming ? 'Opening…' : 'Complete payment'}
-          </button>
+          {/* One control, split 1:3. Cancel is the smaller, quieter half —
+              present so the banner isn't a one-way door, but never competing
+              with the action we actually want. */}
+          <div className="flex w-full shrink-0 overflow-hidden rounded-[10px] md:w-[360px]">
+            <button
+              type="button"
+              onClick={handleCancelPending}
+              disabled={resuming || cancelling}
+              className="w-1/4 cursor-pointer border border-r-0 border-[#121212] bg-transparent px-[8px] py-[13px] text-[11px] font-bold tracking-wide text-[#121212] uppercase transition-colors duration-200 hover:bg-[#121212]/5 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {cancelling ? '…' : 'Cancel'}
+            </button>
+            <button
+              type="button"
+              onClick={handleResume}
+              disabled={resuming || cancelling}
+              className="w-3/4 cursor-pointer bg-[#121212] px-[16px] py-[13px] text-[12px] font-bold tracking-wide text-white uppercase transition-colors duration-200 hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {resuming ? 'Opening…' : 'Complete payment'}
+            </button>
+          </div>
         </motion.div>
       )}
       <div className="page-shell">

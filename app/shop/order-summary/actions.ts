@@ -406,3 +406,41 @@ export async function captureCartEmailAction(email: string): Promise<void> {
     /* best-effort — never block or surface anything at checkout */
   }
 }
+
+/**
+ * Abandon an unpaid order the shopper no longer wants.
+ *
+ * The "awaiting payment" banner used to offer only one action, which made it a
+ * one-way door: a shopper who had changed their mind could not clear it. The
+ * backend refuses anything that isn't still awaiting payment, so this can never
+ * void an order that has actually been paid.
+ */
+export async function cancelPendingOrderAction(
+  orderId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) return { success: false, error: 'API base URL is not configured' };
+  if (!orderId) return { success: false, error: 'Missing order reference' };
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+
+  try {
+    const res = await fetch(`${baseUrl}/payments/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ reference: orderId }),
+      cache: 'no-store',
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      return { success: false, error: json?.message || 'Could not cancel this order.' };
+    }
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Could not cancel this order. Please try again.' };
+  }
+}
