@@ -2,6 +2,7 @@
 
 import { CurrencyProvider, type Currency } from '@/lib/currency-context';
 import RefCapture from '@/components/RefCapture';
+import RouteProgress from '@/components/route-progress';
 
 export default function Providers({
   children,
@@ -13,6 +14,7 @@ export default function Providers({
   return (
     <CurrencyProvider initialCurrency={initialCurrency}>
       <RefCapture />
+      <RouteProgress />
       {children}
     </CurrencyProvider>
   );
