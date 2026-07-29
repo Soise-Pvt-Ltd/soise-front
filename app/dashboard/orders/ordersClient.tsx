@@ -8,7 +8,7 @@ import {
   AdminMoreVerticalIcon,
   AdminSoundLevelsIcon,
 } from '@/components/icons';
-import { updateOrderStatus, ShipmentDetails } from './actions';
+import { updateOrderStatus, deleteOrder, ShipmentDetails } from './actions';
 import { showToast } from '../toast';
 import { totalRows } from '@/lib/pagination';
 import { VALID_ORDER_TRANSITIONS } from '@/lib/order-transitions';
@@ -47,6 +47,10 @@ export default function OrdersPage({
 }: OrdersPageProps) {
   const [activeTab, setActiveTab] = useState('All');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // Deleting is irreversible and sits in the same menu as the routine status
+  // changes, so it goes behind an explicit confirm naming the order.
+  const [pendingDeleteOrder, setPendingDeleteOrder] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
@@ -421,6 +425,18 @@ export default function OrdersPage({
                             No transitions available
                           </div>
                         )}
+                        <div className="my-1 h-px bg-[#F0F0F0]" />
+                        <button
+                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#C0362C] hover:bg-[#FDF4F2] disabled:cursor-not-allowed disabled:opacity-50"
+                          onClick={() => {
+                            setActiveActionMenuId(null);
+                            setMenuAnchorEl(null);
+                            setPendingDeleteOrder(order);
+                          }}
+                          disabled={isUpdating}
+                        >
+                          Delete order
+                        </button>
                       </RowActionMenu>
                     </div>
                   </td>
@@ -433,8 +449,69 @@ export default function OrdersPage({
     );
   };
 
+  const confirmDelete = async () => {
+    if (!pendingDeleteOrder || deleting) return;
+    setDeleting(true);
+    const result = await deleteOrder(pendingDeleteOrder.id);
+    setDeleting(false);
+    if (result.success) {
+      setOrders((prev) => prev.filter((o) => o.id !== pendingDeleteOrder.id));
+      setPendingDeleteOrder(null);
+      showToast('success', 'Order deleted');
+    } else {
+      showToast('error', result.error || 'Could not delete the order.');
+    }
+  };
+
   return (
     <GridContainer>
+      {pendingDeleteOrder && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-order-title"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4"
+          onClick={() => !deleting && setPendingDeleteOrder(null)}
+        >
+          <div
+            className="w-full max-w-[420px] rounded-[16px] bg-white p-[24px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="delete-order-title" className="text-[16px] font-medium text-[#121212]">
+              Delete order #{pendingDeleteOrder.order_number ?? ''}?
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-[#8E8E93]">
+              This permanently removes the order, its items and its payment
+              records. It cannot be undone.
+            </p>
+            {/* A real order should be cancelled, not erased — cancelling keeps
+                the record and the customer's history. Say so here rather than
+                relying on the admin to know the difference. */}
+            <p className="mt-2 text-[13px] leading-relaxed text-[#8B5E3C]">
+              If this is a real customer order, cancel it instead — that keeps
+              the record.
+            </p>
+            <div className="mt-[20px] flex justify-end gap-x-3">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteOrder(null)}
+                disabled={deleting}
+                className="cursor-pointer rounded-[10px] border border-[#E5E5E5] px-[16px] py-[9px] text-[13px] disabled:opacity-50"
+              >
+                Keep it
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="cursor-pointer rounded-[10px] bg-[#C0362C] px-[16px] py-[9px] text-[13px] font-medium text-white disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="px-[16px]">
         <div className="py-[22px]">
           <span className="text-[20px] font-medium">Orders</span>

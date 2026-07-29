@@ -145,3 +145,42 @@ export async function updateOrderStatus(
     };
   }
 }
+
+/**
+ * Permanently delete an order, together with its order_items and payments.
+ *
+ * NOT how to void a real order — cancel it instead, which keeps the record and
+ * the customer's history. This exists for test orders, which otherwise sit in
+ * every count, the funnel and Latest Orders forever.
+ */
+export async function deleteOrder(orderId: string) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) return { success: false, error: 'API base URL is not configured' };
+
+  const id = String(orderId).split(':').pop() || orderId;
+
+  try {
+    const res = await fetch(`${baseUrl}/admin/orders/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+        Accept: 'application/json',
+      },
+      cache: 'no-store',
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      return {
+        success: false,
+        error: json?.message || `Delete failed (status ${res.status})`,
+      };
+    }
+    return { success: true, data: json?.data };
+  } catch {
+    return { success: false, error: 'Could not delete the order. Please try again.' };
+  }
+}
