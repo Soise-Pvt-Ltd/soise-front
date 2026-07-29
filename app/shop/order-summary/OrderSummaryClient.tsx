@@ -395,7 +395,12 @@ export default function OrderSummaryClient({
         if (resumed.redirectUrl === '/thank-you') {
           clearPendingOrder();
         }
-        window.location.href = resumed.redirectUrl;
+        // Through goToPayment, not a raw navigation. This used to jump straight
+        // to the hosted Paystack page, so the one flow aimed at a shopper who
+        // ALREADY failed to pay once was the only flow still bouncing them off
+        // the site — the exact step that lost them the first time. resume
+        // returns an accessCode too, so the overlay works here identically.
+        await goToPayment(resumed);
         return;
       }
       // Order no longer awaiting payment (paid elsewhere / cancelled): drop it.
