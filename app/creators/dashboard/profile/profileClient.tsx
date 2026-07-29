@@ -247,7 +247,14 @@ export default function ProfileClient({ dashboard }: any) {
           <div className="flex items-center justify-between">
             <div>Account Tier</div>
             <div className="flex items-center gap-x-[8px] text-[#AEAEB2]">
-              <div className="">{tier?.name || 'No Tier'}</div>
+              {/* Same serif treatment as the dashboard card, so the tier reads
+                  as the same thing in both places. */}
+              <div
+                className="text-[16px] text-[#121212]"
+                style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
+              >
+                {tier?.name || 'No Tier'}
+              </div>
               <div>
                 <ArrowProfileRightIcon />
               </div>

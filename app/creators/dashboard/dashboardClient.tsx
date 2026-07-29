@@ -287,9 +287,19 @@ export default function CreatorDashboard({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[13px] text-white/60">Your tier</p>
-              <p className="text-[16px] font-medium">
-                {hasTier ? tierName : 'No tier yet'}
-                <span className="ml-[8px] text-[13px] font-normal text-white/60">
+              <p className="mt-[2px] flex flex-wrap items-baseline gap-x-[8px]">
+                {/* The tier name is the one piece of status on this page, so it
+                    is set in the house serif rather than body Poppins — the
+                    same treatment the creator saw on onboarding. Playfair's
+                    default weight is the intended one; font-medium here would
+                    pull a second file for no gain. */}
+                <span
+                  className="text-[22px] leading-[1.15] tracking-[-0.01em]"
+                  style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
+                >
+                  {hasTier ? tierName : 'No tier yet'}
+                </span>
+                <span className="text-[13px] text-white/60">
                   {fmtPct(currentRate)} commission
                 </span>
               </p>

@@ -263,11 +263,20 @@ export default function CreatorCode({
                 <>
                   {' '}
                   at your{' '}
-                  <span className="font-medium text-[#121212]">{tierName}</span>{' '}
+                  {/* Serif here too: the tier is a name, not a data point, and
+                      it should read the same wherever a creator meets it.
+                      Nudged up a size because Playfair sits small next to
+                      Poppins at the same px. */}
+                  <span
+                    className="text-[15px] text-[#121212]"
+                    style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
+                  >
+                    {tierName}
+                  </span>{' '}
                   tier
                 </>
               ) : null}
-              . Sell more to grow your rate.
+              . Orders count for life — keep selling to climb.
             </p>
           </div>
         </div>
