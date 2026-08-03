@@ -12,6 +12,7 @@ import {
 } from './actions';
 import { showToast } from '../toast';
 import { totalRows } from '@/lib/pagination';
+import { formatDate, formatTime } from '@/lib/admin-datetime';
 
 type PayoutStatus =
   | 'requested'
@@ -150,25 +151,9 @@ export default function PayoutClient({
     // { id: 'rejected', label: 'Rejected' },
   ];
 
-  // Helper function to format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  // Helper function to format time
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
+  // formatDate/formatTime come from lib/admin-datetime — they pin the timezone
+  // so the server and the browser render the same string. Reading the ambient
+  // zone here is the same hydration mismatch the overview was throwing.
 
   // Helper function to get full name
   const getFullName = (user: User) => {

@@ -12,6 +12,7 @@ import {
 import { updateOrderStatus, deleteOrder, ShipmentDetails } from './actions';
 import { showToast } from '../toast';
 import { totalRows } from '@/lib/pagination';
+import { formatDate, todayIso } from '@/lib/admin-datetime';
 import { VALID_ORDER_TRANSITIONS } from '@/lib/order-transitions';
 
 type Order = {
@@ -94,7 +95,6 @@ export default function OrdersPage({
   const [deliveredModalOrder, setDeliveredModalOrder] = useState<Order | null>(
     null,
   );
-  const todayIso = () => new Date().toISOString().slice(0, 10);
   const [deliveredDate, setDeliveredDate] = useState(todayIso());
 
   // Status colours moved to the suite-wide STATUS_TONE map in ../ui, so an
@@ -199,12 +199,9 @@ export default function OrdersPage({
     setIsLoading(false);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return `${date.getDate()} ${date.toLocaleString('en-US', {
-      month: 'short',
-    })} ${date.getFullYear()}`;
-  };
+  // formatDate/todayIso come from lib/admin-datetime — getDate()/getFullYear()
+  // read the ambient timezone, so an order placed late in the day rendered one
+  // date on the server and another in the browser.
 
   const customerName = (o: Order) => {
     const name = `${o.customer_first_name ?? ''} ${o.customer_last_name ?? ''}`.trim();

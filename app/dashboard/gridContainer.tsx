@@ -2,7 +2,6 @@
 
 import { useState, useEffect, ReactNode } from 'react';
 import Nav from './nav';
-import Image from 'next/image';
 import AdminGlobalSearch from './AdminGlobalSearch';
 import { useRouter } from 'next/navigation';
 import { ToastContainer } from './toast';
@@ -59,17 +58,21 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
         aria-label="Go to homepage"
       >
         {/* The muse-in-meander emblem, not the full main-logo: that mark is a
-            wide two-part composition and collapses to noise at this size. This
-            one is square, and it is the exact figure /about's ethos section
-            describes. It's transparent line art, so `invert` recolours the
-            lines to bone without touching the background. */}
-        <Image
+            wide two-part composition and collapses to noise at this size.
+
+            Raw <img> with an inline filter, matching /join and StatueWatermark
+            — the two other places this art is inverted onto a dark ground.
+            next/image is wrong for it: the whole mark is carried in the alpha
+            channel (91% transparent, not one fully-opaque pixel), so routing
+            1000px hairlines through /_next/image at w=96&q=75 downsamples and
+            lossy-compresses the strokes until there is nothing left to see.
+            Sized to 72px for the same reason — these lines need the room. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src="/swz.png"
           alt="Soise"
-          width={96}
-          height={96}
-          priority
-          className="h-[48px] w-[48px] object-contain invert"
+          className="h-[72px] w-[72px] object-contain"
+          style={{ filter: 'invert(1)' }}
         />
         <p className="ad-eyebrow-on-ink mt-4 !text-[10px]">Admin suite</p>
       </button>
@@ -100,13 +103,13 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
           className="cursor-pointer"
           aria-label="Go to homepage"
         >
-          <Image
+          {/* Same reasoning as the sidebar mark — no optimizer, no invert
+              (this bar is bone, so the art stays black). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/swz.png"
             alt="Soise"
-            width={72}
-            height={72}
-            priority
-            className="h-[36px] w-[36px] object-contain"
+            className="h-[44px] w-[44px] object-contain"
           />
         </button>
         <button

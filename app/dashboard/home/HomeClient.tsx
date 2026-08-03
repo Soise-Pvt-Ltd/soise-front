@@ -25,6 +25,7 @@ import {
   EmptyState,
   SearchInput,
 } from '../ui';
+import { formatTime, currentMonthIndex } from '@/lib/admin-datetime';
 
 // The doughnut ("Visitors") was commented out of the markup long ago; its
 // ArcElement registration and config went with it.
@@ -90,7 +91,7 @@ export default function HomeClient({
     'Dec',
   ];
 
-  const currentMonthIndex = new Date().getMonth();
+  const monthIndex = currentMonthIndex();
   // Gold for the year, ink for the month we're standing in.
   const defaultBarColor = 'rgba(156, 111, 46, 0.30)';
   const currentMonthBarColor = 'rgba(20, 17, 14, 0.92)';
@@ -105,7 +106,7 @@ export default function HomeClient({
   });
 
   const barBackgroundColors = barLabels.map((_, index) => {
-    return index === currentMonthIndex ? currentMonthBarColor : defaultBarColor;
+    return index === monthIndex ? currentMonthBarColor : defaultBarColor;
   });
 
   const barData = {
@@ -150,10 +151,9 @@ export default function HomeClient({
     },
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  // formatTime/currentMonthIndex come from lib/admin-datetime: reading the
+  // ambient timezone here rendered UTC on the server and local time in the
+  // browser, which is the hydration mismatch (#418) this page was throwing.
 
   const formatCurrency = (amount: number) => {
     return `₦${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
