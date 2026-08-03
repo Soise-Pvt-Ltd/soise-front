@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import GridContainer from '../gridContainer';
+import { PageHeader } from '../ui';
 import { showToast } from '../toast';
 import {
   getCollections,
@@ -299,15 +300,15 @@ export default function HomeContentClient() {
     return (
       <GridContainer>
         <div className="px-2 pb-10">
-          <div className="h-6 w-1/3 animate-pulse rounded bg-[#EEE]" />
+          <div className="h-6 w-1/3 animate-pulse rounded bg-[#E2DBCC]" />
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {SLOTS.map((slot) => (
               <div
                 key={slot.key}
-                className="animate-pulse rounded-[16px] border border-[#F0F0F0] p-5"
+                className="animate-pulse rounded-[14px] border border-[#E2DBCC] p-5"
               >
-                <div className="mb-3 h-4 w-1/2 rounded bg-[#EEE]" />
-                <div className="h-40 w-full rounded-[12px] bg-[#EEE]" />
+                <div className="mb-3 h-4 w-1/2 rounded bg-[#E2DBCC]" />
+                <div className="h-40 w-full rounded-[12px] bg-[#E2DBCC]" />
               </div>
             ))}
           </div>
@@ -320,11 +321,11 @@ export default function HomeContentClient() {
     return (
       <GridContainer>
         <div className="px-2 pb-10">
-          <div className="rounded-[16px] border border-[#E5C6BF] bg-[#FBEDE9] p-6 text-center">
-            <p className="text-[14px] text-[#991C00]">{loadError}</p>
+          <div className="rounded-[14px] border border-[#F2E1DB] bg-[#F2E1DB] p-6 text-center">
+            <p className="text-[14px] text-[#8C3A2B]">{loadError}</p>
             <button
               onClick={load}
-              className="mt-3 rounded-[10px] bg-[#991C00] px-4 py-2 text-[13px] font-medium text-white"
+              className="mt-3 rounded-full bg-[#8C3A2B] px-4 py-2 text-[13px] font-medium text-[#F4F1EA]"
             >
               Try again
             </button>
@@ -336,36 +337,31 @@ export default function HomeContentClient() {
 
   return (
     <GridContainer>
-      <div className="px-2 pb-10">
-        <div className="flex flex-col gap-1 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-[22px] font-bold text-[#121212]">
-              Appearance · Home Page
-            </h1>
-            <p className="mt-1 max-w-2xl text-[14px] text-[#8E8E93]">
-              Swap the imagery and copy used across the public homepage. Leave a
-              slot on its default to keep the bundled design. Changes go live after
-              you save.
-            </p>
-          </div>
-          <button
-            onClick={handleSave}
-            disabled={saving || !dirty}
-            className="mt-3 inline-flex h-[44px] shrink-0 items-center justify-center gap-2 rounded-[10px] bg-[#0072BB] px-6 text-[14px] font-medium text-white transition-colors duration-150 hover:bg-[#005a96] disabled:cursor-not-allowed disabled:opacity-50 lg:mt-0"
-          >
-            {saving && (
-              <span
-                className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-                aria-hidden="true"
-              />
-            )}
-            {saving ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}
-          </button>
-        </div>
+      <div className="pb-10">
+        <PageHeader
+          eyebrow="The house"
+          title="Appearance · Home page"
+          description="Swap the imagery and copy used across the public homepage. Leave a slot on its default to keep the bundled design. Changes go live after you save."
+          actions={
+            <button
+              onClick={handleSave}
+              disabled={saving || !dirty}
+              className="ad-btn-primary"
+            >
+              {saving && (
+                <span
+                  className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#F4F1EA]/30 border-t-[#F4F1EA]"
+                  aria-hidden="true"
+                />
+              )}
+              {saving ? 'Saving…' : dirty ? 'Save changes' : 'Saved'}
+            </button>
+          }
+        />
 
         {/* Images */}
-        <section className="mt-8">
-          <h2 className="text-[16px] font-semibold text-[#121212]">Images</h2>
+        <section>
+          <h2 className="ad-display text-[19px] text-[#14110E]">Images</h2>
           <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {SLOTS.map((slot) => {
               const current = images[slot.key];
@@ -375,38 +371,38 @@ export default function HomeContentClient() {
               return (
                 <div
                   key={slot.key}
-                  className="flex flex-col rounded-[16px] border border-[#F0F0F0] bg-white p-5 transition-shadow duration-150 hover:shadow-sm"
+                  className="flex flex-col rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-5 transition-shadow duration-150 hover:shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h2 className="text-[15px] font-semibold text-[#121212]">
+                      <h2 className="text-[15px] font-semibold text-[#14110E]">
                         {slot.label}
                       </h2>
                     </div>
                     <span
                       className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${
                         isCustom
-                          ? 'bg-[#C0CBF2] text-[#0072BB]'
-                          : 'bg-[#F5F5F5] text-[#8E8E93]'
+                          ? 'bg-[#EAE4D7] text-[#9C6F2E]'
+                          : 'bg-[#EFEBE1] text-[#5C544A]'
                       }`}
                     >
                       {isCustom ? 'Custom' : 'Default'}
                     </span>
                   </div>
-                  <p className="mt-1 text-[12px] leading-relaxed text-[#8E8E93]">
+                  <p className="mt-1 text-[12px] leading-relaxed text-[#5C544A]">
                     {slot.caption}
                   </p>
 
                   <div
-                    className={`relative mt-3 w-full overflow-hidden rounded-[12px] border border-[#F0F0F0] ${
+                    className={`relative mt-3 w-full overflow-hidden rounded-[12px] border border-[#E2DBCC] ${
                       slot.shape === 'tall'
                         ? 'aspect-[3/4]'
                         : // The logo slot only keeps its dark, letterboxed look
                           // for the bundled default; a custom upload fills the
                           // panel edge-to-edge just like it does on the site.
                           slot.shape === 'logo' && !isCustom
-                          ? 'aspect-video bg-[#040000]'
-                          : 'aspect-video bg-[#F5F5F5]'
+                          ? 'aspect-video bg-[#14110E]'
+                          : 'aspect-video bg-[#EFEBE1]'
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -420,9 +416,9 @@ export default function HomeContentClient() {
                       }`}
                     />
                     {isUploading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#0E0E10]/55">
                         <span
-                          className="h-7 w-7 animate-spin rounded-full border-[3px] border-white/40 border-t-white"
+                          className="h-7 w-7 animate-spin rounded-full border-[3px] border-[#F4F1EA]/40 border-t-white"
                           aria-hidden="true"
                         />
                       </div>
@@ -447,14 +443,14 @@ export default function HomeContentClient() {
                     <button
                       onClick={() => fileInputs.current[slot.key]?.click()}
                       disabled={isUploading || saving}
-                      className="inline-flex h-[40px] flex-1 items-center justify-center gap-2 rounded-[10px] bg-[#0072BB] px-4 text-[13px] font-medium text-white transition-colors duration-150 hover:bg-[#005a96] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="inline-flex h-[40px] flex-1 items-center justify-center gap-2 rounded-full bg-[#14110E] px-4 text-[13px] font-medium text-[#F4F1EA] transition-colors duration-150 hover:bg-[#241F19] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isUploading ? 'Uploading…' : 'Upload image'}
                     </button>
                     <button
                       onClick={() => handleReset(slot.key)}
                       disabled={!isCustom || isUploading || saving}
-                      className="inline-flex h-[40px] items-center justify-center rounded-[10px] border border-[#E5E5E5] px-4 text-[13px] font-medium text-[#121212] transition-colors duration-150 hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="inline-flex h-[40px] items-center justify-center rounded-[10px] border border-[#DFD7C6] px-4 text-[13px] font-medium text-[#14110E] transition-colors duration-150 hover:bg-[#EFEBE1] disabled:cursor-not-allowed disabled:opacity-40"
                       title="Reset this slot to the bundled default image"
                     >
                       Reset to default
@@ -468,17 +464,17 @@ export default function HomeContentClient() {
 
         {/* Featured Collection */}
         <section className="mt-10">
-          <h2 className="text-[16px] font-semibold text-[#121212]">
+          <h2 className="ad-display text-[19px] text-[#14110E]">
             Featured Collection
           </h2>
-          <div className="mt-4 rounded-[16px] border border-[#F0F0F0] bg-white p-5">
+          <div className="mt-4 rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-5">
             <label
               htmlFor="featured_collection_id"
-              className="block text-[15px] font-semibold text-[#121212]"
+              className="block text-[15px] font-semibold text-[#14110E]"
             >
               Collection to spotlight on the homepage
             </label>
-            <p className="mb-3 mt-1 text-[12px] leading-relaxed text-[#8E8E93]">
+            <p className="mb-3 mt-1 text-[12px] leading-relaxed text-[#5C544A]">
               Replaces the Men’s Tops band with this collection’s name, banner,
               and Explore Collection link. Leave empty to fall back to the
               default image and text.
@@ -507,7 +503,7 @@ export default function HomeContentClient() {
                   );
                 }
               }}
-              className="h-[48px] w-full rounded-[12px] border border-[#E5E5E5] bg-white px-4 text-[14px] text-[#121212] outline-none transition-colors duration-150 focus:border-[#0072BB]"
+              className="h-[48px] w-full rounded-[12px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 text-[14px] text-[#14110E] outline-none transition-colors duration-150 focus:border-[#9C6F2E]"
             >
               <option value="">None selected</option>
               {collections.map((collection) => (
@@ -521,7 +517,7 @@ export default function HomeContentClient() {
 
         {/* Text */}
         <section className="mt-10">
-          <h2 className="text-[16px] font-semibold text-[#121212]">Text</h2>
+          <h2 className="ad-display text-[19px] text-[#14110E]">Text</h2>
           <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
             {TEXT_SLOTS.map((slot) => {
               const value = texts[slot.key] ?? '';
@@ -529,15 +525,15 @@ export default function HomeContentClient() {
               return (
                 <div
                   key={slot.key}
-                  className="rounded-[16px] border border-[#F0F0F0] bg-white p-5"
+                  className="rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-5"
                 >
                   <label
                     htmlFor={slot.key}
-                    className="block text-[15px] font-semibold text-[#121212]"
+                    className="block text-[15px] font-semibold text-[#14110E]"
                   >
                     {slot.label}
                   </label>
-                  <p className="mb-3 mt-1 text-[12px] leading-relaxed text-[#8E8E93]">
+                  <p className="mb-3 mt-1 text-[12px] leading-relaxed text-[#5C544A]">
                     {slot.caption} Default: “{fallback}”
                   </p>
                   <input
@@ -546,7 +542,7 @@ export default function HomeContentClient() {
                     value={value}
                     placeholder={fallback}
                     onChange={(e) => setTexts({ ...texts, [slot.key]: e.target.value })}
-                    className="h-[48px] w-full rounded-[12px] border border-[#E5E5E5] px-4 text-[14px] text-[#121212] outline-none transition-colors duration-150 placeholder:text-[#AEAEB2] focus:border-[#0072BB]"
+                    className="h-[48px] w-full rounded-[12px] border border-[#DFD7C6] px-4 text-[14px] text-[#14110E] outline-none transition-colors duration-150 placeholder:text-[#8C8377] focus:border-[#9C6F2E]"
                   />
                 </div>
               );

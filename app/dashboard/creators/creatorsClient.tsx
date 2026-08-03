@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
+import { PageHeader } from '../ui';
 import RowActionMenu from '@/components/admin/RowActionMenu';
 import {
   AdminSoundLevelsIcon,
@@ -371,7 +372,7 @@ export default function CreatorsClient({
   const renderContent = () => (
     <div className="overflow-x-auto">
       {isLoading && (
-        <div className="py-4 text-center text-sm text-gray-500">Loading...</div>
+        <div className="py-4 text-center text-sm text-[#8C8377]">Loading...</div>
       )}
       <table className="min-w-full text-left text-[13px]">
         <thead>
@@ -403,7 +404,7 @@ export default function CreatorsClient({
               tier: creatorItem.tier || { name: 'Tier 1', level: 1 },
             };
             return (
-              <tr key={creator.id}>
+              <tr key={creator.id} className="ad-row">
                 <td className="td">
                   <div className="flex items-center gap-x-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -414,7 +415,7 @@ export default function CreatorsClient({
                     />
                     <div className="truncate">{creator.full_name}</div>
                     {creator.role && creator.role !== 'creator' && (
-                      <span className="shrink-0 rounded-full bg-[#F5F5F5] px-2 py-0.5 text-[11px] font-medium text-[#8E8E93] capitalize">
+                      <span className="shrink-0 rounded-full bg-[#EFEBE1] px-2 py-0.5 text-[11px] font-medium text-[#5C544A] capitalize">
                         {creator.role}
                       </span>
                     )}
@@ -427,14 +428,14 @@ export default function CreatorsClient({
                         color: creator.tier?.name
                           .toLowerCase()
                           .includes('tier 1')
-                          ? '#CD7F32'
+                          ? '#9C6F2E'
                           : creator.tier?.name.toLowerCase().includes('tier 2')
-                            ? '#C0C0C0'
+                            ? '#8C8377'
                             : creator.tier?.name
                                   .toLowerCase()
                                   .includes('tier 3')
-                              ? '#FFD700'
-                              : '#8E8E93',
+                              ? '#C4AA6E'
+                              : '#5C544A',
                       }}
                       className="capitalize"
                     >
@@ -453,11 +454,11 @@ export default function CreatorsClient({
                 </td>
                 <td className="td">
                   {creator.creator_code ? (
-                    <span className="font-mono tracking-wide text-[#121212]">
+                    <span className="font-mono tracking-wide text-[#14110E]">
                       {creator.creator_code}
                     </span>
                   ) : (
-                    <span className="text-[#8E8E93]">—</span>
+                    <span className="text-[#5C544A]">—</span>
                   )}
                 </td>
                 <td className="td">{creator.email}</td>
@@ -471,7 +472,7 @@ export default function CreatorsClient({
                         setMenuAnchorEl(next ? e.currentTarget : null);
                         setActiveActionMenuId(next);
                       }}
-                      className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                      className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#EFEBE1] outline-none transition-colors duration-150 hover:bg-[#E2DBCC] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                       aria-label={`Actions for ${creator.full_name}`}
                       aria-expanded={activeActionMenuId === creator.id}
                     >
@@ -486,7 +487,7 @@ export default function CreatorsClient({
                       anchorEl={menuAnchorEl}
                     >
                       <button
-                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#3F3830] hover:bg-[#EFEAE0]"
                         onClick={() => {
                           setAssigningCreator(creator);
                           setSelectedTierIdForAssign('');
@@ -498,7 +499,7 @@ export default function CreatorsClient({
                         Update tier
                       </button>
                       <button
-                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#3F3830] hover:bg-[#EFEAE0]"
                         onClick={() => {
                           setCodeModalCreator(creator);
                           setCodeInput('');
@@ -508,7 +509,7 @@ export default function CreatorsClient({
                         {creator.creator_code_id ? 'Change code' : 'Assign code'}
                       </button>
                       <button
-                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C3A2B] hover:bg-[#F2E1DB]"
                         onClick={() => {
                           setRevokingCreator(creator);
                           setRevokeReason('');
@@ -532,20 +533,20 @@ export default function CreatorsClient({
 
   return (
     <GridContainer>
-      <div className="px-[16px]">
-        <div className="py-[22px]">
-          <span className="text-[20px] font-medium">Creators</span>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="The stage"
+        title="Creators"
+        description="The people the culture already follows. Tiers, codes and commission rates all live here."
+      />
 
       <div className="">
-        <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] py-[24px] text-[#121212]">
+        <div className="rounded-t-[14px] border border-[#E2DBCC] bg-[#FBF9F4] px-[24px] py-[24px] text-[#14110E]">
           <div className="flex flex-row items-center justify-between gap-x-2">
             <input
               type="text"
               placeholder="Search creators..."
               aria-label="Search creators"
-              className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] md:w-[245px]"
+              className="h-[36px] w-full rounded-full border border-[#DFD7C6] bg-[#EFEBE1] text-[#14110E] placeholder:text-[#8C8377] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#9C6F2E] md:w-[245px]"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
             />
@@ -564,7 +565,7 @@ export default function CreatorsClient({
                   </span>
                 </button>
                 {isDropdownOpen && (
-                  <div className="ring-opacity-6 absolute top-full right-0 z-10 mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
+                  <div className="absolute top-full right-0 z-10 mt-2 w-32 origin-top-right rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)]">
                     <div className="py-1">
                       {periodOptions.map((option) => (
                         <button
@@ -573,7 +574,7 @@ export default function CreatorsClient({
                             setSelectedPeriod(option);
                             setIsDropdownOpen(false);
                           }}
-                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                         >
                           {option}
                         </button>
@@ -599,13 +600,13 @@ export default function CreatorsClient({
         </div>
 
         {creators.length > 0 ? (
-          <div className="h-full rounded-b-[20px] bg-white px-[24px]">
+          <div className="h-full rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px]">
             {renderContent()}
           </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center rounded-b-[20px] bg-white px-[24px] py-[48px]">
-            <p className="text-base font-medium text-gray-500">No creators found</p>
-            <p className="mt-1 text-sm text-gray-400">
+          <div className="flex h-full flex-col items-center justify-center rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px] py-[48px]">
+            <p className="ad-display text-[18px] text-[#14110E]">No creators found</p>
+            <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">
               {searchValue
                 ? 'Try adjusting your search'
                 : 'Creators will appear here once they register'}
@@ -621,7 +622,7 @@ export default function CreatorsClient({
                   handlePageChange(pagination.offset - pagination.limit)
                 }
                 disabled={pagination.offset === 0 || isLoading}
-                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="relative inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
               >
                 Previous
               </button>
@@ -633,14 +634,14 @@ export default function CreatorsClient({
                   pagination.offset + pagination.limit >= totalRows(pagination) ||
                   isLoading
                 }
-                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="relative ml-3 inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-[#3F3830]">
                   Showing{' '}
                   <span className="font-medium">{pagination.offset + 1}</span>{' '}
                   to{' '}
@@ -656,7 +657,7 @@ export default function CreatorsClient({
               </div>
               <div>
                 <nav
-                  className="isolate inline-flex -space-x-px rounded-md shadow-xs"
+                  className="isolate inline-flex -space-x-px rounded-[8px] shadow-xs"
                   aria-label="Pagination"
                 >
                   <button
@@ -664,7 +665,7 @@ export default function CreatorsClient({
                       handlePageChange(pagination.offset - pagination.limit)
                     }
                     disabled={pagination.offset === 0 || isLoading}
-                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Previous</span>
                     <svg
@@ -688,7 +689,7 @@ export default function CreatorsClient({
                       pagination.offset + pagination.limit >=
                         totalRows(pagination) || isLoading
                     }
-                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Next</span>
                     <svg
@@ -713,13 +714,13 @@ export default function CreatorsClient({
 
       {codeModalCreator && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg font-medium">
+              <h2 className="ad-display text-[20px] text-[#14110E]">
                 {codeModalCreator.creator_code_id
                   ? 'Change creator code'
                   : 'Assign creator code'}
@@ -727,21 +728,21 @@ export default function CreatorsClient({
               <button
                 onClick={() => setCodeModalCreator(null)}
                 aria-label="Close"
-                className="text-[#8E8E93] hover:text-[#121212]"
+                className="text-[#5C544A] hover:text-[#14110E]"
               >
                 ✕
               </button>
             </div>
-            <p className="mb-4 text-[13px] text-[#8E8E93]">
+            <p className="mb-4 text-[13px] text-[#5C544A]">
               Set a custom code for{' '}
-              <span className="font-medium text-[#121212]">
+              <span className="font-medium text-[#14110E]">
                 {codeModalCreator.full_name}
               </span>
               , or randomize one.{' '}
               {codeModalCreator.creator_code_id ? (
                 <>
                   Current code:{' '}
-                  <span className="font-mono text-[#121212]">
+                  <span className="font-mono text-[#14110E]">
                     {codeModalCreator.creator_code}
                   </span>
                   . This overrides the 24-hour limit.
@@ -754,20 +755,20 @@ export default function CreatorsClient({
               value={codeInput}
               onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
               placeholder="e.g. SWAZ-STAR (blank = randomize)"
-              className="mb-4 w-full rounded-[10px] border border-[#E5E5E5] px-3 py-2 text-[14px] uppercase outline-none focus:border-[#0072BB]"
+              className="mb-4 w-full rounded-[10px] border border-[#DFD7C6] px-3 py-2 text-[14px] uppercase outline-none focus:border-[#9C6F2E]"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => submitCodeChange(false)}
                 disabled={isChangingCode || !codeInput.trim()}
-                className="flex-1 rounded-[10px] bg-[#121212] px-4 py-2.5 text-[14px] font-medium text-white disabled:opacity-40"
+                className="flex-1 rounded-[10px] bg-[#14110E] px-4 py-2.5 text-[14px] font-medium text-[#F4F1EA] disabled:opacity-40"
               >
                 {isChangingCode ? '…' : 'Save custom code'}
               </button>
               <button
                 onClick={() => submitCodeChange(true)}
                 disabled={isChangingCode}
-                className="rounded-[10px] border border-[#0072BB] px-4 py-2.5 text-[14px] font-medium text-[#0072BB] transition-colors hover:bg-[#0072BB] hover:text-white disabled:opacity-40"
+                className="rounded-full border border-[#9C6F2E] px-4 py-2.5 text-[14px] font-medium text-[#9C6F2E] transition-colors hover:bg-[#9C6F2E] hover:text-[#F4F1EA] disabled:opacity-40"
               >
                 Randomize
               </button>
@@ -778,13 +779,13 @@ export default function CreatorsClient({
 
       {revokingCreator && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg font-medium">
+              <h2 className="ad-display text-[20px] text-[#14110E]">
                 {revokingCreator.role === 'creator'
                   ? 'Revoke creator status'
                   : 'Revoke code'}
@@ -792,20 +793,20 @@ export default function CreatorsClient({
               <button
                 onClick={() => setRevokingCreator(null)}
                 aria-label="Close"
-                className="text-[#8E8E93] hover:text-[#121212]"
+                className="text-[#5C544A] hover:text-[#14110E]"
               >
                 ✕
               </button>
             </div>
-            <p className="mb-3 text-[13px] text-[#8E8E93]">
-              <span className="font-medium text-[#121212]">
+            <p className="mb-3 text-[13px] text-[#5C544A]">
+              <span className="font-medium text-[#14110E]">
                 {revokingCreator.full_name}
               </span>
               {revokingCreator.creator_code ? (
                 <>
                   {' '}
                   loses{' '}
-                  <span className="font-mono text-[#121212]">
+                  <span className="font-mono text-[#14110E]">
                     {revokingCreator.creator_code}
                   </span>{' '}
                   and stops earning immediately.
@@ -819,7 +820,7 @@ export default function CreatorsClient({
                 <>
                   {' '}
                   Their{' '}
-                  <span className="font-medium text-[#121212] capitalize">
+                  <span className="font-medium text-[#14110E] capitalize">
                     {revokingCreator.role}
                   </span>{' '}
                   account and its access are not affected — only the code is
@@ -831,19 +832,19 @@ export default function CreatorsClient({
               value={revokeReason}
               onChange={(e) => setRevokeReason(e.target.value)}
               placeholder="Reason (optional, internal)"
-              className="mb-4 w-full rounded-[10px] border border-[#E5E5E5] px-3 py-2 text-[14px] outline-none focus:border-[#0072BB]"
+              className="mb-4 w-full rounded-[10px] border border-[#DFD7C6] px-3 py-2 text-[14px] outline-none focus:border-[#9C6F2E]"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => setRevokingCreator(null)}
-                className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2.5 text-[14px] font-medium text-gray-700 hover:bg-gray-50"
+                className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2.5 text-[14px] font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
               >
                 Cancel
               </button>
               <button
                 onClick={submitRevoke}
                 disabled={isRevoking}
-                className="flex-1 rounded-[10px] bg-red-600 px-4 py-2.5 text-[14px] font-medium text-white hover:bg-red-700 disabled:opacity-40"
+                className="flex-1 rounded-full bg-[#8C3A2B] px-4 py-2.5 text-[14px] font-medium text-[#F4F1EA] hover:bg-[#6E2C20] disabled:opacity-40"
               >
                 {isRevoking ? 'Revoking…' : 'Revoke'}
               </button>
@@ -854,33 +855,33 @@ export default function CreatorsClient({
 
       {showAssignModal && assigningCreator && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
         >
-          <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-lg font-medium">Assign Tier</h2>
+              <h2 className="ad-display text-[20px] text-[#14110E]">Assign Tier</h2>
               <button
                 onClick={() => {
                   setShowAssignModal(false);
                   setAssigningCreator(null);
                   setSelectedTierIdForAssign('');
                 }}
-                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100"
+                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[#EFEAE0]"
                 aria-label="Close dialog"
               >
                 <CloseIconTags />
               </button>
             </div>
-            <p className="mb-4 text-sm text-[#8E8E93]">
+            <p className="mb-4 text-sm text-[#5C544A]">
               Assigning tier to{' '}
-              <span className="font-medium text-[#121212]">
+              <span className="font-medium text-[#14110E]">
                 {assigningCreator.full_name}
               </span>
             </p>
             {!assigningCreator.creator_code_id ? (
-              <p className="text-sm text-red-500">
+              <p className="text-sm text-[#8C3A2B]">
                 This creator has no active creator code, so there is nothing to
                 attach a tier to. Use &ldquo;Assign code&rdquo; on the row first.
               </p>
@@ -906,7 +907,7 @@ export default function CreatorsClient({
                   ))}
                 </select>
                 {!isTiersLoading && tiers.length === 0 && (
-                  <p className="mt-2 text-sm text-[#8E8E93]">
+                  <p className="mt-2 text-sm text-[#5C544A]">
                     Close this and use the “Tier” button to create one.
                   </p>
                 )}
@@ -917,7 +918,7 @@ export default function CreatorsClient({
                       setAssigningCreator(null);
                       setSelectedTierIdForAssign('');
                     }}
-                    className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                   >
                     Cancel
                   </button>
@@ -937,14 +938,14 @@ export default function CreatorsClient({
 
       {showTierModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="tier-modal-title"
         >
-          <div className="w-full max-w-md rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="w-full max-w-md rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-6 flex items-center justify-between">
-              <h2 id="tier-modal-title" className="text-lg font-medium capitalize">
+              <h2 id="tier-modal-title" className="ad-display text-[20px] text-[#14110E] capitalize">
                 {tierView === 'list'
                   ? 'Tiers'
                   : tierView === 'create'
@@ -953,7 +954,7 @@ export default function CreatorsClient({
               </h2>
               <button
                 onClick={closeTierModal}
-                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:outline-none"
+                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[#EFEAE0] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:outline-none"
                 aria-label="Close dialog"
               >
                 <CloseIconTags />
@@ -966,9 +967,9 @@ export default function CreatorsClient({
                   {tiers?.map((tier) => (
                     <div
                       key={tier.id}
-                      className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0"
+                      className="flex items-center justify-between border-b border-[#E2DBCC] py-3 last:border-0"
                     >
-                      <span className="text-[#121212]">
+                      <span className="text-[#14110E]">
                         {tier.name} (Level {tier.level})
                       </span>
                       <button
@@ -981,14 +982,14 @@ export default function CreatorsClient({
                           setTierMaxRate(tier.max_rate?.toString() || '');
                           setTierView('edit');
                         }}
-                        className="text-sm text-blue-600 hover:text-blue-800"
+                        className="text-sm text-[#9C6F2E] hover:text-[#9C6F2E]"
                       >
                         Edit
                       </button>
                     </div>
                   ))}
                   {(!tiers || tiers.length === 0) && (
-                    <p className="text-sm text-[#8E8E93]">No tiers found.</p>
+                    <p className="text-sm text-[#5C544A]">No tiers found.</p>
                   )}
                 </div>
                 <div className="pt-2">
@@ -1074,7 +1075,7 @@ export default function CreatorsClient({
                       setTierBaseRate('');
                       setTierMaxRate('');
                     }}
-                    className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                   >
                     Cancel
                   </button>

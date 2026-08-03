@@ -2,11 +2,8 @@
 
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import GridContainer from '../gridContainer';
-import {
-  AdminSoundLevelsIcon,
-  AdminMoreHorizontalIcon,
-  AdminSuccessCheckIcon,
-} from '@/components/icons';
+import { PageHeader } from '../ui';
+import { AdminSoundLevelsIcon, AdminSuccessCheckIcon } from '@/components/icons';
 import {
   confirmPayout,
   initiatePayout,
@@ -381,7 +378,7 @@ export default function PayoutClient({
           <button
             onClick={() => handleInitiateClick(payout)}
             disabled={processingId === payout.id}
-            className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-[6px] bg-[#0072BB] px-[12px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-full bg-[#14110E] px-[12px] font-medium text-[#F4F1EA] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {processingId === payout.id ? 'Initiating…' : 'Initiate transfer'}
           </button>
@@ -393,7 +390,7 @@ export default function PayoutClient({
             <button
               onClick={() => handleConfirmClick(payout.id)}
               disabled={processingId === payout.id}
-              className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-[6px] border border-[#AEAEB2] px-[12px] font-medium disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-full border border-[#14110E]/25 px-[14px] font-medium text-[#14110E] transition-colors hover:border-[#14110E] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {processingId === payout.id ? 'Confirming…' : 'Enter OTP'}
             </button>
@@ -402,14 +399,14 @@ export default function PayoutClient({
       case 'completed':
       case 'paid':
         return (
-          <span className="flex h-[30px] items-center gap-x-[2px] rounded-full border border-[#CCEAD6] bg-[#CCEAD6] p-[6px] !pr-[8px] font-medium text-[#32AC5B]">
+          <span className="flex h-[30px] items-center gap-x-[2px] rounded-full border border-[#E4EDE3] bg-[#E4EDE3] p-[6px] !pr-[8px] font-medium text-[#3D6B4A]">
             <AdminSuccessCheckIcon />
             Paid
           </span>
         );
       case 'failed':
         return (
-          <span className="rounded-full border border-[#E5C6BF] bg-[#E5C6BF] px-3 py-1 text-xs font-medium text-[#991C00]">
+          <span className="rounded-full border border-[#F2E1DB] bg-[#F2E1DB] px-3 py-1 text-xs font-medium text-[#8C3A2B]">
             Failed
           </span>
         );
@@ -422,8 +419,8 @@ export default function PayoutClient({
     if (payouts.length === 0) {
       return (
         <div className="flex flex-col items-center px-[24px] py-[48px] text-center">
-          <p className="text-base font-medium text-gray-500">No payouts found</p>
-          <p className="mt-1 text-sm text-gray-400">
+          <p className="ad-display text-[18px] text-[#14110E]">No payouts found</p>
+          <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">
             {searchQuery || activeTab !== 'All'
               ? 'Try adjusting your search or filters'
               : 'Payout requests from creators will appear here'}
@@ -435,7 +432,7 @@ export default function PayoutClient({
     return (
       <>
         {isLoading && (
-          <div className="py-4 text-center text-sm text-gray-500">
+          <div className="py-4 text-center text-sm text-[#8C8377]">
             Loading...
           </div>
         )}
@@ -466,7 +463,7 @@ export default function PayoutClient({
                   key={payout.id}
                   onClick={() => openBreakdown(payout)}
                   title="Tap to verify the orders behind this payout"
-                  className="cursor-pointer transition-colors hover:bg-[#FAFAFA]"
+                  className="ad-row cursor-pointer"
                 >
                   <td className="td">
                     <div className="flex items-center gap-x-[5px]">
@@ -501,58 +498,47 @@ export default function PayoutClient({
 
   return (
     <GridContainer>
-      <div className="px-[16px]">
-        <div className="py-[22px]">
-          <span className="text-[20px] font-medium">Payout</span>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="The stage"
+        title="Payout"
+        description="Every sale moves us toward a creator economy that pays its own. This is where that money actually leaves."
+      />
 
-      {/* 1st layer */}
-      <div className="mb-[25px]">
-        <div className="rounded-[20px] bg-white px-[30px] py-[30px] text-[#121212]">
-          <div className="grid grid-cols-1 divide-y divide-gray-200 md:grid-cols-3 md:divide-x md:divide-y-0">
-            <div className="space-y-[16px] py-4 md:py-0 md:pr-6">
-              <div className="flex items-center justify-between">
-                <div className="text-[14px] text-[#AFB1B0]">Confirmed</div>
-                <AdminMoreHorizontalIcon color="#35373C" />
-              </div>
-              <div className="text-[22px] font-medium">{stats.completed}</div>
-              <div className="text-[14px] text-[#0072BB]">Total paid</div>
-            </div>
-            <div className="space-y-[16px] py-4 md:px-6 md:py-0">
-              <div className="flex items-center justify-between">
-                <div className="text-[14px] text-[#AFB1B0]">Requested</div>
-                <AdminMoreHorizontalIcon color="#35373C" />
-              </div>
-              <div className="text-[22px] font-medium">{stats.requested}</div>
-              <div className="text-[14px] text-[#991C00]">Awaiting transfer</div>
-            </div>
-            <div className="space-y-[16px] py-4 md:py-0 md:pl-6">
-              <div className="flex items-center justify-between">
-                <div className="text-[14px] text-[#AFB1B0]">
-                  Paystack balance
-                </div>
-                <AdminMoreHorizontalIcon color="#35373C" />
-              </div>
-              <div className="text-[22px] font-medium">
-                {paystackBalance === null
-                  ? '—'
-                  : `₦${paystackBalance.toLocaleString('en-NG', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`}
-              </div>
-              <div className="text-[14px] text-[#AFB1B0]">
-                Funds available to pay out
-              </div>
-            </div>
-          </div>
+      {/* 1st layer — the hairline three-up used across the suite. */}
+      <div className="ad-grid-hairline mb-6 grid sm:grid-cols-3">
+        <div className="bg-[#FBF9F4] p-6">
+          <p className="ad-eyebrow">Confirmed</p>
+          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+            {stats.completed}
+          </p>
+          <p className="mt-2 text-[12px] text-[#8C8377]">Total paid</p>
+        </div>
+        <div className="bg-[#FBF9F4] p-6">
+          <p className="ad-eyebrow">Requested</p>
+          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+            {stats.requested}
+          </p>
+          <p className="mt-2 text-[12px] text-[#8C3A2B]">Awaiting transfer</p>
+        </div>
+        <div className="bg-[#FBF9F4] p-6">
+          <p className="ad-eyebrow">Paystack balance</p>
+          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+            {paystackBalance === null
+              ? '—'
+              : `₦${paystackBalance.toLocaleString('en-NG', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}`}
+          </p>
+          <p className="mt-2 text-[12px] text-[#8C8377]">
+            Funds available to pay out
+          </p>
         </div>
       </div>
 
       {/* 2nd layer */}
       <div className="">
-        <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] text-[#121212]">
+        <div className="rounded-t-[14px] border border-[#E2DBCC] bg-[#FBF9F4] px-[24px] pt-[24px] text-[#14110E]">
           <div className="scrollbar-hide relative flex flex-col-reverse items-start justify-between gap-4 overflow-visible sm:flex-row sm:items-center">
             <div className="flex items-center gap-8">
               {tabs.map((tab) => {
@@ -563,13 +549,13 @@ export default function PayoutClient({
                     onClick={() => setActiveTab(tab.id)}
                     className={`relative cursor-pointer pb-4 text-[14px] transition-all duration-200 ease-in-out ${
                       isActive
-                        ? 'text-gray-900'
-                        : 'text-gray-400 hover:text-gray-600'
+                        ? 'text-[#14110E]'
+                        : 'text-[#8C8377] hover:text-[#5C544A]'
                     }`}
                   >
                     {tab.label}
                     {isActive && (
-                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[5px]" />
+                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-[#9C6F2E] sm:translate-y-[5px]" />
                     )}
                   </button>
                 );
@@ -581,7 +567,7 @@ export default function PayoutClient({
                   type="text"
                   placeholder="Search creators..."
                   aria-label="Search creators"
-                  className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] md:w-[245px]"
+                  className="h-[36px] w-full rounded-full border border-[#DFD7C6] bg-[#EFEBE1] text-[#14110E] placeholder:text-[#8C8377] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#9C6F2E] md:w-[245px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -600,7 +586,7 @@ export default function PayoutClient({
                   </span>
                 </button>
                 {isDropdownOpen && (
-                  <div className="ring-opacity-6 absolute top-full right-0 z-10 -mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
+                  <div className="absolute top-full right-0 z-10 -mt-2 w-32 origin-top-right rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)]">
                     <div className="py-1">
                       {periodOptions.map((option) => (
                         <button
@@ -609,7 +595,7 @@ export default function PayoutClient({
                             setSelectedPeriod(option);
                             setIsDropdownOpen(false);
                           }}
-                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                         >
                           {option}
                         </button>
@@ -621,7 +607,7 @@ export default function PayoutClient({
             </div>
           </div>
         </div>
-        <div className="rounded-b-[20px] bg-white px-[24px]">
+        <div className="rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px]">
           {renderContent()}
         </div>
         {/* Pagination Controls */}
@@ -633,7 +619,7 @@ export default function PayoutClient({
                   handlePageChange(pagination.offset - pagination.limit)
                 }
                 disabled={pagination.offset === 0 || isLoading}
-                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="relative inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
               >
                 Previous
               </button>
@@ -645,14 +631,14 @@ export default function PayoutClient({
                   pagination.offset + pagination.limit >= totalRows(pagination) ||
                   isLoading
                 }
-                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="relative ml-3 inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-[#3F3830]">
                   Showing{' '}
                   <span className="font-medium">{pagination.offset + 1}</span>{' '}
                   to{' '}
@@ -668,7 +654,7 @@ export default function PayoutClient({
               </div>
               <div>
                 <nav
-                  className="isolate inline-flex -space-x-px rounded-md shadow-xs"
+                  className="isolate inline-flex -space-x-px rounded-[8px] shadow-xs"
                   aria-label="Pagination"
                 >
                   <button
@@ -676,7 +662,7 @@ export default function PayoutClient({
                       handlePageChange(pagination.offset - pagination.limit)
                     }
                     disabled={pagination.offset === 0 || isLoading}
-                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Previous</span>
                     <svg
@@ -700,7 +686,7 @@ export default function PayoutClient({
                       pagination.offset + pagination.limit >=
                         totalRows(pagination) || isLoading
                     }
-                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Next</span>
                     <svg
@@ -725,21 +711,21 @@ export default function PayoutClient({
 
       {showOtpModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="otp-modal-title"
         >
-          <div className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-4 flex items-center justify-between">
-              <h2 id="otp-modal-title" className="text-lg font-medium">Confirm Payout</h2>
+              <h2 id="otp-modal-title" className="ad-display text-[20px] text-[#14110E]">Confirm Payout</h2>
               <button
                 onClick={() => {
                   setShowOtpModal(false);
                   setPendingPayoutId(null);
                   setOtpValue('');
                 }}
-                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:outline-none"
+                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full text-[#8C8377] transition-colors hover:bg-[#EFEAE0] hover:text-[#5C544A] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:outline-none"
                 aria-label="Close dialog"
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -747,7 +733,7 @@ export default function PayoutClient({
                 </svg>
               </button>
             </div>
-            <p className="mb-4 text-sm text-[#8E8E93]">
+            <p className="mb-4 text-sm text-[#5C544A]">
               Enter the OTP sent to your Paystack-registered device to finalize this transfer.
             </p>
             <input
@@ -755,7 +741,7 @@ export default function PayoutClient({
               value={otpValue}
               onChange={(e) => setOtpValue(e.target.value)}
               placeholder="Enter OTP"
-              className="mb-4 w-full rounded-[10px] border border-gray-200 px-4 py-3 text-sm focus:border-[#0072BB] focus:ring-1 focus:ring-[#0072BB] focus:outline-none"
+              className="mb-4 w-full rounded-[10px] border border-[#E2DBCC] px-4 py-3 text-sm focus:border-[#9C6F2E] focus:ring-1 focus:ring-[#9C6F2E] focus:outline-none"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && otpValue.trim()) handleOtpSubmit();
@@ -768,14 +754,14 @@ export default function PayoutClient({
                   setPendingPayoutId(null);
                   setOtpValue('');
                 }}
-                className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleOtpSubmit}
                 disabled={!otpValue.trim()}
-                className="flex-1 rounded-[10px] bg-[#0072BB] px-4 py-2 text-sm font-medium text-white hover:bg-[#005A94] disabled:opacity-50"
+                className="flex-1 rounded-full bg-[#14110E] px-4 py-2 text-sm font-medium text-[#F4F1EA] hover:bg-[#241F19] disabled:opacity-50"
               >
                 Confirm
               </button>
@@ -785,32 +771,32 @@ export default function PayoutClient({
       )}
       {showBreakdown && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="breakdown-title"
           onClick={() => setShowBreakdown(false)}
         >
           <div
-            className="max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-[20px] bg-white shadow-xl"
+            className="max-h-[88vh] w-full max-w-2xl overflow-hidden rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between border-b border-[#F0F0F0] px-[24px] py-[20px]">
+            <div className="flex items-start justify-between border-b border-[#E2DBCC] px-[24px] py-[20px]">
               <div>
                 <h2
                   id="breakdown-title"
-                  className="text-[18px] font-semibold text-[#121212]"
+                  className="text-[18px] font-semibold text-[#14110E]"
                 >
                   Payout verification
                 </h2>
-                <p className="mt-[2px] text-[13px] text-[#8E8E93]">
+                <p className="mt-[2px] text-[13px] text-[#5C544A]">
                   The orders that built this creator&rsquo;s balance.
                 </p>
               </div>
               <button
                 onClick={() => setShowBreakdown(false)}
                 aria-label="Close"
-                className="flex h-[32px] w-[32px] items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:outline-none"
+                className="flex h-[32px] w-[32px] items-center justify-center rounded-full text-[#8C8377] transition-colors hover:bg-[#EFEAE0] hover:text-[#5C544A] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:outline-none"
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
@@ -825,20 +811,20 @@ export default function PayoutClient({
 
             <div className="max-h-[72vh] overflow-y-auto px-[24px] py-[20px]">
               {breakdownLoading ? (
-                <div className="py-12 text-center text-sm text-gray-500">
+                <div className="py-12 text-center text-sm text-[#8C8377]">
                   Loading breakdown…
                 </div>
               ) : !breakdown ? (
-                <div className="py-12 text-center text-sm text-[#991C00]">
+                <div className="py-12 text-center text-sm text-[#8C3A2B]">
                   Could not load this payout&rsquo;s breakdown.
                 </div>
               ) : (
                 <>
                   <div className="mb-[18px]">
-                    <div className="text-[15px] font-medium text-[#121212]">
+                    <div className="text-[15px] font-medium text-[#14110E]">
                       {breakdown.creator?.name || '—'}
                     </div>
-                    <div className="text-[12px] text-[#8E8E93]">
+                    <div className="text-[12px] text-[#5C544A]">
                       {breakdown.creator?.email}
                       {breakdown.creator?.code
                         ? ` · ${breakdown.creator.code}`
@@ -851,7 +837,7 @@ export default function PayoutClient({
                       {
                         label: 'This payout',
                         value: money(breakdown.summary?.this_payout),
-                        accent: 'text-[#0072BB]',
+                        accent: 'text-[#9C6F2E]',
                       },
                       {
                         label: 'Total earned',
@@ -868,13 +854,13 @@ export default function PayoutClient({
                     ].map((s) => (
                       <div
                         key={s.label}
-                        className="rounded-[12px] bg-[#F7F7F8] px-[14px] py-[12px]"
+                        className="rounded-[12px] bg-[#F8F5EE] px-[14px] py-[12px]"
                       >
-                        <div className="text-[11px] tracking-wide text-[#AFB1B0] uppercase">
+                        <div className="text-[11px] tracking-wide text-[#8C8377] uppercase">
                           {s.label}
                         </div>
                         <div
-                          className={`mt-[4px] text-[15px] font-semibold ${s.accent || 'text-[#121212]'}`}
+                          className={`mt-[4px] text-[15px] font-semibold ${s.accent || 'text-[#14110E]'}`}
                         >
                           {s.value}
                         </div>
@@ -888,33 +874,33 @@ export default function PayoutClient({
                       o.order_status !== 'paid' &&
                       o.order_status !== 'completed',
                   ) && (
-                    <div className="mb-[14px] rounded-[10px] border border-[#E5C6BF] bg-[#FBEDE9] px-[14px] py-[10px] text-[12px] text-[#991C00]">
+                    <div className="mb-[14px] rounded-[10px] border border-[#F2E1DB] bg-[#F2E1DB] px-[14px] py-[10px] text-[12px] text-[#8C3A2B]">
                       ⚠ Some commission below is tied to an order that is not in a
                       paid state — verify before sending this payout.
                     </div>
                   )}
 
-                  <div className="mb-[8px] text-[12px] font-medium tracking-wide text-[#AFB1B0] uppercase">
+                  <div className="mb-[8px] text-[12px] font-medium tracking-wide text-[#8C8377] uppercase">
                     Commission-earning orders ({breakdown.orders?.length || 0})
                   </div>
                   {breakdown.orders?.length ? (
-                    <div className="overflow-x-auto rounded-[12px] border border-[#F0F0F0]">
+                    <div className="overflow-x-auto rounded-[12px] border border-[#E2DBCC]">
                       <table className="min-w-full text-left text-[12px]">
-                        <thead className="bg-[#FAFAFA]">
+                        <thead className="bg-[#F8F5EE]">
                           <tr>
-                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                            <th className="px-[12px] py-[8px] font-medium text-[#8C8377]">
                               Order
                             </th>
-                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                            <th className="px-[12px] py-[8px] font-medium text-[#8C8377]">
                               Date
                             </th>
-                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                            <th className="px-[12px] py-[8px] font-medium text-[#8C8377]">
                               Order total
                             </th>
-                            <th className="px-[12px] py-[8px] font-medium text-[#AFB1B0]">
+                            <th className="px-[12px] py-[8px] font-medium text-[#8C8377]">
                               Status
                             </th>
-                            <th className="px-[12px] py-[8px] text-right font-medium text-[#AFB1B0]">
+                            <th className="px-[12px] py-[8px] text-right font-medium text-[#8C8377]">
                               Commission
                             </th>
                           </tr>
@@ -927,17 +913,17 @@ export default function PayoutClient({
                             return (
                               <tr
                                 key={i}
-                                className="border-t border-[#F5F5F5]"
+                                className="border-t border-[#E2DBCC]"
                               >
-                                <td className="px-[12px] py-[10px] font-mono text-[#121212]">
+                                <td className="px-[12px] py-[10px] font-mono text-[#14110E]">
                                   #{shortId(o.order_id)}
                                 </td>
-                                <td className="px-[12px] py-[10px] text-[#35373C]">
+                                <td className="px-[12px] py-[10px] text-[#3F3830]">
                                   {o.order_created_at
                                     ? formatDate(o.order_created_at)
                                     : formatDate(o.created_at)}
                                 </td>
-                                <td className="px-[12px] py-[10px] text-[#35373C]">
+                                <td className="px-[12px] py-[10px] text-[#3F3830]">
                                   {o.order_total != null
                                     ? money(o.order_total)
                                     : '—'}
@@ -946,8 +932,8 @@ export default function PayoutClient({
                                   <span
                                     className={`rounded-full px-[8px] py-[2px] text-[11px] font-medium ${
                                       paid
-                                        ? 'bg-[#CCEAD6] text-[#32AC5B]'
-                                        : 'bg-[#E5C6BF] text-[#991C00]'
+                                        ? 'bg-[#E4EDE3] text-[#3D6B4A]'
+                                        : 'bg-[#F2E1DB] text-[#8C3A2B]'
                                     }`}
                                   >
                                     {(o.order_status || 'unknown').replace(
@@ -956,7 +942,7 @@ export default function PayoutClient({
                                     )}
                                   </span>
                                 </td>
-                                <td className="px-[12px] py-[10px] text-right font-semibold text-[#121212]">
+                                <td className="px-[12px] py-[10px] text-right font-semibold text-[#14110E]">
                                   {money(o.commission)}
                                 </td>
                               </tr>
@@ -966,12 +952,12 @@ export default function PayoutClient({
                       </table>
                     </div>
                   ) : (
-                    <div className="rounded-[12px] border border-[#F0F0F0] py-8 text-center text-[13px] text-[#8E8E93]">
+                    <div className="rounded-[12px] border border-[#E2DBCC] py-8 text-center text-[13px] text-[#5C544A]">
                       No commission orders found for this creator.
                     </div>
                   )}
 
-                  <p className="mt-[12px] text-[11px] leading-relaxed text-[#AFB1B0]">
+                  <p className="mt-[12px] text-[11px] leading-relaxed text-[#8C8377]">
                     Payouts draw from the creator&rsquo;s accumulated balance, so
                     a single payout isn&rsquo;t tied to one order — this is the
                     full earning history behind the balance.
@@ -979,20 +965,20 @@ export default function PayoutClient({
 
                   {breakdown.prior_payouts?.length > 1 && (
                     <div className="mt-[18px]">
-                      <div className="mb-[8px] text-[12px] font-medium tracking-wide text-[#AFB1B0] uppercase">
+                      <div className="mb-[8px] text-[12px] font-medium tracking-wide text-[#8C8377] uppercase">
                         Payout history
                       </div>
                       <div className="space-y-[6px]">
                         {breakdown.prior_payouts.map((p: any, i: number) => (
                           <div
                             key={i}
-                            className="flex items-center justify-between rounded-[8px] bg-[#FAFAFA] px-[12px] py-[8px] text-[12px]"
+                            className="flex items-center justify-between rounded-[8px] bg-[#F8F5EE] px-[12px] py-[8px] text-[12px]"
                           >
-                            <span className="text-[#35373C]">
+                            <span className="text-[#3F3830]">
                               {formatDate(p.created_at)}
                             </span>
                             <span className="font-medium">{money(p.amount)}</span>
-                            <span className="text-[#8E8E93] capitalize">
+                            <span className="text-[#5C544A] capitalize">
                               {p.status}
                             </span>
                           </div>

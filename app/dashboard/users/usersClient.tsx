@@ -8,6 +8,7 @@ import {
   CloseIconTags,
 } from '@/components/icons';
 import GridContainer from '../gridContainer';
+import { PageHeader, Badge, type Tone } from '../ui';
 import RowActionMenu from '@/components/admin/RowActionMenu';
 import { updateUserRole } from './actions';
 import { showToast } from '../toast';
@@ -67,11 +68,12 @@ export default function UsersPage({
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
 
-  const roleClasses: Record<string, string> = {
-    user: 'bg-[#CCEAD6] text-[#32AC5B] border border-[#CCEAD6] rounded-full',
-    creator: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
-    admin: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
-    outreach: 'bg-[#D6E6F2] text-[#0072BB] border border-[#D6E6F2] rounded-full',
+  // Role → badge tone, drawn from the suite's shared badge set (../ui).
+  const roleTone: Record<string, Tone> = {
+    user: 'neutral',
+    creator: 'warn',
+    admin: 'bad',
+    outreach: 'info',
   };
 
   const [selectedPeriod, setSelectedPeriod] = useState('All Time');
@@ -204,20 +206,20 @@ export default function UsersPage({
 
   return (
     <GridContainer>
-      <div className="px-[16px]">
-        <div className="py-[22px]">
-          <span className="text-[20px] font-medium">Users</span>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="The people"
+        title="Users"
+        description="Everyone who has an account with Soise — customers, creators and admins. Roles can be changed here."
+      />
 
       <div className="">
-        <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] py-[24px] text-[#121212]">
+        <div className="rounded-t-[14px] border border-[#E2DBCC] bg-[#FBF9F4] px-[24px] py-[24px] text-[#14110E]">
           <div className="flex items-center justify-between gap-x-2">
             <input
               type="text"
               placeholder="Search users..."
               aria-label="Search users"
-              className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] md:w-[245px]"
+              className="h-[36px] w-full rounded-full border border-[#DFD7C6] bg-[#EFEBE1] text-[#14110E] placeholder:text-[#8C8377] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#9C6F2E] md:w-[245px]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -227,7 +229,7 @@ export default function UsersPage({
               aria-label="Filter by role"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="h-[36px] cursor-pointer rounded-[10px] border-2 border-[#F6F6F6] bg-white px-2 text-[12px] text-[#AFB1B0] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+              className="h-[36px] cursor-pointer rounded-[10px] border-2 border-[#EFEAE0] bg-[#FBF9F4] px-2 text-[12px] text-[#8C8377] outline-none focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
             >
               {roleOptions.map((r) => (
                 <option key={r} value={r}>
@@ -247,7 +249,7 @@ export default function UsersPage({
                 <span className="hidden md:block">{selectedPeriod}</span>
               </button>
               {isDropdownOpen && (
-                <div className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200">
+                <div className="absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)]">
                   <div className="py-1">
                     {periodOptions.map((option) => (
                       <button
@@ -256,7 +258,7 @@ export default function UsersPage({
                           setSelectedPeriod(option);
                           setIsDropdownOpen(false);
                         }}
-                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                       >
                         {option}
                       </button>
@@ -268,9 +270,9 @@ export default function UsersPage({
             </div>
           </div>
         </div>
-        <div className="rounded-b-[20px] bg-white px-[24px]">
+        <div className="rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px]">
           {isLoading && (
-            <div className="py-4 text-center text-sm text-gray-500">
+            <div className="py-4 text-center text-sm text-[#8C8377]">
               Loading...
             </div>
           )}
@@ -300,18 +302,14 @@ export default function UsersPage({
               </thead>
               <tbody>
                 {users.map((user, index, arr) => (
-                  <tr key={user.id}>
+                  <tr key={user.id} className="ad-row">
                     <td className="td">
                       {user.first_name} {user.last_name}
                     </td>
                     <td className="td">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium capitalize ${
-                          roleClasses[user.role] || roleClasses.user
-                        }`}
-                      >
+                      <Badge tone={roleTone[user.role] ?? 'neutral'}>
                         {user.role}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="td">{user.email}</td>
                     <td className="td">
@@ -329,7 +327,7 @@ export default function UsersPage({
                             setMenuAnchorEl(next ? e.currentTarget : null);
                             setActiveActionMenuId(next);
                           }}
-                          className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                          className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#EFEBE1] outline-none transition-colors duration-150 hover:bg-[#E2DBCC] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                           aria-label={`Actions for ${user.first_name} ${user.last_name}`}
                           aria-expanded={activeActionMenuId === user.id}
                         >
@@ -350,7 +348,7 @@ export default function UsersPage({
                               setShowRoleModal(true);
                               setActiveActionMenuId(null);
                             }}
-                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#3F3830] hover:bg-[#EFEAE0]"
                           >
                             Change Role
                           </button>
@@ -373,7 +371,7 @@ export default function UsersPage({
                 handlePageChange(pagination.offset - pagination.limit)
               }
               disabled={pagination.offset === 0 || isLoading}
-              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="relative inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
             >
               Previous
             </button>
@@ -385,14 +383,14 @@ export default function UsersPage({
                 pagination.offset + pagination.limit >= totalRows(pagination) ||
                 isLoading
               }
-              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="relative ml-3 inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
             >
               Next
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-[#3F3830]">
                 Showing{' '}
                 <span className="font-medium">{pagination.offset + 1}</span> to{' '}
                 <span className="font-medium">
@@ -407,7 +405,7 @@ export default function UsersPage({
             </div>
             <div>
               <nav
-                className="isolate inline-flex -space-x-px rounded-md shadow-xs"
+                className="isolate inline-flex -space-x-px rounded-[8px] shadow-xs"
                 aria-label="Pagination"
               >
                 <button
@@ -415,7 +413,7 @@ export default function UsersPage({
                     handlePageChange(pagination.offset - pagination.limit)
                   }
                   disabled={pagination.offset === 0 || isLoading}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                 >
                   <span className="sr-only">Previous</span>
                   <svg
@@ -439,7 +437,7 @@ export default function UsersPage({
                     pagination.offset + pagination.limit >= totalRows(pagination) ||
                     isLoading
                   }
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                 >
                   <span className="sr-only">Next</span>
                   <svg
@@ -463,17 +461,17 @@ export default function UsersPage({
 
       {showRoleModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-labelledby="role-modal-title"
         >
-          <div className="w-full max-w-md rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="w-full max-w-md rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-6 flex items-center justify-between">
-              <h2 id="role-modal-title" className="text-lg font-medium capitalize">Change Role</h2>
+              <h2 id="role-modal-title" className="ad-display text-[20px] text-[#14110E] capitalize">Change Role</h2>
               <button
                 onClick={() => setShowRoleModal(false)}
-                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:outline-none"
+                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[#EFEAE0] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:outline-none"
                 aria-label="Close dialog"
               >
                 <CloseIconTags />
@@ -496,7 +494,7 @@ export default function UsersPage({
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowRoleModal(false)}
-                  className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                 >
                   Cancel
                 </button>

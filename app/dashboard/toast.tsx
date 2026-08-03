@@ -18,9 +18,9 @@ export function showToast(type: ToastType, message: string) {
 }
 
 const TOAST_STYLES: Record<ToastType, string> = {
-  success: 'bg-[#CCEAD6] text-[#1B7A3D] border-[#32AC5B]',
-  error: 'bg-[#E5C6BF] text-[#991C00] border-[#991C00]',
-  info: 'bg-[#C0CBF2] text-[#0072BB] border-[#0072BB]',
+  success: 'bg-[#E4EDE3] text-[#3D6B4A] border-[#3D6B4A]',
+  error: 'bg-[#F2E1DB] text-[#8C3A2B] border-[#8C3A2B]',
+  info: 'bg-[#F3E9D6] text-[#8A6218] border-[#9C6F2E]',
 };
 
 const TOAST_ICONS: Record<ToastType, string> = {
@@ -58,7 +58,7 @@ export function ToastContainer() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`flex items-center gap-2 rounded-[10px] border-l-4 px-4 py-3 text-sm shadow-lg transition-all duration-300 ${TOAST_STYLES[toast.type]}`}
+          className={`flex items-center gap-2 rounded-[12px] border-l-2 px-4 py-3 text-[13px] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)] transition-all duration-300 ${TOAST_STYLES[toast.type]}`}
         >
           <span className="text-base font-bold" aria-hidden="true">
             {TOAST_ICONS[toast.type]}

@@ -29,7 +29,22 @@ export default async function AdminDashboardLayout({
           own toast system (./toast) is separate and does not receive anything
           sent through @/lib/toast-utils, which OrderActionsMenu uses — so
           every failed order-status change here was silent. */}
-      <Toaster position="top-center" richColors />
+      {/* `richColors` painted these in stock traffic-light green/red, which is
+          the one thing the suite's palette does not contain. Toned to the
+          same paper/ink/gold set as the dashboard's own toasts. */}
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#FBF9F4',
+            border: '1px solid #E2DBCC',
+            color: '#14110E',
+            borderRadius: '12px',
+            fontSize: '13px',
+            boxShadow: '0 18px 40px -20px rgba(20,17,14,0.35)',
+          },
+        }}
+      />
       {children}
     </>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import GridContainer from '../gridContainer';
+import { PageHeader, StatusBadge } from '../ui';
 import RowActionMenu from '@/components/admin/RowActionMenu';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -96,17 +97,8 @@ export default function OrdersPage({
   const todayIso = () => new Date().toISOString().slice(0, 10);
   const [deliveredDate, setDeliveredDate] = useState(todayIso());
 
-  const statusClasses: Record<string, string> = {
-    created: 'bg-[#C0CBF2] text-[#0072BB] border border-[#C0CBF2] rounded-full',
-    pending_payment: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
-    paid: 'bg-[#CCEAD6] text-[#32AC5B] border border-[#CCEAD6] rounded-full',
-    processing: 'bg-[#E8D5F5] text-[#7B2CBF] border border-[#E8D5F5] rounded-full',
-    shipped: 'bg-[#D5E8F5] text-[#1A6FB5] border border-[#D5E8F5] rounded-full',
-    delivered: 'bg-[#C2E6D3] text-[#1B7A3D] border border-[#C2E6D3] rounded-full',
-    cancelled: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
-    refunded: 'bg-[#F0E0D6] text-[#8B5E3C] border border-[#F0E0D6] rounded-full',
-    failed: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
-  };
+  // Status colours moved to the suite-wide STATUS_TONE map in ../ui, so an
+  // order reads the same here as on the overview and in a payout row.
 
   // Shared with the home dashboard's quick-action menu so the two screens
   // can't drift apart again. Mirrors backend VALID_ORDER_TRANSITIONS.
@@ -311,7 +303,7 @@ export default function OrdersPage({
     return (
       <>
         {isLoading && (
-          <div className="py-4 text-center text-sm text-gray-500">
+          <div className="py-4 text-center text-sm text-[#8C8377]">
             Loading...
           </div>
         )}
@@ -344,17 +336,17 @@ export default function OrdersPage({
             </thead>
             <tbody>
               {orders.map((order, index, arr) => (
-                <tr key={order.id}>
+                <tr key={order.id} className="ad-row">
                   <td className="td">
                     <div className="flex items-center gap-x-[10px]">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#EAEAEA] text-[11px] font-semibold text-[#121212]">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#E2DBCC] text-[11px] font-semibold text-[#14110E]">
                         {initials(order)}
                       </span>
                       <div className="min-w-0">
-                        <div className="truncate font-medium text-[#121212]">
+                        <div className="truncate font-medium text-[#14110E]">
                           {customerName(order)}
                         </div>
-                        <div className="truncate text-[11px] text-[#AFB1B0]">
+                        <div className="truncate text-[11px] text-[#8C8377]">
                           {customerEmail(order)}
                         </div>
                       </div>
@@ -364,7 +356,7 @@ export default function OrdersPage({
                     <button
                       onClick={() => copyRef(order)}
                       title="Copy full order ID"
-                      className="rounded-[6px] bg-[#F5F5F5] px-[8px] py-[3px] font-mono text-[12px] text-[#121212] transition-colors hover:bg-[#EBEBEB]"
+                      className="rounded-[6px] bg-[#EFEBE1] px-[8px] py-[3px] font-mono text-[12px] text-[#14110E] transition-colors hover:bg-[#E2DBCC]"
                     >
                       #{shortRef(order)}
                     </button>
@@ -375,11 +367,7 @@ export default function OrdersPage({
                     {Number(order.total).toLocaleString()}
                   </td>
                   <td className="td">
-                    <span
-                      className={`px-2 py-1 capitalize ${statusClasses[order.status] || ''}`}
-                    >
-                      {(order.status || 'unknown').replace('_', ' ')}
-                    </span>
+                    <StatusBadge status={order.status} />
                   </td>
                   <td className="td whitespace-nowrap">
                     {order.created_at ? formatDate(order.created_at) : '—'}
@@ -393,7 +381,7 @@ export default function OrdersPage({
                           setMenuAnchorEl(next ? e.currentTarget : null);
                           setActiveActionMenuId(next);
                         }}
-                        className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#F5F5F5] outline-none transition-colors duration-150 hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[6px] bg-[#EFEBE1] outline-none transition-colors duration-150 hover:bg-[#E2DBCC] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={isUpdating}
                         aria-label={`Actions for order ${order.id}`}
                         aria-expanded={activeActionMenuId === order.id}
@@ -413,7 +401,7 @@ export default function OrdersPage({
                           (validTransitions[order.status] || []).map((status) => (
                             <button
                               key={status}
-                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 capitalize hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#3F3830] capitalize hover:bg-[#EFEAE0] disabled:cursor-not-allowed disabled:opacity-50"
                               onClick={() => handleMarkStatusClick(order, status)}
                               disabled={isUpdating}
                             >
@@ -421,13 +409,13 @@ export default function OrdersPage({
                             </button>
                           ))
                         ) : (
-                          <div className="px-4 py-2 text-sm text-gray-400 italic">
+                          <div className="px-4 py-2 text-sm text-[#8C8377] italic">
                             No transitions available
                           </div>
                         )}
-                        <div className="my-1 h-px bg-[#F0F0F0]" />
+                        <div className="my-1 h-px bg-[#E2DBCC]" />
                         <button
-                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#C0362C] hover:bg-[#FDF4F2] disabled:cursor-not-allowed disabled:opacity-50"
+                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C3A2B] hover:bg-[#F8EDE8] disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => {
                             setActiveActionMenuId(null);
                             setMenuAnchorEl(null);
@@ -470,24 +458,24 @@ export default function OrdersPage({
           role="dialog"
           aria-modal="true"
           aria-labelledby="delete-order-title"
-          className="fixed inset-0 z-50 grid place-items-center bg-black/40 px-4"
+          className="fixed inset-0 z-50 grid place-items-center bg-[#0E0E10]/55 px-4"
           onClick={() => !deleting && setPendingDeleteOrder(null)}
         >
           <div
-            className="w-full max-w-[420px] rounded-[16px] bg-white p-[24px]"
+            className="w-full max-w-[420px] rounded-[14px] bg-[#FBF9F4] p-[24px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="delete-order-title" className="text-[16px] font-medium text-[#121212]">
+            <h2 id="delete-order-title" className="ad-display text-[19px] text-[#14110E]">
               Delete order #{pendingDeleteOrder.order_number ?? ''}?
             </h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-[#8E8E93]">
+            <p className="mt-2 text-[13px] leading-relaxed text-[#5C544A]">
               This permanently removes the order, its items and its payment
               records. It cannot be undone.
             </p>
             {/* A real order should be cancelled, not erased — cancelling keeps
                 the record and the customer's history. Say so here rather than
                 relying on the admin to know the difference. */}
-            <p className="mt-2 text-[13px] leading-relaxed text-[#8B5E3C]">
+            <p className="mt-2 text-[13px] leading-relaxed text-[#8A6218]">
               If this is a real customer order, cancel it instead — that keeps
               the record.
             </p>
@@ -496,7 +484,7 @@ export default function OrdersPage({
                 type="button"
                 onClick={() => setPendingDeleteOrder(null)}
                 disabled={deleting}
-                className="cursor-pointer rounded-[10px] border border-[#E5E5E5] px-[16px] py-[9px] text-[13px] disabled:opacity-50"
+                className="cursor-pointer rounded-[10px] border border-[#DFD7C6] px-[16px] py-[9px] text-[13px] disabled:opacity-50"
               >
                 Keep it
               </button>
@@ -504,7 +492,7 @@ export default function OrdersPage({
                 type="button"
                 onClick={confirmDelete}
                 disabled={deleting}
-                className="cursor-pointer rounded-[10px] bg-[#C0362C] px-[16px] py-[9px] text-[13px] font-medium text-white disabled:opacity-50"
+                className="cursor-pointer rounded-full bg-[#8C3A2B] px-[16px] py-[9px] text-[13px] font-medium text-[#F4F1EA] disabled:opacity-50"
               >
                 {deleting ? 'Deleting…' : 'Delete permanently'}
               </button>
@@ -512,14 +500,14 @@ export default function OrdersPage({
           </div>
         </div>
       )}
-      <div className="px-[16px]">
-        <div className="py-[22px]">
-          <span className="text-[20px] font-medium">Orders</span>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="The house"
+        title="Orders"
+        description="Every order the store has taken, from the moment a bag was filled to the moment it shipped."
+      />
 
       <div className="relative">
-        <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] text-[#121212]">
+        <div className="rounded-t-[14px] border border-[#E2DBCC] bg-[#FBF9F4] px-[24px] pt-[24px] text-[#14110E]">
           <div className="scrollbar-hide relative flex flex-col-reverse items-start justify-between gap-4 overflow-visible sm:flex-row sm:items-center">
             <div className="flex items-center gap-8">
               {tabs.map((tab) => {
@@ -530,13 +518,13 @@ export default function OrdersPage({
                     onClick={() => setActiveTab(tab.id)}
                     className={`relative cursor-pointer pb-4 text-[14px] transition-all duration-200 ease-in-out ${
                       isActive
-                        ? 'text-gray-900'
-                        : 'text-gray-400 hover:text-gray-600'
+                        ? 'text-[#14110E]'
+                        : 'text-[#8C8377] hover:text-[#5C544A]'
                     }`}
                   >
                     {tab.label}
                     {isActive && (
-                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[5px]" />
+                      <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-[#9C6F2E] sm:translate-y-[5px]" />
                     )}
                   </button>
                 );
@@ -547,7 +535,7 @@ export default function OrdersPage({
                 type="text"
                 placeholder="Search order ID, customer or email…"
                 aria-label="Search orders by ID, customer name or email"
-                className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] sm:w-[290px]"
+                className="h-[36px] w-full rounded-full border border-[#DFD7C6] bg-[#EFEBE1] text-[#14110E] placeholder:text-[#8C8377] px-3 text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#9C6F2E] sm:w-[290px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -565,7 +553,7 @@ export default function OrdersPage({
                   </span>
                 </button>
                 {isDropdownOpen && (
-                  <div className="ring-opacity-6 absolute top-full right-0 z-[60] mt-2 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-gray-200">
+                  <div className="absolute top-full right-0 z-[60] mt-2 w-32 origin-top-right rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)]">
                     <div className="py-1">
                       {periodOptions.map((option) => (
                         <button
@@ -574,7 +562,7 @@ export default function OrdersPage({
                             setSelectedPeriod(option);
                             setIsDropdownOpen(false);
                           }}
-                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                          className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                         >
                           {option}
                         </button>
@@ -587,15 +575,15 @@ export default function OrdersPage({
           </div>
         </div>
         {orders.length > 0 ? (
-          <div className="h-full rounded-b-[20px] bg-white px-[24px]">
+          <div className="h-full rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px]">
             {renderContent()}
           </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center rounded-b-[20px] bg-white px-[24px] py-[48px]">
-            <p className="text-base font-medium text-gray-500">
+          <div className="flex h-full flex-col items-center justify-center rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px] py-[48px]">
+            <p className="ad-display text-[18px] text-[#14110E]">
               No orders found
             </p>
-            <p className="mt-1 text-sm text-gray-400">
+            <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">
               {searchQuery || activeTab !== 'All'
                 ? 'Try adjusting your search or filters'
                 : 'Orders will appear here once customers place them'}
@@ -611,7 +599,7 @@ export default function OrdersPage({
                   handlePageChange(pagination.offset - pagination.limit)
                 }
                 disabled={pagination.offset === 0 || isLoading}
-                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="relative inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
               >
                 Previous
               </button>
@@ -623,14 +611,14 @@ export default function OrdersPage({
                   pagination.offset + pagination.limit >= totalRows(pagination) ||
                   isLoading
                 }
-                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="relative ml-3 inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-[#3F3830]">
                   Showing{' '}
                   <span className="font-medium">{pagination.offset + 1}</span>{' '}
                   to{' '}
@@ -646,7 +634,7 @@ export default function OrdersPage({
               </div>
               <div>
                 <nav
-                  className="isolate inline-flex -space-x-px rounded-md shadow-xs"
+                  className="isolate inline-flex -space-x-px rounded-[8px] shadow-xs"
                   aria-label="Pagination"
                 >
                   <button
@@ -654,7 +642,7 @@ export default function OrdersPage({
                       handlePageChange(pagination.offset - pagination.limit)
                     }
                     disabled={pagination.offset === 0 || isLoading}
-                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Previous</span>
                     <svg
@@ -678,7 +666,7 @@ export default function OrdersPage({
                       pagination.offset + pagination.limit >=
                         totalRows(pagination) || isLoading
                     }
-                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                   >
                     <span className="sr-only">Next</span>
                     <svg
@@ -702,19 +690,19 @@ export default function OrdersPage({
       </div>
 
       {shippingModalOrder && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-[420px] rounded-[12px] bg-white p-6 shadow-lg">
-            <h3 className="text-[16px] font-semibold text-[#121212]">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0E0E10]/55 px-4">
+          <div className="w-full max-w-[420px] rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-6 shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
+            <h3 className="text-[16px] font-semibold text-[#14110E]">
               Shipment details
             </h3>
-            <p className="mt-1 text-[13px] text-[#8E8E93]">
+            <p className="mt-1 text-[13px] text-[#5C544A]">
               Order #{shortRef(shippingModalOrder)} — this goes straight
               into the customer&apos;s shipped-order email.
             </p>
 
             <div className="mt-5 flex flex-col gap-y-4">
               <div>
-                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                <label className="text-[12px] font-medium text-[#5C544A]">
                   Tracking number *
                 </label>
                 <input
@@ -723,13 +711,13 @@ export default function OrdersPage({
                   onChange={(e) =>
                     setShipmentForm({ ...shipmentForm, tracking_number: e.target.value })
                   }
-                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  className="mt-1 w-full rounded-[8px] border border-[#DFD7C6] px-3 py-2 text-[14px] outline-none focus:border-[#14110E]"
                   placeholder="e.g. GIG123456789"
                 />
               </div>
 
               <div>
-                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                <label className="text-[12px] font-medium text-[#5C544A]">
                   Carrier *
                 </label>
                 <input
@@ -739,7 +727,7 @@ export default function OrdersPage({
                   onChange={(e) =>
                     setShipmentForm({ ...shipmentForm, carrier: e.target.value })
                   }
-                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  className="mt-1 w-full rounded-[8px] border border-[#DFD7C6] px-3 py-2 text-[14px] outline-none focus:border-[#14110E]"
                   placeholder="e.g. GIG Logistics"
                 />
                 <datalist id="carrier-options">
@@ -750,7 +738,7 @@ export default function OrdersPage({
               </div>
 
               <div>
-                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                <label className="text-[12px] font-medium text-[#5C544A]">
                   Estimated delivery
                 </label>
                 <input
@@ -759,13 +747,13 @@ export default function OrdersPage({
                   onChange={(e) =>
                     setShipmentForm({ ...shipmentForm, estimated_delivery: e.target.value })
                   }
-                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  className="mt-1 w-full rounded-[8px] border border-[#DFD7C6] px-3 py-2 text-[14px] outline-none focus:border-[#14110E]"
                   placeholder="e.g. 2-3 business days"
                 />
               </div>
 
               <div>
-                <label className="text-[12px] font-medium text-[#5C5C5C]">
+                <label className="text-[12px] font-medium text-[#5C544A]">
                   Tracking link
                 </label>
                 <input
@@ -774,7 +762,7 @@ export default function OrdersPage({
                   onChange={(e) =>
                     setShipmentForm({ ...shipmentForm, tracking_url: e.target.value })
                   }
-                  className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                  className="mt-1 w-full rounded-[8px] border border-[#DFD7C6] px-3 py-2 text-[14px] outline-none focus:border-[#14110E]"
                   placeholder="https://..."
                 />
               </div>
@@ -783,14 +771,14 @@ export default function OrdersPage({
             <div className="mt-6 flex justify-end gap-x-3">
               <button
                 onClick={() => setShippingModalOrder(null)}
-                className="rounded-[8px] px-4 py-2 text-[14px] font-medium text-[#5C5C5C] hover:bg-gray-100"
+                className="rounded-[8px] px-4 py-2 text-[14px] font-medium text-[#5C544A] hover:bg-[#EFEAE0]"
                 disabled={isUpdating}
               >
                 Cancel
               </button>
               <button
                 onClick={handleShipmentSubmit}
-                className="rounded-[8px] bg-[#121212] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-[#14110E] px-4 py-2 text-[14px] font-medium text-[#F4F1EA] hover:bg-[#241F19] disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isUpdating}
               >
                 {isUpdating ? 'Marking as shipped…' : 'Mark as shipped'}
@@ -801,18 +789,18 @@ export default function OrdersPage({
       )}
 
       {deliveredModalOrder && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-[420px] rounded-[12px] bg-white p-6 shadow-lg">
-            <h3 className="text-[16px] font-semibold text-[#121212]">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#0E0E10]/55 px-4">
+          <div className="w-full max-w-[420px] rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-6 shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
+            <h3 className="text-[16px] font-semibold text-[#14110E]">
               Delivery date
             </h3>
-            <p className="mt-1 text-[13px] text-[#8E8E93]">
+            <p className="mt-1 text-[13px] text-[#5C544A]">
               Order #{shortRef(deliveredModalOrder)} — this goes straight
               into the customer&apos;s delivered-order email.
             </p>
 
             <div className="mt-5">
-              <label className="text-[12px] font-medium text-[#5C5C5C]">
+              <label className="text-[12px] font-medium text-[#5C544A]">
                 Delivered on *
               </label>
               <input
@@ -820,21 +808,21 @@ export default function OrdersPage({
                 value={deliveredDate}
                 max={todayIso()}
                 onChange={(e) => setDeliveredDate(e.target.value)}
-                className="mt-1 w-full rounded-[8px] border border-[#D1D1D6] px-3 py-2 text-[14px] outline-none focus:border-[#121212]"
+                className="mt-1 w-full rounded-[8px] border border-[#DFD7C6] px-3 py-2 text-[14px] outline-none focus:border-[#14110E]"
               />
             </div>
 
             <div className="mt-6 flex justify-end gap-x-3">
               <button
                 onClick={() => setDeliveredModalOrder(null)}
-                className="rounded-[8px] px-4 py-2 text-[14px] font-medium text-[#5C5C5C] hover:bg-gray-100"
+                className="rounded-[8px] px-4 py-2 text-[14px] font-medium text-[#5C544A] hover:bg-[#EFEAE0]"
                 disabled={isUpdating}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeliveredSubmit}
-                className="rounded-[8px] bg-[#121212] px-4 py-2 text-[14px] font-medium text-white hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-[#14110E] px-4 py-2 text-[14px] font-medium text-[#F4F1EA] hover:bg-[#241F19] disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={isUpdating || !deliveredDate}
               >
                 {isUpdating ? 'Marking as delivered…' : 'Mark as delivered'}

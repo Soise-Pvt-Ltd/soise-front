@@ -5,6 +5,14 @@ import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchApplications, reviewApplication, allowReapplication } from './actions';
 import PaginationBar from '../PaginationBar';
+import {
+  PageHeader,
+  FilterPills,
+  SearchInput,
+  TableShell,
+  StatusBadge,
+  EmptyState,
+} from '../ui';
 import type { PaginationMeta } from '@/lib/pagination';
 
 type Application = {
@@ -19,14 +27,8 @@ type Application = {
   created_at?: string;
 };
 
+// Badge colours come from the suite's shared STATUS_TONE map (../ui).
 const STATUSES = ['submitted', 'approved', 'rejected', 'all'] as const;
-
-const statusStyle: Record<string, string> = {
-  submitted: 'bg-[#FFF4E5] text-[#B25E09]',
-  review: 'bg-[#E8F0FE] text-[#0072BB]',
-  approved: 'bg-[#E7F6EC] text-[#1A7F37]',
-  rejected: 'bg-[#FDECEC] text-[#C0362C]',
-};
 
 function shortId(id: string) {
   return (id || '').split(':').pop() || id;
@@ -135,120 +137,134 @@ export default function ApplicationsClient({
 
   return (
     <GridContainer>
-      <div className="px-2">
-        <h1 className="text-[22px] font-bold text-[#121212]">Creator Applications</h1>
-        <p className="mt-1 text-[14px] text-[#8E8E93]">
-          Review and approve people applying to become creators. Approving upgrades
-          their account so they can finish onboarding (bank details + code).
-        </p>
+      <PageHeader
+        eyebrow="The stage"
+        title="Creator applications"
+        description="Every drop is a collaboration — this is where the stage gets set. Approving upgrades an account so they can finish onboarding with bank details and a code."
+      />
 
-        <div className="mt-5 flex gap-2">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              onClick={() => load(s)}
-              className={`rounded-full px-4 py-1.5 text-[13px] font-medium capitalize transition-colors ${
-                status === s
-                  ? 'bg-[#0072BB] text-white'
-                  : 'bg-[#F5F5F5] text-[#8E8E93] hover:text-[#121212]'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search applicant name or email…"
-            aria-label="Search applications"
-            className="h-[38px] w-full max-w-[320px] rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
-          />
-        </div>
-
-        <div className="mt-5 overflow-x-auto rounded-[12px] border border-[#F0F0F0]">
-          <table className="w-full min-w-[760px]">
-            <thead>
-              <tr>
-                <th className="thead">Applicant</th>
-                <th className="thead">Portfolio</th>
-                <th className="thead">Bio</th>
-                <th className="thead">Status</th>
-                <th className="thead">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td className="td p-6 text-center text-[#8E8E93]" colSpan={5}>Loading…</td></tr>
-              ) : apps.length === 0 ? (
-                <tr><td className="td p-6 text-center text-[#8E8E93]" colSpan={5}>No {status === 'all' ? '' : status} applications.</td></tr>
-              ) : (
-                apps.map((app) => (
-                  <tr key={app.id} className="border-t border-[#F0F0F0]">
-                    <td className="td">
-                      <div className="font-medium text-[#121212]">@{app.applicant_username || '—'}</div>
-                      <div className="text-[12px] text-[#8E8E93]">{app.applicant_email || ''}</div>
-                    </td>
-                    <td className="td max-w-[180px] truncate">
-                      {app.portfolio_url ? (
-                        <a href={app.portfolio_url} target="_blank" rel="noreferrer" className="text-[#0072BB] underline">
-                          {app.portfolio_url}
-                        </a>
-                      ) : '—'}
-                    </td>
-                    <td className="td max-w-[260px] truncate text-[#5b5b5b]">{app.bio || '—'}</td>
-                    <td className="td">
-                      <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium capitalize ${statusStyle[app.status] || 'bg-[#F5F5F5] text-[#8E8E93]'}`}>
-                        {app.status}
-                      </span>
-                    </td>
-                    <td className="td">
-                      {app.status === 'submitted' || app.status === 'review' ? (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => review(app, 'approve')}
-                            disabled={busyId === app.id}
-                            className="rounded-[8px] bg-[#1A7F37] px-3 py-1.5 text-[13px] font-medium text-white disabled:opacity-50"
-                          >
-                            {busyId === app.id ? '…' : 'Approve'}
-                          </button>
-                          <button
-                            onClick={() => review(app, 'reject')}
-                            disabled={busyId === app.id}
-                            className="rounded-[8px] border border-[#C0362C] px-3 py-1.5 text-[13px] font-medium text-[#C0362C] disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : app.status === 'rejected' ? (
-                        <button
-                          onClick={() => allowReapply(app)}
-                          disabled={busyId === app.id}
-                          title="Bypass the 30-day cooldown so this applicant can re-apply now"
-                          className="rounded-[8px] border border-[#0072BB] px-3 py-1.5 text-[13px] font-medium text-[#0072BB] transition-colors hover:bg-[#0072BB] hover:text-white disabled:opacity-50"
-                        >
-                          {busyId === app.id ? '…' : 'Allow re-application'}
-                        </button>
-                      ) : (
-                        <span className="text-[13px] text-[#8E8E93]">Reviewed</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <PaginationBar
-          pagination={pagination}
-          onChange={(offset) => load(status, search, offset)}
-          disabled={loading}
-          noun="applications"
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <FilterPills
+          options={STATUSES}
+          value={status}
+          onChange={(s) => load(s)}
+          label="Filter by status"
+        />
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search applicant name or email…"
+          label="Search applications"
         />
       </div>
+
+      <TableShell>
+        <table className="w-full min-w-[760px]">
+          <thead>
+            <tr className="border-b border-[#E2DBCC]">
+              <th className="thead pl-6">Applicant</th>
+              <th className="thead">Portfolio</th>
+              <th className="thead">Bio</th>
+              <th className="thead">Status</th>
+              <th className="thead pr-6">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={5}>
+                  <EmptyState title="Loading…" />
+                </td>
+              </tr>
+            ) : apps.length === 0 ? (
+              <tr>
+                <td colSpan={5}>
+                  <EmptyState
+                    title="No applications here"
+                    hint={
+                      status === 'all'
+                        ? 'Nobody has applied to create with Soise yet.'
+                        : `Nothing ${status} at the moment.`
+                    }
+                  />
+                </td>
+              </tr>
+            ) : (
+              apps.map((app) => (
+                <tr key={app.id} className="ad-row">
+                  <td className="td pl-6">
+                    <div className="font-medium text-[#14110E]">
+                      @{app.applicant_username || '—'}
+                    </div>
+                    <div className="text-[12px] text-[#8C8377]">
+                      {app.applicant_email || ''}
+                    </div>
+                  </td>
+                  <td className="td max-w-[180px] truncate">
+                    {app.portfolio_url ? (
+                      <a
+                        href={app.portfolio_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="luxe-underline text-[#9C6F2E]"
+                      >
+                        {app.portfolio_url}
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="td max-w-[260px] truncate text-[#5C544A]">
+                    {app.bio || '—'}
+                  </td>
+                  <td className="td">
+                    <StatusBadge status={app.status} />
+                  </td>
+                  <td className="td pr-6">
+                    {app.status === 'submitted' || app.status === 'review' ? (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => review(app, 'approve')}
+                          disabled={busyId === app.id}
+                          className="ad-btn-primary !px-4 !py-1.5 !text-[12px]"
+                        >
+                          {busyId === app.id ? '…' : 'Approve'}
+                        </button>
+                        <button
+                          onClick={() => review(app, 'reject')}
+                          disabled={busyId === app.id}
+                          className="ad-btn-danger !px-4 !py-1.5 !text-[12px]"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : app.status === 'rejected' ? (
+                      <button
+                        onClick={() => allowReapply(app)}
+                        disabled={busyId === app.id}
+                        title="Bypass the 30-day cooldown so this applicant can re-apply now"
+                        className="ad-btn-ghost !px-4 !py-1.5 !text-[12px]"
+                      >
+                        {busyId === app.id ? '…' : 'Allow re-application'}
+                      </button>
+                    ) : (
+                      <span className="text-[12px] tracking-[0.14em] text-[#8C8377] uppercase">
+                        Reviewed
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </TableShell>
+      <PaginationBar
+        pagination={pagination}
+        onChange={(offset) => load(status, search, offset)}
+        disabled={loading}
+        noun="applications"
+      />
     </GridContainer>
   );
 }

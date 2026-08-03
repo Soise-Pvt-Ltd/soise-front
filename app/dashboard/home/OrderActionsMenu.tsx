@@ -88,27 +88,27 @@ export default function OrderActionsMenu({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Order actions"
-        className="cursor-pointer rounded-md p-1.5 text-[#121212] transition-colors hover:bg-[#F2F2F2] focus:bg-[#F2F2F2] focus:outline-none"
+        className="cursor-pointer rounded-[8px] p-1.5 text-[#14110E] transition-colors hover:bg-[#EFEAE0] focus:bg-[#EFEAE0] focus:outline-none"
       >
-        <AdminMoreHorizontalIcon color="#121212" />
+        <AdminMoreHorizontalIcon color="#14110E" />
       </button>
 
       {open && (
         <div
           role="menu"
-          className="animate-in fade-in zoom-in-95 absolute right-0 z-30 mt-1 w-52 origin-top-right overflow-hidden rounded-[12px] border border-[#F0F0F0] bg-white py-1 shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+          className="animate-in fade-in zoom-in-95 absolute right-0 z-30 mt-1 w-52 origin-top-right overflow-hidden rounded-[12px] border border-[#E2DBCC] bg-[#FBF9F4] py-1 shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
         >
           <Link
             href="/dashboard/orders"
             role="menuitem"
-            className="block px-4 py-2.5 text-[13px] text-[#121212] transition-colors hover:bg-[#F6F6F6]"
+            className="block px-4 py-2.5 text-[13px] text-[#14110E] transition-colors hover:bg-[#EFEAE0]"
             onClick={() => setOpen(false)}
           >
             View in Orders
           </Link>
 
           {(transitions.length > 0 || needsDetails.length > 0) && (
-            <div className="my-1 h-px bg-[#F0F0F0]" />
+            <div className="my-1 h-px bg-[#E2DBCC]" />
           )}
 
           {transitions.map((s) => (
@@ -118,8 +118,8 @@ export default function OrderActionsMenu({
               role="menuitem"
               disabled={busy}
               onClick={() => act(s)}
-              className={`flex w-full items-center px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-[#F6F6F6] disabled:cursor-not-allowed disabled:opacity-50 ${
-                s === 'cancelled' ? 'text-[#C0362C]' : 'text-[#121212]'
+              className={`flex w-full items-center px-4 py-2.5 text-left text-[13px] transition-colors hover:bg-[#EFEAE0] disabled:cursor-not-allowed disabled:opacity-50 ${
+                s === 'cancelled' ? 'text-[#8C3A2B]' : 'text-[#14110E]'
               }`}
             >
               {LABELS[s] || s}
@@ -131,11 +131,11 @@ export default function OrderActionsMenu({
               key={s}
               href="/dashboard/orders"
               role="menuitem"
-              className="block px-4 py-2.5 text-[13px] text-[#121212] transition-colors hover:bg-[#F6F6F6]"
+              className="block px-4 py-2.5 text-[13px] text-[#14110E] transition-colors hover:bg-[#EFEAE0]"
               onClick={() => setOpen(false)}
             >
               {LABELS[s] || s}
-              <span className="mt-0.5 block text-[11px] text-[#AFB1B0]">
+              <span className="mt-0.5 block text-[11px] text-[#8C8377]">
                 {s === 'shipped'
                   ? 'Needs tracking details'
                   : 'Needs a delivery date'}
@@ -144,7 +144,7 @@ export default function OrderActionsMenu({
           ))}
 
           {transitions.length === 0 && needsDetails.length === 0 && (
-            <div className="px-4 py-2.5 text-[12px] text-[#AFB1B0]">
+            <div className="px-4 py-2.5 text-[12px] text-[#8C8377]">
               No further actions
             </div>
           )}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import GridContainer from '../gridContainer';
+import { PageHeader } from '../ui';
 import RowActionMenu from '@/components/admin/RowActionMenu';
 import { useDropzone } from 'react-dropzone';
 import {
@@ -247,7 +248,7 @@ function VariantItem({
   };
 
   return (
-    <div className="rounded-[20px] bg-white p-[24px] text-[#121212] md:col-span-3">
+    <div className="rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] text-[#14110E] md:col-span-3">
       <div className="rounded-[10px]">
         <div className="flex items-center justify-between pb-[24px]">
           <div>
@@ -265,7 +266,7 @@ function VariantItem({
         <div className="gid-cols-1 grid gap-[16px] md:grid-cols-2">
           <div>
             <div {...getRootProps({ className: 'dropzone h-full' })}>
-              <div className="flex h-full cursor-pointer flex-col items-center justify-center rounded-lg border-1 border-dashed border-[#DADDDC] bg-gray-50 p-6 text-center">
+              <div className="flex h-full cursor-pointer flex-col items-center justify-center rounded-[10px] border-1 border-dashed border-[#DFD7C6] bg-[#EFEBE1] p-6 text-center">
                 <input {...getInputProps()} />
                 {variant.media.length > 0 && (
                   <div className="mb-4 flex flex-wrap justify-center gap-2">
@@ -299,12 +300,12 @@ function VariantItem({
                         onClick={(e) => e.stopPropagation()}
                         className={`group relative inline-flex h-24 w-24 cursor-grab rounded border p-1 active:cursor-grabbing ${
                           dragOverIndex === i
-                            ? 'border-[#0072BB] border-dashed'
-                            : 'border-gray-300'
+                            ? 'border-[#9C6F2E] border-dashed'
+                            : 'border-[#DFD7C6]'
                         }`}
                         title="Drag to reorder"
                       >
-                        <div className="flex min-w-0 overflow-hidden rounded-sm">
+                        <div className="flex min-w-0 overflow-hidden rounded-[6px]">
                           <img
                             src={m.url}
                             className="pointer-events-none block h-full w-full object-cover"
@@ -314,7 +315,7 @@ function VariantItem({
                           />
                         </div>
                         {i === 0 && (
-                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[9px] font-medium text-white">
+                          <span className="absolute bottom-1 left-1 rounded bg-[#0E0E10]/65 px-1 text-[9px] font-medium text-[#F4F1EA]">
                             Cover
                           </span>
                         )}
@@ -324,7 +325,7 @@ function VariantItem({
                             e.stopPropagation();
                             removeMediaItem(m.key);
                           }}
-                          className="absolute -top-2 -right-2 flex size-5 cursor-pointer items-center justify-center rounded-full bg-black text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
+                          className="absolute -top-2 -right-2 flex size-5 cursor-pointer items-center justify-center rounded-full bg-[#14110E] text-[#F4F1EA] opacity-0 shadow transition-opacity group-hover:opacity-100"
                           aria-label="Remove photo"
                         >
                           <CloseIconTags />
@@ -336,16 +337,16 @@ function VariantItem({
                 <button
                   type="button"
                   disabled={remainingSlots <= 0}
-                  className="flex items-center justify-center gap-x-[2.5px] rounded-[10px] border-2 border-[#0072BB] bg-[#B3D5EB33] p-[10px] text-sm font-semibold text-[#0072BB] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center justify-center gap-x-[2.5px] rounded-[10px] border-2 border-[#9C6F2E] bg-[#F3E9D633] p-[10px] text-sm font-semibold text-[#9C6F2E] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <AdminUploadIcon /> Upload Image
                 </button>
-                <p className="mt-2 text-xs text-[#8E8E93]">
+                <p className="mt-2 text-xs text-[#5C544A]">
                   {variant.media.length}/{MAX_VARIANT_MEDIA} photos
                   {remainingSlots <= 0 ? ' - limit reached' : ''}
                 </p>
                 {variant.media.length === 0 && (
-                  <p className="mt-1 text-xs text-[#8E8E93]">
+                  <p className="mt-1 text-xs text-[#5C544A]">
                     No photos yet — the storefront will borrow another
                     variant&apos;s photos until you upload some here.
                   </p>
@@ -363,14 +364,14 @@ function VariantItem({
                   <div
                     onClick={() => handleSizeClick(size)}
                     key={size}
-                    className={`flex h-[40px] w-[54px] cursor-pointer items-center justify-center rounded-[2px] border text-[11px] uppercase transition-colors ${variant.selectedSizes.includes(size) ? 'border-3 border-[#0072BB] bg-[#F5F5F5]' : 'border-[#8E8E93] bg-[#F5F5F5]'}`}
+                    className={`flex h-[40px] w-[54px] cursor-pointer items-center justify-center rounded-[2px] border text-[11px] uppercase transition-colors ${variant.selectedSizes.includes(size) ? 'border-3 border-[#9C6F2E] bg-[#EFEBE1]' : 'border-[#5C544A] bg-[#EFEBE1]'}`}
                   >
                     {size}
                   </div>
                 ))}
               </div>
               {errors?.size && (
-                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#8C3A2B]">
                   <AdminExclamationIcon /> {errors.size}
                 </p>
               )}
@@ -396,8 +397,8 @@ function VariantItem({
                     }}
                     className={`size-6 shrink-0 rounded-full transition-all ${
                       variant.colors[0] === preset.name
-                        ? 'ring-2 ring-[#0072BB] ring-offset-1'
-                        : 'ring-1 ring-[#E5E5E5] ring-offset-1'
+                        ? 'ring-2 ring-[#9C6F2E] ring-offset-1'
+                        : 'ring-1 ring-[#DFD7C6] ring-offset-1'
                     }`}
                     style={finishSwatchStyle(preset.hex, preset.finish)}
                     aria-label={preset.name}
@@ -414,17 +415,17 @@ function VariantItem({
                 {variant.colors.map((color) => (
                   <div
                     key={color}
-                    className="flex items-center gap-[4px] rounded-sm bg-white p-[7px] text-[11px]"
+                    className="flex items-center gap-[4px] rounded-[6px] bg-[#FBF9F4] p-[7px] text-[11px]"
                   >
                     <div
                       className="size-3 shrink-0 rounded-full"
                       style={finishSwatchStyle(variant.colorHex, variant.finish)}
                     />
-                    <span className="text-[#424242] capitalize">{color}</span>
+                    <span className="text-[#3F3830] capitalize">{color}</span>
                     <button
                       type="button"
                       onClick={() => removeColor()}
-                      className="cursor-pointer text-gray-500 hover:text-gray-800"
+                      className="cursor-pointer text-[#8C8377] hover:text-[#14110E]"
                       aria-label={`Remove ${color}`}
                     >
                       <CloseIconTags />
@@ -450,15 +451,15 @@ function VariantItem({
               {/* Exact swatch color + finish - covers anything not in the
                   presets above (full RGB spectrum via the native picker). */}
               <div className="mt-2 flex items-center gap-x-3">
-                <label className="flex items-center gap-x-2 text-[11px] text-[#8E8E93]">
+                <label className="flex items-center gap-x-2 text-[11px] text-[#5C544A]">
                   Exact color
                   <input
                     type="color"
-                    value={isValidHex(variant.colorHex) ? variant.colorHex : '#cccccc'}
+                    value={isValidHex(variant.colorHex) ? variant.colorHex : '#DFD7C6'}
                     onChange={(e) =>
                       onUpdate(variant.id, 'colorHex', e.target.value)
                     }
-                    className="h-6 w-8 cursor-pointer rounded border border-[#E5E5E5] bg-transparent p-0"
+                    className="h-6 w-8 cursor-pointer rounded border border-[#DFD7C6] bg-transparent p-0"
                     aria-label="Pick exact swatch color"
                   />
                 </label>
@@ -467,7 +468,7 @@ function VariantItem({
                   onChange={(e) =>
                     onUpdate(variant.id, 'finish', e.target.value as ColorFinish)
                   }
-                  className="rounded-[6px] border border-[#E5E5E5] bg-white px-2 py-1 text-[11px] capitalize outline-none"
+                  className="rounded-[6px] border border-[#DFD7C6] bg-[#FBF9F4] px-2 py-1 text-[11px] capitalize outline-none"
                   aria-label="Color finish"
                 >
                   {COLOR_FINISHES.map((f) => (
@@ -479,7 +480,7 @@ function VariantItem({
               </div>
 
               {errors?.color && (
-                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#8C3A2B]">
                   <AdminExclamationIcon /> {errors.color}
                 </p>
               )}
@@ -501,11 +502,11 @@ function VariantItem({
                 min="0"
                 value={variant.stock}
                 onChange={(e) => onUpdate(variant.id, 'stock', e.target.value)}
-                className={`adminsolid ${errors?.stock ? '!ring-2 !ring-[#991C00]' : ''}`}
+                className={`adminsolid ${errors?.stock ? '!ring-2 !ring-[#8C3A2B]' : ''}`}
                 aria-invalid={!!errors?.stock}
               />
               {errors?.stock && (
-                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#8C3A2B]">
                   <AdminExclamationIcon /> {errors.stock}
                 </p>
               )}
@@ -1410,12 +1411,12 @@ export default function ProductsPage({
       <>
         <div ref={topRef} className="px-[16px]">
           {showAddProduct ? (
-            <div className="sticky top-0 z-40 -mx-[16px] mb-[8px] flex flex-col gap-3 border-b border-[#AEAEB266]/40 bg-[#f9f9f9]/95 px-[16px] py-[16px] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between !text-[#121212]">
+            <div className="sticky top-0 z-40 -mx-[16px] mb-[8px] flex flex-col gap-3 border-b border-[#E2DBCC] bg-[#F4F1EA]/95 px-[16px] py-[16px] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between !text-[#14110E]">
               <div className="flex items-center gap-x-3">
                 <button
                   type="button"
                   onClick={closeForm}
-                  className="flex h-[44px] min-w-[44px] cursor-pointer items-center justify-center gap-x-2 rounded-[10px] border border-[#E5E5E5] bg-white px-3 text-sm font-medium outline-none transition-colors hover:bg-[#F5F5F5] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  className="flex h-[44px] min-w-[44px] cursor-pointer items-center justify-center gap-x-2 rounded-[10px] border border-[#DFD7C6] bg-[#FBF9F4] px-3 text-sm font-medium outline-none transition-colors hover:bg-[#EFEBE1] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                   aria-label="Back to products list"
                 >
                   <ArrowLeftIcon />
@@ -1427,16 +1428,16 @@ export default function ProductsPage({
                       <img
                         src={editingProductMeta.image}
                         alt=""
-                        className="size-10 rounded-[8px] border border-[#E5E5E5] object-cover"
+                        className="size-10 rounded-[8px] border border-[#DFD7C6] object-cover"
                       />
                     ) : (
-                      <div className="flex size-10 items-center justify-center rounded-[8px] border border-[#E5E5E5] bg-[#F5F5F5] text-[#AFB1B0]">
+                      <div className="flex size-10 items-center justify-center rounded-[8px] border border-[#DFD7C6] bg-[#EFEBE1] text-[#8C8377]">
                         <AdminEditIcon />
                       </div>
                     )}
                     <div className="min-w-0">
                       <div className="flex items-center gap-x-2">
-                        <span className="rounded-full bg-[#C0CBF2] px-2 py-0.5 text-[11px] font-semibold text-[#0072BB] uppercase">
+                        <span className="rounded-full bg-[#EAE4D7] px-2 py-0.5 text-[11px] font-semibold text-[#9C6F2E] uppercase">
                           Editing
                         </span>
                       </div>
@@ -1446,20 +1447,22 @@ export default function ProductsPage({
                     </div>
                   </div>
                 ) : (
-                  <span className="text-[18px] font-semibold">Add product</span>
+                  <span className="ad-display text-[20px]">Add product</span>
                 )}
               </div>
             </div>
           ) : (
-            <div className="py-[22px]">
-              <span className="text-[20px] font-medium">Products</span>
-            </div>
+            <PageHeader
+              eyebrow="The house"
+              title="Products"
+              description="Limited capsule drops, never floods. Everything in the catalogue — live, draft and archived — sits here."
+            />
           )}
         </div>
 
         {!showAddProduct && (
           <div className="">
-            <div className="relative rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] text-[#121212]">
+            <div className="relative rounded-t-[14px] border border-[#E2DBCC] bg-[#FBF9F4] px-[24px] pt-[24px] text-[#14110E]">
               <div className="scrollbar-hide flex flex-col-reverse items-start justify-between gap-4 overflow-visible sm:flex-row sm:items-center">
                 <div className="flex items-center gap-8" role="tablist">
                   {[
@@ -1474,24 +1477,24 @@ export default function ProductsPage({
                         role="tab"
                         aria-selected={isActive}
                         onClick={() => setActiveTab(id)}
-                        className={`relative flex cursor-pointer items-center gap-x-2 pb-4 text-[14px] outline-none transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-[#0072BB] ${
+                        className={`relative flex cursor-pointer items-center gap-x-2 pb-4 text-[14px] outline-none transition-all duration-200 ease-in-out focus-visible:ring-2 focus-visible:ring-[#9C6F2E] ${
                           isActive
-                            ? 'text-gray-900'
-                            : 'text-gray-400 hover:text-gray-600'
+                            ? 'text-[#14110E]'
+                            : 'text-[#8C8377] hover:text-[#5C544A]'
                         }`}
                       >
                         {label}
                         <span
                           className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                             isActive
-                              ? 'bg-[#121212] text-white'
-                              : 'bg-[#F5F5F5] text-[#AFB1B0]'
+                              ? 'bg-[#14110E] text-[#F4F1EA]'
+                              : 'bg-[#EFEBE1] text-[#8C8377]'
                           }`}
                         >
                           {count}
                         </span>
                         {isActive && (
-                          <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-gray-900 sm:translate-y-[5px]" />
+                          <span className="absolute top-full left-0 z-10 h-[2px] w-full translate-y-[-2px] rounded-t-sm bg-[#9C6F2E] sm:translate-y-[5px]" />
                         )}
                       </button>
                     );
@@ -1507,7 +1510,7 @@ export default function ProductsPage({
                       whileTap={{ scale: 0.95 }}
                       aria-haspopup="menu"
                       aria-expanded={isDropdownOpen}
-                      className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                      className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                     >
                       <AdminSoundLevelsIcon />
                       {selectedPeriod}
@@ -1519,7 +1522,7 @@ export default function ProductsPage({
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.92, y: -6 }}
                           transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                          className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-md bg-white ring-1 ring-gray-200"
+                          className="absolute top-full right-0 z-30 mt-2 w-32 origin-top-right rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)]"
                         >
                           <div className="py-1">
                             {periodOptions.map((option) => (
@@ -1529,7 +1532,7 @@ export default function ProductsPage({
                                   setSelectedPeriod(option);
                                   setIsDropdownOpen(false);
                                 }}
-                                className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                                className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                               >
                                 {option}
                               </button>
@@ -1548,7 +1551,7 @@ export default function ProductsPage({
                       whileTap={{ scale: 0.95 }}
                       aria-haspopup="menu"
                       aria-expanded={isAddDropdownOpen}
-                      className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                      className="btn_admin_outline flex items-center gap-x-[2px] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                     >
                       <AdminPlusCircleIcon />
                       Add
@@ -1560,11 +1563,11 @@ export default function ProductsPage({
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.92, y: -6 }}
                           transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                          className="ring-opacity-6 absolute top-full right-0 z-30 mt-2 w-40 origin-top-right rounded-md bg-white ring-1 ring-gray-200"
+                          className="absolute top-full right-0 z-30 mt-2 w-40 origin-top-right rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] shadow-[0_18px_40px_-20px_rgba(20,17,14,0.35)]"
                         >
                           <div className="py-1">
                             <button
-                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                               onClick={() => {
                                 setIsAddDropdownOpen(false);
                                 setShowCollectionModal(true);
@@ -1578,7 +1581,7 @@ export default function ProductsPage({
                                 setShowAddProduct(true);
                                 setIsAddDropdownOpen(false);
                               }}
-                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#AFB1B0] hover:bg-gray-100 hover:text-gray-400"
+                              className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C8377] hover:bg-[#EFEAE0] hover:text-[#8C8377]"
                             >
                               Add Product
                             </button>
@@ -1592,8 +1595,8 @@ export default function ProductsPage({
             </div>
 
             {/* Search + sort toolbar */}
-            <div className="flex flex-col gap-3 bg-white px-[24px] pt-[20px] sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex h-[44px] w-full items-center gap-x-2 rounded-[10px] bg-[#F5F5F5] px-[15px] sm:max-w-[320px]">
+            <div className="flex flex-col gap-3 bg-[#FBF9F4] px-[24px] pt-[20px] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex h-[44px] w-full items-center gap-x-2 rounded-[10px] bg-[#EFEBE1] px-[15px] sm:max-w-[320px]">
                 <AdminSearchIcon />
                 <input
                   type="text"
@@ -1601,14 +1604,14 @@ export default function ProductsPage({
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder="Search products..."
                   aria-label="Search products"
-                  className="w-full border-0 bg-transparent text-[14px] placeholder:text-[#9A9A9A] outline-none focus:ring-0"
+                  className="w-full border-0 bg-transparent text-[14px] placeholder:text-[#8C8377] outline-none focus:ring-0"
                 />
                 {searchInput && (
                   <button
                     type="button"
                     onClick={() => setSearchInput('')}
                     aria-label="Clear search"
-                    className="flex size-6 cursor-pointer items-center justify-center text-[#9A9A9A] hover:text-[#35373C]"
+                    className="flex size-6 cursor-pointer items-center justify-center text-[#8C8377] hover:text-[#3F3830]"
                   >
                     <CloseIconTags />
                   </button>
@@ -1617,7 +1620,7 @@ export default function ProductsPage({
               <div className="flex items-center gap-x-2">
                 <label
                   htmlFor="sort-products"
-                  className="text-[13px] text-[#AFB1B0]"
+                  className="text-[13px] text-[#8C8377]"
                 >
                   Sort by
                 </label>
@@ -1625,7 +1628,7 @@ export default function ProductsPage({
                   id="sort-products"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="h-[44px] cursor-pointer rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[13px] text-[#35373C] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  className="h-[44px] cursor-pointer rounded-full border border-[#DFD7C6] bg-[#EFEBE1] text-[#14110E] placeholder:text-[#8C8377] px-3 text-[13px] text-[#3F3830] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                 >
                   <option value="newest">Newest</option>
                   <option value="name">Name (A–Z)</option>
@@ -1637,7 +1640,7 @@ export default function ProductsPage({
 
             <div
               id="product_display"
-              className="rounded-b-[20px] bg-white px-[24px]"
+              className="rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px]"
             >
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left text-[13px]">
@@ -1671,24 +1674,24 @@ export default function ProductsPage({
                         <tr key={`skeleton-${i}`}>
                           <td className="td">
                             <div className="flex items-center gap-x-3">
-                              <div className="size-8 animate-pulse rounded-md bg-[#F0F0F0]" />
-                              <div className="h-3 w-40 animate-pulse rounded bg-[#F0F0F0]" />
+                              <div className="size-8 animate-pulse rounded-[8px] bg-[#E2DBCC]" />
+                              <div className="h-3 w-40 animate-pulse rounded bg-[#E2DBCC]" />
                             </div>
                           </td>
                           <td className="td">
-                            <div className="h-3 w-16 animate-pulse rounded bg-[#F0F0F0]" />
+                            <div className="h-3 w-16 animate-pulse rounded bg-[#E2DBCC]" />
                           </td>
                           <td className="td">
-                            <div className="h-5 w-14 animate-pulse rounded-full bg-[#F0F0F0]" />
+                            <div className="h-5 w-14 animate-pulse rounded-full bg-[#E2DBCC]" />
                           </td>
                           <td className="td">
-                            <div className="h-3 w-8 animate-pulse rounded bg-[#F0F0F0]" />
+                            <div className="h-3 w-8 animate-pulse rounded bg-[#E2DBCC]" />
                           </td>
                           <td className="td">
-                            <div className="h-3 w-8 animate-pulse rounded bg-[#F0F0F0]" />
+                            <div className="h-3 w-8 animate-pulse rounded bg-[#E2DBCC]" />
                           </td>
                           <td className="td">
-                            <div className="size-[25px] animate-pulse rounded-[6px] bg-[#F0F0F0]" />
+                            <div className="size-[25px] animate-pulse rounded-[6px] bg-[#E2DBCC]" />
                           </td>
                         </tr>
                       ))}
@@ -1698,10 +1701,10 @@ export default function ProductsPage({
                       <tr>
                         <td colSpan={6} className="td">
                           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-                            <div className="flex size-12 items-center justify-center rounded-full bg-[#F5F5F5] text-[#AFB1B0]">
+                            <div className="flex size-12 items-center justify-center rounded-full bg-[#EFEBE1] text-[#8C8377]">
                               <AdminSearchIcon />
                             </div>
-                            <p className="text-[15px] font-medium text-[#35373C]">
+                            <p className="text-[15px] font-medium text-[#3F3830]">
                               {searchQuery
                                 ? `No products match "${searchQuery}"`
                                 : activeTab === 'active'
@@ -1710,7 +1713,7 @@ export default function ProductsPage({
                                     ? 'No draft products'
                                     : 'No products yet'}
                             </p>
-                            <p className="max-w-xs text-[13px] text-[#AFB1B0]">
+                            <p className="max-w-xs text-[13px] text-[#8C8377]">
                               {searchQuery
                                 ? 'Try a different search term or clear the search.'
                                 : 'Add your first product to get started.'}
@@ -1722,7 +1725,7 @@ export default function ProductsPage({
                                   resetForm();
                                   setShowAddProduct(true);
                                 }}
-                                className="mt-2 flex h-[44px] cursor-pointer items-center gap-x-1 rounded-[10px] bg-[#0072BB] px-4 text-[13px] font-semibold text-white outline-none transition-colors hover:bg-[#005a94] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                                className="mt-2 flex h-[44px] cursor-pointer items-center gap-x-1 rounded-full bg-[#14110E] px-4 text-[13px] font-semibold text-[#F4F1EA] outline-none transition-colors hover:bg-[#241F19] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                               >
                                 <AdminPlusCircleIcon /> Add Product
                               </button>
@@ -1740,28 +1743,28 @@ export default function ProductsPage({
                       const displayPrice =
                         product.minVariantPrice ?? product.basePrice;
                       return (
-                        <tr key={product.id} className="group">
+                        <tr key={product.id} className="ad-row group">
                           <td className="td">
                             <div className="flex items-center gap-x-3">
                               {product?.image ? (
                                 <img
                                   src={product.image}
                                   alt={product.name || 'Product image'}
-                                  className="size-9 rounded-md object-cover"
+                                  className="size-9 rounded-[8px] object-cover"
                                 />
                               ) : (
-                                <div className="flex size-9 items-center justify-center rounded-md bg-[#F5F5F5] text-[10px] text-[#AFB1B0]">
+                                <div className="flex size-9 items-center justify-center rounded-[8px] bg-[#EFEBE1] text-[10px] text-[#8C8377]">
                                   N/A
                                 </div>
                               )}
-                              <div className="max-w-[220px] truncate whitespace-nowrap font-medium text-[#121212]">
+                              <div className="max-w-[220px] truncate whitespace-nowrap font-medium text-[#14110E]">
                                 {product.name}
                               </div>
                             </div>
                           </td>
                           <td className="td whitespace-nowrap">
                             {product.priceVaries && (
-                              <span className="mr-1 text-[#AFB1B0]">from</span>
+                              <span className="mr-1 text-[#8C8377]">from</span>
                             )}
                             {formatPrice(displayPrice)}
                           </td>
@@ -1769,8 +1772,8 @@ export default function ProductsPage({
                             <span
                               className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
                                 product.status === 'live'
-                                  ? 'bg-[#CCEAD6] text-[#32AC5B]'
-                                  : 'bg-[#F5F1CC] text-[#D8C732]'
+                                  ? 'bg-[#E4EDE3] text-[#3D6B4A]'
+                                  : 'bg-[#F3E9D6] text-[#8A6218]'
                               }`}
                             >
                               {product.status}
@@ -1780,11 +1783,11 @@ export default function ProductsPage({
                             <div className="flex items-center gap-x-2">
                               <span>{product.inventory}</span>
                               {isOutOfStock ? (
-                                <span className="rounded-full bg-[#E5C6BF] px-2 py-0.5 text-[10px] font-semibold text-[#991C00] uppercase">
+                                <span className="rounded-full bg-[#F2E1DB] px-2 py-0.5 text-[10px] font-semibold text-[#8C3A2B] uppercase">
                                   Out of stock
                                 </span>
                               ) : isLowStock ? (
-                                <span className="rounded-full bg-[#F5E6CC] px-2 py-0.5 text-[10px] font-semibold text-[#B26A00] uppercase">
+                                <span className="rounded-full bg-[#F3E9D6] px-2 py-0.5 text-[10px] font-semibold text-[#8A6218] uppercase">
                                   Low
                                 </span>
                               ) : null}
@@ -1809,7 +1812,7 @@ export default function ProductsPage({
                                 aria-haspopup="menu"
                                 aria-expanded={activeActionMenuId === product.id}
                                 aria-label={`Actions for ${product.name}`}
-                                className="flex size-[36px] cursor-pointer items-center justify-center rounded-[8px] bg-[#F5F5F5] outline-none transition-colors hover:bg-[#EBEBEB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                                className="flex size-[36px] cursor-pointer items-center justify-center rounded-[8px] bg-[#EFEBE1] outline-none transition-colors hover:bg-[#E2DBCC] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                               >
                                 <AdminMoreVerticalIcon />
                               </motion.button>
@@ -1827,7 +1830,7 @@ export default function ProductsPage({
                                     handleEditClick(product.id);
                                     setActiveActionMenuId(null);
                                   }}
-                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#3F3830] outline-none hover:bg-[#EFEAE0] focus-visible:bg-[#EFEAE0]"
                                 >
                                   Edit
                                 </button>
@@ -1836,7 +1839,7 @@ export default function ProductsPage({
                                   onClick={() =>
                                     requestDeleteProduct(product.id)
                                   }
-                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-red-700 outline-none hover:bg-gray-100 focus-visible:bg-gray-100"
+                                  className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C3A2B] outline-none hover:bg-[#EFEAE0] focus-visible:bg-[#EFEAE0]"
                                 >
                                   Delete
                                 </button>
@@ -1859,7 +1862,7 @@ export default function ProductsPage({
                       handlePageChange(pagination.offset - pagination.limit)
                     }
                     disabled={pagination.offset === 0 || isLoading}
-                    className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="relative inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
                   >
                     Previous
                   </button>
@@ -1871,14 +1874,14 @@ export default function ProductsPage({
                       pagination.offset + pagination.limit >=
                         totalRows(pagination) || isLoading
                     }
-                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="relative ml-3 inline-flex items-center rounded-[8px] border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1] disabled:opacity-50"
                   >
                     Next
                   </button>
                 </div>
                 <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-[#3F3830]">
                       Showing{' '}
                       <span className="font-medium">
                         {pagination.offset + 1}
@@ -1896,7 +1899,7 @@ export default function ProductsPage({
                   </div>
                   <div>
                     <nav
-                      className="isolate inline-flex -space-x-px rounded-md shadow-xs"
+                      className="isolate inline-flex -space-x-px rounded-[8px] shadow-xs"
                       aria-label="Pagination"
                     >
                       <button
@@ -1904,7 +1907,7 @@ export default function ProductsPage({
                           handlePageChange(pagination.offset - pagination.limit)
                         }
                         disabled={pagination.offset === 0 || isLoading}
-                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                       >
                         <span className="sr-only">Previous</span>
                         <svg
@@ -1928,7 +1931,7 @@ export default function ProductsPage({
                           pagination.offset + pagination.limit >=
                             totalRows(pagination) || isLoading
                         }
-                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-[#8C8377] ring-1 ring-[#DFD7C6] ring-inset hover:bg-[#EFEBE1] focus:z-20 focus:outline-offset-0 disabled:opacity-50"
                       >
                         <span className="sr-only">Next</span>
                         <svg
@@ -1957,7 +1960,7 @@ export default function ProductsPage({
             {/* Product Information */}
             <div>
               <div className="space-y-[24px]">
-                <div className="rounded-[20px] bg-white p-[24px] text-[#121212]">
+                <div className="rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] text-[#14110E]">
                   <div className="space-y-[24px]">
                     {/* Header */}
                     <div className="flex justify-between pb-[24px]">
@@ -1966,7 +1969,7 @@ export default function ProductsPage({
                         htmlFor="live-toggle"
                         className="relative inline-flex cursor-pointer items-center gap-x-2"
                       >
-                        <span className="text-[14px] text-[#121212]">Live</span>
+                        <span className="text-[14px] text-[#14110E]">Live</span>
 
                         <input
                           type="checkbox"
@@ -1979,7 +1982,7 @@ export default function ProductsPage({
                           className="peer sr-only"
                         />
 
-                        <div className="relative h-6 w-11 rounded-full bg-gray-200 transition-colors peer-checked:bg-[#32AC5B] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5" />
+                        <div className="relative h-6 w-11 rounded-full bg-[#E2DBCC] transition-colors peer-checked:bg-[#3D6B4A] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-[#FBF9F4] after:shadow after:transition-all after:content-[''] peer-checked:after:translate-x-5" />
                       </label>
                     </div>
 
@@ -1987,13 +1990,13 @@ export default function ProductsPage({
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div>
                         <label htmlFor="product-name" className="adminsolidlabel">
-                          Product name <span className="text-[#991C00]">*</span>
+                          Product name <span className="text-[#8C3A2B]">*</span>
                         </label>
                         <input
                           id="product-name"
                           ref={nameInputRef}
                           type="text"
-                          className={`adminsolid ${fieldErrors.productName ? '!ring-2 !ring-[#991C00]' : ''}`}
+                          className={`adminsolid ${fieldErrors.productName ? '!ring-2 !ring-[#8C3A2B]' : ''}`}
                           value={productName}
                           aria-invalid={!!fieldErrors.productName}
                           onChange={(e) => {
@@ -2007,7 +2010,7 @@ export default function ProductsPage({
                           }}
                         />
                         {fieldErrors.productName && (
-                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#8C3A2B]">
                             <AdminExclamationIcon /> {fieldErrors.productName}
                           </p>
                         )}
@@ -2019,13 +2022,13 @@ export default function ProductsPage({
                           className="adminsolidlabel"
                         >
                           Product price{' '}
-                          <span className="text-[#991C00]">*</span>
+                          <span className="text-[#8C3A2B]">*</span>
                         </label>
                         <input
                           id="product-price"
                           type="number"
                           min="0"
-                          className={`adminsolid ${fieldErrors.basePrice ? '!ring-2 !ring-[#991C00]' : ''}`}
+                          className={`adminsolid ${fieldErrors.basePrice ? '!ring-2 !ring-[#8C3A2B]' : ''}`}
                           value={basePrice}
                           aria-invalid={!!fieldErrors.basePrice}
                           onChange={(e) => {
@@ -2036,7 +2039,7 @@ export default function ProductsPage({
                           }}
                         />
                         {fieldErrors.basePrice && (
-                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#8C3A2B]">
                             <AdminExclamationIcon /> {fieldErrors.basePrice}
                           </p>
                         )}
@@ -2062,10 +2065,10 @@ export default function ProductsPage({
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                       <div>
                         <label className="adminsolidlabel">
-                          Collection <span className="text-[#991C00]">*</span>
+                          Collection <span className="text-[#8C3A2B]">*</span>
                         </label>
                         <select
-                          className={`adminsolid ${fieldErrors.category ? '!ring-2 !ring-[#991C00]' : ''}`}
+                          className={`adminsolid ${fieldErrors.category ? '!ring-2 !ring-[#8C3A2B]' : ''}`}
                           value={category}
                           aria-invalid={!!fieldErrors.category}
                           onChange={(e) => {
@@ -2085,7 +2088,7 @@ export default function ProductsPage({
                           ))}
                         </select>
                         {fieldErrors.category && (
-                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#991C00]">
+                          <p className="mt-1 flex items-center gap-x-1 text-[12px] text-[#8C3A2B]">
                             <AdminExclamationIcon /> {fieldErrors.category}
                           </p>
                         )}
@@ -2176,18 +2179,18 @@ export default function ProductsPage({
 
             {/* Variants */}
             <div>
-              <div className="flex items-center justify-between px-[16px] pt-[24px] pb-[22px] !text-[#121212]">
+              <div className="flex items-center justify-between px-[16px] pt-[24px] pb-[22px] !text-[#14110E]">
                 <span className="font-medium">Product Variant</span>
                 <button
                   type="button"
                   onClick={addVariant}
-                  className="btn_creators_solid_no_height p-[10px] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  className="btn_creators_solid_no_height p-[10px] focus-visible:ring-2 focus-visible:ring-[#9C6F2E]"
                 >
                   + Add Variant
                 </button>
               </div>
               {fieldErrors.variants && (
-                <p className="mb-3 flex items-center gap-x-1 px-[16px] text-[12px] text-[#991C00]">
+                <p className="mb-3 flex items-center gap-x-1 px-[16px] text-[12px] text-[#8C3A2B]">
                   <AdminExclamationIcon /> {fieldErrors.variants}
                 </p>
               )}
@@ -2217,7 +2220,7 @@ export default function ProductsPage({
               onClick={handleSaveProduct}
               disabled={isSaving}
               aria-busy={isSaving}
-              className={`btn_creators_solid flex items-center justify-center gap-x-2 focus-visible:ring-2 focus-visible:ring-[#0072BB] ${isSaving ? 'cursor-not-allowed opacity-60' : ''}`}
+              className={`btn_creators_solid flex items-center justify-center gap-x-2 focus-visible:ring-2 focus-visible:ring-[#9C6F2E] ${isSaving ? 'cursor-not-allowed opacity-60' : ''}`}
             >
               {isSaving && <Spinner />}
               {isSaving
@@ -2232,7 +2235,7 @@ export default function ProductsPage({
         {/* Styled delete confirmation dialog */}
         {pendingDeleteId && (
           <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0E0E10]/60 p-4 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-dialog-title"
@@ -2241,21 +2244,21 @@ export default function ProductsPage({
             }}
           >
             <div
-              className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl"
+              className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-3 flex items-center gap-x-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-[#E5C6BF]">
+                <div className="flex size-10 items-center justify-center rounded-full bg-[#F2E1DB]">
                   <AdminExclamationIcon />
                 </div>
                 <h2
                   id="delete-dialog-title"
-                  className="text-lg font-semibold text-[#121212]"
+                  className="text-lg font-semibold text-[#14110E]"
                 >
                   Delete product?
                 </h2>
               </div>
-              <p className="mb-6 text-sm text-[#6B6B6B]">
+              <p className="mb-6 text-sm text-[#5C544A]">
                 {pendingDeleteProduct?.name
                   ? `“${pendingDeleteProduct.name}” and its variants will be permanently removed. This action cannot be undone.`
                   : 'This product and its variants will be permanently removed. This action cannot be undone.'}
@@ -2264,7 +2267,7 @@ export default function ProductsPage({
                 <button
                   type="button"
                   onClick={() => setPendingDeleteId(null)}
-                  className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                 >
                   Cancel
                 </button>
@@ -2272,7 +2275,7 @@ export default function ProductsPage({
                   type="button"
                   onClick={() => handleDeleteProduct(pendingDeleteId)}
                   disabled={isLoading}
-                  className="flex-1 rounded-[10px] bg-[#991C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#7A1600] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex-1 rounded-full bg-[#8C3A2B] px-4 py-2 text-sm font-medium text-[#F4F1EA] hover:bg-[#6E2C20] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading && <Spinner />}
                   {isLoading ? 'Deleting...' : 'Delete'}
@@ -2285,7 +2288,7 @@ export default function ProductsPage({
         {/* Collection delete confirmation dialog */}
         {pendingDeleteCollectionId && (
           <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0E0E10]/60 p-4 backdrop-blur-sm"
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-collection-dialog-title"
@@ -2294,28 +2297,28 @@ export default function ProductsPage({
             }}
           >
             <div
-              className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl"
+              className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-3 flex items-center gap-x-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-[#E5C6BF]">
+                <div className="flex size-10 items-center justify-center rounded-full bg-[#F2E1DB]">
                   <AdminExclamationIcon />
                 </div>
                 <h2
                   id="delete-collection-dialog-title"
-                  className="text-lg font-semibold text-[#121212]"
+                  className="text-lg font-semibold text-[#14110E]"
                 >
                   Delete collection?
                 </h2>
               </div>
-              <p className="mb-6 text-sm text-[#6B6B6B]">
+              <p className="mb-6 text-sm text-[#5C544A]">
                 This collection will be permanently removed. This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => setPendingDeleteCollectionId(null)}
-                  className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                 >
                   Cancel
                 </button>
@@ -2323,7 +2326,7 @@ export default function ProductsPage({
                   type="button"
                   onClick={() => handleDeleteCollection(pendingDeleteCollectionId)}
                   disabled={isLoading}
-                  className="flex-1 rounded-[10px] bg-[#991C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#7A1600] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex-1 rounded-full bg-[#8C3A2B] px-4 py-2 text-sm font-medium text-[#F4F1EA] hover:bg-[#6E2C20] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading && <Spinner />}
                   {isLoading ? 'Deleting...' : 'Delete'}
@@ -2334,10 +2337,10 @@ export default function ProductsPage({
         )}
 
         {showCollectionModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-[20px] bg-white p-[24px] shadow-xl">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-lg font-medium capitalize">
+                <h2 className="ad-display text-[20px] text-[#14110E] capitalize">
                   {collectionView === 'list'
                     ? 'Collections'
                     : collectionView === 'create'
@@ -2363,12 +2366,12 @@ export default function ProductsPage({
                     {collections?.map((collection) => (
                       <div
                         key={collection.id}
-                        className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0"
+                        className="flex items-center justify-between border-b border-[#E2DBCC] py-3 last:border-0"
                       >
-                        <span className="flex items-center gap-2 text-[#121212]">
+                        <span className="flex items-center gap-2 text-[#14110E]">
                           {collection.name}
                           {collection.coming_soon && (
-                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-medium text-gray-500">
+                            <span className="rounded-full bg-[#EFEAE0] px-2 py-0.5 text-[11px] font-medium text-[#8C8377]">
                               Coming soon
                             </span>
                           )}
@@ -2386,13 +2389,13 @@ export default function ProductsPage({
                               );
                               setCollectionView('edit');
                             }}
-                            className="text-sm text-blue-600 hover:text-blue-800"
+                            className="text-sm text-[#9C6F2E] hover:text-[#9C6F2E]"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => setPendingDeleteCollectionId(collection.id)}
-                            className="text-sm text-red-600 hover:text-red-800"
+                            className="text-sm text-[#8C3A2B] hover:text-[#8C3A2B]"
                           >
                             Delete
                           </button>
@@ -2400,7 +2403,7 @@ export default function ProductsPage({
                       </div>
                     ))}
                     {(!collections || collections.length === 0) && (
-                      <p className="text-sm text-[#8E8E93]">
+                      <p className="text-sm text-[#5C544A]">
                         No collections found.
                       </p>
                     )}
@@ -2445,12 +2448,12 @@ export default function ProductsPage({
                       placeholder="Enter collection description"
                     />
                   </div>
-                  <label className="flex items-center gap-2 text-sm text-[#121212]">
+                  <label className="flex items-center gap-2 text-sm text-[#14110E]">
                     <input
                       type="checkbox"
                       checked={collectionComingSoon}
                       onChange={(e) => setCollectionComingSoon(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300"
+                      className="h-4 w-4 rounded border-[#DFD7C6]"
                     />
                     Coming soon (greyed out in the storefront menu, not yet
                     shoppable)
@@ -2463,7 +2466,7 @@ export default function ProductsPage({
                         setCollectionDescription('');
                         setCollectionComingSoon(false);
                       }}
-                      className="flex-1 rounded-[10px] border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                     >
                       Cancel
                     </button>

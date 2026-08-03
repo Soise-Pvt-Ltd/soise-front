@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import {
   Chart as ChartJS,
-  ArcElement,
   Tooltip,
   Legend,
   ChartOptions,
@@ -12,23 +11,24 @@ import {
   BarElement,
   Title,
 } from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import { useRouter } from 'next/navigation';
 import GridContainer from '../gridContainer';
-import { AdminEditIcon } from '@/components/icons';
 import OrderActionsMenu from './OrderActionsMenu';
 import FunnelCard from './FunnelCard';
 import StatCardMenu from './StatCardMenu';
+import {
+  PageHeader,
+  Panel,
+  StatTile,
+  StatusBadge,
+  EmptyState,
+  SearchInput,
+} from '../ui';
 
-ChartJS.register(
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-);
+// The doughnut ("Visitors") was commented out of the markup long ago; its
+// ArcElement registration and config went with it.
+ChartJS.register(Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 const getCount = (val: any) => {
   if (typeof val === 'object' && val !== null && 'count' in val) {
@@ -75,45 +75,6 @@ export default function HomeClient({
     'month',
   );
 
-  const doughnutData = {
-    labels: ['Social Media', 'Creators', 'Ads', 'Purchased'],
-    backgroundColor: ['#2D2C54', '#0072BB', '#121212', '#C0CBF2'],
-    datasets: [
-      {
-        label: '# of Votes',
-        data: [10, 10, 10, 5],
-        backgroundColor: ['#2D2C54', '#0072BB', '#121212', '#C0CBF2'],
-        borderRadius: 0,
-        spacing: 0,
-        hoverOffset: 10,
-      },
-    ],
-  };
-
-  const doughnutOptions: ChartOptions<'doughnut'> = {
-    cutout: '60%',
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: 0,
-    },
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          padding: 20,
-          boxWidth: 15,
-          usePointStyle: true,
-          pointStyle: 'circle',
-          font: {
-            size: 12,
-            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
-          },
-        },
-      },
-    },
-  };
-
   const barLabels = [
     'Jan',
     'Feb',
@@ -130,8 +91,9 @@ export default function HomeClient({
   ];
 
   const currentMonthIndex = new Date().getMonth();
-  const defaultBarColor = 'rgba(0, 114, 187, 0.3)';
-  const currentMonthBarColor = 'rgba(0, 114, 187, 1)';
+  // Gold for the year, ink for the month we're standing in.
+  const defaultBarColor = 'rgba(156, 111, 46, 0.30)';
+  const currentMonthBarColor = 'rgba(20, 17, 14, 0.92)';
 
   // Create sales data array with zeros, then fill in the months we have data for
   const salesByMonth = Array(12).fill(0);
@@ -163,33 +125,29 @@ export default function HomeClient({
   const barOptions: ChartOptions<'bar'> = {
     responsive: true,
     plugins: {
-      legend: {
-        display: false,
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#14110E',
+        titleColor: '#F4F1EA',
+        bodyColor: '#C4AA6E',
+        cornerRadius: 8,
+        padding: 10,
+        displayColors: false,
       },
     },
     scales: {
-      y: {
-        display: false,
-      },
+      y: { display: false },
       x: {
-        grid: {
-          display: false,
+        grid: { display: false },
+        border: { color: '#E2DBCC' },
+        // Month labels are supporting information, not the chart — set in the
+        // same faint uppercase key as every other label in the suite.
+        ticks: {
+          color: '#8C8377',
+          font: { size: 10 },
         },
       },
     },
-  };
-
-  const statusClasses: Record<string, string> = {
-    created: 'bg-[#C0CBF2] text-[#0072BB] border border-[#C0CBF2] rounded-full',
-    pending_payment: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
-    paid: 'bg-[#CCEAD6] text-[#32AC5B] border border-[#CCEAD6] rounded-full',
-    processing: 'bg-[#E8D5F5] text-[#7B2CBF] border border-[#E8D5F5] rounded-full',
-    shipped: 'bg-[#D5E8F5] text-[#1A6FB5] border border-[#D5E8F5] rounded-full',
-    delivered: 'bg-[#C2E6D3] text-[#1B7A3D] border border-[#C2E6D3] rounded-full',
-    cancelled: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
-    refunded: 'bg-[#F0E0D6] text-[#8B5E3C] border border-[#F0E0D6] rounded-full',
-    failed: 'bg-[#E5C6BF] text-[#991C00] border border-[#E5C6BF] rounded-full',
-    abandoned: 'bg-[#F5F1CC] text-[#D8C732] border border-[#F5F1CC] rounded-full',
   };
 
   const formatTime = (dateString: string) => {
@@ -216,49 +174,55 @@ export default function HomeClient({
   ) => {
     if (metric?.is_new) {
       return (
-        <div
-          className={`w-fit rounded-full p-[10px] text-[14px] font-medium ${
+        <span
+          className={`ad-badge ${
             variant === 'onDark'
-              ? 'bg-white text-[#0072BB]'
-              : 'bg-[#CCEAD6] text-[#32AC5B]'
+              ? 'bg-[#C4AA6E]/15 text-[#C4AA6E]'
+              : 'bg-[#E4EDE3] text-[#3D6B4A]'
           }`}
         >
           New
-        </div>
+        </span>
       );
     }
     const pos = (metric?.percentage_change ?? 0) >= 0;
     const cls =
       variant === 'onDark'
         ? pos
-          ? 'bg-white text-[#0072BB]'
-          : 'bg-[#F0DEDC] text-[#D87C86]'
+          ? 'bg-[#C4AA6E]/15 text-[#C4AA6E]'
+          : 'bg-[#F2E1DB]/15 text-[#D9A79B]'
         : pos
-          ? 'bg-[#CCEAD6] text-[#32AC5B]'
-          : 'bg-[#F0DEDC] text-[#D87C86]';
+          ? 'bg-[#E4EDE3] text-[#3D6B4A]'
+          : 'bg-[#F2E1DB] text-[#8C3A2B]';
     return (
-      <div className={`w-fit rounded-full p-[10px] text-[14px] ${cls}`}>
+      <span className={`ad-badge ${cls}`}>
         {formatPercentage(metric?.percentage_change ?? 0)}
-      </div>
+      </span>
     );
   };
 
   return (
     <GridContainer>
-      <main className="mt-[22px] !text-[#35373C]" role="main">
+      <main className="!text-[#3F3830]" role="main">
+        <PageHeader
+          eyebrow="The house"
+          title="Overview"
+          description="Where the drop stands today — what came in, what goes out, and what the culture is actually buying."
+        />
+
         {/* Without this an unreachable backend renders a fully-populated
             dashboard reading zero revenue, zero products and "no recent
             orders" — identical to a store that has never sold anything. */}
         {loadFailed && (
           <div
             role="alert"
-            className="mb-[24px] flex flex-col gap-y-3 rounded-[16px] border border-[#E5C6BF] bg-[#FDF4F2] px-[20px] py-[16px] sm:flex-row sm:items-center sm:justify-between"
+            className="mb-6 flex flex-col gap-y-3 rounded-[14px] border border-[#E2DBCC] border-l-2 border-l-[#8C3A2B] bg-[#F8EDE8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <div className="text-[14px] font-medium text-[#991C00]">
+              <div className="ad-display text-[17px] text-[#8C3A2B]">
                 Couldn&apos;t load dashboard data
               </div>
-              <div className="mt-1 text-[12px] text-[#8B5E3C]">
+              <div className="mt-1 text-[13px] text-[#5C544A]">
                 The figures below are placeholders, not real numbers. Nothing
                 has been lost.
               </div>
@@ -266,20 +230,24 @@ export default function HomeClient({
             <button
               type="button"
               onClick={() => router.refresh()}
-              className="shrink-0 cursor-pointer rounded-[10px] bg-[#991C00] px-[18px] py-[9px] text-[12px] font-bold text-white uppercase transition-colors hover:bg-[#7d1700]"
+              className="ad-btn-danger shrink-0 !text-[12px]"
             >
               Try again
             </button>
           </div>
         )}
-        {/* First layer */}
-        <div className="grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-3 lg:grid-cols-4 lg:space-y-0">
-          {/* 1st grid - Total Revenue */}
-          <div className="flex flex-col justify-between rounded-[20px] bg-[#0072BB] px-[24px] py-[30px] text-white" role="region" aria-label="Total Revenue">
-            <div className="flex items-center justify-between">
-              <div className="text-[14px]">Total Revenue</div>
+
+        {/* Revenue carries the ink treatment — /about alternates light and dark
+            to mark what matters, and here exactly one number does. */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatTile
+            tone="ink"
+            label="Total revenue"
+            value={formatCurrency(data.revenue.total)}
+            meta={trendBadge(data.revenue, 'onDark')}
+            action={
               <StatCardMenu
-                color="#ffffff"
+                color="#C4AA6E"
                 ariaLabel="Revenue options"
                 items={[
                   { label: 'View all orders', href: '/dashboard/orders' },
@@ -287,188 +255,137 @@ export default function HomeClient({
                   { label: 'Refresh data', onClick: () => router.refresh() },
                 ]}
               />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-[22px] font-medium">
-                {formatCurrency(data.revenue.total)}
-              </div>
-              {trendBadge(data.revenue, 'onDark')}
-            </div>
-          </div>
+            }
+          />
 
-          {/* 2nd grid - Payout */}
-          <div className="flex flex-col justify-between rounded-[20px] bg-white px-[24px] py-[30px] text-[#121212]" role="region" aria-label="Payout">
-            <div className="flex items-center justify-between">
-              <div className="text-[14px] text-[#AFB1B0]">Payout</div>
+          <StatTile
+            label="Payout"
+            value={formatCurrency(data.payout.total)}
+            meta={trendBadge(data.payout, 'onLight')}
+            action={
               <StatCardMenu
-                color="#121212"
+                color="#14110E"
                 ariaLabel="Payout options"
                 items={[
                   { label: 'Manage payouts', href: '/dashboard/payout' },
                   { label: 'Refresh data', onClick: () => router.refresh() },
                 ]}
               />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-[22px] font-medium">
-                {formatCurrency(data.payout.total)}
-              </div>
-              {trendBadge(data.payout, 'onLight')}
-            </div>
-          </div>
+            }
+          />
 
-          {/* 3rd grid - Total Products */}
-          <div className="flex flex-col justify-between rounded-[20px] bg-white px-[24px] py-[30px] text-[#121212]" role="region" aria-label="Total Products">
-            <div className="flex items-center justify-between">
-              <div className="text-[14px] text-[#AFB1B0]">Total Products</div>
+          <StatTile
+            label="Total products"
+            value={getCount(data.products.total)}
+            meta={
+              <span className="text-[12px] text-[#8C8377]">
+                {getCount(data.products.active)} active
+              </span>
+            }
+            action={
               <StatCardMenu
-                color="#121212"
+                color="#14110E"
                 ariaLabel="Products options"
                 items={[
                   { label: 'Manage products', href: '/dashboard/products' },
                   { label: 'Refresh data', onClick: () => router.refresh() },
                 ]}
               />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-[22px] font-medium">
-                {getCount(data.products.total)}
-              </div>
-              <div className="text-[12px] text-[#AFB1B0]">
-                {getCount(data.products.active)} active
-              </div>
-            </div>
-          </div>
+            }
+          />
 
-          {/* 4th grid - Items Sold */}
-          <div className="flex flex-col justify-between rounded-[20px] bg-white px-[24px] py-[30px] text-[#121212]" role="region" aria-label="Items Sold">
-            <div className="flex items-center justify-between">
-              <div className="text-[14px] text-[#AFB1B0]">Items Sold</div>
+          <StatTile
+            label="Items sold"
+            value={getCount(
+              itemsPeriod === 'week'
+                ? data.items_sold.current_week
+                : itemsPeriod === 'year'
+                  ? data.items_sold.current_year
+                  : data.items_sold.current_month,
+            )}
+            meta={
+              /* This select had no value, no onChange and no state behind it —
+                 it rendered the 30-day figure whichever period was chosen. */
+              <select
+                value={itemsPeriod}
+                onChange={(e) =>
+                  setItemsPeriod(e.target.value as 'week' | 'month' | 'year')
+                }
+                aria-label="Items sold period"
+                className="h-[30px] cursor-pointer rounded-full border border-[#DFD7C6] bg-transparent py-0 pr-7 pl-3 text-[11px] tracking-[0.1em] text-[#5C544A] uppercase transition-colors outline-none hover:border-[#9C6F2E] focus:border-[#9C6F2E] focus:ring-0"
+              >
+                <option value="week">Weekly</option>
+                <option value="month">Monthly</option>
+                <option value="year">Yearly</option>
+              </select>
+            }
+            action={
               <StatCardMenu
-                color="#121212"
+                color="#14110E"
                 ariaLabel="Items sold options"
                 items={[
                   { label: 'View all orders', href: '/dashboard/orders' },
                   { label: 'Refresh data', onClick: () => router.refresh() },
                 ]}
               />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-[22px] font-medium">
-                {getCount(
-                  itemsPeriod === 'week'
-                    ? data.items_sold.current_week
-                    : itemsPeriod === 'year'
-                      ? data.items_sold.current_year
-                      : data.items_sold.current_month,
-                )}
-              </div>
-              <div>
-                {/* This select had no value, no onChange and no state behind
-                    it — it rendered the 30-day figure whichever period was
-                    chosen. */}
-                <select
-                  value={itemsPeriod}
-                  onChange={(e) =>
-                    setItemsPeriod(e.target.value as 'week' | 'month' | 'year')
-                  }
-                  aria-label="Items sold period"
-                  className="cursor-pointer rounded-[6px] border-2 border-[#F6F6F6] px-2 py-1 pr-8 text-[13px] text-[#AFB1B0] outline-none"
-                >
-                  <option value="week">Weekly</option>
-                  <option value="month">Monthly</option>
-                  <option value="year">Yearly</option>
-                </select>
-              </div>
-            </div>
-          </div>
+            }
+          />
         </div>
 
         <FunnelCard funnel={funnel} />
 
-        {/* Second layer */}
-        <div className="my-[38px] space-y-[24px] gap-x-[16px] md:space-y-0">
-          {/* <div className="my-[38px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-6 md:space-y-0"> */}
-          <div className="rounded-[20px] bg-white px-[24px] py-[30px] md:col-span-4">
-            <div>
-              <p className="text-[14px] font-medium text-[#AFB1B0]">
-                Sales Statistics
-              </p>
-              <p className="text-[36px] font-medium">
-                {formatCurrency(data.revenue.total)}
-              </p>
+        {/* Second layer — sales over the year */}
+        <div className="mt-6">
+          <Panel eyebrow="Sales statistics" title={formatCurrency(data.revenue.total)}>
+            <div className="scrollbar-hide overflow-x-auto pt-2">
+              <Bar data={barData} options={barOptions} />
             </div>
-            <div>
-              <div className="scrollbar-hide overflow-x-auto pt-[20px] md:px-[10px]">
-                <div>
-                  <Bar data={barData} options={barOptions} />
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* <div className="flex flex-col rounded-[20px] bg-white px-[24px] py-[30px] md:col-span-2">
-            <div className="flex items-center justify-between">
-              <div className="text-[18px]">Visitors</div>
-              <div>
-                <select className="cursor-pointer rounded-[6px] border-2 border-[#F6F6F6] px-2 py-1 pr-8 text-[13px] text-[#AFB1B0] outline-none">
-                  <option>Weekly</option>
-                  <option>Monthly</option>
-                  <option>Yearly</option>
-                </select>
-              </div>
-            </div>
-            <div className="relative flex-grow pt-4">
-              <Doughnut data={doughnutData} options={doughnutOptions} />
-            </div>
-          </div> */}
+          </Panel>
         </div>
 
         {/* Third layer */}
-        <div className="mt-[38px] grid grid-cols-1 space-y-[24px] gap-x-[16px] md:grid-cols-5 md:space-y-0">
-          <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[27px] md:col-span-2">
-            <div className="mb-4 flex flex-col justify-between gap-4 border-none sm:flex-row sm:items-center">
-              <div className="text-[18px] font-medium">Latest Orders</div>
-              <div className="h-[36px]"></div>
-            </div>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[300px] text-left !text-[13px]">
-                <thead>
-                  {data.latest_orders.length > 0 && (
-                    <tr className="text-[#AFB1B0]">
-                      <th className="pb-2 font-normal">Customer</th>
-                      <th className="pb-2 font-normal">Status</th>
-                      <th className="pb-2 font-normal">Time</th>
-                      <th className="pb-2 font-normal"></th>
+        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-5">
+          <Panel
+            eyebrow="Just in"
+            title="Latest orders"
+            className="!h-fit md:col-span-2"
+            bodyClassName="!px-0"
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[300px] text-left text-[13px]">
+                {data.latest_orders.length > 0 && (
+                  <thead>
+                    <tr className="border-b border-[#E2DBCC]">
+                      <th className="thead pl-6">Customer</th>
+                      <th className="thead">Status</th>
+                      <th className="thead">Time</th>
+                      <th className="thead pr-6"></th>
                     </tr>
-                  )}
-                </thead>
+                  </thead>
+                )}
                 <tbody>
                   {data.latest_orders.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center">
-                        <p className="text-base font-medium text-gray-500">No recent orders</p>
-                        <p className="mt-1 text-sm text-gray-400">Orders will appear here once customers place them</p>
+                      <td colSpan={4}>
+                        <EmptyState
+                          title="No recent orders"
+                          hint="Orders will appear here once customers place them."
+                        />
                       </td>
                     </tr>
                   ) : (
                     data.latest_orders.map((order: any) => (
-                      <tr key={order.id} className="border-t border-[#F6F6F6]">
-                        <td className="py-3 text-wrap">
+                      <tr key={order.id} className="ad-row">
+                        <td className="py-4 pl-6 text-wrap text-[#3F3830]">
                           {order.customer_name || 'Guest'}
                         </td>
-                        <td className="py-3">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium ${
-                              statusClasses[order.status] ||
-                              statusClasses.created
-                            }`}
-                          >
-                            {order.status.charAt(0).toUpperCase() +
-                              order.status.slice(1)}
-                          </span>
+                        <td className="py-4">
+                          <StatusBadge status={order.status} />
                         </td>
-                        <td className="py-3">{formatTime(order.created_at)}</td>
-                        <td className="py-3 text-right">
+                        <td className="py-4 text-[#5C544A]">
+                          {formatTime(order.created_at)}
+                        </td>
+                        <td className="py-4 pr-6 text-right">
                           <OrderActionsMenu
                             orderId={order.id}
                             status={order.status}
@@ -480,8 +397,8 @@ export default function HomeClient({
                 </tbody>
               </table>
             </div>
-          </div>
-          <div className="!h-fit rounded-[20px] bg-white px-[24px] py-[27px] md:col-span-3">
+          </Panel>
+          <div className="md:col-span-3">
             <AllProductsTable products={data.top_products} />
           </div>
         </div>
@@ -505,77 +422,85 @@ const AllProductsTable = ({ products }: { products: any[] }) => {
   };
 
   return (
-    <>
-      <div className="mb-4 flex flex-col justify-between gap-4 border-none sm:flex-row sm:items-center">
-        <div className="text-[18px] font-medium">Top Products</div>
-        <input
-          type="search"
+    <Panel
+      eyebrow="Worn most"
+      title="Top products"
+      className="!h-fit"
+      bodyClassName="!px-0"
+      actions={
+        <SearchInput
           value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          placeholder="Search products..."
-          aria-label="Search top products"
-          className="rounded-[10px] border-0 bg-[#F5F5F5] text-[12px] outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-[#0072BB] md:w-[245px]"
+          onChange={setGlobalFilter}
+          placeholder="Search products…"
+          label="Search top products"
+          className="!h-[36px] !max-w-[220px] !text-[12px]"
         />
-      </div>
+      }
+    >
       <div className="scrollbar-hide overflow-x-auto">
-        <table className="w-full min-w-[600px] text-left !text-[13px]" aria-label="Top Products">
+        <table
+          className="w-full min-w-[600px] text-left text-[13px]"
+          aria-label="Top Products"
+        >
           {filteredProducts.length > 0 && (
             <thead>
-              <tr className="text-[#AFB1B0]">
-                <th className="pb-2 font-normal" scope="col">Product Name</th>
-                <th className="pb-2 font-normal" scope="col">Price</th>
-                <th className="pb-2 font-normal" scope="col">Total Sales</th>
-                <th className="pb-2 font-normal" scope="col">Revenue</th>
+              <tr className="border-b border-[#E2DBCC]">
+                <th className="thead pl-6" scope="col">
+                  Product
+                </th>
+                <th className="thead" scope="col">
+                  Price
+                </th>
+                <th className="thead" scope="col">
+                  Total sales
+                </th>
+                <th className="thead pr-6" scope="col">
+                  Revenue
+                </th>
               </tr>
             </thead>
           )}
           <tbody>
-            {filteredProducts.length > 0 &&
-              filteredProducts.map((product, index) => (
-                <tr
-                  key={product.product_id || index}
-                  className="border-t border-[#F6F6F6]"
-                >
-                  <td className="py-3 pr-2" scope="row">
-                    <div className="flex items-center gap-x-2">
-                      {product.product_image && (
-                        <img
-                          src={product.product_image}
-                          alt={product.product_name || 'Product'}
-                          className="h-10 w-10 rounded-md object-cover"
-                        />
-                      )}
-                      <span>{product.product_name || 'Unknown Product'}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 pr-2">
-                    <div className="h-[25px] w-fit rounded-[6px] bg-[#C0CBF2] px-2 py-1 text-[#0072BB]">
-                      {formatCurrency(product.price)}
-                    </div>
-                  </td>
-                  <td className="py-3 pr-2">
-                    <div className="h-[25px] w-fit rounded-[6px] bg-[#C0CBF2] px-2 py-1 text-[#0072BB]">
-                      {product.total_sales}
-                    </div>
-                  </td>
-                  <td className="py-3 pr-2">
-                    <div className="h-[25px] w-fit rounded-[6px] bg-[#C0CBF2] px-2 py-1 text-[#0072BB]">
-                      {formatCurrency(product.revenue)}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+            {filteredProducts.map((product, index) => (
+              <tr key={product.product_id || index} className="ad-row">
+                <td className="py-4 pr-3 pl-6">
+                  <div className="flex items-center gap-x-3">
+                    {product.product_image && (
+                      <img
+                        src={product.product_image}
+                        alt={product.product_name || 'Product'}
+                        className="h-10 w-10 rounded-[6px] object-cover"
+                      />
+                    )}
+                    <span className="text-[#14110E]">
+                      {product.product_name || 'Unknown Product'}
+                    </span>
+                  </div>
+                </td>
+                <td className="py-4 pr-3 text-[#3F3830]">
+                  {formatCurrency(product.price)}
+                </td>
+                <td className="ad-display py-4 pr-3 text-[16px] text-[#14110E]">
+                  {product.total_sales}
+                </td>
+                <td className="ad-display py-4 pr-6 text-[16px] text-[#14110E]">
+                  {formatCurrency(product.revenue)}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
         {filteredProducts.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-base font-medium text-gray-500">No products found</p>
-            <p className="mt-1 text-sm text-gray-400">
-              {globalFilter ? 'Try adjusting your search' : 'No top products to display'}
-            </p>
-          </div>
+          <EmptyState
+            title="No products found"
+            hint={
+              globalFilter
+                ? 'Try adjusting your search.'
+                : 'Top sellers appear here once the drop starts moving.'
+            }
+          />
         )}
       </div>
-    </>
+    </Panel>
   );
 };

@@ -34,11 +34,11 @@ export default function PaginationBar({
   const singlePage = atStart && atEnd;
 
   return (
-    <div className="mt-[16px] flex flex-col gap-y-3 border-t border-[#F0F0F0] pt-[16px] sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-[12px] text-[#AFB1B0]">
-        Showing <span className="font-medium text-[#35373C]">{first}</span> to{' '}
-        <span className="font-medium text-[#35373C]">{last}</span> of{' '}
-        <span className="font-medium text-[#35373C]">{total}</span> {noun}
+    <div className="mt-4 flex flex-col gap-y-3 border-t border-[#E2DBCC] pt-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
+        Showing <span className="text-[#14110E]">{first}</span>–
+        <span className="text-[#14110E]">{last}</span> of{' '}
+        <span className="text-[#14110E]">{total}</span> {noun}
       </p>
       {!singlePage && (
         <div className="flex items-center gap-x-2">
@@ -46,7 +46,7 @@ export default function PaginationBar({
             type="button"
             onClick={() => onChange(Math.max(offset - limit, 0))}
             disabled={atStart || disabled}
-            className="cursor-pointer rounded-[10px] border border-[#E5E5E5] px-[14px] py-[7px] text-[12px] text-[#35373C] transition-colors hover:bg-[#F6F6F6] disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer rounded-full border border-[#DFD7C6] px-4 py-1.5 text-[12px] text-[#3F3830] transition-colors hover:border-[#14110E] hover:text-[#14110E] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#DFD7C6]"
           >
             Previous
           </button>
@@ -54,7 +54,7 @@ export default function PaginationBar({
             type="button"
             onClick={() => onChange(offset + limit)}
             disabled={atEnd || disabled}
-            className="cursor-pointer rounded-[10px] border border-[#E5E5E5] px-[14px] py-[7px] text-[12px] text-[#35373C] transition-colors hover:bg-[#F6F6F6] disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer rounded-full border border-[#DFD7C6] px-4 py-1.5 text-[12px] text-[#3F3830] transition-colors hover:border-[#14110E] hover:text-[#14110E] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#DFD7C6]"
           >
             Next
           </button>

@@ -4,6 +4,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
+import {
+  PageHeader,
+  SearchInput,
+  TableShell,
+  Badge,
+  EmptyState,
+} from '../ui';
 
 interface CreatorCode {
   id: string;
@@ -103,177 +110,159 @@ export default function CreatorCodesClient({
 
   return (
     <GridContainer>
-      <div className="px-[16px]">
-        <div className="py-[22px]">
-          <span className="text-[20px] font-medium">Creator Codes</span>
+      <PageHeader
+        eyebrow="The stage"
+        title="Creator codes"
+        description="Every code is a credit. Each one below carries its owner, tier, commission rate and the sales it has moved."
+      />
+
+      {/* The hairline three-up, straight from /about's product section. */}
+      <div className="ad-grid-hairline mb-6 grid sm:grid-cols-3">
+        <div className="bg-[#FBF9F4] p-6">
+          <p className="ad-eyebrow">Total codes</p>
+          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+            {stats.total}
+          </p>
+          <p className="mt-2 text-[12px] text-[#8C8377]">Across all creators</p>
+        </div>
+        <div className="bg-[#FBF9F4] p-6">
+          <p className="ad-eyebrow">Active</p>
+          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+            {stats.active}
+          </p>
+          <p className="mt-2 text-[12px] text-[#8C8377]">Currently usable</p>
+        </div>
+        <div className="bg-[#FBF9F4] p-6">
+          <p className="ad-eyebrow">Sales generated</p>
+          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+            {ngn(stats.sales)}
+          </p>
+          <p className="mt-2 text-[12px] text-[#8C8377]">
+            Attributed to the codes on this page
+          </p>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="mb-[25px]">
-        <div className="rounded-[20px] bg-white px-[30px] py-[30px] text-[#121212]">
-          <div className="grid grid-cols-1 divide-y divide-gray-200 md:grid-cols-3 md:divide-x md:divide-y-0">
-            <div className="space-y-[12px] py-4 md:py-0 md:pr-6">
-              <div className="text-[14px] text-[#AFB1B0]">Total codes</div>
-              <div className="text-[22px] font-medium">{stats.total}</div>
-              <div className="text-[14px] text-[#0072BB]">Across all creators</div>
-            </div>
-            <div className="space-y-[12px] py-4 md:px-6 md:py-0">
-              <div className="text-[14px] text-[#AFB1B0]">Active</div>
-              <div className="text-[22px] font-medium">{stats.active}</div>
-              <div className="text-[14px] text-[#32AC5B]">Currently usable</div>
-            </div>
-            <div className="space-y-[12px] py-4 md:py-0 md:pl-6">
-              <div className="text-[14px] text-[#AFB1B0]">
-                Sales generated (this page)
-              </div>
-              <div className="text-[22px] font-medium">{ngn(stats.sales)}</div>
-              <div className="text-[14px] text-[#AFB1B0]">
-                Attributed to these codes
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="mb-5 flex justify-end">
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search code or creator…"
+          label="Search creator codes"
+        />
       </div>
 
-      {/* Table card */}
-      <div>
-        <div className="rounded-t-[20px] border-b border-[#AEAEB266]/40 bg-white px-[24px] pt-[24px] pb-[16px] text-[#121212]">
-          <div className="flex flex-col-reverse items-start justify-between gap-3 sm:flex-row sm:items-center">
-            <div className="text-[14px] text-[#8E8E93]">
-              Every creator code, its owner, tier, commission rate and
-              performance.
-            </div>
-            <input
-              type="text"
-              placeholder="Search code or creator…"
-              aria-label="Search creator codes"
-              className="h-[36px] w-full rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB] sm:w-[260px]"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="rounded-b-[20px] bg-white px-[24px] pb-[10px]">
-          {isLoading ? (
-            <div className="py-12 text-center text-sm text-gray-500">Loading…</div>
-          ) : codes.length === 0 ? (
-            <div className="flex flex-col items-center px-[24px] py-[48px] text-center">
-              <p className="text-base font-medium text-gray-500">
-                No creator codes found
-              </p>
-              <p className="mt-1 text-sm text-gray-400">
-                {search
-                  ? 'Try a different search.'
-                  : 'Codes appear here once creators are onboarded.'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-[13px]">
-                <thead>
-                  <tr>
-                    <th className="thead">Creator</th>
-                    <th className="thead">Code</th>
-                    <th className="thead">Tier</th>
-                    <th className="thead">Rate</th>
-                    <th className="thead">Uses</th>
-                    <th className="thead">Total sales</th>
-                    <th className="thead">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {codes.map((c) => (
-                    <tr key={c.id} className="border-t border-[#F5F5F5]">
-                      <td className="td">
-                        <div className="flex items-center gap-x-[8px]">
-                          <img
-                            src={
-                              c.owner_avatar ||
-                              `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                                fullName(c),
-                              )}&background=EAEAEA&color=121212`
-                            }
-                            alt=""
-                            className="size-8 shrink-0 rounded-full object-cover"
-                          />
-                          <div className="min-w-0">
-                            <div className="truncate font-medium text-[#121212]">
-                              {fullName(c)}
-                            </div>
-                            <div className="truncate text-[11px] text-[#AFB1B0]">
-                              {c.owner_email}
-                            </div>
-                          </div>
+      <TableShell>
+        {isLoading ? (
+          <EmptyState title="Loading…" />
+        ) : codes.length === 0 ? (
+          <EmptyState
+            title="No creator codes found"
+            hint={
+              search
+                ? 'Try a different search.'
+                : 'Codes appear here once creators are onboarded.'
+            }
+          />
+        ) : (
+          <table className="min-w-full text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-[#E2DBCC]">
+                <th className="thead pl-6">Creator</th>
+                <th className="thead">Code</th>
+                <th className="thead">Tier</th>
+                <th className="thead">Rate</th>
+                <th className="thead">Uses</th>
+                <th className="thead">Total sales</th>
+                <th className="thead pr-6">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {codes.map((c) => (
+                <tr key={c.id} className="ad-row">
+                  <td className="td pl-6">
+                    <div className="flex items-center gap-x-3">
+                      <img
+                        src={
+                          c.owner_avatar ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                            fullName(c),
+                          )}&background=EFEBE1&color=14110E`
+                        }
+                        alt=""
+                        className="size-8 shrink-0 rounded-full object-cover"
+                      />
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-[#14110E]">
+                          {fullName(c)}
                         </div>
-                      </td>
-                      <td className="td">
-                        <button
-                          onClick={() => copyCode(c.code)}
-                          title="Copy code"
-                          className="rounded-[6px] bg-[#F5F5F5] px-[8px] py-[4px] font-mono text-[12px] font-medium tracking-wide text-[#121212] transition-colors hover:bg-[#E8E8E8]"
-                        >
-                          {c.code}
-                        </button>
-                      </td>
-                      <td className="td">
-                        <span className="rounded-full bg-[#C0CBF2] px-[8px] py-[2px] text-[11px] font-medium text-[#0072BB]">
-                          {c.tier_name || 'No tier'}
-                        </span>
-                      </td>
-                      <td className="td font-medium">{c.current_rate}%</td>
-                      <td className="td">{c.usage_count ?? 0}</td>
-                      <td className="td">{ngn(c.total_sales)}</td>
-                      <td className="td">
-                        {c.active ? (
-                          <span className="rounded-full bg-[#CCEAD6] px-[8px] py-[2px] text-[11px] font-medium text-[#32AC5B]">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-[#E5C6BF] px-[8px] py-[2px] text-[11px] font-medium text-[#991C00]">
-                            Inactive
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {pagination.total > pagination.limit && (
-          <div className="mt-3 flex items-center justify-between px-2 text-sm text-gray-600">
-            <span>
-              Showing {pagination.offset + 1}–
-              {Math.min(pagination.offset + pagination.limit, pagination.total)}{' '}
-              of {pagination.total}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => load(pagination.offset - pagination.limit)}
-                disabled={pagination.offset === 0 || isLoading}
-                className="rounded-md border border-gray-300 px-3 py-1 disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => load(pagination.offset + pagination.limit)}
-                disabled={
-                  pagination.offset + pagination.limit >= pagination.total ||
-                  isLoading
-                }
-                className="rounded-md border border-gray-300 px-3 py-1 disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+                        <div className="truncate text-[11px] text-[#8C8377]">
+                          {c.owner_email}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="td">
+                    <button
+                      onClick={() => copyCode(c.code)}
+                      title="Copy code"
+                      className="rounded-full border border-[#DFD7C6] bg-[#EFEBE1] px-3 py-1 font-mono text-[12px] tracking-[0.08em] text-[#14110E] transition-colors hover:border-[#9C6F2E] hover:text-[#9C6F2E]"
+                    >
+                      {c.code}
+                    </button>
+                  </td>
+                  <td className="td">
+                    <Badge tone={c.tier_name ? 'warn' : 'neutral'}>
+                      {c.tier_name || 'No tier'}
+                    </Badge>
+                  </td>
+                  <td className="td ad-display text-[16px] text-[#14110E]">
+                    {c.current_rate}%
+                  </td>
+                  <td className="td">{c.usage_count ?? 0}</td>
+                  <td className="td">{ngn(c.total_sales)}</td>
+                  <td className="td pr-6">
+                    <Badge tone={c.active ? 'good' : 'neutral'}>
+                      {c.active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
-      </div>
+      </TableShell>
+
+      {pagination.total > pagination.limit && (
+        <div className="mt-4 flex flex-col gap-y-3 border-t border-[#E2DBCC] pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
+            Showing <span className="text-[#14110E]">{pagination.offset + 1}</span>–
+            <span className="text-[#14110E]">
+              {Math.min(pagination.offset + pagination.limit, pagination.total)}
+            </span>{' '}
+            of <span className="text-[#14110E]">{pagination.total}</span> codes
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => load(pagination.offset - pagination.limit)}
+              disabled={pagination.offset === 0 || isLoading}
+              className="cursor-pointer rounded-full border border-[#DFD7C6] px-4 py-1.5 text-[12px] text-[#3F3830] transition-colors hover:border-[#14110E] hover:text-[#14110E] disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => load(pagination.offset + pagination.limit)}
+              disabled={
+                pagination.offset + pagination.limit >= pagination.total ||
+                isLoading
+              }
+              className="cursor-pointer rounded-full border border-[#DFD7C6] px-4 py-1.5 text-[12px] text-[#3F3830] transition-colors hover:border-[#14110E] hover:text-[#14110E] disabled:cursor-not-allowed disabled:opacity-35"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </GridContainer>
   );
 }

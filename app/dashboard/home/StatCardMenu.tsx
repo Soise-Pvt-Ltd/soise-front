@@ -12,7 +12,7 @@ export interface StatMenuItem {
 
 export default function StatCardMenu({
   items,
-  color = '#121212',
+  color = '#14110E',
   ariaLabel = 'Card options',
 }: {
   items: StatMenuItem[];
@@ -54,7 +54,7 @@ export default function StatCardMenu({
       {open && (
         <div
           role="menu"
-          className="absolute top-full right-0 z-30 mt-1 w-48 overflow-hidden rounded-[10px] border border-gray-100 bg-white py-1 text-[#121212] shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+          className="absolute top-full right-0 z-30 mt-1 w-48 overflow-hidden rounded-[10px] border border-[#E2DBCC] bg-[#FBF9F4] py-1 text-[#14110E] shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
         >
           {items.map((item, i) => (
             <button
@@ -66,7 +66,7 @@ export default function StatCardMenu({
                 if (item.onClick) item.onClick();
                 else if (item.href) router.push(item.href);
               }}
-              className="block w-full px-4 py-2 text-left text-[13px] text-[#35373C] transition-colors hover:bg-[#F5F5F5] hover:text-[#0072BB]"
+              className="block w-full px-4 py-2 text-left text-[13px] text-[#3F3830] transition-colors hover:bg-[#EFEBE1] hover:text-[#9C6F2E]"
             >
               {item.label}
             </button>

@@ -162,7 +162,7 @@ export default function RowActionMenu({
         transform: `translate(-100%, ${coords?.openUp ? '-100%' : '0'})`,
         visibility: coords ? 'visible' : 'hidden',
       }}
-      className={`ring-opacity-5 z-[1000] ${widthClass} origin-top-right rounded-md bg-white text-sm shadow-md ring-1 ring-[#F5F5F5] transition-opacity duration-150 focus:outline-none`}
+      className={`ring-opacity-5 z-[1000] ${widthClass} origin-top-right rounded-md bg-[#FBF9F4] text-sm shadow-md ring-1 ring-[#EFEBE1] transition-opacity duration-150 focus:outline-none`}
     >
       <div className="py-1">{children}</div>
     </div>,

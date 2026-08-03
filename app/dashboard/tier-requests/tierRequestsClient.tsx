@@ -5,6 +5,14 @@ import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchTierRequests, reviewTierRequest } from './actions';
 import PaginationBar from '../PaginationBar';
+import {
+  PageHeader,
+  FilterPills,
+  SearchInput,
+  TableShell,
+  StatusBadge,
+  EmptyState,
+} from '../ui';
 import type { PaginationMeta } from '@/lib/pagination';
 
 type Req = {
@@ -21,12 +29,9 @@ type Req = {
 
 type Tier = { id: string; name: string; level?: number; base_rate?: number; max_rate?: number };
 
+// Status vocabulary and its colours now live in ../ui (STATUS_TONE), so a
+// "pending" pill looks the same here as it does on orders and applications.
 const STATUSES = ['pending', 'approved', 'rejected', 'all'] as const;
-const statusStyle: Record<string, string> = {
-  pending: 'bg-[#FFF4E5] text-[#B25E09]',
-  approved: 'bg-[#E7F6EC] text-[#1A7F37]',
-  rejected: 'bg-[#FDECEC] text-[#C0362C]',
-};
 
 function shortId(id: string) {
   return (id || '').split(':').pop() || id;
@@ -117,120 +122,129 @@ export default function TierRequestsClient({
 
   return (
     <GridContainer>
-      <div className="px-2">
-        <h1 className="text-[22px] font-bold text-[#121212]">Tier-Upgrade Requests</h1>
-        <p className="mt-1 text-[14px] text-[#8E8E93]">
-          Creators submit their latest social following to request a higher commission
-          tier. Approve to apply their followers and auto-evaluate the tier — or pick a
-          tier explicitly. Auto-evaluate is used when no tier is chosen.
-        </p>
+      <PageHeader
+        eyebrow="The stage"
+        title="Tier-upgrade requests"
+        description="Creators submit their latest social following to request a higher commission tier. Approving applies their followers and auto-evaluates the tier — or pick one explicitly."
+      />
 
-        <div className="mt-5 flex gap-2">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              onClick={() => load(s)}
-              className={`rounded-full px-4 py-1.5 text-[13px] font-medium capitalize ${
-                status === s ? 'bg-[#0072BB] text-white' : 'bg-[#F5F5F5] text-[#8E8E93] hover:text-[#121212]'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-4">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search creator, email or code…"
-            aria-label="Search tier requests"
-            className="h-[38px] w-full max-w-[320px] rounded-[10px] border-0 bg-[#F5F5F5] px-3 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB]"
-          />
-        </div>
-
-        <div className="mt-5 overflow-x-auto rounded-[12px] border border-[#F0F0F0]">
-          <table className="w-full min-w-[860px]">
-            <thead>
-              <tr>
-                <th className="thead">Creator</th>
-                <th className="thead">Code / current tier</th>
-                <th className="thead">Reported followers</th>
-                <th className="thead">Status</th>
-                <th className="thead">Decision</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reqs.length === 0 ? (
-                <tr><td className="td p-6 text-center text-[#8E8E93]" colSpan={5}>No {status === 'all' ? '' : status} requests.</td></tr>
-              ) : (
-                reqs.map((req) => (
-                  <tr key={req.id} className="border-t border-[#F0F0F0]">
-                    <td className="td font-medium text-[#121212]">@{req.requester_username || '—'}</td>
-                    <td className="td">
-                      <div>{req.code || '—'}</div>
-                      <div className="text-[12px] text-[#8E8E93]">
-                        {req.current_tier || 'no tier'} · {req.current_rate ?? '—'}%
-                      </div>
-                    </td>
-                    <td className="td">
-                      <div className="font-medium">{(req.follower_count ?? 0).toLocaleString()}</div>
-                      {req.social_handle && <div className="text-[12px] text-[#8E8E93]">{req.social_handle}</div>}
-                      {req.note && <div className="text-[12px] text-[#8E8E93]">“{req.note}”</div>}
-                    </td>
-                    <td className="td">
-                      <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium capitalize ${statusStyle[req.status] || ''}`}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td className="td">
-                      {req.status === 'pending' ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <select
-                            value={tierChoice[req.id] || ''}
-                            onChange={(e) => setTierChoice((p) => ({ ...p, [req.id]: e.target.value }))}
-                            className="rounded-[8px] border border-[#E5E5E5] px-2 py-1.5 text-[13px]"
-                          >
-                            <option value="">Auto-evaluate</option>
-                            {tiers.map((t) => (
-                              <option key={t.id} value={shortId(t.id)}>
-                                {t.name} ({t.base_rate}%)
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={() => review(req, 'approve')}
-                            disabled={busyId === req.id}
-                            className="rounded-[8px] bg-[#1A7F37] px-3 py-1.5 text-[13px] font-medium text-white disabled:opacity-50"
-                          >
-                            {busyId === req.id ? '…' : 'Approve'}
-                          </button>
-                          <button
-                            onClick={() => review(req, 'reject')}
-                            disabled={busyId === req.id}
-                            className="rounded-[8px] border border-[#C0362C] px-3 py-1.5 text-[13px] font-medium text-[#C0362C] disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-[13px] text-[#8E8E93]">Reviewed</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <PaginationBar
-          pagination={pagination}
-          onChange={(offset) => load(status, search, offset)}
-          disabled={loading}
-          noun="requests"
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <FilterPills
+          options={STATUSES}
+          value={status}
+          onChange={(s) => load(s)}
+          label="Filter by status"
+        />
+        <SearchInput
+          value={search}
+          onChange={setSearch}
+          placeholder="Search creator, email or code…"
+          label="Search tier requests"
         />
       </div>
+
+      <TableShell>
+        <table className="w-full min-w-[860px]">
+          <thead>
+            <tr className="border-b border-[#E2DBCC]">
+              <th className="thead pl-6">Creator</th>
+              <th className="thead">Code / current tier</th>
+              <th className="thead">Reported followers</th>
+              <th className="thead">Status</th>
+              <th className="thead pr-6">Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reqs.length === 0 ? (
+              <tr>
+                <td colSpan={5}>
+                  <EmptyState
+                    title="Nothing to review"
+                    hint={
+                      status === 'all'
+                        ? 'No creator has requested a tier upgrade yet.'
+                        : `No ${status} requests right now.`
+                    }
+                  />
+                </td>
+              </tr>
+            ) : (
+              reqs.map((req) => (
+                <tr key={req.id} className="ad-row">
+                  <td className="td pl-6 font-medium text-[#14110E]">
+                    @{req.requester_username || '—'}
+                  </td>
+                  <td className="td">
+                    <div>{req.code || '—'}</div>
+                    <div className="text-[12px] text-[#8C8377]">
+                      {req.current_tier || 'no tier'} · {req.current_rate ?? '—'}%
+                    </div>
+                  </td>
+                  <td className="td">
+                    <div className="ad-display text-[17px] text-[#14110E]">
+                      {(req.follower_count ?? 0).toLocaleString()}
+                    </div>
+                    {req.social_handle && (
+                      <div className="text-[12px] text-[#8C8377]">{req.social_handle}</div>
+                    )}
+                    {req.note && (
+                      <div className="text-[12px] text-[#8C8377] italic">“{req.note}”</div>
+                    )}
+                  </td>
+                  <td className="td">
+                    <StatusBadge status={req.status} />
+                  </td>
+                  <td className="td pr-6">
+                    {req.status === 'pending' ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={tierChoice[req.id] || ''}
+                          onChange={(e) =>
+                            setTierChoice((p) => ({ ...p, [req.id]: e.target.value }))
+                          }
+                          aria-label={`Tier for @${req.requester_username || 'creator'}`}
+                          className="h-[34px] rounded-full border border-[#DFD7C6] bg-transparent py-0 pr-7 pl-3 text-[12px] text-[#3F3830] transition-colors outline-none hover:border-[#9C6F2E] focus:border-[#9C6F2E] focus:ring-0"
+                        >
+                          <option value="">Auto-evaluate</option>
+                          {tiers.map((t) => (
+                            <option key={t.id} value={shortId(t.id)}>
+                              {t.name} ({t.base_rate}%)
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => review(req, 'approve')}
+                          disabled={busyId === req.id}
+                          className="ad-btn-primary !px-4 !py-1.5 !text-[12px]"
+                        >
+                          {busyId === req.id ? '…' : 'Approve'}
+                        </button>
+                        <button
+                          onClick={() => review(req, 'reject')}
+                          disabled={busyId === req.id}
+                          className="ad-btn-danger !px-4 !py-1.5 !text-[12px]"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[12px] tracking-[0.14em] text-[#8C8377] uppercase">
+                        Reviewed
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </TableShell>
+      <PaginationBar
+        pagination={pagination}
+        onChange={(offset) => load(status, search, offset)}
+        disabled={loading}
+        noun="requests"
+      />
     </GridContainer>
   );
 }

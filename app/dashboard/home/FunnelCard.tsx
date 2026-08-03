@@ -30,45 +30,47 @@ export default function FunnelCard({ funnel }: { funnel: Funnel | null }) {
   const widest = Math.max(...steps.map((s) => s.value), 1);
 
   return (
-    <div className="mt-[24px] rounded-[20px] bg-white px-[24px] py-[24px]">
-      <div className="flex flex-wrap items-baseline justify-between gap-y-2">
+    <div className="ad-panel mt-6 p-6">
+      <div className="flex flex-wrap items-end justify-between gap-y-4">
         <div>
-          <div className="text-[14px] font-medium text-[#35373C]">
-            Cart conversion
-          </div>
-          <div className="mt-1 text-[12px] text-[#AFB1B0]">
+          <p className="ad-eyebrow">Cart conversion</p>
+          <p className="mt-2 text-[12px] text-[#8C8377]">
             Last {funnel.window_days} days
-          </div>
+          </p>
         </div>
-        <div className="flex items-end gap-x-6">
+        <div className="flex items-end gap-x-8">
           <div>
-            <div className="text-[22px] font-medium text-[#35373C]">
+            <p className="ad-display text-[26px] leading-none text-[#14110E]">
               {funnel.cart_conversion_rate}%
-            </div>
-            <div className="text-[12px] text-[#AFB1B0]">bag → paid</div>
+            </p>
+            <p className="mt-1.5 text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
+              bag → paid
+            </p>
           </div>
           <div>
-            <div className="text-[22px] font-medium text-[#35373C]">
+            <p className="ad-display text-[26px] leading-none text-[#14110E]">
               {funnel.checkout_completion_rate}%
-            </div>
-            <div className="text-[12px] text-[#AFB1B0]">checkout → paid</div>
+            </p>
+            <p className="mt-1.5 text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
+              checkout → paid
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-[20px] space-y-[10px]">
+      <div className="mt-7 space-y-3">
         {steps.map((step) => (
-          <div key={step.label} className="flex items-center gap-x-3">
-            <div className="w-[120px] shrink-0 text-[12px] text-[#AFB1B0]">
+          <div key={step.label} className="flex items-center gap-x-4">
+            <div className="w-[130px] shrink-0 text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
               {step.label}
             </div>
-            <div className="h-[10px] flex-1 overflow-hidden rounded-full bg-[#F2F2F2]">
+            <div className="h-[6px] flex-1 overflow-hidden rounded-full bg-[#EFEAE0]">
               <div
-                className="h-full rounded-full bg-[#0072BB]"
+                className="h-full rounded-full bg-[#9C6F2E]"
                 style={{ width: `${Math.round((step.value / widest) * 100)}%` }}
               />
             </div>
-            <div className="w-[48px] shrink-0 text-right text-[12px] font-medium text-[#35373C]">
+            <div className="ad-display w-[52px] shrink-0 text-right text-[16px] text-[#14110E]">
               {step.value}
             </div>
           </div>
@@ -76,7 +78,7 @@ export default function FunnelCard({ funnel }: { funnel: Funnel | null }) {
       </div>
 
       {funnel.abandoned_carts > 0 && (
-        <p className="mt-[16px] text-[12px] text-[#8B5E3C]">
+        <p className="mt-6 border-t border-[#E2DBCC] pt-4 text-[12px] leading-relaxed text-[#8A6218]">
           {funnel.abandoned_carts} bag
           {funnel.abandoned_carts === 1 ? '' : 's'} filled but never checked out.
           Anyone who left an email gets one recovery reminder.
