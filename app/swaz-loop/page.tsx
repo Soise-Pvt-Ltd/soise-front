@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   ...NOINDEX,
 };
 
+const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+
 function CenteredMessage({
   title,
   body,
@@ -30,17 +32,19 @@ function CenteredMessage({
 }) {
   return (
     <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-6 py-[64px] text-center">
-      <span className="mb-3 inline-flex items-center gap-x-2 rounded-full bg-[#E8F1F9] px-3 py-1 text-[11px] font-medium tracking-wide text-[#0072BB] uppercase">
-        Swaz Loop
-      </span>
-      <h1 className="font-display text-[32px] leading-tight text-[#121212]">
+      <p className="text-[12px] font-medium uppercase tracking-[0.34em] text-[#9C6F2E]">
+        The Swaz Loop
+      </p>
+      <h1 className="mt-5 text-[34px] leading-[1.08] tracking-tight sm:text-[44px]" style={serif}>
         {title}
       </h1>
-      <p className="mt-3 max-w-[440px] text-[14px] text-[#8E8E93]">{body}</p>
+      <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-[#5C544A]">
+        {body}
+      </p>
       {cta && (
         <Link
           href={cta.href}
-          className="btn_creators_solid mt-8 flex max-w-[280px] items-center justify-center"
+          className="mt-8 inline-flex h-[53px] items-center justify-center rounded-[10px] bg-[#14110E] px-10 text-[13px] font-bold uppercase text-[#F4F1EA] transition-all duration-300 ease-out hover:bg-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.98]"
         >
           {cta.label}
         </Link>
@@ -56,14 +60,16 @@ export default async function SwazLoopPage() {
     return (
       <>
         <Nav />
-        <CenteredMessage
-          title="Invite friends, earn store credit"
-          body="Share your link and when a friend places their first paid order, you earn 10% of it as store credit (up to ₦10,000) — they get ₦1,000 off too. Log in to get your unique link."
-          cta={{
-            href: '/auth/login?callbackUrl=/swaz-loop',
-            label: 'Log in to get your link',
-          }}
-        />
+        <main className="bg-[#F4F1EA] text-[#14110E]">
+          <CenteredMessage
+            title="Invite friends, earn store credit"
+            body="Share your link and when a friend places their first paid order, you earn 10% of it as store credit (up to ₦10,000) — they get ₦1,000 off too. Log in to get your unique link."
+            cta={{
+              href: '/auth/login?callbackUrl=/swaz-loop',
+              label: 'Log in to get your link',
+            }}
+          />
+        </main>
         <Footer />
       </>
     );
@@ -75,11 +81,13 @@ export default async function SwazLoopPage() {
     return (
       <>
         <Nav />
-        <CenteredMessage
-          title="We couldn't load your Swaz Loop"
-          body="Something went wrong fetching your referral details. Please refresh the page or try again shortly."
-          cta={{ href: '/swaz-loop', label: 'Try again' }}
-        />
+        <main className="bg-[#F4F1EA] text-[#14110E]">
+          <CenteredMessage
+            title="We couldn’t load your Swaz Loop"
+            body="Something went wrong fetching your referral details. Please refresh the page or try again shortly."
+            cta={{ href: '/swaz-loop', label: 'Try again' }}
+          />
+        </main>
         <Footer />
       </>
     );
@@ -88,7 +96,9 @@ export default async function SwazLoopPage() {
   return (
     <>
       <Nav />
-      <SwazLoopClient referral={result.data} />
+      <main className="bg-[#F4F1EA] text-[#14110E]">
+        <SwazLoopClient referral={result.data} />
+      </main>
       <Footer />
     </>
   );

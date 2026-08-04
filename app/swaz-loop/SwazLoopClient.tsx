@@ -10,6 +10,8 @@ interface SwazLoopClientProps {
   referral: MyReferral;
 }
 
+const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+
 function naira(amount: number): string {
   return `₦${Math.round(amount ?? 0).toLocaleString('en-NG')}`;
 }
@@ -77,83 +79,86 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-[20px] py-[40px] md:py-[64px]">
+    <div className="mx-auto max-w-3xl px-[20px] py-[48px] md:py-[72px]">
       {/* Header / offer */}
       <div className="text-center">
-        <span className="inline-flex items-center gap-x-2 rounded-full bg-[#E8F1F9] px-3 py-1 text-[11px] font-medium tracking-wide text-[#0072BB] uppercase">
-          Swaz Loop
-        </span>
-        <h1 className="font-display mt-4 text-[34px] leading-tight text-[#121212] md:text-[44px]">
+        <p className="text-[12px] font-medium uppercase tracking-[0.34em] text-[#9C6F2E]">
+          The Swaz Loop
+        </p>
+        <h1
+          className="mx-auto mt-5 text-[34px] leading-[1.08] tracking-tight md:text-[48px]"
+          style={serif}
+        >
           Invite friends, earn store credit
         </h1>
-        <p className="mx-auto mt-4 max-w-[540px] text-[15px] leading-relaxed text-[#35373C]">
+        <p className="mx-auto mt-5 max-w-[540px] text-[15px] leading-relaxed text-[#5C544A] sm:text-[16px]">
           Share your link. When a friend places their{' '}
-          <span className="font-semibold text-[#121212]">FIRST paid order</span>,
+          <span className="font-semibold text-[#14110E]">first paid order</span>,
           you earn{' '}
-          <span className="font-semibold text-[#121212]">
+          <span className="font-semibold text-[#14110E]">
             {referrerPercent}% of it as store credit
           </span>{' '}
           (up to {naira(referrerCap)}). They get{' '}
-          <span className="font-semibold text-[#121212]">
+          <span className="font-semibold text-[#14110E]">
             {naira(welcomeCredit)} off
           </span>{' '}
           their next order too. Store credit is spendable at checkout.
         </p>
       </div>
 
-      {/* Store credit balance */}
-      <div className="mt-[36px] rounded-[20px] bg-gradient-to-br from-[#0072BB] to-[#2D2C54] p-8 text-white">
-        <p className="text-[12px] font-medium tracking-wide text-white/75 uppercase">
+      {/* Store credit balance — the house dark panel */}
+      <div className="mt-[40px] bg-[#0E0E10] p-8 text-[#F4F1EA] sm:p-10">
+        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#C4AA6E]">
           Your store credit balance
         </p>
-        <p className="mt-2 text-[48px] leading-none font-bold md:text-[56px]">
+        <p className="mt-3 text-[52px] leading-none md:text-[64px]" style={serif}>
           {naira(store_credit_balance)}
         </p>
-        <p className="mt-3 text-[13px] text-white/80">
+        <p className="mt-4 text-[13px] text-[#B7B2A6]">
           Spendable at checkout — toggle it on in your order summary.
         </p>
       </div>
 
       {/* Stats */}
-      <div className="mt-[24px] grid grid-cols-2 gap-[16px]">
-        <div className="rounded-[16px] border border-[#EAEAEA] p-5">
-          <p className="text-[12px] tracking-wide text-[#8E8E93] uppercase">
+      <div className="mt-[20px] grid grid-cols-2 gap-[16px]">
+        <div className="border border-[#DFD7C6] bg-[#FBF9F4] p-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
             Friends converted
           </p>
-          <p className="mt-2 text-[28px] font-bold text-[#121212]">
+          <p className="mt-2 text-[30px] leading-none" style={serif}>
             {friends_converted ?? 0}
           </p>
         </div>
-        <div className="rounded-[16px] border border-[#EAEAEA] p-5">
-          <p className="text-[12px] tracking-wide text-[#8E8E93] uppercase">
+        <div className="border border-[#DFD7C6] bg-[#FBF9F4] p-5">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
             Total earned
           </p>
-          <p className="mt-2 text-[28px] font-bold text-[#121212]">
+          <p className="mt-2 text-[30px] leading-none" style={serif}>
             {naira(total_earned)}
           </p>
         </div>
       </div>
 
       {/* Share link + code */}
-      <div className="mt-[24px] rounded-[20px] border border-[#EAEAEA] p-6">
-        <p className="mb-[12px] flex items-center gap-x-2 text-[13px] font-medium text-[#121212]">
+      <div className="mt-[20px] border border-[#DFD7C6] bg-[#FBF9F4] p-6 sm:p-7">
+        <p className="mb-[14px] flex items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
           <ChainIcon />
           Your shareable link
         </p>
         <div className="flex flex-col gap-x-3 gap-y-3 sm:flex-row sm:items-center">
-          <div className="flex min-w-0 flex-1 items-center rounded-[10px] bg-[#F5F5F5] px-[16px] py-[14px]">
-            <span className="truncate text-[13px] text-[#35373C]">
+          <div className="flex min-w-0 flex-1 items-center border border-[#EAE3D4] bg-[#F4F1EA] px-[16px] py-[14px]">
+            <span className="truncate text-[13px] text-[#5C544A]">
               {referral_link}
             </span>
           </div>
           <button
             type="button"
             onClick={() => copy(referral_link, setLinkCopied, 'Invite link')}
-            className="flex h-[48px] shrink-0 items-center justify-center gap-x-2 rounded-[10px] border border-[#121212] px-[20px] text-[12px] font-bold text-[#121212] uppercase transition-colors hover:bg-[#121212] hover:text-white"
+            className="flex h-[48px] shrink-0 items-center justify-center gap-x-2 rounded-[10px] border border-[#14110E] px-[20px] text-[12px] font-bold uppercase text-[#14110E] transition-colors hover:bg-[#14110E] hover:text-[#F4F1EA]"
             title="Copy invite link"
           >
             {linkCopied ? (
-              <span className="text-green-600">Copied!</span>
+              <span className="text-[#9C6F2E]">Copied!</span>
             ) : (
               <>
                 <CopyIcon /> Copy
@@ -165,26 +170,28 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
         <button
           type="button"
           onClick={handleShare}
-          className="btn_creators_solid mt-[16px] flex items-center justify-center gap-x-2 !text-[12px]"
+          className="mt-[16px] flex h-[53px] w-full items-center justify-center gap-x-2 rounded-[10px] bg-[#14110E] text-[12px] font-bold uppercase text-[#F4F1EA] transition-all duration-300 ease-out hover:bg-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.98]"
         >
           Share your link <ShareIcon />
         </button>
 
-        <div className="mt-[20px] flex items-center justify-between border-t border-[#EAEAEA] pt-[16px]">
+        <div className="mt-[20px] flex items-center justify-between border-t border-[#EAE3D4] pt-[16px]">
           <div>
-            <p className="text-[12px] text-[#8E8E93]">Referral code</p>
-            <span className="font-semibold tracking-widest text-[#0072BB] uppercase">
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
+              Referral code
+            </p>
+            <span className="font-semibold tracking-widest text-[#9C6F2E] uppercase">
               {referral_code}
             </span>
           </div>
           <button
             type="button"
             onClick={() => copy(referral_code, setCodeCopied, 'Referral code')}
-            className="flex items-center gap-x-1 text-[#8E8E93] transition-colors hover:text-[#121212]"
+            className="flex items-center gap-x-1 text-[#8A8271] transition-colors hover:text-[#14110E]"
             title="Copy referral code"
           >
             {codeCopied ? (
-              <span className="text-sm font-medium text-green-600">Copied!</span>
+              <span className="text-sm font-medium text-[#9C6F2E]">Copied!</span>
             ) : (
               <CopyIcon />
             )}
@@ -193,8 +200,10 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
       </div>
 
       {/* How it works */}
-      <div className="mt-[40px]">
-        <h2 className="text-[20px] font-bold text-[#121212]">How it works</h2>
+      <div className="mt-[48px]">
+        <h2 className="text-[24px] leading-snug" style={serif}>
+          How it works
+        </h2>
         <div className="mt-[20px] grid gap-[16px] sm:grid-cols-3">
           {[
             {
@@ -215,15 +224,15 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
           ].map((step) => (
             <div
               key={step.n}
-              className="rounded-[16px] border border-[#EAEAEA] p-5"
+              className="border border-[#DFD7C6] bg-[#FBF9F4] p-5"
             >
-              <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#E8F1F9] text-[15px] font-bold text-[#0072BB]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#9C6F2E] text-[13px] font-semibold text-[#9C6F2E]">
                 {step.n}
-              </div>
-              <p className="mt-3 text-[14px] font-semibold text-[#121212]">
+              </span>
+              <p className="mt-3 text-[14px] font-semibold text-[#14110E]">
                 {step.title}
               </p>
-              <p className="mt-2 text-[13px] leading-relaxed text-[#8E8E93]">
+              <p className="mt-2 text-[13px] leading-relaxed text-[#8A8271]">
                 {step.body}
               </p>
             </div>
@@ -232,22 +241,22 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
       </div>
 
       {/* Reward history */}
-      <div className="mt-[40px]">
-        <h2 className="text-[20px] font-bold text-[#121212]">
+      <div className="mt-[48px]">
+        <h2 className="text-[24px] leading-snug" style={serif}>
           Referral rewards
         </h2>
         {history && history.length > 0 ? (
-          <ul className="mt-[16px] divide-y divide-[#EAEAEA] rounded-[16px] border border-[#EAEAEA]">
+          <ul className="mt-[16px] divide-y divide-[#EAE3D4] border border-[#DFD7C6] bg-[#FBF9F4]">
             {history.map((item, i) => (
               <li
                 key={i}
                 className="flex items-center justify-between px-5 py-4"
               >
                 <div>
-                  <p className="text-[14px] font-medium text-[#121212]">
+                  <p className="text-[14px] font-medium text-[#14110E]">
                     Friend&apos;s order · {naira(item.order_total)}
                   </p>
-                  <p className="text-[12px] text-[#8E8E93]">
+                  <p className="text-[12px] text-[#8A8271]">
                     {formatDate(item.created_at)} ·{' '}
                     <span className="capitalize">{item.status}</span>
                   </p>
@@ -256,8 +265,8 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
                   className={`text-[14px] font-semibold ${
                     item.status?.toLowerCase() === 'paid' ||
                     item.status?.toLowerCase() === 'credited'
-                      ? 'text-[#32AC5B]'
-                      : 'text-[#8E8E93]'
+                      ? 'text-[#9C6F2E]'
+                      : 'text-[#8A8271]'
                   }`}
                 >
                   +{naira(item.reward_value)}
@@ -266,8 +275,8 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
             ))}
           </ul>
         ) : (
-          <div className="mt-[16px] rounded-[16px] border border-dashed border-[#EAEAEA] px-5 py-8 text-center">
-            <p className="text-[14px] text-[#8E8E93]">
+          <div className="mt-[16px] border border-dashed border-[#DFD7C6] px-5 py-8 text-center">
+            <p className="text-[14px] text-[#8A8271]">
               No rewards yet. Share your link to start earning store credit.
             </p>
           </div>
@@ -276,11 +285,11 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
 
       {/* Credit ledger */}
       {ledger && ledger.length > 0 && (
-        <div className="mt-[32px]">
-          <h2 className="text-[20px] font-bold text-[#121212]">
+        <div className="mt-[40px]">
+          <h2 className="text-[24px] leading-snug" style={serif}>
             Store credit activity
           </h2>
-          <ul className="mt-[16px] divide-y divide-[#EAEAEA] rounded-[16px] border border-[#EAEAEA]">
+          <ul className="mt-[16px] divide-y divide-[#EAE3D4] border border-[#DFD7C6] bg-[#FBF9F4]">
             {ledger.map((entry, i) => {
               const isCredit = entry.direction === 'credit';
               return (
@@ -289,16 +298,16 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
                   className="flex items-center justify-between px-5 py-4"
                 >
                   <div>
-                    <p className="text-[14px] font-medium text-[#121212]">
+                    <p className="text-[14px] font-medium text-[#14110E]">
                       {entry.reason}
                     </p>
-                    <p className="text-[12px] text-[#8E8E93]">
+                    <p className="text-[12px] text-[#8A8271]">
                       {formatDate(entry.created_at)}
                     </p>
                   </div>
                   <span
                     className={`text-[14px] font-semibold ${
-                      isCredit ? 'text-[#32AC5B]' : 'text-[#C0362C]'
+                      isCredit ? 'text-[#9C6F2E]' : 'text-[#8A3B33]'
                     }`}
                   >
                     {isCredit ? '+' : '-'}
@@ -312,8 +321,11 @@ export default function SwazLoopClient({ referral }: SwazLoopClientProps) {
       )}
 
       {/* Repeat the offer at the bottom */}
-      <div className="mt-[40px]">
-        <ReferralPromoCard title="Keep earning — invite more friends" />
+      <div className="mt-[48px]">
+        <ReferralPromoCard
+          variant="editorial"
+          title="Keep earning — invite more friends"
+        />
       </div>
     </div>
   );
