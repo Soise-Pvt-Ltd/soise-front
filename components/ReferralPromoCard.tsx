@@ -6,7 +6,15 @@ interface ReferralPromoCardProps {
   title?: string;
   /** Optional extra wrapper classes. */
   className?: string;
+  /**
+   * Visual language. `default` is the blue Swaz Loop gradient used on the
+   * referral hub; `editorial` is the ivory-house dark panel (as on /about and
+   * the admin surfaces) for pages that live in the quiet-luxury language.
+   */
+  variant?: 'default' | 'editorial';
 }
+
+const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 
 /**
  * Reusable Swaz Loop awareness card. Repeats the core offer ("share your link,
@@ -17,7 +25,35 @@ interface ReferralPromoCardProps {
 export default function ReferralPromoCard({
   title = 'Share your link, earn store credit',
   className = '',
+  variant = 'default',
 }: ReferralPromoCardProps) {
+  if (variant === 'editorial') {
+    return (
+      <Link
+        href="/swaz-loop"
+        className={`group block bg-[#0E0E10] p-7 text-left text-[#F4F1EA] transition-shadow hover:shadow-[0_12px_40px_rgba(14,14,16,0.35)] sm:p-8 ${className}`}
+      >
+        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#C4AA6E]">
+          The Swaz Loop
+        </p>
+        <h3 className="mt-4 text-[22px] leading-snug sm:text-[26px]" style={serif}>
+          {title}
+        </h3>
+        <p className="mt-4 max-w-[440px] text-[13px] leading-relaxed text-[#B7B2A6] sm:text-[14px]">
+          When a friend places their first paid order with your link, you earn{' '}
+          <span className="font-semibold text-[#F4F1EA]">10% of it as store credit</span>{' '}
+          (up to ₦10,000). They get{' '}
+          <span className="font-semibold text-[#F4F1EA]">₦1,000 off</span> their next
+          order too. Store credit is spendable at checkout.
+        </p>
+        <span className="mt-5 inline-flex items-center gap-x-1 text-[13px] font-semibold text-[#C4AA6E] underline-offset-4 group-hover:underline">
+          Get your link
+          <ArrowUpRightIcon />
+        </span>
+      </Link>
+    );
+  }
+
   return (
     <Link
       href="/swaz-loop"

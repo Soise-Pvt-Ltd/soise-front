@@ -1,10 +1,10 @@
 import Footer from '@/components/footer';
 import Nav from '@/components/home/nav/Nav';
-import { ArrowLeftIcon, AdminCheckCircleIcon } from '@/components/icons';
 import Link from 'next/link';
 import { siteConfig } from '@/lib/site-config';
 import ReferralPromoCard from '@/components/ReferralPromoCard';
 import RecommendationCarousel from '@/components/RecommendationCarousel';
+import StatueWatermark from '@/components/brand/StatueWatermark';
 import { getRecommendations, getFeaturedProducts } from '@/app/shop/product-listing/[id]/recs-actions';
 import ClearPendingOrderMarker from './ClearPendingOrderMarker';
 import { apiForwardCookie } from '@/lib/tracking';
@@ -15,6 +15,8 @@ import { NOINDEX } from '@/lib/seo';
 // expose order-flow URLs. Explicit noindex (robots.txt alone can't prevent
 // URL-only indexing of a linked page).
 export const metadata: Metadata = NOINDEX;
+
+const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 
 export default async function ThankYouPage({
   searchParams,
@@ -70,105 +72,114 @@ export default async function ThankYouPage({
     : await getFeaturedProducts(8);
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
       {/* Payment confirmed (or store-credit covered): drop the resume marker so
           the order-summary page stops nudging to pay for this order. */}
       {showConfirmed && <ClearPendingOrderMarker />}
-      {/* Navigation */}
-      <header className="relative h-[607px] w-full overflow-hidden" role="banner">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0072BB] to-[#2D2C54]" aria-hidden="true" />
-        <div className="relative z-10 h-full">
-          <Nav />
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="shell-max relative -mt-[400px] z-20 px-4 pb-20" role="main">
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="text-center">
-            {/* Success Icon */}
-            <div className="mb-8 flex justify-center" role="img" aria-label="Success">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#CCEAD6]">
-                <AdminCheckCircleIcon color="#32AC5B" className="h-12 w-12" aria-hidden="true" />
-              </div>
-            </div>
-
-            {/* Thank You Message */}
-            <h1 className="mb-4 text-5xl font-bold text-[#121212] md:text-6xl">
-              Thank You!
-            </h1>
-            
-            <p className="mb-8 text-xl text-[#35373C] md:text-2xl">
-              {showConfirmed
-                ? 'Your order has been successfully placed'
-                : "We're confirming your payment — this can take a moment"}
+      <Nav />
+      <main className="bg-[#F4F1EA] text-[#14110E]" role="main">
+        {/* ── Confirmation ─────────────────────────────────────── */}
+        <section className="relative overflow-hidden px-6 pt-20 pb-16 text-center sm:pt-28">
+          <StatueWatermark
+            tone="dark"
+            width={520}
+            opacity={0.05}
+            className="absolute -top-10 right-[-120px] hidden lg:block"
+          />
+          <div className="relative mx-auto max-w-[680px]">
+            <p className="text-[12px] font-medium uppercase tracking-[0.34em] text-[#9C6F2E]">
+              {showConfirmed ? 'Order confirmed' : 'Confirming payment'}
             </p>
-
-            {/* Order Details */}
-            <section className="mb-12 rounded-[20px] bg-[#F5F5F5] p-8 text-left" aria-labelledby="order-details">
-              <h2 id="order-details" className="mb-4 text-lg font-semibold text-[#121212]">Order Details</h2>
-              <div className="space-y-2 text-[#35373C]">
-                <p className="flex justify-between">
-                  <span>Order Reference:</span>
-                  <span className="font-medium">{orderRef ?? '—'}</span>
-                </p>
-                <p className="flex justify-between">
-                  <span>Status:</span>
-                  <span
-                    className={`font-medium ${showConfirmed ? 'text-[#32AC5B]' : 'text-[#B8860B]'}`}
-                  >
-                    {showConfirmed ? 'Confirmed' : 'Processing'}
-                  </span>
-                </p>
-                <p className="flex justify-between">
-                  <span>Estimated Delivery:</span>
-                  <span className="font-medium">{siteConfig.estimatedDelivery}</span>
-                </p>
-              </div>
-            </section>
-
-            {/* Invite & earn store credit */}
-            <div className="mb-12">
-              <ReferralPromoCard />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Link
-                href="/"
-                className="inline-flex items-center justify-center rounded-[10px] bg-[#0072BB] px-8 py-3 text-white transition-colors hover:bg-[#005a8f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:ring-offset-2"
-              >
-                <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                Continue Shopping
-              </Link>
-              
-              <Link
-                href="/shop/order-history"
-                className="inline-flex items-center justify-center rounded-[10px] border-2 border-[#0072BB] bg-white px-8 py-3 text-[#0072BB] transition-colors hover:bg-[#F5F5F5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:ring-offset-2"
-              >
-                View Orders
-              </Link>
-            </div>
-
-            {/* Additional Info */}
-            <div className="mt-12 text-sm text-[#AFB1B0]">
-              <p className="mb-2">A confirmation email has been sent to your registered email address.</p>
-              <p>Need help? Contact our support team at <a href={`mailto:${siteConfig.supportEmail}`} className="underline">{siteConfig.supportEmail}</a></p>
-            </div>
+            <h1
+              className="mx-auto mt-5 max-w-[560px] text-[38px] leading-[1.08] tracking-tight sm:text-[56px]"
+              style={serif}
+            >
+              {showConfirmed ? 'Thank you. It’s in motion.' : 'Almost there.'}
+            </h1>
+            <p className="mx-auto mt-6 max-w-[460px] text-[15px] leading-relaxed text-[#5C544A] sm:text-[17px]">
+              {showConfirmed
+                ? 'Your order is confirmed, and a receipt is on its way to your inbox.'
+                : 'We’re confirming your payment — this can take a moment. You don’t need to do anything.'}
+            </p>
           </div>
-        </div>
+
+          {/* Order details — quiet ledger, not a card shout */}
+          <section
+            className="mx-auto mt-12 max-w-[560px] border border-[#DFD7C6] bg-[#FBF9F4] px-6 py-5 text-left sm:px-8"
+            aria-labelledby="order-details"
+          >
+            <h2 id="order-details" className="sr-only">
+              Order details
+            </h2>
+            <dl className="divide-y divide-[#EAE3D4]">
+              <div className="flex items-baseline justify-between gap-x-6 py-3">
+                <dt className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
+                  Reference
+                </dt>
+                <dd className="text-[14px] font-medium">{orderRef ?? '—'}</dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-x-6 py-3">
+                <dt className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
+                  Status
+                </dt>
+                <dd
+                  className={`text-[14px] font-medium ${showConfirmed ? 'text-[#14110E]' : 'text-[#9C6F2E]'}`}
+                >
+                  {showConfirmed ? 'Confirmed' : 'Processing'}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-x-6 py-3">
+                <dt className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#8A8271]">
+                  Estimated delivery
+                </dt>
+                <dd className="text-[14px] font-medium">{siteConfig.estimatedDelivery}</dd>
+              </div>
+            </dl>
+          </section>
+
+          {/* Swaz Loop — the one pitch this page makes, in the house dark panel */}
+          <div className="mx-auto mt-8 max-w-[560px]">
+            <ReferralPromoCard variant="editorial" />
+          </div>
+
+          {/* Actions */}
+          <div className="mx-auto mt-10 flex max-w-[560px] flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/shop/product-listing"
+              className="inline-flex h-[53px] items-center justify-center rounded-[10px] bg-[#14110E] px-10 text-[13px] font-bold uppercase text-[#F4F1EA] transition-all duration-300 ease-out hover:bg-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14110E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F1EA]"
+            >
+              Continue shopping
+            </Link>
+            <Link
+              href="/shop/order-history"
+              className="inline-flex h-[53px] items-center justify-center rounded-[10px] border border-[#14110E] px-10 text-[13px] font-bold uppercase text-[#14110E] transition-all duration-300 ease-out hover:bg-[#14110E] hover:text-[#F4F1EA] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14110E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F1EA]"
+            >
+              View orders
+            </Link>
+          </div>
+
+          <p className="mx-auto mt-10 max-w-[460px] text-[13px] leading-relaxed text-[#8A8271]">
+            Need help with this order? Write to{' '}
+            <a
+              href={`mailto:${siteConfig.supportEmail}`}
+              className="underline underline-offset-4 transition-colors hover:text-[#14110E]"
+            >
+              {siteConfig.supportEmail}
+            </a>
+            .
+          </p>
+        </section>
 
         {/* You may also like — generic recommendation row. Hidden when empty. */}
-        <RecommendationCarousel
-          title="You may also like"
-          items={youMayAlsoLike}
-          headingId="thank-you-recs"
-          className="mt-[56px] md:mt-[80px]"
-        />
+        <div className="shell-max px-4 pb-20">
+          <RecommendationCarousel
+            title="You may also like"
+            items={youMayAlsoLike}
+            headingId="thank-you-recs"
+          />
+        </div>
       </main>
-
-      {/* Footer */}
       <Footer />
-    </div>
+    </>
   );
 }
