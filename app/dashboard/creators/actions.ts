@@ -280,3 +280,64 @@ export async function updateTier(formData: FormData) {
     return { success: false, error: json.message || 'Failed to update tier' };
   return { success: true, data: json.data };
 }
+
+/**
+ * Delete a tier outright. The backend refuses with 409 when any creator code
+ * or tier_history row still points at it — record links aren't foreign keys,
+ * so deleting a referenced tier would silently blank the rung on a creator's
+ * code and across their pay history. That message is surfaced verbatim,
+ * because it names the counts and tells the admin to retire it instead.
+ */
+export async function deleteTier(id: string, force = false) {
+  const accessToken = (await cookies()).get('access_token')?.value;
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+
+  const res = await fetch(
+    `${BASE_URL}/tiers/admin/tiers/${id}${force ? '?force=true' : ''}`,
+    {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        Cookie: `access_token=${accessToken}`,
+        Accept: 'application/json',
+      },
+    },
+  );
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok)
+    return {
+      success: false,
+      error: json.message || 'Failed to delete tier',
+      // `forcable` is true when only history blocks the delete — a live
+      // creator code is never overridable from the UI.
+      forcable: Boolean(json.details?.forcable),
+      details: json.details,
+    };
+  return { success: true };
+}
+
+/** Retire (or restore) a tier without deleting it. */
+export async function setTierActive(id: string, active: boolean) {
+  const accessToken = (await cookies()).get('access_token')?.value;
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+
+  const res = await fetch(`${BASE_URL}/tiers/admin/tiers/${id}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: {
+      Cookie: `access_token=${accessToken}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ active }),
+  });
+
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok)
+    return {
+      success: false,
+      error: json.message || `Failed to ${active ? 'restore' : 'retire'} tier`,
+    };
+  return { success: true };
+}

@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import GridContainer from '../gridContainer';
-import { PageHeader } from '../ui';
+import { PageHeader, Badge } from '../ui';
 import RowActionMenu from '@/components/admin/RowActionMenu';
 import {
   AdminSoundLevelsIcon,
@@ -17,6 +17,8 @@ import {
   fetchTiers,
   createTier,
   updateTier,
+  deleteTier,
+  setTierActive,
   assignTierToCreator,
   changeCreatorCodeAdmin,
   revokeCreatorAdmin,
@@ -81,6 +83,10 @@ export default function CreatorsClient({
   const [showTierModal, setShowTierModal] = useState(false);
   const [tierView, setTierView] = useState<'list' | 'create' | 'edit'>('list');
   const [tiers, setTiers] = useState<any[]>([]);
+  // The tier-management list shows every row, including the retired SWAZ-*
+  // ladder that migrate_tier_ladder deactivated rather than deleted. Anything
+  // that assigns a tier reads this instead.
+  const assignableTiers = tiers.filter((t) => t.active !== false);
   const [isTiersLoading, setIsTiersLoading] = useState(false);
   const [tierName, setTierName] = useState('');
   const [tierLevel, setTierLevel] = useState('');
@@ -88,6 +94,7 @@ export default function CreatorsClient({
   const [tierBaseRate, setTierBaseRate] = useState('');
   const [tierMaxRate, setTierMaxRate] = useState('');
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
+  const [tierBusyId, setTierBusyId] = useState<string | null>(null);
 
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assigningCreator, setAssigningCreator] = useState<Creator | null>(null);
@@ -283,6 +290,57 @@ export default function CreatorsClient({
       }
     } finally {
       setIsTiersLoading(false);
+    }
+  };
+
+  // Deleting is refused by the backend (409) whenever a creator code or a
+  // tier_history row still points at the tier, and that message names the
+  // counts — so it is surfaced verbatim rather than replaced with something
+  // generic, and the admin is pointed at Retire instead.
+  const removeTier = async (tier: any) => {
+    if (tierBusyId) return;
+    if (
+      !confirm(
+        `Delete ${tier.name}?\n\nThis cannot be undone. If any creator or pay history references it, the delete will be refused and you can retire it instead.`,
+      )
+    )
+      return;
+    setTierBusyId(tier.id);
+    let res = await deleteTier(tier.id);
+
+    // Blocked only by history: that's a judgement call, not a safety rule, so
+    // it's the admin's to make. A live creator code is never overridable here.
+    if (!res.success && res.forcable) {
+      const n = res.details?.tier_history ?? 0;
+      if (
+        confirm(
+          `${tier.name} is referenced by ${n} history record${n === 1 ? '' : 's'}.\n\nDelete anyway? Those entries will stop naming the tier — the rate and date they record are unaffected.`,
+        )
+      ) {
+        res = await deleteTier(tier.id, true);
+      }
+    }
+
+    setTierBusyId(null);
+    if (res.success) {
+      showToast('success', `${tier.name} deleted`);
+      loadTiers();
+    } else {
+      showToast('error', res.error || 'Could not delete tier');
+    }
+  };
+
+  const toggleTierActive = async (tier: any) => {
+    if (tierBusyId) return;
+    const next = tier.active === false;
+    setTierBusyId(tier.id);
+    const res = await setTierActive(tier.id, next);
+    setTierBusyId(null);
+    if (res.success) {
+      showToast('success', `${tier.name} ${next ? 'restored to' : 'retired from'} the ladder`);
+      loadTiers();
+    } else {
+      showToast('error', res.error || 'Could not update tier');
     }
   };
 
@@ -891,22 +949,27 @@ export default function CreatorsClient({
                   value={selectedTierIdForAssign}
                   onChange={(e) => setSelectedTierIdForAssign(e.target.value)}
                   className="adminsolid w-full"
-                  disabled={isTiersLoading || tiers.length === 0}
+                  disabled={isTiersLoading || assignableTiers.length === 0}
                 >
                   <option value="">
                     {isTiersLoading
                       ? 'Loading tiers…'
-                      : tiers.length === 0
+                      : assignableTiers.length === 0
                         ? 'No tiers exist yet'
                         : 'Select a tier'}
                   </option>
-                  {tiers.map((tier) => (
+                  {/* assignableTiers, not tiers: the retired SWAZ-* rows kept
+                      their old levels, which collide with the live ladder, so
+                      an unfiltered list put "SWAZ-ELITE (Level 1)" beside
+                      "Soise I (Level 1)" — one click from an 18% rate that is
+                      no longer on the ladder. */}
+                  {assignableTiers.map((tier) => (
                     <option key={tier.id} value={tier.id}>
                       {tier.name} (Level {tier.level})
                     </option>
                   ))}
                 </select>
-                {!isTiersLoading && tiers.length === 0 && (
+                {!isTiersLoading && assignableTiers.length === 0 && (
                   <p className="mt-2 text-sm text-[#5C544A]">
                     Close this and use the “Tier” button to create one.
                   </p>
@@ -969,23 +1032,59 @@ export default function CreatorsClient({
                       key={tier.id}
                       className="flex items-center justify-between border-b border-[#E2DBCC] py-3 last:border-0"
                     >
-                      <span className="text-[#14110E]">
-                        {tier.name} (Level {tier.level})
+                      {/* Retired tiers are kept, not deleted, so tier_history
+                          keeps resolving — but they must never read as part of
+                          the live ladder. The backend sorts them last; this
+                          names them. */}
+                      <span className="flex items-center gap-2">
+                        <span
+                          className={
+                            tier.active === false
+                              ? 'text-[#8C8377] line-through'
+                              : 'text-[#14110E]'
+                          }
+                        >
+                          {tier.name} (Level {tier.level})
+                        </span>
+                        {tier.active === false && (
+                          <Badge tone="neutral">Retired</Badge>
+                        )}
                       </span>
-                      <button
-                        onClick={() => {
-                          setEditingTierId(tier.id);
-                          setTierName(tier.name);
-                          setTierLevel(tier.level?.toString() || '');
-                          setTierDescription(tier.description || '');
-                          setTierBaseRate(tier.base_rate?.toString() || '');
-                          setTierMaxRate(tier.max_rate?.toString() || '');
-                          setTierView('edit');
-                        }}
-                        className="text-sm text-[#9C6F2E] hover:text-[#9C6F2E]"
-                      >
-                        Edit
-                      </button>
+                      <div className="flex shrink-0 items-center gap-3">
+                        <button
+                          onClick={() => {
+                            setEditingTierId(tier.id);
+                            setTierName(tier.name);
+                            setTierLevel(tier.level?.toString() || '');
+                            setTierDescription(tier.description || '');
+                            setTierBaseRate(tier.base_rate?.toString() || '');
+                            setTierMaxRate(tier.max_rate?.toString() || '');
+                            setTierView('edit');
+                          }}
+                          className="text-sm text-[#9C6F2E] hover:opacity-70"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => toggleTierActive(tier)}
+                          disabled={tierBusyId === tier.id}
+                          title={
+                            tier.active === false
+                              ? 'Put this tier back on the ladder'
+                              : 'Take this tier off the ladder, keeping its history'
+                          }
+                          className="text-sm text-[#5C544A] hover:text-[#14110E] disabled:opacity-40"
+                        >
+                          {tier.active === false ? 'Restore' : 'Retire'}
+                        </button>
+                        <button
+                          onClick={() => removeTier(tier)}
+                          disabled={tierBusyId === tier.id}
+                          className="text-sm text-[#8C3A2B] hover:opacity-70 disabled:opacity-40"
+                        >
+                          {tierBusyId === tier.id ? '…' : 'Delete'}
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {(!tiers || tiers.length === 0) && (

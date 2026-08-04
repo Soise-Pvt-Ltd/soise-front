@@ -27,7 +27,14 @@ type Req = {
   status: string;
 };
 
-type Tier = { id: string; name: string; level?: number; base_rate?: number; max_rate?: number };
+type Tier = {
+  id: string;
+  name: string;
+  level?: number;
+  base_rate?: number;
+  max_rate?: number;
+  active?: boolean;
+};
 
 // Status vocabulary and its colours now live in ../ui (STATUS_TONE), so a
 // "pending" pill looks the same here as it does on orders and applications.
@@ -44,6 +51,11 @@ export default function TierRequestsClient({
   initialData: Req[];
   tiers: Tier[];
 }) {
+  // Filtered here as well as in the request, because the two repos deploy
+  // independently: until the backend ships `?active=true`, the param is simply
+  // ignored and the retired SWAZ-* ladder comes back with everything else.
+  const liveTiers = (tiers || []).filter((t) => t.active !== false);
+
   const [reqs, setReqs] = useState<Req[]>(initialData || []);
   const [status, setStatus] = useState<string>('pending');
   const [search, setSearch] = useState('');
@@ -206,7 +218,7 @@ export default function TierRequestsClient({
                           className="h-[34px] rounded-full border border-[#DFD7C6] bg-transparent py-0 pr-7 pl-3 text-[12px] text-[#3F3830] transition-colors outline-none hover:border-[#9C6F2E] focus:border-[#9C6F2E] focus:ring-0"
                         >
                           <option value="">Auto-evaluate</option>
-                          {tiers.map((t) => (
+                          {liveTiers.map((t) => (
                             <option key={t.id} value={shortId(t.id)}>
                               {t.name} ({t.base_rate}%)
                             </option>

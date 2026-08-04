@@ -36,7 +36,14 @@ export async function fetchTiers() {
   const h = await authHeader();
   if (!h) return { success: false, data: [] };
   try {
-    const res = await fetch(`${BASE_URL}/tiers/admin/tiers`, { headers: h, cache: 'no-store' });
+    // active=true only. The migration deactivates the old SWAZ-* tiers instead
+    // of deleting them (tier_history still points at them), and they kept their
+    // original levels — which collide with the live ladder — so an unfiltered
+    // list offered "SWAZ-ELITE (18%)" as a choice for approving a request.
+    const res = await fetch(`${BASE_URL}/tiers/admin/tiers?active=true`, {
+      headers: h,
+      cache: 'no-store',
+    });
     const json = await res.json();
     if (!res.ok) return { success: false, data: [] };
     return { success: true, data: json.data || [] };
