@@ -241,6 +241,9 @@ export default function FooterClient() {
             <Link href="/contact" className="transition-colors hover:text-[#121212]">
               Contact
             </Link>
+            <Link href="/returns" className="transition-colors hover:text-[#121212]">
+              Returns
+            </Link>
           </nav>
           Copyright © {new Date().getFullYear()} {siteConfig.name}™
           <br />

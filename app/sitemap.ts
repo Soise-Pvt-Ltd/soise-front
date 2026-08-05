@@ -53,6 +53,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     },
     {
+      // Trust page: shoppers (and Google) check the return policy before a
+      // first high-ticket purchase.
+      url: `${SITE_URL}/returns`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    },
+    {
       url: `${SITE_URL}/team/playbook`,
       lastModified: now,
       changeFrequency: 'monthly',
