@@ -8,7 +8,7 @@ export const siteConfig = {
   supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? 'hello@soise.ng',
   // Operating region shown in the footer. Hardcoded (not env-driven) so it
   // can't be overridden by a stale NEXT_PUBLIC_OFFICE_ADDRESS in the host env.
-  officeAddress: 'Sub-Saharan Africa, Africa',
+  officeAddress: 'Sub-Saharan Africa',
   // CAC registration (RC) number from the certificate of incorporation
   // (SOISE PVT. LTD, incorporated 15 Apr 2025). Hardcoded so it reflects the
   // real entity and can't be overridden by a stale host env var.
