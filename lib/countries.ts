@@ -87,3 +87,44 @@ export const NIGERIAN_STATES = [
   'Yobe',
   'Zamfara',
 ];
+
+/**
+ * ISO 3166-1 alpha-2 codes for the shipping countries. Third parties
+ * (Google Customer Reviews, carriers) speak codes, the checkout form speaks
+ * names — this is the bridge. Unknown input falls back to NG, which is the
+ * right guess for this store by an overwhelming margin.
+ */
+const COUNTRY_CODES: Record<string, string> = {
+  Nigeria: 'NG',
+  'United Kingdom': 'GB',
+  'United States': 'US',
+  Canada: 'CA',
+  Ireland: 'IE',
+  Germany: 'DE',
+  France: 'FR',
+  Netherlands: 'NL',
+  Italy: 'IT',
+  Spain: 'ES',
+  Belgium: 'BE',
+  Sweden: 'SE',
+  Norway: 'NO',
+  Denmark: 'DK',
+  Switzerland: 'CH',
+  Austria: 'AT',
+  Portugal: 'PT',
+  Australia: 'AU',
+  'New Zealand': 'NZ',
+  'United Arab Emirates': 'AE',
+  Qatar: 'QA',
+  'Saudi Arabia': 'SA',
+  'South Africa': 'ZA',
+  Ghana: 'GH',
+  Kenya: 'KE',
+  China: 'CN',
+  Japan: 'JP',
+  Malaysia: 'MY',
+};
+
+export function countryCode(name: string | null | undefined): string {
+  return COUNTRY_CODES[(name || DEFAULT_COUNTRY).trim()] ?? 'NG';
+}

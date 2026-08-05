@@ -7,6 +7,7 @@ import RecommendationCarousel from '@/components/RecommendationCarousel';
 import StatueWatermark from '@/components/brand/StatueWatermark';
 import { getRecommendations, getFeaturedProducts } from '@/app/shop/product-listing/[id]/recs-actions';
 import ClearPendingOrderMarker from './ClearPendingOrderMarker';
+import GoogleReviewsOptIn from '@/components/GoogleReviewsOptIn';
 import { apiForwardCookie } from '@/lib/tracking';
 
 import type { Metadata } from 'next';
@@ -84,6 +85,10 @@ export default async function ThankYouPage({
       {/* Payment confirmed (or store-credit covered): drop the resume marker so
           the order-summary page stops nudging to pay for this order. */}
       {showConfirmed && <ClearPendingOrderMarker />}
+      {/* Google Customer Reviews opt-in — only for a confirmed order with a
+          reference; the component itself bails quietly if the checkout contact
+          isn't in local storage. */}
+      {showConfirmed && orderRef && <GoogleReviewsOptIn orderId={orderRef} />}
       <Nav />
       <main className="bg-[#F4F1EA] text-[#14110E]" role="main">
         {/* ── Confirmation ─────────────────────────────────────── */}

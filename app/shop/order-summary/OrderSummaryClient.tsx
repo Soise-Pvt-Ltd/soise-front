@@ -25,6 +25,7 @@ import {
   writePendingOrder,
   clearPendingOrder,
 } from './pending-order';
+import { writeCheckoutContact } from './checkout-contact';
 import {
   SHIPPING_COUNTRIES,
   NIGERIAN_STATES,
@@ -356,6 +357,13 @@ export default function OrderSummaryClient({
         } catch {
           /* private mode / storage disabled — banner just won't show */
         }
+        // Remember who placed it, so the thank-you page can offer the Google
+        // Customer Reviews opt-in (it needs email + delivery country, and the
+        // confirmation URL carries neither).
+        writeCheckoutContact(
+          String(formData.get('email') ?? ''),
+          String(formData.get('country') ?? ''),
+        );
       }
 
       if (result?.success && result.redirectUrl) {
