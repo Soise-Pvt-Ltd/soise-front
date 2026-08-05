@@ -93,7 +93,7 @@ export async function getPayoutBreakdown(id: string) {
   }
 }
 
-export async function getPaystackBalance() {
+export async function getProviderBalance() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -161,17 +161,16 @@ export async function initiatePayout(id: string) {
   return { success: Boolean(json.success), data: json.data, message: json.message };
 }
 
-export async function confirmPayout(id: string, otp: string) {
+// Bachs has no transfer OTP. /confirm is now a status SYNC: it asks Bachs for
+// the withdrawal's current state and settles the payout if a webhook was
+// missed. Safe to call on any processing payout.
+export async function confirmPayout(id: string) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   if (!accessToken) {
     return { success: false, message: 'Unauthorized' };
-  }
-
-  if (!otp) {
-    return { success: false, message: 'OTP is required' };
   }
 
   const res = await fetch(`${baseUrl}/admin/payouts/${id}/confirm`, {
@@ -182,7 +181,7 @@ export async function confirmPayout(id: string, otp: string) {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify({ otp }),
+    body: JSON.stringify({}),
   });
 
   if (!res.ok) {
@@ -190,9 +189,9 @@ export async function confirmPayout(id: string, otp: string) {
     console.error(`Upstream error: ${res.status} ${text}`);
     try {
       const errorJson = JSON.parse(text);
-      return { success: false, message: errorJson.message || 'Failed to confirm payout' };
+      return { success: false, message: errorJson.message || 'Could not check this payout' };
     } catch {
-      return { success: false, message: 'Failed to confirm payout' };
+      return { success: false, message: 'Could not check this payout' };
     }
   }
 

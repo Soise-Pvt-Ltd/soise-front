@@ -1,11 +1,11 @@
-// A just-placed order whose Paystack redirect may not have landed. The order
-// summary writes it before navigating to Paystack and offers a "Complete
+// A just-placed order whose payment redirect may not have landed. The order
+// summary writes it before navigating to payment and offers a "Complete
 // payment" resume if the shopper returns; the thank-you page clears it once
 // payment is confirmed. Single source of truth so the writer and the clearer
 // can never drift apart.
 //
 // Backed by localStorage, not sessionStorage: the most common way this recovery
-// was needed — shopper bounces to Paystack, something goes wrong, they close the
+// was needed — shopper bounces to the payment page, something goes wrong, they close the
 // tab and come back later — is exactly the case sessionStorage throws away. The
 // order and a payable URL still exist server-side, so the marker is what stands
 // between them and a silently abandoned paid-for order.

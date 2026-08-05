@@ -70,7 +70,7 @@ export default async function OrderHistoryPage() {
       // No shipping fee is read here on purpose. GET /cart's `meta` carries
       // only `session_id`, and the backend has no shipping pricing at all —
       // checkout hardcodes shipping to zero. If that changes, surface the fee
-      // here so the total on this page matches what Paystack collects; the
+      // here so the total on this page matches what Bachs collects; the
       // Shipping line in OrderSummaryClient is already wired for it.
     } else if (cartRes.status !== 404) {
       // 404 is the backend's "this cart doesn't exist yet" — a genuinely empty

@@ -21,16 +21,24 @@ const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 export default async function ThankYouPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reference?: string; trxref?: string; product?: string }>;
+  searchParams: Promise<{
+    reference?: string;
+    // Bachs appends ?checkout_id= to the success redirect; the backend can
+    // verify by either handle. trxref is the retired Paystack callback param,
+    // kept so links already in shoppers' tabs/inboxes still confirm.
+    checkout_id?: string;
+    trxref?: string;
+    product?: string;
+  }>;
 }) {
   const params = await searchParams;
-  const orderRef = params.reference || params.trxref;
+  const orderRef = params.reference || params.checkout_id || params.trxref;
 
-  // Confirm the payment on the Paystack callback. This is the reliable client
-  // path: Paystack redirects the browser here after charging, and we verify by
-  // reference server-side. `confirm_payment` is idempotent, so this is safe to
-  // run alongside the webhook. Without this, a paid order can sit forever in
-  // `pending_payment` if the webhook is missed.
+  // Confirm the payment on the Bachs callback. This is the reliable client
+  // path: Bachs redirects the browser here after charging, and we verify by
+  // reference (or checkout_id) server-side. `confirm_payment` is idempotent,
+  // so this is safe to run alongside the webhook. Without this, a paid order
+  // can sit forever in `pending_payment` if the webhook is missed.
   let paymentConfirmed = false;
   if (orderRef) {
     try {

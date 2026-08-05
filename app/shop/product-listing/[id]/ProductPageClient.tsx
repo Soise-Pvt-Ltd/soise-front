@@ -540,7 +540,7 @@ export default function ProductPageClient({
 
               {/* Checkout confidence — factual, quiet, right where doubt lives. */}
               <p className="mt-3 mb-[32px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-                Secure checkout via Paystack&ensp;·&ensp;Ships across Nigeria
+                Secure checkout via Bachs&ensp;·&ensp;Ships across Nigeria
               </p>
 
               <motion.button

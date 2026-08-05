@@ -7,7 +7,7 @@ import { AdminSoundLevelsIcon, AdminSuccessCheckIcon } from '@/components/icons'
 import {
   confirmPayout,
   initiatePayout,
-  getPaystackBalance,
+  getProviderBalance,
   getPayoutBreakdown,
 } from './actions';
 import { showToast } from '../toast';
@@ -112,11 +112,8 @@ export default function PayoutClient({
   });
   const filterDropdownRef = useRef<HTMLDivElement>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [otpValue, setOtpValue] = useState('');
-  const [pendingPayoutId, setPendingPayoutId] = useState<string | null>(null);
-  // Live Paystack balance — payouts draw from it. null = unknown/not loaded.
-  const [paystackBalance, setPaystackBalance] = useState<number | null>(null);
+  // Live Bachs balance — payouts draw from it. null = unknown/not loaded.
+  const [providerBalance, setProviderBalance] = useState<number | null>(null);
 
   // Payout breakdown modal — the traceable orders behind a payout.
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -133,9 +130,9 @@ export default function PayoutClient({
   };
 
   const loadBalance = useCallback(async () => {
-    const res = await getPaystackBalance();
+    const res = await getProviderBalance();
     if (res.success && typeof res.balance === 'number') {
-      setPaystackBalance(res.balance);
+      setProviderBalance(res.balance);
     }
   }, []);
 
@@ -200,19 +197,6 @@ export default function PayoutClient({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [handleClickOutside]);
-
-  useEffect(() => {
-    if (!showOtpModal) return;
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowOtpModal(false);
-        setPendingPayoutId(null);
-        setOtpValue('');
-      }
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showOtpModal]);
 
   useEffect(() => {
     const next = {
@@ -288,23 +272,17 @@ export default function PayoutClient({
     setIsLoading(false);
   };
 
-  const handleConfirmClick = (id: string) => {
-    setPendingPayoutId(id);
-    setOtpValue('');
-    setShowOtpModal(true);
-  };
-
-  // Admin initiates the Paystack transfer for a queued ('requested') payout.
-  // If Paystack requires transfer OTP, open the OTP modal to finalize; if it
-  // went through without OTP, just refresh.
+  // Admin initiates the Bachs withdrawal for a queued ('requested') payout.
+  // Bachs has no transfer OTP: the withdrawal goes straight to 'processing'
+  // and the payout.paid webhook marks it paid.
   const handleInitiateClick = async (payout: Payout) => {
-    // Warn (don't hard-block — test mode succeeds regardless) when the payout
-    // exceeds the live Paystack balance it would draw from.
-    if (paystackBalance !== null && payout.amount > paystackBalance) {
+    // Warn (don't hard-block — sandbox succeeds regardless) when the payout
+    // exceeds the live Bachs balance it would draw from.
+    if (providerBalance !== null && payout.amount > providerBalance) {
       const ok = window.confirm(
-        `This payout is ₦${payout.amount.toLocaleString()}, but your Paystack balance is only ₦${paystackBalance.toLocaleString()}.\n\n` +
-          `In live mode Paystack will reject it and the amount is returned to the creator. ` +
-          `Top up your Paystack balance first.\n\nInitiate anyway?`,
+        `This payout is ₦${payout.amount.toLocaleString()}, but your Bachs balance is only ₦${providerBalance.toLocaleString()}.\n\n` +
+          `In live mode Bachs will reject it and the amount is returned to the creator. ` +
+          `Top up your Bachs balance first.\n\nInitiate anyway?`,
       );
       if (!ok) return;
     }
@@ -317,16 +295,9 @@ export default function PayoutClient({
         handleFilterChange();
         return;
       }
-      if (result.data?.requires_otp) {
-        showToast('success', 'Transfer started — enter the OTP to finalize.');
-        setPendingPayoutId(payout.id);
-        setOtpValue('');
-        setShowOtpModal(true);
-      } else {
-        showToast('success', result.message || 'Transfer sent.');
-        handleFilterChange();
-        loadBalance();
-      }
+      showToast('success', result.message || 'Transfer initiated.');
+      handleFilterChange();
+      loadBalance();
     } catch {
       showToast('error', 'An error occurred while initiating the transfer');
     } finally {
@@ -334,31 +305,37 @@ export default function PayoutClient({
     }
   };
 
-  const handleOtpSubmit = async () => {
-    if (!pendingPayoutId || !otpValue.trim()) return;
-    setShowOtpModal(false);
-    setProcessingId(pendingPayoutId);
+  // For a 'processing' payout: ask Bachs for the withdrawal's current status
+  // and settle it if the payout.paid/payout.failed webhook was missed.
+  const handleCheckStatus = async (id: string) => {
+    setProcessingId(id);
     try {
-      const result = await confirmPayout(pendingPayoutId, otpValue.trim());
+      const result = await confirmPayout(id);
       if (result.success) {
-        showToast('success', 'Payout confirmed successfully');
+        const status = result.data?.status;
+        showToast(
+          'success',
+          status === 'paid'
+            ? 'Payout confirmed — transfer delivered.'
+            : 'Still processing at Bachs. The webhook will complete it.',
+        );
         handleFilterChange();
         loadBalance();
       } else {
-        showToast('error', `Failed to confirm payout: ${result.message || 'Unknown error'}`);
+        showToast('error', result.message || 'Could not check this payout');
+        handleFilterChange();
       }
-    } catch (error) {
-      showToast('error', 'An error occurred while confirming the payout');
+    } catch {
+      showToast('error', 'An error occurred while checking the payout');
     } finally {
       setProcessingId(null);
-      setPendingPayoutId(null);
     }
   };
 
   const renderActionButtons = (payout: Payout) => {
     switch (payout.status) {
       case 'requested':
-        // Admin starts the Paystack transfer. Creators only queue the request.
+        // Admin starts the Bachs withdrawal. Creators only queue the request.
         return (
           <button
             onClick={() => handleInitiateClick(payout)}
@@ -369,15 +346,16 @@ export default function PayoutClient({
           </button>
         );
       case 'processing':
-        // Transfer initiated; awaiting OTP finalization (or Paystack webhook).
+        // Withdrawal initiated; the payout.paid webhook completes it. The
+        // button is a manual re-check for the day a webhook goes missing.
         return (
           <div className="flex items-center gap-x-2">
             <button
-              onClick={() => handleConfirmClick(payout.id)}
+              onClick={() => handleCheckStatus(payout.id)}
               disabled={processingId === payout.id}
               className="flex h-[30px] items-center justify-center gap-x-[4px] rounded-full border border-[#14110E]/25 px-[14px] font-medium text-[#14110E] transition-colors hover:border-[#14110E] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {processingId === payout.id ? 'Confirming…' : 'Enter OTP'}
+              {processingId === payout.id ? 'Checking…' : 'Check status'}
             </button>
           </div>
         );
@@ -506,11 +484,11 @@ export default function PayoutClient({
           <p className="mt-2 text-[12px] text-[#8C3A2B]">Awaiting transfer</p>
         </div>
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Paystack balance</p>
+          <p className="ad-eyebrow">Bachs balance</p>
           <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
-            {paystackBalance === null
+            {providerBalance === null
               ? '—'
-              : `₦${paystackBalance.toLocaleString('en-NG', {
+              : `₦${providerBalance.toLocaleString('en-NG', {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}`}
@@ -694,66 +672,6 @@ export default function PayoutClient({
         )}
       </div>
 
-      {showOtpModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="otp-modal-title"
-        >
-          <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 id="otp-modal-title" className="ad-display text-[20px] text-[#14110E]">Confirm Payout</h2>
-              <button
-                onClick={() => {
-                  setShowOtpModal(false);
-                  setPendingPayoutId(null);
-                  setOtpValue('');
-                }}
-                className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full text-[#8C8377] transition-colors hover:bg-[#EFEAE0] hover:text-[#5C544A] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:outline-none"
-                aria-label="Close dialog"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-            <p className="mb-4 text-sm text-[#5C544A]">
-              Enter the OTP sent to your Paystack-registered device to finalize this transfer.
-            </p>
-            <input
-              type="text"
-              value={otpValue}
-              onChange={(e) => setOtpValue(e.target.value)}
-              placeholder="Enter OTP"
-              className="mb-4 w-full rounded-[10px] border border-[#E2DBCC] px-4 py-3 text-sm focus:border-[#9C6F2E] focus:ring-1 focus:ring-[#9C6F2E] focus:outline-none"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && otpValue.trim()) handleOtpSubmit();
-              }}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowOtpModal(false);
-                  setPendingPayoutId(null);
-                  setOtpValue('');
-                }}
-                className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleOtpSubmit}
-                disabled={!otpValue.trim()}
-                className="flex-1 rounded-full bg-[#14110E] px-4 py-2 text-sm font-medium text-[#F4F1EA] hover:bg-[#241F19] disabled:opacity-50"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {showBreakdown && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 p-4 backdrop-blur-sm"

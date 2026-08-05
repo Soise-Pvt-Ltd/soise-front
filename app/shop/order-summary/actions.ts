@@ -30,19 +30,19 @@ interface CheckoutResult {
   error?: string;
   errorCode?: string;
   redirectUrl?: string;
-  // The order id (== Paystack reference). Returned so the client can persist a
+  // The order id (== payment reference). Returned so the client can persist a
   // pending order and resume its payment if the post-checkout redirect fails.
   orderId?: string;
-  // Paystack access code from the server-side transaction initialize. Lets the
-  // client open Paystack's inline checkout in an overlay rather than sending
+  // The Bachs hosted checkout_url from the server-side session create. Lets
+  // the client open the checkout in an overlay (bachs.js) rather than sending
   // the shopper away to a hosted page.
   //
-  // Deliberately the access code and NOT an amount: resumeTransaction() resumes
-  // a transaction whose value was fixed on the server, so the price stays
-  // server-authoritative. Paystack's other entry point, newTransaction(), takes
-  // an `amount` from the browser — which would reintroduce exactly the
-  // client-sets-its-own-price hole that shipping_total already was.
-  accessCode?: string;
+  // Deliberately a server-created session URL and NOT an amount: the session's
+  // value was fixed on the server with the secret key, so the price stays
+  // server-authoritative. Building a checkout in the browser from an amount
+  // would reintroduce exactly the client-sets-its-own-price hole that
+  // shipping_total already was.
+  checkoutUrl?: string;
 }
 
 export async function checkoutAction(formData: FormData): Promise<CheckoutResult> {
@@ -178,10 +178,12 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     const data = await response.json();
 
     const checkoutMeta = data?.data?.payment?.checkout_metadata;
-    const authUrl = checkoutMeta?.authorization_url;
-    const accessCode = checkoutMeta?.access_code as string | undefined;
+    // checkout_url is the Bachs field; authorization_url is the same value
+    // under its legacy name, kept server-side for older clients.
+    const payUrl = (checkoutMeta?.checkout_url ||
+      checkoutMeta?.authorization_url) as string | undefined;
     // When store credit fully covers the order, the backend marks it paid and
-    // returns no Paystack URL — go straight to the thank-you page.
+    // returns no payment URL — go straight to the thank-you page.
     const fullyCovered =
       data?.data?.payment?.fully_covered === true ||
       data?.data?.order?.status === 'paid';
@@ -190,27 +192,27 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     // NOT call redirect() here: a server-action redirect rejects the client
     // promise with NEXT_REDIRECT, which the caller's catch surfaced as a bogus
     // "An error occurred during checkout" toast — even though the navigation
-    // to Paystack still happened. Returning the URL lets the client do a clean
-    // window.location navigation with no spurious error.
-    // The order id doubles as the Paystack reference. Hand it back so the
+    // to the payment page still happened. Returning the URL lets the client do
+    // a clean window.location navigation with no spurious error.
+    // The order id doubles as the payment reference. Hand it back so the
     // client can persist it and resume payment (see resumePaymentAction) if the
     // redirect below never lands — the order + a payable URL already exist
     // server-side, so a dropped redirect must not strand the shopper.
     const orderId = data?.data?.order?.id as string | undefined;
 
-    if (authUrl) {
+    if (payUrl) {
       return {
         success: true as const,
-        redirectUrl: authUrl as string,
-        accessCode,
+        redirectUrl: payUrl,
+        checkoutUrl: payUrl,
         orderId,
       };
     }
     if (fullyCovered) {
-      // Store credit covered everything — there is no Paystack step at all.
+      // Store credit covered everything — there is no payment step at all.
       return { success: true as const, redirectUrl: '/thank-you', orderId };
     }
-    // 201 but no URL: the order exists and its authorization_url is stored on
+    // 201 but no URL: the order exists and its checkout_url is stored on
     // the payment record — recover via resume rather than dead-ending.
     if (orderId) {
       return { success: false as const, error: 'no_payment_link', orderId };
@@ -233,9 +235,10 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
  * Resume payment for an existing pending order.
  *
  * The durable fix for a failed post-checkout redirect: the order and a payable
- * Paystack URL already exist server-side, so recovery is just "hand me that URL
- * again." Idempotent — no new order, no new Paystack transaction. Works for
- * guests and authenticated users alike (keyed on the order id / reference).
+ * Bachs checkout URL already exist server-side, so recovery is just "hand me
+ * that URL again." Idempotent — no new order, no new checkout session unless
+ * the old one is spent. Works for guests and authenticated users alike (keyed
+ * on the order id / reference).
  */
 export async function resumePaymentAction(
   orderId: string,
@@ -275,10 +278,16 @@ export async function resumePaymentAction(
     }
 
     const meta = data?.data?.checkout_metadata;
-    const authUrl = meta?.authorization_url as string | undefined;
-    const accessCode = meta?.access_code as string | undefined;
-    if (authUrl) {
-      return { success: true as const, redirectUrl: authUrl, accessCode, orderId };
+    const payUrl = (meta?.checkout_url || meta?.authorization_url) as
+      | string
+      | undefined;
+    if (payUrl) {
+      return {
+        success: true as const,
+        redirectUrl: payUrl,
+        checkoutUrl: payUrl,
+        orderId,
+      };
     }
 
     return {

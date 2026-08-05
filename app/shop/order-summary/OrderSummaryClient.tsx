@@ -19,7 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
-import { openInlineCheckout } from '@/lib/paystack-inline';
+import { openInlineCheckout } from '@/lib/bachs-overlay';
 import {
   readPendingOrder,
   writePendingOrder,
@@ -75,7 +75,7 @@ interface OrderSummaryClientProps {
   // empty-bag message that reads as "we lost your cart".
   cartLoadFailed?: boolean;
   // Only set when the backend actually charges shipping. Shown as its own line
-  // so the total here matches what Paystack collects.
+  // so the total here matches what Bachs collects.
   shippingFee?: number | null;
 }
 
@@ -135,7 +135,7 @@ export default function OrderSummaryClient({
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
-  // A pending order whose Paystack redirect never landed. When set, we surface
+  // A pending order whose payment redirect never landed. When set, we surface
   // a "Complete your payment" banner so the shopper can resume without the cart
   // (which checkout already cleared) and without creating a duplicate order.
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
@@ -187,18 +187,19 @@ export default function OrderSummaryClient({
   const hasStoreCredit = isLoggedIn && storeCredit > 0;
   // Shipping is charged on top of the goods, so it has to land in the total
   // before credit is applied — otherwise credit could appear to cover an
-  // amount that Paystack then exceeds.
+  // amount that the charge then exceeds.
   const shipping = typeof shippingFee === 'number' && shippingFee > 0 ? shippingFee : 0;
   const totalWithShipping = total + shipping;
   const creditApplied =
     useStoreCredit && hasStoreCredit ? Math.min(storeCredit, totalWithShipping) : 0;
   const totalAfterCredit = Math.max(totalWithShipping - creditApplied, 0);
 
-  // No fee line: the Paystack transaction fee is absorbed by the merchant, so
-  // the order total IS the amount charged. It briefly wasn't — the account
-  // passed the fee on, and checkout quoted 150,000 while Paystack collected
-  // 152,000. If that setting is ever flipped back, the fee must be surfaced
-  // again rather than left as a surprise at the payment step.
+  // No fee line: the Bachs processing fee is absorbed by the merchant
+  // (fee_handling: org_pays_fee), so the order total IS the amount charged.
+  // Under Paystack this briefly wasn't true — the account passed the fee on,
+  // and checkout quoted 150,000 while the charge collected 152,000. If that
+  // setting is ever flipped to customer_pays, the fee must be surfaced again
+  // rather than left as a surprise at the payment step.
 
   async function handleRemoveItem(itemId: string) {
     if (!itemId || removingId) return;
@@ -226,32 +227,32 @@ export default function OrderSummaryClient({
   /**
    * Take the shopper to payment.
    *
-   * Inline overlay first: every order this store has created reached the
-   * Paystack redirect and none were paid, and a full-page bounce to another
-   * domain is the step that loses people. The hosted page stays as the
-   * fallback for anything that stops the overlay running — a blocked script,
-   * an ad blocker, an older build with no access code — because the order
-   * already exists server-side either way.
+   * Inline overlay first: every order this store created under the old
+   * full-page redirect went unpaid, and a bounce to another domain is the
+   * step that loses people. The hosted Bachs page stays as the fallback for
+   * anything that stops the overlay running — a blocked script, an ad
+   * blocker, an older build with no checkout URL — because the order already
+   * exists server-side either way.
    *
-   * Payment is NEVER trusted from the browser. onSuccess only routes to
-   * /thank-you, which verifies against Paystack server-side before showing
+   * Payment is NEVER trusted from the browser. checkout.completed only routes
+   * to /thank-you, which verifies against Bachs server-side before showing
    * anything (see app/thank-you/page.tsx) — same as the redirect path always
    * did.
    */
   async function goToPayment(result: {
     redirectUrl?: string;
-    accessCode?: string;
+    checkoutUrl?: string;
     orderId?: string;
   }) {
-    // Store credit covered the whole order: no Paystack step at all.
+    // Store credit covered the whole order: no payment step at all.
     if (result.redirectUrl === '/thank-you') {
       showToast.success('Order placed!');
       window.location.href = result.redirectUrl;
       return;
     }
 
-    if (result.accessCode) {
-      const outcome = await openInlineCheckout(result.accessCode);
+    if (result.checkoutUrl) {
+      const outcome = await openInlineCheckout(result.checkoutUrl);
 
       if (outcome.kind === 'success') {
         showToast.success('Payment received — confirming…');
@@ -273,7 +274,7 @@ export default function OrderSummaryClient({
       }
 
       // Overlay unavailable: fall through to the hosted page.
-      console.error('Paystack inline unavailable:', outcome.reason);
+      console.error('Bachs overlay unavailable:', outcome.reason);
     }
 
     if (result.redirectUrl) {
@@ -372,7 +373,7 @@ export default function OrderSummaryClient({
   }
 
   // On load, if a prior checkout left a pending order behind (redirect dropped,
-  // tab closed, shopper bailed on Paystack), offer to resume it. Verifying it's
+  // tab closed, shopper bailed on the payment page), offer to resume it. Verifying it's
   // still payable happens server-side when they tap the banner.
   useEffect(() => {
     const stored = readPendingOrder();
@@ -392,10 +393,10 @@ export default function OrderSummaryClient({
           clearPendingOrder();
         }
         // Through goToPayment, not a raw navigation. This used to jump straight
-        // to the hosted Paystack page, so the one flow aimed at a shopper who
+        // to the hosted payment page, so the one flow aimed at a shopper who
         // ALREADY failed to pay once was the only flow still bouncing them off
         // the site — the exact step that lost them the first time. resume
-        // returns an accessCode too, so the overlay works here identically.
+        // returns a checkoutUrl too, so the overlay works here identically.
         await goToPayment(resumed);
         return;
       }

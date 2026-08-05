@@ -9,8 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@bachs/js": "^0.2.0",
     "@faker-js/faker": "^10.1.0",
-    "@paystack/inline-js": "^2.24.0",
     "@preline/tabs": "^3.2.3",
     "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^2.0.1",

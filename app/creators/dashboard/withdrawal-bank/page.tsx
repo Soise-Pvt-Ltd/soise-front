@@ -53,7 +53,7 @@ export default function WithdrawalBankPage() {
         setHasBank(true);
         setBankName(details.bank_name);
         // Keep the CODE, not just the name. Prefilling the edit form used to
-        // match the saved bank by NAME against Paystack's list; any drift in
+        // match the saved bank by NAME against the provider's list; any drift in
         // spelling or spacing meant the select silently fell back to "Select
         // your bank" and the creator had to find their bank again.
         setBankCode(details.bank_code || '');
@@ -181,7 +181,7 @@ export default function WithdrawalBankPage() {
         </div>
         {/* "Funds would be sent in a few minutes" was not true and set the
             wrong expectation: a payout request is queued at status
-            'requested' and an admin initiates the Paystack transfer by hand
+            'requested' and an admin initiates the Bachs transfer by hand
             (a creator must never be able to trigger the transfer OTP). The
             request-payout page already says one business day; these two now
             agree. */}

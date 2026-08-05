@@ -102,7 +102,7 @@ export async function getBanks() {
  * Ask the bank who actually owns an account number.
  *
  * The account name used to be a free-text box the creator filled in
- * themselves, saved verbatim and handed to Paystack as the transfer
+ * themselves, saved verbatim and handed to the provider as the transfer
  * recipient. One mistyped digit made a valid recipient pointing at a
  * stranger, and transfers don't come back. Now the name is something the
  * bank returns and the creator confirms.
