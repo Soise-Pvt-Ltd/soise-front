@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@bachs/js':
+        specifier: ^0.2.0
+        version: 0.2.0
       '@faker-js/faker':
         specifier: ^10.1.0
         version: 10.5.0
-      '@paystack/inline-js':
-        specifier: ^2.24.0
-        version: 2.24.0
       '@preline/tabs':
         specifier: ^3.2.3
         version: 3.2.3
@@ -175,6 +175,10 @@ packages:
   '@babel/types@7.29.7':
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
+
+  '@bachs/js@0.2.0':
+    resolution: {integrity: sha512-O0W6ut3BwEadMN+NS56uXNEbwKdcmAGCjYuMDwrIJzy7a498Bc+byC+D+jYiVWMqqm4CUaSV3mV/GbAkJLsytQ==}
+    engines: {node: '>=18'}
 
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
@@ -501,10 +505,6 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
-
-  '@paystack/inline-js@2.24.0':
-    resolution: {integrity: sha512-78O19c7voo02eD1w9qHh74Snuy4u8R301LhHaiPZdNnRv4jlcWCKKzaGslanjwhyaftaSlhaIlV3Cqi6MGIJIQ==}
-    engines: {node: '>= 22.0.0'}
 
   '@preline/tabs@3.2.3':
     resolution: {integrity: sha512-ipXFqluOmE/FHLroMCChDHCcdtda0jr7s+2qeBv+DsIaLYilcWTlNVrnM+2/RCiKgtdhVtvDckFWYcei8xrlXA==}
@@ -2429,6 +2429,8 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
+  '@bachs/js@0.2.0': {}
+
   '@emnapi/core@1.10.0':
     dependencies:
       '@emnapi/wasi-threads': 1.2.1
@@ -2682,8 +2684,6 @@ snapshots:
       fastq: 1.20.1
 
   '@nolyfill/is-core-module@1.0.39': {}
-
-  '@paystack/inline-js@2.24.0': {}
 
   '@preline/tabs@3.2.3': {}
 
