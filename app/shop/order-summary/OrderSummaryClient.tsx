@@ -239,11 +239,14 @@ export default function OrderSummaryClient({
    * anything (see app/thank-you/page.tsx) — same as the redirect path always
    * did.
    */
-  async function goToPayment(result: {
-    redirectUrl?: string;
-    checkoutUrl?: string;
-    orderId?: string;
-  }) {
+  async function goToPayment(
+    result: {
+      redirectUrl?: string;
+      checkoutUrl?: string;
+      orderId?: string;
+    },
+    isRetryAfterExpiry = false,
+  ) {
     // Store credit covered the whole order: no payment step at all.
     if (result.redirectUrl === '/thank-you') {
       showToast.success('Order placed!');
@@ -273,7 +276,42 @@ export default function OrderSummaryClient({
         return;
       }
 
-      // Overlay unavailable: fall through to the hosted page.
+      // A session that expired while the overlay sat open is the one
+      // "unavailable" whose URL is guaranteed dead — Bachs sessions live 60
+      // minutes, and redirecting to the corpse strands the shopper on the
+      // provider's expired-session page. Mint a fresh session via resume and
+      // reopen. Once only: a brand-new session cannot be expired, so a second
+      // failure means something else is wrong and the generic fallback below
+      // (or the resume banner) is the right place to land.
+      if (
+        outcome.kind === 'unavailable' &&
+        outcome.reason === 'session-expired' &&
+        result.orderId &&
+        !isRetryAfterExpiry
+      ) {
+        const expiredToastId = showToast.loading(
+          'That checkout timed out — opening a fresh one…',
+        );
+        const resumed = await resumePaymentAction(result.orderId);
+        showToast.dismiss(expiredToastId);
+        if (resumed?.success && resumed.redirectUrl) {
+          await goToPayment(resumed, true);
+          return;
+        }
+        // Resume said no (paid elsewhere / cancelled meanwhile): surface the
+        // banner path rather than redirecting to a dead session.
+        setPendingOrderId(result.orderId);
+        setPending(false);
+        submittingRef.current = false;
+        showToast.error(
+          resumed?.error || 'That checkout expired. Tap “Complete payment” to reopen it.',
+        );
+        return;
+      }
+
+      // Overlay unavailable for any other reason (blocked script, ad blocker,
+      // SDK error): the session itself is still payable, so fall through to
+      // the hosted page.
       console.error('Bachs overlay unavailable:', outcome.reason);
     }
 
