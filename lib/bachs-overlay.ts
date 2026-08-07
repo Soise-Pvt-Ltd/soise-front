@@ -93,15 +93,25 @@ export async function openInlineCheckout(
       resolve(outcome);
     };
 
-    // Watchdog: if the overlay never becomes ready (expired session, dead
-    // script, malformed token), settle as unavailable so the caller can fall
-    // back instead of stranding the shopper behind a blank modal. Only runs
-    // until the checkout is ready; once it is, the shopper is paying and we
-    // must not yank it away from them.
-    const watchdog = setTimeout(
+    // Watchdog, two-phase. A genuinely dead overlay (dead script, malformed
+    // token) emits NO lifecycle events, so 12 quiet seconds means bail to the
+    // hosted page. But checkout.opened/checkout.loaded arriving proves the
+    // overlay is alive and merely still fetching — common on mobile data and
+    // in TikTok/IG in-app browsers — and yanking a loading overlay into a
+    // full-page redirect restarts the SAME page from zero on the SAME slow
+    // network, strictly worse. So each sign of life extends the leash; only
+    // checkout.ready (shopper can pay) retires the watchdog entirely.
+    let watchdog = setTimeout(
       () => settle({ kind: 'unavailable', reason: 'load-timeout' }),
       12_000,
     );
+    const extendWatchdog = () => {
+      clearTimeout(watchdog);
+      watchdog = setTimeout(
+        () => settle({ kind: 'unavailable', reason: 'load-timeout' }),
+        30_000,
+      );
+    };
 
     let paidReference = '';
 
@@ -114,6 +124,11 @@ export async function openInlineCheckout(
           checkoutUrl,
         onEvent: (event: { type: string; data?: Record<string, unknown> }) => {
           switch (event.type) {
+            case 'checkout.opened':
+            case 'checkout.loaded':
+              // Alive but still loading — give it room instead of bailing.
+              extendWatchdog();
+              break;
             case 'checkout.ready':
               clearTimeout(watchdog);
               break;
