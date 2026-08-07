@@ -37,10 +37,28 @@ function pixel(): TiktokPixel | null {
   return ttq && typeof ttq.track === 'function' ? ttq : null;
 }
 
+type MetaPixel = (command: 'track', event: string, properties?: TtqEventProperties) => void;
+
+function metaPixel(): MetaPixel | null {
+  if (typeof window === 'undefined') return null;
+  // Like ttq, the fbq base snippet queues calls made before fbevents.js loads.
+  const fbq = (window as unknown as { fbq?: MetaPixel }).fbq;
+  return typeof fbq === 'function' ? fbq : null;
+}
+
 /** Report a browser-side pixel event. Never throws — tracking must not break the page. */
 export function track(event: string, properties?: TtqEventProperties): void {
   try {
     pixel()?.track(event, properties);
+  } catch {
+    /* attribution is best-effort */
+  }
+}
+
+/** Report a browser-side Meta pixel event. Never throws, like track(). */
+export function metaTrack(event: string, properties?: TtqEventProperties): void {
+  try {
+    metaPixel()?.('track', event, properties);
   } catch {
     /* attribution is best-effort */
   }
@@ -64,6 +82,15 @@ export function trackViewContent(product: {
     ],
     // Matches the backend's ViewContent payload (app/routes/products.py) so the
     // two sources stay comparable in TikTok's reporting.
+    content_name: product.name,
+    currency: 'NGN',
+    value: Number(product.base_price) || 0,
+  });
+  // Same taxonomy as the Meta server events (app/integrations/meta_events.py):
+  // product id here, variant ids on AddToCart/Purchase.
+  metaTrack('ViewContent', {
+    content_ids: [product.id],
+    content_type: 'product_group',
     content_name: product.name,
     currency: 'NGN',
     value: Number(product.base_price) || 0,

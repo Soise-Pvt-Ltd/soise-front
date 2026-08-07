@@ -102,6 +102,10 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
   },
   other: {
+    // Meta domain verification for soise.ng (Business settings -> Brand safety
+    // -> Domains). Rendered into the static <head> at build time, which is
+    // exactly what the verifier requires — must not move into client-side code.
+    'facebook-domain-verification': '4g9s1h6x4nq1y0z70p707srugzwvxl',
     'msapplication-TileColor': '#121212',
     'msapplication-config': '/browserconfig.xml',
   },
@@ -147,6 +151,22 @@ var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n
 }(window, document, 'ttq');`,
           }}
         />
+        {process.env.NEXT_PUBLIC_META_PIXEL_ID && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${process.env.NEXT_PUBLIC_META_PIXEL_ID}');
+fbq('track', 'PageView');`,
+            }}
+          />
+        )}
       </head>
       <body className="font-body shell-max antialiased">
         <Providers>{children}</Providers>

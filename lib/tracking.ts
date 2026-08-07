@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 /**
  * Cookie header value to forward to the API (api.soise.ng) on server-side
- * requests that trigger TikTok CAPI events (AddToCart, InitiateCheckout,
+ * requests that trigger TikTok/Meta server events (AddToCart, InitiateCheckout,
  * Purchase).
  *
  * Those requests originate from Next server code, not the browser, so the
@@ -28,6 +28,14 @@ export async function apiForwardCookie(): Promise<string> {
 
   const ttclid = store.get('ttclid')?.value;
   if (ttclid) parts.push(`ttclid=${ttclid}`);
+
+  // Meta's equivalents: _fbp is the pixel browser id, _fbc carries the ad
+  // click id (the pixel derives it from a landing URL's fbclid on its own).
+  const fbp = store.get('_fbp')?.value;
+  if (fbp) parts.push(`_fbp=${fbp}`);
+
+  const fbc = store.get('_fbc')?.value;
+  if (fbc) parts.push(`_fbc=${fbc}`);
 
   return parts.join('; ');
 }
