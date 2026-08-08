@@ -17,6 +17,7 @@ import {
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
+import { mediaThumb } from '@/lib/cloudinary';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
 import { openInlineCheckout } from '@/lib/bachs-overlay';
@@ -1361,8 +1362,8 @@ function OrderSummaryItem({
   const size = item.variantDetails?.size ?? 'N/A';
   const price = item.variantDetails?.price ?? 0;
   const image =
-    item.variantDetails?.display_media?.[0]?.url ??
-    item.variantDetails?.media?.[0]?.url ??
+    mediaThumb(item.variantDetails?.display_media?.[0]) ??
+    mediaThumb(item.variantDetails?.media?.[0]) ??
     item.variantDetails?.product_primary_image ??
     undefined;
 

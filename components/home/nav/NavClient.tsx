@@ -15,6 +15,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import BrandMark from '@/components/brand/BrandMark';
+import { mediaThumb } from '@/lib/cloudinary';
 import { EnrichedCartItem, Product } from './types';
 import {
   logout,
@@ -677,7 +678,7 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                                 {(() => {
                                   const src =
                                     product?.primary_image ||
-                                    product?.sample_variants?.[0]?.media?.[0]?.url;
+                                    mediaThumb(product?.sample_variants?.[0]?.media?.[0]);
                                   return src ? (
                                     // eslint-disable-next-line @next/next/no-img-element
                                     <img
@@ -1110,8 +1111,8 @@ function BagItem({
   const size = item.variantDetails?.size ?? 'N/A';
   const price = item.variantDetails?.price ?? 0;
   const image =
-    item.variantDetails?.display_media?.[0]?.url ??
-    item.variantDetails?.media?.[0]?.url;
+    mediaThumb(item.variantDetails?.display_media?.[0]) ??
+    mediaThumb(item.variantDetails?.media?.[0]);
 
   return (
     // min-w-0 throughout: without it the fixed-width left group refuses to

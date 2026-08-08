@@ -209,9 +209,16 @@ export default function ProductListingClient({
                       {/* Image */}
                       <div className="flex flex-1 items-center justify-center overflow-hidden">
                         {(() => {
+                          // Never fall back to `.url` — that's the raw
+                          // full-resolution upload (~941KB) for a card that
+                          // paints at ~200px. `small` is the same asset at
+                          // w_400/f_auto, which is ~29KB.
+                          const media = product.sample_variants?.[0]?.media?.[0];
                           const src =
                             product.primary_image ||
-                            product.sample_variants?.[0]?.media?.[0]?.url;
+                            media?.variants?.small ||
+                            media?.variants?.medium ||
+                            media?.url;
                           return (
                             src && (
                               <motion.img

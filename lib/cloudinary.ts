@@ -11,6 +11,36 @@ export function withCloudinaryTransform(url: string, transform: string): string 
   return `${url.slice(0, i + UPLOAD_MARKER.length)}${transform}/${url.slice(i + UPLOAD_MARKER.length)}`;
 }
 
+interface MediaLike {
+  url?: string | null;
+  variants?: Record<string, string | undefined> | null;
+}
+
+/**
+ * A thumbnail-sized URL for a media record — never the raw original.
+ *
+ * Uploads land at full resolution: the product PNGs run 1-2.5MB. Cards, cart
+ * rows and nav previews paint them between 60px and 200px, so reaching for
+ * `media.url` shipped a 941KB PNG to fill a 29KB box. That mismatch was the
+ * entire Cloudinary bandwidth bill — 111GB in 30 days against a measured
+ * 947KB average per delivered image, which is the raw original almost exactly.
+ *
+ * Prefers the stored variant and derives the same transform from the raw URL
+ * when a record predates `variants`, so it needs no backfill and degrades to
+ * pass-through on non-Cloudinary URLs.
+ */
+export function mediaThumb(
+  media: MediaLike | null | undefined,
+  width = 400,
+): string | undefined {
+  if (!media) return undefined;
+  const stored = width <= 400 ? media.variants?.small : media.variants?.medium;
+  if (stored) return stored;
+  const url = media.url;
+  if (!url) return undefined;
+  return withCloudinaryTransform(url, `c_scale,f_auto,q_auto,w_${width}`);
+}
+
 /**
  * Trim the dead transparent margin off a mockup-tool product cutout.
  *
