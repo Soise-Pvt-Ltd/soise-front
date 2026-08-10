@@ -17,11 +17,14 @@ import {
 
 // Downscale + re-encode large images client-side before upload. Full-width
 // hero/featured backgrounds are routinely >10MB, which the server's body-size
-// limit rejects with a 413 ("upload failed"); they also render as the raw
-// uploaded URL on the homepage, so shrinking them keeps that page fast. The
-// transparent-logo slot is skipped so its alpha channel survives.
+// limit rejects with a 413 ("upload failed"), so shrinking them keeps the
+// upload inside the limit. Alpha-capable sources re-encode to WebP, never
+// JPEG — see the note in compressImage for why that distinction matters.
 const MAX_UPLOAD_DIMENSION = 2560;
 const COMPRESS_THRESHOLD_BYTES = 1_500_000; // ~1.5MB — below this, not worth it
+
+/** Source formats that can carry an alpha channel. JPEG cannot. */
+const ALPHA_CAPABLE = /^image\/(png|webp|gif|avif)$/;
 
 async function compressImage(file: File): Promise<File> {
   if (file.type === 'image/svg+xml' || file.size <= COMPRESS_THRESHOLD_BYTES) {
@@ -49,12 +52,30 @@ async function compressImage(file: File): Promise<File> {
   }
   ctx.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
+
+  // This used to always encode JPEG, which silently destroyed transparency:
+  // JPEG has no alpha channel, and a canvas composites transparent pixels to
+  // BLACK on export. Every homepage cutout came out with a black background,
+  // and because it happened in the browser the server only ever saw the
+  // already-flattened file — nothing downstream could detect or undo it.
+  //
+  // WebP is the fix: it keeps alpha AND compresses better than JPEG, so
+  // alpha-capable sources lose nothing. JPEG sources have no alpha to protect,
+  // so they keep using JPEG.
+  const keepsAlpha = ALPHA_CAPABLE.test(file.type);
+  const mime = keepsAlpha ? 'image/webp' : 'image/jpeg';
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, 'image/jpeg', 0.85),
+    canvas.toBlob(resolve, mime, 0.85),
   );
-  if (!blob || blob.size >= file.size) return file;
-  const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
-  return new File([blob], name, { type: 'image/jpeg' });
+
+  // A browser without WebP encoding returns null. Never fall back to JPEG for
+  // an alpha-capable source — that's the exact bug this replaced. Ship the
+  // original instead and let the server-side pipeline size it down.
+  if (!blob || blob.type !== mime || blob.size >= file.size) return file;
+
+  const ext = keepsAlpha ? '.webp' : '.jpg';
+  const name = file.name.replace(/\.[^.]+$/, '') + ext;
+  return new File([blob], name, { type: mime });
 }
 
 interface SlotDef {
@@ -252,10 +273,11 @@ export default function HomeContentClient() {
     }
     setUploading(slot);
     try {
-      // Keep the transparent logo untouched; compress everything else so large
-      // background photos don't trip the server's upload size limit.
-      const uploadFile =
-        slot === 'explore_collection' ? file : await compressImage(file);
+      // Every slot compresses now. The explore_collection exemption existed
+      // only because compressImage flattened alpha to JPEG; it encodes WebP for
+      // alpha-capable sources, so the transparent slots are safe and large
+      // uploads in every slot get shrunk below the server's size limit.
+      const uploadFile = await compressImage(file);
       const formData = new FormData();
       formData.append('file', uploadFile);
       const res = await fetch('/api/media/upload', {
