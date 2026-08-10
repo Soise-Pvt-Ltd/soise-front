@@ -9,7 +9,7 @@ import AfterHero from '@/components/home/after-hero';
 import Hero from '@/components/home/hero';
 import ImageGallerySection from '@/components/home/image-gallery-section';
 import { SITE_URL, SITE_NAME, pageMetadata } from '@/lib/seo';
-import { cloudinaryGalleryTrim, cloudinaryContent } from '@/lib/cloudinary';
+import { galleryImage, contentImage } from '@/lib/images';
 
 // Serve a cached, statically-rendered homepage and revalidate the catalog data
 // in the background at most once a minute. Turns a per-request dynamic render
@@ -141,13 +141,13 @@ export default async function Home() {
 
   const images = [
     homeImages.gallery_1
-      ? cloudinaryGalleryTrim(homeImages.gallery_1)
+      ? galleryImage(homeImages.gallery_1)
       : '/before-explore-collection-1.png',
     homeImages.gallery_2
-      ? cloudinaryGalleryTrim(homeImages.gallery_2)
+      ? galleryImage(homeImages.gallery_2)
       : '/before-explore-collection-2.png',
     homeImages.gallery_3
-      ? cloudinaryGalleryTrim(homeImages.gallery_3)
+      ? galleryImage(homeImages.gallery_3)
       : '/before-explore-collection-3.png',
   ];
 
@@ -179,7 +179,7 @@ export default async function Home() {
       )}
       <FeaturedCollection
         collection={featuredCollection}
-        img={homeImages.mens_top ? cloudinaryContent(homeImages.mens_top) : homeImages.mens_top}
+        img={homeImages.mens_top ? contentImage(homeImages.mens_top) : homeImages.mens_top}
         texts={homeTexts}
       />
       {category2Products.length > 0 && (
@@ -189,7 +189,7 @@ export default async function Home() {
       <ExploreCollection
         image={
           homeImages.explore_collection
-            ? cloudinaryContent(homeImages.explore_collection)
+            ? contentImage(homeImages.explore_collection)
             : homeImages.explore_collection
         }
       />

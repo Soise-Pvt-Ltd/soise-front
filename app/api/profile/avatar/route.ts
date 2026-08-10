@@ -3,7 +3,7 @@ import { getBackendToken } from '@/lib/server-auth';
 
 /**
  * Avatar upload for the signed-in user. Forwards the multipart file to the
- * backend's auth-only `POST /profiles/avatar`, which uploads to Cloudinary and
+ * backend's auth-only `POST /profiles/avatar`, which uploads to Cloudflare and
  * sets the user's `avatar`. Unlike `/api/media/upload` (admin-gated), any
  * authenticated user can use this. Returns the updated profile.
  */

@@ -17,7 +17,7 @@ import {
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
-import { mediaThumb } from '@/lib/cloudinary';
+import { mediaThumb } from '@/lib/images';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
 import { openInlineCheckout } from '@/lib/bachs-overlay';

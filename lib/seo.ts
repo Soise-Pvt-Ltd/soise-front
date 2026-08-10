@@ -5,6 +5,7 @@
 
 import type { Metadata } from 'next';
 import { siteConfig } from './site-config';
+import { shareCard } from './images';
 
 // Canonical host. Must match the host the site actually serves on (apex
 // redirects to www), otherwise og:url / canonical point at a 308 and social
@@ -48,21 +49,13 @@ export function snippet(text: string, max = 155): string {
 }
 
 /**
- * Ask Cloudinary for a landscape share card instead of the raw asset.
+ * A landscape share card for OpenGraph/Twitter.
  *
- * Product photography is portrait or square and can be several megabytes.
- * Handed to a scraper as-is it renders as a small cropped thumbnail (and
- * WhatsApp simply drops anything oversized). This returns a 1200×630,
- * subject-aware, ~100KB JPEG. Non-Cloudinary URLs pass through untouched.
+ * The transform itself now lives in lib/images.ts alongside the other delivery
+ * helpers; it's re-exported here because every metadata builder below and
+ * app/og/route.tsx reach for it through this module.
  */
-export function cloudinaryCard(url: string): string {
-  const marker = '/image/upload/';
-  const i = url.indexOf(marker);
-  if (i === -1) return url;
-  const transform =
-    'c_fill,g_auto,w_1200,h_630,q_80,f_jpg,fl_progressive:none';
-  return `${url.slice(0, i + marker.length)}${transform}/${url.slice(i + marker.length)}`;
-}
+export { shareCard };
 
 /**
  * Build a COMPLETE Open Graph block.
@@ -92,8 +85,8 @@ export function buildOpenGraph(opts: {
     description: opts.description,
     images: opts.images?.length
       ? opts.images.map((img) => {
-          const url = cloudinaryCard(img.url);
-          // Only declare dimensions we actually know. Cloudinary-transformed
+          const url = shareCard(img.url);
+          // Only declare dimensions we actually know. Cloudflare-transformed
           // URLs are exactly 1200×630; for anything else, asserting those
           // numbers would make scrapers lay the card out wrong.
           const isCard = url !== img.url;
@@ -152,7 +145,7 @@ export function pageMetadata(opts: {
     twitter: buildTwitter({
       title: ogTitle,
       description: ogDescription,
-      images: opts.images?.map((i) => cloudinaryCard(i.url)),
+      images: opts.images?.map((i) => shareCard(i.url)),
     }),
   };
 }

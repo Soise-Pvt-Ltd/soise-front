@@ -18,12 +18,15 @@ export default function ImageGallerySection({
       {/* Mobile: edge-to-edge snap strip (was a fixed-width row that overflowed
           the viewport and dragged the whole page sideways). Desktop: 3-up grid.
           Full renders, zero cropping -- object-contain guarantees that.
-          Cloudinary uploads get e_trim only (lib/cloudinary.ts): removes the
-          dead transparent canvas margin around the subject, keeps 100% of
-          the subject. Bundled /public fallbacks are pre-trimmed the same
-          way. Trimming the empty margin is not the same thing as cropping
-          into the subject -- that distinction is why this card is still
-          object-contain and not object-cover.
+          Uploads are trimmed once, at upload time, by trim_transparent_margin
+          in the backend's app/domain/media.py: it removes the dead transparent
+          canvas margin around the subject and keeps 100% of the subject.
+          (Cloudinary did this per-delivery with e_trim; Cloudflare Images has
+          no equivalent transform, so it moved into the upload path.) Bundled
+          /public fallbacks are pre-trimmed the same way. Trimming the empty
+          margin is not the same thing as cropping into the subject -- that
+          distinction is why this card is still object-contain and not
+          object-cover.
           The cards deliberately have NO background of their own. The renders
           are transparent PNGs and e_trim leaves a ~1:3 subject inside a 3:4
           card, so any card colour shows as a large slab either side of the

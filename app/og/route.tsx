@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { SITE_NAME, SITE_URL, cloudinaryCard } from '@/lib/seo';
+import { SITE_NAME, SITE_URL, shareCard } from '@/lib/seo';
 
 export const runtime = 'nodejs';
 
@@ -30,7 +30,7 @@ async function getHero(): Promise<{ img: string; headline: string }> {
     return {
       // Baseline JPEG at exact card size — satori decodes those reliably and
       // it keeps the fetch to ~100KB instead of the multi-MB original.
-      img: img ? cloudinaryCard(img) : fallback.img,
+      img: img ? shareCard(img) : fallback.img,
       headline: headline || fallback.headline,
     };
   } catch {

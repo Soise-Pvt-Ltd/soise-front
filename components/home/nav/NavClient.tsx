@@ -15,7 +15,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import BrandMark from '@/components/brand/BrandMark';
-import { mediaThumb } from '@/lib/cloudinary';
+import { mediaThumb } from '@/lib/images';
 import { EnrichedCartItem, Product } from './types';
 import {
   logout,

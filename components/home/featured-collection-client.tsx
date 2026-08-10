@@ -6,7 +6,7 @@ import { ArrowRightIcon } from '../icons';
 import Link from 'next/link';
 import type { HomepageTexts } from './hero';
 import type { FeaturedCollection } from './featured-collection';
-import { cloudinaryContent } from '@/lib/cloudinary';
+import { contentImage } from '@/lib/images';
 
 interface FeaturedCollectionClientProps {
   collection?: FeaturedCollection | null;
@@ -29,8 +29,8 @@ export default function FeaturedCollectionClient({
   // collection's banner, then the bundled default.
   // Every branch here needs optimising, not just the CMS one: the collection
   // banner was arriving as a 1.4MB untransformed PNG and rendering as a
-  // full-bleed background. cloudinaryContent no-ops on the bundled fallback.
-  const backgroundImage = cloudinaryContent(
+  // full-bleed background. contentImage no-ops on the bundled fallback.
+  const backgroundImage = contentImage(
     img || collection?.bannerUrl || '/mens-top.jpg',
   );
   const href = collection

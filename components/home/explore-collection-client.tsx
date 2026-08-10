@@ -35,6 +35,10 @@ export default function ExploreCollectionClient({
           <motion.img
             src={src}
             alt="Explore Collection"
+            // Below the fold — see the note in caurosel.tsx. Eager here cost a
+            // 148KB w_1400 preload ahead of the hero.
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
             initial={{ opacity: 0, scale: 1.08 }}
             animate={
@@ -56,7 +60,14 @@ export default function ExploreCollectionClient({
           >
             {isRemote ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={src} alt="Explore Collection" width={211} height={113} />
+              <img
+                src={src}
+                alt="Explore Collection"
+                width={211}
+                height={113}
+                loading="lazy"
+                decoding="async"
+              />
             ) : (
               <Image
                 src={src}

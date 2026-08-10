@@ -134,6 +134,24 @@ export default async function RootLayout({
       className={`${body_font.variable} ${display_font.variable} ${luxe_font.variable}`}
     >
       <head>
+        {/*
+          Every image on the site — including the LCP hero — comes from
+          res.cloudinary.com, and the API from api.soise.ng. Both are
+          cross-origin, so the browser must do DNS + TCP + TLS before the first
+          byte of the hero can arrive. Those preloads were already in <head>,
+          but a preload can't start until the connection exists.
+
+          On a Lagos mobile connection that handshake chain is ~3 round trips at
+          ~250ms each, i.e. most of a second of dead time in front of the LCP
+          element. Warming it here overlaps it with HTML parse instead.
+
+          crossOrigin is required on the Cloudinary hint: the images are fetched
+          in CORS mode (canvas/Next image semantics), and a preconnect opened in
+          the wrong mode is simply not reused — you get a second handshake and
+          the hint buys nothing.
+        */}
+        <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="" />
+        <link rel="preconnect" href="https://api.soise.ng" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }}

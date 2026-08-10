@@ -10,7 +10,7 @@ import { useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice } from '@/lib/product-price';
-import { cloudinaryContent } from '@/lib/cloudinary';
+import { contentImage } from '@/lib/images';
 
 export default function SwiperCarouselClient({ items: products }: any) {
   const { formatPrice } = useCurrency();
@@ -89,7 +89,7 @@ export default function SwiperCarouselClient({ items: products }: any) {
                         (item.images?.length && item.images) ||
                         (item.primary_image ? [{ url: item.primary_image }] : []);
                       // Prefer the pre-generated variants. The backend already
-                      // emits c_scale,f_auto,q_auto at w_1200/w_800, but this
+                      // emits w=800/w=1200 variants, but this
                       // read `.url` — the untransformed original. One product
                       // render was shipping 1.4MB of PNG into a card, and
                       // Swiper preloads the first slide, so it landed ahead of
@@ -98,7 +98,7 @@ export default function SwiperCarouselClient({ items: products }: any) {
                       const photoUrls: string[] = (rawMedia ?? [])
                         .map((m: { url?: string; variants?: { medium?: string; large?: string } } | null) =>
                           m?.variants?.medium || m?.variants?.large ||
-                          (m?.url ? cloudinaryContent(m.url, 900) : undefined),
+                          (m?.url ? contentImage(m.url, 900) : undefined),
                         )
                         .filter((url: string | undefined): url is string => Boolean(url));
 
@@ -109,6 +109,15 @@ export default function SwiperCarouselClient({ items: products }: any) {
                           <motion.img
                             src={photoUrls[0]}
                             alt={item.title || item.name}
+                            // React 19 emits <link rel="preload" as="image"> for
+                            // every eager <img> it renders on the server, and
+                            // hoists them into <head> ABOVE the hero's own
+                            // preload. Five card images at ~150KB each put 1.1MB
+                            // of below-the-fold traffic in front of the LCP
+                            // element. `lazy` opts them out of that entirely —
+                            // they're off-screen at first paint by definition.
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-contain"
                             whileHover={{ scale: 1.08 }}
                             transition={{
@@ -149,6 +158,8 @@ export default function SwiperCarouselClient({ items: products }: any) {
                               <img
                                 src={url}
                                 alt={item.title || item.name}
+                                loading="lazy"
+                                decoding="async"
                                 className="h-full w-full object-contain"
                               />
                             </SwiperSlide>

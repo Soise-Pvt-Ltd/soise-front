@@ -143,7 +143,7 @@ export default function ProfileClient({ dashboard }: any) {
       const formData = new FormData();
       formData.append('file', file);
 
-      // Single auth-only call: uploads to Cloudinary AND saves the avatar.
+      // Single auth-only call: uploads to Cloudflare Images AND saves the avatar.
       const res = await fetch('/api/profile/avatar', {
         method: 'POST',
         body: formData,
