@@ -1,3 +1,5 @@
+import imageCompression from 'browser-image-compression';
+
 // Downscale + re-encode large images client-side before upload.
 //
 // Uploads travel browser → /api/media/upload (a Vercel route handler) → the
@@ -5,10 +7,13 @@
 // bigger dies with 413 FUNCTION_PAYLOAD_TOO_LARGE *before our handler runs*,
 // leaving no trace in any log. Full-width hero shots and phone photos are
 // routinely >4.5MB, so shrinking them client-side is the only reliable path.
-// Alpha-capable sources re-encode to WebP, never JPEG — see the note in
-// compressImage for why that distinction matters.
+//
+// browser-image-compression does the work in a web worker (no main-thread
+// freeze on 10MB photos) and iterates quality until the result actually fits
+// under the target size — unlike a single-pass canvas encode, which guesses.
 const MAX_UPLOAD_DIMENSION = 2560;
 const COMPRESS_THRESHOLD_BYTES = 1_500_000; // ~1.5MB — below this, not worth it
+const TARGET_SIZE_MB = 3.5; // comfortably under Vercel's cap, with headroom
 
 /** Vercel's serverless request-body cap; requests above it 413 before our code runs. */
 export const MAX_UPLOAD_BYTES = 4_500_000;
@@ -20,50 +25,40 @@ export async function compressImage(file: File): Promise<File> {
   if (file.type === 'image/svg+xml' || file.size <= COMPRESS_THRESHOLD_BYTES) {
     return file;
   }
-  let bitmap: ImageBitmap;
-  try {
-    bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-  } catch {
-    return file; // Unsupported/corrupt — let the server validate it.
-  }
-  const scale = Math.min(
-    1,
-    MAX_UPLOAD_DIMENSION / Math.max(bitmap.width, bitmap.height),
-  );
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    bitmap.close();
-    return file;
-  }
-  ctx.drawImage(bitmap, 0, 0, width, height);
-  bitmap.close();
 
-  // This used to always encode JPEG, which silently destroyed transparency:
-  // JPEG has no alpha channel, and a canvas composites transparent pixels to
-  // BLACK on export. Every homepage cutout came out with a black background,
-  // and because it happened in the browser the server only ever saw the
-  // already-flattened file — nothing downstream could detect or undo it.
-  //
-  // WebP is the fix: it keeps alpha AND compresses better than JPEG, so
-  // alpha-capable sources lose nothing. JPEG sources have no alpha to protect,
-  // so they keep using JPEG.
+  // An earlier version of this flow always encoded JPEG, which silently
+  // destroyed transparency: JPEG has no alpha channel, and a canvas
+  // composites transparent pixels to BLACK on export. Every homepage cutout
+  // came out with a black background, and because it happened in the browser
+  // the server only ever saw the already-flattened file. Alpha-capable
+  // sources therefore re-encode to WebP (keeps alpha, compresses better),
+  // and only JPEG sources — which have no alpha to protect — stay JPEG.
   const keepsAlpha = ALPHA_CAPABLE.test(file.type);
-  const mime = keepsAlpha ? 'image/webp' : 'image/jpeg';
-  const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob(resolve, mime, 0.85),
-  );
 
-  // A browser without WebP encoding returns null. Never fall back to JPEG for
-  // an alpha-capable source — that's the exact bug this replaced. Ship the
-  // original instead and let the server-side pipeline size it down.
-  if (!blob || blob.type !== mime || blob.size >= file.size) return file;
+  try {
+    const out = await imageCompression(file, {
+      maxSizeMB: TARGET_SIZE_MB,
+      maxWidthOrHeight: MAX_UPLOAD_DIMENSION,
+      useWebWorker: true,
+      fileType: keepsAlpha ? 'image/webp' : 'image/jpeg',
+      initialQuality: 0.85,
+      preserveExif: false,
+    });
 
-  const ext = keepsAlpha ? '.webp' : '.jpg';
-  const name = file.name.replace(/\.[^.]+$/, '') + ext;
-  return new File([blob], name, { type: mime });
+    // A browser without WebP encoding falls back per the canvas spec. PNG
+    // output is acceptable (alpha survives); JPEG output for an
+    // alpha-capable source is the exact flattening bug this flow replaced —
+    // ship the original instead.
+    if (keepsAlpha && out.type === 'image/jpeg') return file;
+    if (out.size >= file.size) return file;
+
+    const ext =
+      out.type === 'image/webp' ? '.webp'
+      : out.type === 'image/png' ? '.png'
+      : '.jpg';
+    const name = file.name.replace(/\.[^.]+$/, '') + ext;
+    return new File([out], name, { type: out.type });
+  } catch {
+    return file; // Unsupported/corrupt/worker failure — let the server validate it.
+  }
 }
