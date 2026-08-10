@@ -1696,8 +1696,40 @@ export default function ProductsPage({
                         </tr>
                       ))}
 
+                    {/*
+                      The catalogue says there ARE products but none reached the
+                      table. Previously this fell through to "Add your first
+                      product", which contradicts the tab badges and the
+                      "Showing 1 to N" line right below — both of which come
+                      from server-supplied meta rather than from these rows, so
+                      they stay correct while the table is empty. Saying so
+                      out loud beats a blank tbody or a misleading empty state.
+                    */}
+                    {!isLoading &&
+                      filteredProducts.length === 0 &&
+                      totalRows(pagination) > 0 && (
+                        <tr>
+                          <td colSpan={6} className="td">
+                            <div className="py-12 text-center">
+                              <p className="text-[15px] font-medium text-[#3F3830]">
+                                {totalRows(pagination)} product
+                                {totalRows(pagination) === 1 ? '' : 's'} in this
+                                view could not be displayed.
+                              </p>
+                              <p className="mt-1 text-[13px] text-[#8C8377]">
+                                Reload the page. If it keeps happening, try a
+                                different browser — some data-saving browsers
+                                cannot render this table.
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+
                     {/* Empty state per tab */}
-                    {!isLoading && filteredProducts.length === 0 && (
+                    {!isLoading &&
+                      filteredProducts.length === 0 &&
+                      totalRows(pagination) === 0 && (
                       <tr>
                         <td colSpan={6} className="td">
                           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
@@ -1744,23 +1776,33 @@ export default function ProductsPage({
                         product.minVariantPrice ?? product.basePrice;
                       return (
                         <tr key={product.id} className="ad-row group">
+                          {/*
+                            Laid out with inline-block, NOT flex, and deliberately
+                            so. Opera Mini's proxy renderer has no flexbox: a flex
+                            child there can collapse to zero width, and combined
+                            with `truncate` (overflow:hidden) the product name
+                            clipped to nothing — the whole table read as empty even
+                            though every row was present in the markup.
+
+                            Inline-block degrades safely instead: a renderer that
+                            ignores max-width/overflow shows the untruncated name
+                            rather than no name. Same result on modern browsers.
+                          */}
                           <td className="td">
-                            <div className="flex items-center gap-x-3">
-                              {product?.image ? (
-                                <img
-                                  src={product.image}
-                                  alt={product.name || 'Product image'}
-                                  className="size-9 rounded-[8px] object-cover"
-                                />
-                              ) : (
-                                <div className="flex size-9 items-center justify-center rounded-[8px] bg-[#EFEBE1] text-[10px] text-[#8C8377]">
-                                  N/A
-                                </div>
-                              )}
-                              <div className="max-w-[220px] truncate whitespace-nowrap font-medium text-[#14110E]">
-                                {product.name}
-                              </div>
-                            </div>
+                            {product?.image ? (
+                              <img
+                                src={product.image}
+                                alt={product.name || 'Product image'}
+                                className="mr-3 inline-block size-9 rounded-[8px] object-cover align-middle"
+                              />
+                            ) : (
+                              <span className="mr-3 inline-block size-9 rounded-[8px] bg-[#EFEBE1] text-center text-[10px] leading-9 text-[#8C8377] align-middle">
+                                N/A
+                              </span>
+                            )}
+                            <span className="inline-block max-w-[220px] truncate align-middle font-medium text-[#14110E]">
+                              {product.name}
+                            </span>
                           </td>
                           <td className="td whitespace-nowrap">
                             {product.priceVaries && (
@@ -1780,18 +1822,16 @@ export default function ProductsPage({
                             </span>
                           </td>
                           <td className="td">
-                            <div className="flex items-center gap-x-2">
-                              <span>{product.inventory}</span>
-                              {isOutOfStock ? (
-                                <span className="rounded-full bg-[#F2E1DB] px-2 py-0.5 text-[10px] font-semibold text-[#8C3A2B] uppercase">
-                                  Out of stock
-                                </span>
-                              ) : isLowStock ? (
-                                <span className="rounded-full bg-[#F3E9D6] px-2 py-0.5 text-[10px] font-semibold text-[#8A6218] uppercase">
-                                  Low
-                                </span>
-                              ) : null}
-                            </div>
+                            <span className="align-middle">{product.inventory}</span>
+                            {isOutOfStock ? (
+                              <span className="ml-2 inline-block rounded-full bg-[#F2E1DB] px-2 py-0.5 align-middle text-[10px] font-semibold text-[#8C3A2B] uppercase">
+                                Out of stock
+                              </span>
+                            ) : isLowStock ? (
+                              <span className="ml-2 inline-block rounded-full bg-[#F3E9D6] px-2 py-0.5 align-middle text-[10px] font-semibold text-[#8A6218] uppercase">
+                                Low
+                              </span>
+                            ) : null}
                           </td>
                           <td className="td">{product.outOfStock}</td>
                           <td className="td">
