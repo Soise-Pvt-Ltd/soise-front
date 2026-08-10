@@ -143,11 +143,19 @@ export function contentImage(url: string, width = 1400): string {
  *
  * `fit=scale-down` never upscales and never crops — it only caps the long edge
  * — so the framing the CMS chose is preserved exactly.
+ *
+ * quality=70 rather than the 85 used everywhere else, and only here. The hero
+ * sits under a `from-black/60 via-black/10` gradient and carries no fine detail
+ * a customer inspects — it is atmosphere, not merchandise. That hides the
+ * artefacts 70 introduces while cutting roughly a third off the single largest
+ * image on the site. Product imagery stays at 85 deliberately: on a
+ * quiet-luxury storefront the garment is the thing being judged, and shaving
+ * bytes off it is a false economy.
  */
 export function heroImage(url: string, width = 1600): string {
   return withImageTransform(
     url,
-    `width=${width},fit=scale-down,format=auto,quality=85`,
+    `width=${width},fit=scale-down,format=auto,quality=70`,
   );
 }
 
