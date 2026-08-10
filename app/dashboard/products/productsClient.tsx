@@ -28,6 +28,7 @@ import {
   deleteVariant,
 } from './actions';
 import { showToast } from '../toast';
+import { compressImage } from '@/lib/image-compress';
 import { totalRows } from '@/lib/pagination';
 import {
   COLOR_PRESETS,
@@ -88,6 +89,14 @@ async function uploadFile(formData: FormData) {
 
     if (response.ok) {
       return await response.json();
+    }
+    // Vercel rejects bodies >4.5MB before our route handler even runs, so
+    // this is the only place the failure is visible — name it for the admin.
+    if (response.status === 413) {
+      return {
+        success: false,
+        error: 'Image too large for upload (over ~4MB) — resize it and try again',
+      };
     }
     return { success: false, error: 'Upload failed' };
   } catch (error) {
@@ -1331,7 +1340,9 @@ export default function ProductsPage({
             uploadTasks.push(
               (async () => {
                 const fileData = new FormData();
-                fileData.append('file', file);
+                // Shrink below Vercel's 4.5MB body cap (alpha-safe — WebP,
+                // never JPEG, for transparent sources).
+                fileData.append('file', await compressImage(file));
                 const res = await uploadFile(fileData);
                 if (!res?.success || !res.data?.id) {
                   throw new Error(
