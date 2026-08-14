@@ -90,7 +90,7 @@ export const NIGERIAN_STATES = [
 
 /**
  * ISO 3166-1 alpha-2 codes for the shipping countries. Third parties
- * (Google Customer Reviews, carriers) speak codes, the checkout form speaks
+ * (carriers) speak codes, the checkout form speaks
  * names — this is the bridge. Unknown input falls back to NG, which is the
  * right guess for this store by an overwhelming margin.
  */
