@@ -191,7 +191,7 @@ export default function ApplicationsClient({
               </tr>
             ) : (
               apps.map((app) => (
-                <tr key={app.id} className="ad-row">
+                <tr key={app.id} className="suite-row">
                   <td className="td pl-6">
                     <div className="font-medium text-[#14110E]">
                       @{app.applicant_username || '—'}
@@ -226,14 +226,14 @@ export default function ApplicationsClient({
                         <button
                           onClick={() => review(app, 'approve')}
                           disabled={busyId === app.id}
-                          className="ad-btn-primary !px-4 !py-1.5 !text-[12px]"
+                          className="suite-btn-primary !px-4 !py-1.5 !text-[12px]"
                         >
                           {busyId === app.id ? '…' : 'Approve'}
                         </button>
                         <button
                           onClick={() => review(app, 'reject')}
                           disabled={busyId === app.id}
-                          className="ad-btn-danger !px-4 !py-1.5 !text-[12px]"
+                          className="suite-btn-danger !px-4 !py-1.5 !text-[12px]"
                         >
                           Reject
                         </button>
@@ -243,7 +243,7 @@ export default function ApplicationsClient({
                         onClick={() => allowReapply(app)}
                         disabled={busyId === app.id}
                         title="Bypass the 30-day cooldown so this applicant can re-apply now"
-                        className="ad-btn-ghost !px-4 !py-1.5 !text-[12px]"
+                        className="suite-btn-ghost !px-4 !py-1.5 !text-[12px]"
                       >
                         {busyId === app.id ? '…' : 'Allow re-application'}
                       </button>

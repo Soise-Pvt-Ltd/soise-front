@@ -117,24 +117,24 @@ export default function CreatorCodesClient({
       />
 
       {/* The hairline three-up, straight from /about's product section. */}
-      <div className="ad-grid-hairline mb-6 grid sm:grid-cols-3">
+      <div className="suite-grid-hairline mb-6 grid sm:grid-cols-3">
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Total codes</p>
-          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+          <p className="suite-eyebrow">Total codes</p>
+          <p className="suite-display mt-3 text-[30px] leading-none text-[#14110E]">
             {stats.total}
           </p>
           <p className="mt-2 text-[12px] text-[#8C8377]">Across all creators</p>
         </div>
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Active</p>
-          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+          <p className="suite-eyebrow">Active</p>
+          <p className="suite-display mt-3 text-[30px] leading-none text-[#14110E]">
             {stats.active}
           </p>
           <p className="mt-2 text-[12px] text-[#8C8377]">Currently usable</p>
         </div>
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Sales generated</p>
-          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+          <p className="suite-eyebrow">Sales generated</p>
+          <p className="suite-display mt-3 text-[30px] leading-none text-[#14110E]">
             {ngn(stats.sales)}
           </p>
           <p className="mt-2 text-[12px] text-[#8C8377]">
@@ -179,7 +179,7 @@ export default function CreatorCodesClient({
             </thead>
             <tbody>
               {codes.map((c) => (
-                <tr key={c.id} className="ad-row">
+                <tr key={c.id} className="suite-row">
                   <td className="td pl-6">
                     <div className="flex items-center gap-x-3">
                       <img
@@ -216,7 +216,7 @@ export default function CreatorCodesClient({
                       {c.tier_name || 'No tier'}
                     </Badge>
                   </td>
-                  <td className="td ad-display text-[16px] text-[#14110E]">
+                  <td className="td suite-display text-[16px] text-[#14110E]">
                     {c.current_rate}%
                   </td>
                   <td className="td">{c.usage_count ?? 0}</td>

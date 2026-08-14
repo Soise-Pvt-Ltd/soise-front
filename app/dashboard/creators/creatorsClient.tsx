@@ -462,7 +462,7 @@ export default function CreatorsClient({
               tier: creatorItem.tier || { name: 'Tier 1', level: 1 },
             };
             return (
-              <tr key={creator.id} className="ad-row">
+              <tr key={creator.id} className="suite-row">
                 <td className="td">
                   <div className="flex items-center gap-x-3">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -663,7 +663,7 @@ export default function CreatorsClient({
           </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px] py-[48px]">
-            <p className="ad-display text-[18px] text-[#14110E]">No creators found</p>
+            <p className="suite-display text-[18px] text-[#14110E]">No creators found</p>
             <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">
               {searchValue
                 ? 'Try adjusting your search'
@@ -778,7 +778,7 @@ export default function CreatorsClient({
         >
           <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="ad-display text-[20px] text-[#14110E]">
+              <h2 className="suite-display text-[20px] text-[#14110E]">
                 {codeModalCreator.creator_code_id
                   ? 'Change creator code'
                   : 'Assign creator code'}
@@ -843,7 +843,7 @@ export default function CreatorsClient({
         >
           <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-2 flex items-center justify-between">
-              <h2 className="ad-display text-[20px] text-[#14110E]">
+              <h2 className="suite-display text-[20px] text-[#14110E]">
                 {revokingCreator.role === 'creator'
                   ? 'Revoke creator status'
                   : 'Revoke code'}
@@ -919,7 +919,7 @@ export default function CreatorsClient({
         >
           <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-6 flex items-center justify-between">
-              <h2 className="ad-display text-[20px] text-[#14110E]">Assign Tier</h2>
+              <h2 className="suite-display text-[20px] text-[#14110E]">Assign Tier</h2>
               <button
                 onClick={() => {
                   setShowAssignModal(false);
@@ -1008,7 +1008,7 @@ export default function CreatorsClient({
         >
           <div className="w-full max-w-md rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-6 flex items-center justify-between">
-              <h2 id="tier-modal-title" className="ad-display text-[20px] text-[#14110E] capitalize">
+              <h2 id="tier-modal-title" className="suite-display text-[20px] text-[#14110E] capitalize">
                 {tierView === 'list'
                   ? 'Tiers'
                   : tierView === 'create'

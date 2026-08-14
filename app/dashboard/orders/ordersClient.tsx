@@ -333,7 +333,7 @@ export default function OrdersPage({
             </thead>
             <tbody>
               {orders.map((order, index, arr) => (
-                <tr key={order.id} className="ad-row">
+                <tr key={order.id} className="suite-row">
                   <td className="td">
                     <div className="flex items-center gap-x-[10px]">
                       <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#E2DBCC] text-[11px] font-semibold text-[#14110E]">
@@ -462,7 +462,7 @@ export default function OrdersPage({
             className="w-full max-w-[420px] rounded-[14px] bg-[#FBF9F4] p-[24px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id="delete-order-title" className="ad-display text-[19px] text-[#14110E]">
+            <h2 id="delete-order-title" className="suite-display text-[19px] text-[#14110E]">
               Delete order #{pendingDeleteOrder.order_number ?? ''}?
             </h2>
             <p className="mt-2 text-[13px] leading-relaxed text-[#5C544A]">
@@ -577,7 +577,7 @@ export default function OrdersPage({
           </div>
         ) : (
           <div className="flex h-full flex-col items-center justify-center rounded-b-[14px] border border-t-0 border-[#E2DBCC] bg-[#FBF9F4] px-[24px] py-[48px]">
-            <p className="ad-display text-[18px] text-[#14110E]">
+            <p className="suite-display text-[18px] text-[#14110E]">
               No orders found
             </p>
             <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">

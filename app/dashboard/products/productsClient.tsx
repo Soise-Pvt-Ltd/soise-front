@@ -1458,7 +1458,7 @@ export default function ProductsPage({
                     </div>
                   </div>
                 ) : (
-                  <span className="ad-display text-[20px]">Add product</span>
+                  <span className="suite-display text-[20px]">Add product</span>
                 )}
               </div>
             </div>
@@ -1728,9 +1728,9 @@ export default function ProductsPage({
                                 view could not be displayed.
                               </p>
                               <p className="mt-1 text-[13px] text-[#8C8377]">
-                                Reload the page. If it keeps happening, try a
-                                different browser — some data-saving browsers
-                                cannot render this table.
+                                Reload the page. If it keeps happening the
+                                catalogue response and the row data disagree —
+                                worth a look at the network tab.
                               </p>
                             </div>
                           </td>
@@ -1786,18 +1786,14 @@ export default function ProductsPage({
                       const displayPrice =
                         product.minVariantPrice ?? product.basePrice;
                       return (
-                        <tr key={product.id} className="ad-row group">
+                        <tr key={product.id} className="suite-row group">
                           {/*
-                            Laid out with inline-block, NOT flex, and deliberately
-                            so. Opera Mini's proxy renderer has no flexbox: a flex
-                            child there can collapse to zero width, and combined
-                            with `truncate` (overflow:hidden) the product name
-                            clipped to nothing — the whole table read as empty even
-                            though every row was present in the markup.
-
-                            Inline-block degrades safely instead: a renderer that
-                            ignores max-width/overflow shows the untruncated name
-                            rather than no name. Same result on modern browsers.
+                            Laid out with inline-block rather than flex. This was
+                            once believed to be what fixed an "empty table" report;
+                            it wasn't — the rows were being hidden by ad blockers
+                            matching the old `.ad-row` class name (see the suite-*
+                            prefix note in globals.css). Kept because it renders
+                            identically and there's no reason to churn it back.
                           */}
                           <td className="td">
                             {product?.image ? (
@@ -2391,7 +2387,7 @@ export default function ProductsPage({
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm">
             <div className="w-full max-w-md rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="ad-display text-[20px] text-[#14110E] capitalize">
+                <h2 className="suite-display text-[20px] text-[#14110E] capitalize">
                   {collectionView === 'list'
                     ? 'Collections'
                     : collectionView === 'create'

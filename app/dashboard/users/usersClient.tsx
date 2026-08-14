@@ -302,7 +302,7 @@ export default function UsersPage({
               </thead>
               <tbody>
                 {users.map((user, index, arr) => (
-                  <tr key={user.id} className="ad-row">
+                  <tr key={user.id} className="suite-row">
                     <td className="td">
                       {user.first_name} {user.last_name}
                     </td>
@@ -468,7 +468,7 @@ export default function UsersPage({
         >
           <div className="w-full max-w-md rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
             <div className="mb-6 flex items-center justify-between">
-              <h2 id="role-modal-title" className="ad-display text-[20px] text-[#14110E] capitalize">Change Role</h2>
+              <h2 id="role-modal-title" className="suite-display text-[20px] text-[#14110E] capitalize">Change Role</h2>
               <button
                 onClick={() => setShowRoleModal(false)}
                 className="flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[#EFEAE0] focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:outline-none"

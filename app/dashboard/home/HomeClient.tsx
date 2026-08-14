@@ -175,7 +175,7 @@ export default function HomeClient({
     if (metric?.is_new) {
       return (
         <span
-          className={`ad-badge ${
+          className={`suite-badge ${
             variant === 'onDark'
               ? 'bg-[#C4AA6E]/15 text-[#C4AA6E]'
               : 'bg-[#E4EDE3] text-[#3D6B4A]'
@@ -195,7 +195,7 @@ export default function HomeClient({
           ? 'bg-[#E4EDE3] text-[#3D6B4A]'
           : 'bg-[#F2E1DB] text-[#8C3A2B]';
     return (
-      <span className={`ad-badge ${cls}`}>
+      <span className={`suite-badge ${cls}`}>
         {formatPercentage(metric?.percentage_change ?? 0)}
       </span>
     );
@@ -219,7 +219,7 @@ export default function HomeClient({
             className="mb-6 flex flex-col gap-y-3 rounded-[14px] border border-[#E2DBCC] border-l-2 border-l-[#8C3A2B] bg-[#F8EDE8] px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <div className="ad-display text-[17px] text-[#8C3A2B]">
+              <div className="suite-display text-[17px] text-[#8C3A2B]">
                 Couldn&apos;t load dashboard data
               </div>
               <div className="mt-1 text-[13px] text-[#5C544A]">
@@ -230,7 +230,7 @@ export default function HomeClient({
             <button
               type="button"
               onClick={() => router.refresh()}
-              className="ad-btn-danger shrink-0 !text-[12px]"
+              className="suite-btn-danger shrink-0 !text-[12px]"
             >
               Try again
             </button>
@@ -375,7 +375,7 @@ export default function HomeClient({
                     </tr>
                   ) : (
                     data.latest_orders.map((order: any) => (
-                      <tr key={order.id} className="ad-row">
+                      <tr key={order.id} className="suite-row">
                         <td className="py-4 pl-6 text-wrap text-[#3F3830]">
                           {order.customer_name || 'Guest'}
                         </td>
@@ -462,7 +462,7 @@ const AllProductsTable = ({ products }: { products: any[] }) => {
           )}
           <tbody>
             {filteredProducts.map((product, index) => (
-              <tr key={product.product_id || index} className="ad-row">
+              <tr key={product.product_id || index} className="suite-row">
                 <td className="py-4 pr-3 pl-6">
                   <div className="flex items-center gap-x-3">
                     {product.product_image && (
@@ -480,10 +480,10 @@ const AllProductsTable = ({ products }: { products: any[] }) => {
                 <td className="py-4 pr-3 text-[#3F3830]">
                   {formatCurrency(product.price)}
                 </td>
-                <td className="ad-display py-4 pr-3 text-[16px] text-[#14110E]">
+                <td className="suite-display py-4 pr-3 text-[16px] text-[#14110E]">
                   {product.total_sales}
                 </td>
-                <td className="ad-display py-4 pr-6 text-[16px] text-[#14110E]">
+                <td className="suite-display py-4 pr-6 text-[16px] text-[#14110E]">
                   {formatCurrency(product.revenue)}
                 </td>
               </tr>

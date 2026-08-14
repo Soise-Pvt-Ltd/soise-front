@@ -306,7 +306,7 @@ export default function HomeContentClient() {
             <button
               onClick={handleSave}
               disabled={saving || !dirty}
-              className="ad-btn-primary"
+              className="suite-btn-primary"
             >
               {saving && (
                 <span
@@ -321,7 +321,7 @@ export default function HomeContentClient() {
 
         {/* Images */}
         <section>
-          <h2 className="ad-display text-[19px] text-[#14110E]">Images</h2>
+          <h2 className="suite-display text-[19px] text-[#14110E]">Images</h2>
           <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {SLOTS.map((slot) => {
               const current = images[slot.key];
@@ -424,7 +424,7 @@ export default function HomeContentClient() {
 
         {/* Featured Collection */}
         <section className="mt-10">
-          <h2 className="ad-display text-[19px] text-[#14110E]">
+          <h2 className="suite-display text-[19px] text-[#14110E]">
             Featured Collection
           </h2>
           <div className="mt-4 rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-5">
@@ -477,7 +477,7 @@ export default function HomeContentClient() {
 
         {/* Text */}
         <section className="mt-10">
-          <h2 className="ad-display text-[19px] text-[#14110E]">Text</h2>
+          <h2 className="suite-display text-[19px] text-[#14110E]">Text</h2>
           <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
             {TEXT_SLOTS.map((slot) => {
               const value = texts[slot.key] ?? '';

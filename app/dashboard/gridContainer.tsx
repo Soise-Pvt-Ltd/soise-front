@@ -74,7 +74,7 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
           className="h-[72px] w-[72px] object-contain"
           style={{ filter: 'invert(1)' }}
         />
-        <p className="ad-eyebrow-on-ink mt-4 !text-[10px]">Admin suite</p>
+        <p className="suite-eyebrow-on-ink mt-4 !text-[10px]">Admin suite</p>
       </button>
 
       <div className="scrollbar-hide relative z-10 flex-1 overflow-y-auto">
@@ -203,8 +203,8 @@ const GridContainer = ({ children, user }: GridContainerProps) => {
           <div className="scrollbar-hide col-span-1 block min-h-screen overflow-y-auto">
             <div className="flex flex-col justify-between gap-4 border-b border-[#E2DBCC] px-6 py-6 lg:flex-row lg:items-center lg:px-10">
               <div>
-                <p className="ad-eyebrow">Say less, look more</p>
-                <p className="ad-display mt-1.5 text-[22px] leading-none text-[#14110E]">
+                <p className="suite-eyebrow">Say less, look more</p>
+                <p className="suite-display mt-1.5 text-[22px] leading-none text-[#14110E]">
                   Hello, {userName}
                 </p>
               </div>

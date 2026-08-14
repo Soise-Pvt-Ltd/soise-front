@@ -30,17 +30,17 @@ export default function FunnelCard({ funnel }: { funnel: Funnel | null }) {
   const widest = Math.max(...steps.map((s) => s.value), 1);
 
   return (
-    <div className="ad-panel mt-6 p-6">
+    <div className="suite-panel mt-6 p-6">
       <div className="flex flex-wrap items-end justify-between gap-y-4">
         <div>
-          <p className="ad-eyebrow">Cart conversion</p>
+          <p className="suite-eyebrow">Cart conversion</p>
           <p className="mt-2 text-[12px] text-[#8C8377]">
             Last {funnel.window_days} days
           </p>
         </div>
         <div className="flex items-end gap-x-8">
           <div>
-            <p className="ad-display text-[26px] leading-none text-[#14110E]">
+            <p className="suite-display text-[26px] leading-none text-[#14110E]">
               {funnel.cart_conversion_rate}%
             </p>
             <p className="mt-1.5 text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
@@ -48,7 +48,7 @@ export default function FunnelCard({ funnel }: { funnel: Funnel | null }) {
             </p>
           </div>
           <div>
-            <p className="ad-display text-[26px] leading-none text-[#14110E]">
+            <p className="suite-display text-[26px] leading-none text-[#14110E]">
               {funnel.checkout_completion_rate}%
             </p>
             <p className="mt-1.5 text-[11px] tracking-[0.14em] text-[#8C8377] uppercase">
@@ -70,7 +70,7 @@ export default function FunnelCard({ funnel }: { funnel: Funnel | null }) {
                 style={{ width: `${Math.round((step.value / widest) * 100)}%` }}
               />
             </div>
-            <div className="ad-display w-[52px] shrink-0 text-right text-[16px] text-[#14110E]">
+            <div className="suite-display w-[52px] shrink-0 text-right text-[16px] text-[#14110E]">
               {step.value}
             </div>
           </div>

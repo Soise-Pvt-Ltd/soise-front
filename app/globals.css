@@ -110,21 +110,33 @@ input[type='number'].adminsolid,
    nothing with the storefront. These tokens are the same values /about is built
    from: bone canvas, ink black, gold accent, Playfair display serif. Defined as
    variables so the whole suite shifts from one place.
+
+   The prefix is `suite-`, and it must never go back to `ad-`. EasyList ships
+   generic cosmetic filters — `##.ad-display`, `##.ad-row`, `##.ad-panel`,
+   `##.ad-btn`, `##.ad-body`, `##.ad-field`, `##.ad-line` — that hide any element
+   carrying those class names on any site. Opera's built-in blocker and uBlock
+   Origin both apply them by default, so the whole admin quietly lost its
+   headings, its stat values and every table row in Chrome and Opera while
+   Firefox (no blocker) looked perfect. Nothing errors and nothing logs: the
+   markup is present and correct, the browser just paints `display: none` over
+   it, which is why it reads as a data bug from the outside.
+
+   Before adding a token here, check the name against EasyList's generic hides.
    ---------------------------------------------------------------------------- */
 :root {
-  --ad-canvas: #f4f1ea; /* page ground — bone */
-  --ad-paper: #fbf9f4; /* cards, lifted off the canvas without shadow */
-  --ad-ink: #0e0e10; /* sidebar / dark sections */
-  --ad-text: #14110e; /* primary type */
-  --ad-body: #3f3830; /* secondary type */
-  --ad-muted: #5c544a; /* supporting copy */
-  --ad-faint: #8c8377; /* labels, column heads */
-  --ad-hairline: #e2dbcc; /* dividers on light */
-  --ad-line: #dfd7c6; /* control borders */
-  --ad-field: #efebe1; /* input ground */
-  --ad-gold: #9c6f2e; /* accent on light surfaces */
-  --ad-gold-lt: #c4aa6e; /* accent on dark surfaces */
-  --ad-gold-dp: #7e5722; /* accent, pressed */
+  --suite-canvas: #f4f1ea; /* page ground — bone */
+  --suite-paper: #fbf9f4; /* cards, lifted off the canvas without shadow */
+  --suite-ink: #0e0e10; /* sidebar / dark sections */
+  --suite-text: #14110e; /* primary type */
+  --suite-body: #3f3830; /* secondary type */
+  --suite-muted: #5c544a; /* supporting copy */
+  --suite-faint: #8c8377; /* labels, column heads */
+  --suite-hairline: #e2dbcc; /* dividers on light */
+  --suite-line: #dfd7c6; /* control borders */
+  --suite-field: #efebe1; /* input ground */
+  --suite-gold: #9c6f2e; /* accent on light surfaces */
+  --suite-gold-lt: #c4aa6e; /* accent on dark surfaces */
+  --suite-gold-dp: #7e5722; /* accent, pressed */
 }
 
 /* The rule under the column heads is part of the head, not the first row —
@@ -138,100 +150,100 @@ input[type='number'].adminsolid,
 }
 
 /* Display type — Playfair, the same serif /about sets every headline in. */
-.ad-display {
+.suite-display {
   font-family: var(--font-luxe, Georgia, serif);
   letter-spacing: -0.01em;
 }
 
 /* Section eyebrow: gold, uppercase, widely tracked. The one repeating motif
    that ties every /about section together. */
-.ad-eyebrow {
+.suite-eyebrow {
   @apply text-[11px] font-medium tracking-[0.28em] text-[#9C6F2E] uppercase;
 }
-.ad-eyebrow-on-ink {
+.suite-eyebrow-on-ink {
   @apply text-[11px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase;
 }
 
 /* Card surface. Hairline border instead of shadow — quiet, printed, flat. */
-.ad-panel {
+.suite-panel {
   @apply rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4];
 }
 
 /* Hairline-divided grid, lifted straight from /about's three-up product cards:
    gap-px over a border-coloured ground draws the rules for free. */
-.ad-grid-hairline {
+.suite-grid-hairline {
   @apply gap-px overflow-hidden rounded-[14px] border border-[#E2DBCC] bg-[#E2DBCC];
 }
 
 /* Controls ------------------------------------------------------------------ */
 /* The shared geometry is declared once here and inherited by the variants
    below through plain CSS composition — Tailwind v4's `@apply` only resolves
-   real utilities, so a variant cannot `@apply ad-btn`. */
-.ad-btn,
-.ad-btn-primary,
-.ad-btn-ghost,
-.ad-btn-gold,
-.ad-btn-danger {
+   real utilities, so a variant cannot `@apply suite-btn`. */
+.suite-btn,
+.suite-btn-primary,
+.suite-btn-ghost,
+.suite-btn-gold,
+.suite-btn-danger {
   @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-medium transition-all duration-300 ease-out disabled:cursor-not-allowed disabled:opacity-40;
 }
-.ad-btn-primary {
+.suite-btn-primary {
   @apply bg-[#14110E] text-[#F4F1EA] hover:scale-[1.02] hover:bg-[#241f19] disabled:hover:scale-100;
 }
-.ad-btn-ghost {
+.suite-btn-ghost {
   @apply border border-[#14110E]/25 text-[#14110E] hover:border-[#14110E] hover:bg-[#14110E]/[0.04];
 }
-.ad-btn-gold {
+.suite-btn-gold {
   @apply bg-[#9C6F2E] text-[#F4F1EA] hover:bg-[#7E5722];
 }
-.ad-btn-danger {
+.suite-btn-danger {
   @apply border border-[#8C3A2B]/40 text-[#8C3A2B] hover:border-[#8C3A2B] hover:bg-[#8C3A2B]/[0.06];
 }
 
 /* Filter pill row — ink fill for the selected state, never a colour wash. */
-.ad-pill {
+.suite-pill {
   @apply cursor-pointer rounded-full border border-transparent px-4 py-1.5 text-[12px] font-medium tracking-[0.02em] text-[#5C544A] capitalize transition-colors hover:border-[#DFD7C6] hover:text-[#14110E];
 }
-.ad-pill-on {
+.suite-pill-on {
   @apply cursor-pointer rounded-full border border-[#14110E] bg-[#14110E] px-4 py-1.5 text-[12px] font-medium tracking-[0.02em] text-[#F4F1EA] capitalize;
 }
 
 /* Inputs -------------------------------------------------------------------- */
-.ad-input {
+.suite-input {
   @apply h-[40px] w-full rounded-[10px] border border-[#DFD7C6] bg-[#EFEBE1] px-3 text-[13px] text-[#14110E] transition-colors placeholder:text-[#8C8377] focus:border-[#9C6F2E] focus:bg-[#F8F5EE] focus:ring-0 focus:outline-none;
 }
 
 /* Status badges. Earth-toned rather than the stock traffic-light set — they
    still read at a glance, but belong to the same palette as everything else. */
-.ad-badge,
-.ad-badge-neutral,
-.ad-badge-good,
-.ad-badge-warn,
-.ad-badge-bad,
-.ad-badge-info,
-.ad-badge-alt {
+.suite-badge,
+.suite-badge-neutral,
+.suite-badge-good,
+.suite-badge-warn,
+.suite-badge-bad,
+.suite-badge-info,
+.suite-badge-alt {
   @apply inline-flex w-fit items-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-[0.06em] whitespace-nowrap uppercase;
 }
-.ad-badge-neutral {
+.suite-badge-neutral {
   @apply bg-[#EAE4D7] text-[#57503F];
 }
-.ad-badge-good {
+.suite-badge-good {
   @apply bg-[#E4EDE3] text-[#3D6B4A];
 }
-.ad-badge-warn {
+.suite-badge-warn {
   @apply bg-[#F3E9D6] text-[#8A6218];
 }
-.ad-badge-bad {
+.suite-badge-bad {
   @apply bg-[#F2E1DB] text-[#8C3A2B];
 }
-.ad-badge-info {
+.suite-badge-info {
   @apply bg-[#E3E6EC] text-[#4A5568];
 }
-.ad-badge-alt {
+.suite-badge-alt {
   @apply bg-[#EAE3EF] text-[#5E4B6B];
 }
 
 /* Table rows: the divider is the only chrome. */
-.ad-row {
+.suite-row {
   @apply border-t border-[#E2DBCC] transition-colors hover:bg-[#14110E]/[0.02];
 }
 

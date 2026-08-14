@@ -182,7 +182,7 @@ export default function TierRequestsClient({
               </tr>
             ) : (
               reqs.map((req) => (
-                <tr key={req.id} className="ad-row">
+                <tr key={req.id} className="suite-row">
                   <td className="td pl-6 font-medium text-[#14110E]">
                     @{req.requester_username || '—'}
                   </td>
@@ -193,7 +193,7 @@ export default function TierRequestsClient({
                     </div>
                   </td>
                   <td className="td">
-                    <div className="ad-display text-[17px] text-[#14110E]">
+                    <div className="suite-display text-[17px] text-[#14110E]">
                       {(req.follower_count ?? 0).toLocaleString()}
                     </div>
                     {req.social_handle && (
@@ -227,14 +227,14 @@ export default function TierRequestsClient({
                         <button
                           onClick={() => review(req, 'approve')}
                           disabled={busyId === req.id}
-                          className="ad-btn-primary !px-4 !py-1.5 !text-[12px]"
+                          className="suite-btn-primary !px-4 !py-1.5 !text-[12px]"
                         >
                           {busyId === req.id ? '…' : 'Approve'}
                         </button>
                         <button
                           onClick={() => review(req, 'reject')}
                           disabled={busyId === req.id}
-                          className="ad-btn-danger !px-4 !py-1.5 !text-[12px]"
+                          className="suite-btn-danger !px-4 !py-1.5 !text-[12px]"
                         >
                           Reject
                         </button>

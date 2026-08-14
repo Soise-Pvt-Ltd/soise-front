@@ -83,7 +83,7 @@ const Nav = () => {
     <nav className="relative px-4 pb-6" aria-label="Admin sections">
       {SECTIONS.map((section) => (
         <div key={section.heading} className="mb-7">
-          <p className="ad-eyebrow-on-ink mb-3 px-3 !text-[10px] opacity-70">
+          <p className="suite-eyebrow-on-ink mb-3 px-3 !text-[10px] opacity-70">
             {section.heading}
           </p>
           <div className="space-y-0.5">

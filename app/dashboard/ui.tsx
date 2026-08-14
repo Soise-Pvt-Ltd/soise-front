@@ -34,7 +34,7 @@ export function Eyebrow({
   className?: string;
 }) {
   return (
-    <p className={`${onInk ? 'ad-eyebrow-on-ink' : 'ad-eyebrow'} ${className}`}>
+    <p className={`${onInk ? 'suite-eyebrow-on-ink' : 'suite-eyebrow'} ${className}`}>
       {children}
     </p>
   );
@@ -60,7 +60,7 @@ export function PageHeader({
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-[640px]">
           <Eyebrow>{eyebrow}</Eyebrow>
-          <h1 className="ad-display mt-3 text-[30px] leading-[1.12] text-[#14110E] sm:text-[38px]">
+          <h1 className="suite-display mt-3 text-[30px] leading-[1.12] text-[#14110E] sm:text-[38px]">
             {title}
           </h1>
           {description && (
@@ -86,7 +86,7 @@ export function SectionTitle({
   className?: string;
 }) {
   return (
-    <h2 className={`ad-display text-[19px] text-[#14110E] ${className}`}>
+    <h2 className={`suite-display text-[19px] text-[#14110E] ${className}`}>
       {children}
     </h2>
   );
@@ -113,7 +113,7 @@ export function Panel({
 }) {
   const hasHead = Boolean(title || eyebrow || actions);
   return (
-    <section className={`ad-panel ${className}`}>
+    <section className={`suite-panel ${className}`}>
       {hasHead && (
         <div className="flex flex-col gap-3 border-b border-[#E2DBCC] px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -160,12 +160,12 @@ export function StatTile({
       aria-label={label}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className={ink ? 'ad-eyebrow-on-ink' : 'ad-eyebrow'}>{label}</p>
+        <p className={ink ? 'suite-eyebrow-on-ink' : 'suite-eyebrow'}>{label}</p>
         {action}
       </div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <p
-          className={`ad-display text-[30px] leading-none ${
+          className={`suite-display text-[30px] leading-none ${
             ink ? 'text-[#F4F1EA]' : 'text-[#14110E]'
           }`}
         >
@@ -233,7 +233,7 @@ export function Badge({
   tone?: Tone;
   className?: string;
 }) {
-  return <span className={`ad-badge-${tone} ${className}`}>{children}</span>;
+  return <span className={`suite-badge-${tone} ${className}`}>{children}</span>;
 }
 
 /** Badge driven straight off a backend status string. */
@@ -265,7 +265,7 @@ export function EmptyState({
     <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
       {/* The Greek-key rule from the brand mark, abstracted to a divider. */}
       <span aria-hidden="true" className="mb-5 block h-px w-10 bg-[#C4AA6E]" />
-      <p className="ad-display text-[18px] text-[#14110E]">{title}</p>
+      <p className="suite-display text-[18px] text-[#14110E]">{title}</p>
       {hint && (
         <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">
           {hint}
@@ -308,7 +308,7 @@ export function FilterPills<T extends string>({
           type="button"
           onClick={() => onChange(o.value)}
           aria-pressed={value === o.value}
-          className={value === o.value ? 'ad-pill-on' : 'ad-pill'}
+          className={value === o.value ? 'suite-pill-on' : 'suite-pill'}
         >
           {o.label}
         </button>
@@ -337,7 +337,7 @@ export function SearchInput({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       aria-label={label}
-      className={`ad-input max-w-[320px] ${className}`}
+      className={`suite-input max-w-[320px] ${className}`}
     />
   );
 }

@@ -382,7 +382,7 @@ export default function PayoutClient({
     if (payouts.length === 0) {
       return (
         <div className="flex flex-col items-center px-[24px] py-[48px] text-center">
-          <p className="ad-display text-[18px] text-[#14110E]">No payouts found</p>
+          <p className="suite-display text-[18px] text-[#14110E]">No payouts found</p>
           <p className="mt-2 max-w-[340px] text-[13px] leading-relaxed text-[#8C8377]">
             {searchQuery || activeTab !== 'All'
               ? 'Try adjusting your search or filters'
@@ -426,7 +426,7 @@ export default function PayoutClient({
                   key={payout.id}
                   onClick={() => openBreakdown(payout)}
                   title="Tap to verify the orders behind this payout"
-                  className="ad-row cursor-pointer"
+                  className="suite-row cursor-pointer"
                 >
                   <td className="td">
                     <div className="flex items-center gap-x-[5px]">
@@ -468,24 +468,24 @@ export default function PayoutClient({
       />
 
       {/* 1st layer — the hairline three-up used across the suite. */}
-      <div className="ad-grid-hairline mb-6 grid sm:grid-cols-3">
+      <div className="suite-grid-hairline mb-6 grid sm:grid-cols-3">
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Confirmed</p>
-          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+          <p className="suite-eyebrow">Confirmed</p>
+          <p className="suite-display mt-3 text-[30px] leading-none text-[#14110E]">
             {stats.completed}
           </p>
           <p className="mt-2 text-[12px] text-[#8C8377]">Total paid</p>
         </div>
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Requested</p>
-          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+          <p className="suite-eyebrow">Requested</p>
+          <p className="suite-display mt-3 text-[30px] leading-none text-[#14110E]">
             {stats.requested}
           </p>
           <p className="mt-2 text-[12px] text-[#8C3A2B]">Awaiting transfer</p>
         </div>
         <div className="bg-[#FBF9F4] p-6">
-          <p className="ad-eyebrow">Bachs balance</p>
-          <p className="ad-display mt-3 text-[30px] leading-none text-[#14110E]">
+          <p className="suite-eyebrow">Bachs balance</p>
+          <p className="suite-display mt-3 text-[30px] leading-none text-[#14110E]">
             {providerBalance === null
               ? '—'
               : `₦${providerBalance.toLocaleString('en-NG', {
