@@ -7,6 +7,15 @@ import { MinusIcon, PlusIcon, LikeIcon, LikeIconSolid } from '@/components/icons
 import SwiperCarouselClient from '@/components/caurosel';
 import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
+import { withImageTransform, isTransformable } from '@/lib/images';
+
+/**
+ * Widths offered for the main product image. Every entry is one more unique
+ * image+options pair against the 5,000/month free transformation quota, so this
+ * ladder is deliberately short: four rungs across the ~440px (1x) to ~1300px
+ * (3x) range the frame can actually paint.
+ */
+const MAIN_IMAGE_WIDTHS = [400, 640, 828, 1200] as const;
 import { addToBag as addToBagAction } from './actions';
 import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/actions';
 import { notifyCartChanged } from '@/lib/cart-events';
@@ -220,6 +229,33 @@ export default function ProductPageClient({
     return '/placeholder.png';
   }, [currentImages, selectedImageIndex]);
 
+  // Responsive ladder for the main product image, which was pinned to the
+  // stored `variants.large` (width=1200) for every device.
+  //
+  // Sizing here is HEIGHT-bound, not viewport-bound: the frame is h-[500px] with
+  // object-contain, and the catalogue is portrait (ratios ~0.62-0.88), so the
+  // image paints roughly 310-440 CSS px wide no matter how wide the screen is.
+  // A 3x phone therefore genuinely needs ~1300px and keeps getting 1200 — mobile
+  // was never the waste. A 1x desktop needs ~440px and was also getting 1200,
+  // which is 65KB where 25KB would do.
+  //
+  // sizes="500px" is the worst case that frame can paint (a square image filling
+  // the 500px height). Slightly overstating for portrait art is the safe
+  // direction: the browser rounds up to the next rung rather than under-serving.
+  //
+  // quality stays 85 unlike the hero's 70 — this is the garment itself, the one
+  // image a customer studies before spending money.
+  const mainImageSrcSet = useMemo(() => {
+    if (!isTransformable(mainImage)) return undefined;
+    return MAIN_IMAGE_WIDTHS.map(
+      (w) =>
+        `${withImageTransform(
+          mainImage,
+          `width=${w},fit=scale-down,format=auto,quality=85`,
+        )} ${w}w`,
+    ).join(', ');
+  }, [mainImage]);
+
   const currentPrice = useMemo(() => {
     if (selectedVariant && selectedVariant.price > 0) return selectedVariant.price;
     return product?.base_price ?? 0;
@@ -318,6 +354,8 @@ export default function ProductPageClient({
                         <motion.img
                           key={mainImage}
                           src={mainImage}
+                          srcSet={mainImageSrcSet}
+                          sizes={mainImageSrcSet ? '500px' : undefined}
                           alt={product.name}
                           className="max-h-full max-w-full object-contain"
                           initial={{ opacity: 0, scale: 0.95 }}
