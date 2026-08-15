@@ -79,9 +79,38 @@ export default function ProductPageClient({
   const router = useRouter();
   const pathname = usePathname();
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariant, setSelectedVariant] = useState<SampleVariant | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  // Seeded from variants[0] on the FIRST render, not in an effect.
+  //
+  // These used to start null and get filled by the "Initialize selection"
+  // effect, which then triggered the "Sync variant" effect. Both run only after
+  // hydration, so the server-rendered HTML had no variant, `currentImages` was
+  // empty, and `mainImage` fell through to /placeholder.png. The real product
+  // photo was not merely late — it was not in the markup at all, so the preload
+  // scanner could not see it and the browser only began fetching it after
+  // HTML -> JS download -> parse -> hydrate -> two effect passes -> re-render.
+  // On a Nigerian mobile connection that chain is seconds before the main image
+  // is even requested.
+  //
+  // variants[0] is exactly what the init effect chose, so the selection is
+  // unchanged — only its timing. The effects below still handle every later
+  // change, and both no-op on mount now (the init effect is guarded on
+  // !selectedColor, and the sync effect resolves to this same object reference,
+  // so React bails out without a re-render).
+  //
+  // Reads `product?.sample_variants` rather than the `variants` memo on purpose:
+  // that memo is declared further down the component, so referencing it here
+  // would be a temporal-dead-zone ReferenceError at runtime. This is the same
+  // array the memo wraps.
+  const firstVariant = product?.sample_variants?.[0] ?? null;
+  const [selectedVariant, setSelectedVariant] = useState<SampleVariant | null>(
+    () => firstVariant,
+  );
+  const [selectedColor, setSelectedColor] = useState<string | null>(
+    () => firstVariant?.color ?? null,
+  );
+  const [selectedSize, setSelectedSize] = useState<string | null>(
+    () => firstVariant?.size ?? null,
+  );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
   const [wishlistPending, setWishlistPending] = useState(false);
