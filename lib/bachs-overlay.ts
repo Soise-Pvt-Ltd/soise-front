@@ -89,28 +89,35 @@ export async function openInlineCheckout(
     const settle = (outcome: InlineOutcome) => {
       if (settled) return;
       settled = true;
-      clearTimeout(watchdog);
+      retireWatchdog();
       resolve(outcome);
     };
 
-    // Watchdog, two-phase. A genuinely dead overlay (dead script, malformed
-    // token) emits NO lifecycle events, so 12 quiet seconds means bail to the
-    // hosted page. But checkout.opened/checkout.loaded arriving proves the
-    // overlay is alive and merely still fetching — common on mobile data and
-    // in TikTok/IG in-app browsers — and yanking a loading overlay into a
-    // full-page redirect restarts the SAME page from zero on the SAME slow
-    // network, strictly worse. So each sign of life extends the leash; only
-    // checkout.ready (shopper can pay) retires the watchdog entirely.
-    let watchdog = setTimeout(
+    // Watchdog for ONE question only: did the overlay ever come up?
+    //
+    // A genuinely dead overlay (dead script, malformed token) emits no
+    // lifecycle events and never mounts, so 12 quiet seconds means bail to the
+    // hosted page. The moment we have any evidence the modal is actually on
+    // screen, the watchdog is retired for good — see retireWatchdog.
+    //
+    // It used to keep running afterwards on a 30s extension, retired only by
+    // checkout.ready. That made a timer out of something that is not a timing
+    // problem: once the overlay is up, the clock belongs to the shopper. Anyone
+    // reading the form, digging out a card, or waiting on an OTP would get
+    // yanked into a full-page redirect mid-payment — restarting the same page
+    // from zero, which is the exact failure this overlay exists to prevent
+    // (see the header: every order under the old redirect went unpaid). And it
+    // hinged on one event name: if the SDK doesn't emit checkout.ready, the
+    // redirect was guaranteed rather than merely possible.
+    let watchdog: ReturnType<typeof setTimeout> | null = setTimeout(
       () => settle({ kind: 'unavailable', reason: 'load-timeout' }),
       12_000,
     );
-    const extendWatchdog = () => {
-      clearTimeout(watchdog);
-      watchdog = setTimeout(
-        () => settle({ kind: 'unavailable', reason: 'load-timeout' }),
-        30_000,
-      );
+    const retireWatchdog = () => {
+      if (watchdog) {
+        clearTimeout(watchdog);
+        watchdog = null;
+      }
     };
 
     let paidReference = '';
@@ -126,11 +133,12 @@ export async function openInlineCheckout(
           switch (event.type) {
             case 'checkout.opened':
             case 'checkout.loaded':
-              // Alive but still loading — give it room instead of bailing.
-              extendWatchdog();
-              break;
             case 'checkout.ready':
-              clearTimeout(watchdog);
+              // Any of these means the modal is up and the shopper can see it.
+              // Which one arrives (and whether this SDK emits all three) is not
+              // something we should depend on — they all answer the only
+              // question the watchdog asks.
+              retireWatchdog();
               break;
             case 'checkout.completed':
               // The overlay auto-closes ~1.2s after success; settle now so
@@ -162,12 +170,20 @@ export async function openInlineCheckout(
           }
         },
         }),
-      ).catch((error: unknown) => {
-        settle({
-          kind: 'unavailable',
-          reason: error instanceof Error ? error.message : 'open-rejected',
+      )
+        .then(() => {
+          // open() resolving IS the mount. Belt-and-braces with the lifecycle
+          // events above: if this SDK build emits no event we recognise, the
+          // resolved promise still proves the modal is on screen, so the
+          // shopper is never redirected out from under a working overlay.
+          retireWatchdog();
+        })
+        .catch((error: unknown) => {
+          settle({
+            kind: 'unavailable',
+            reason: error instanceof Error ? error.message : 'open-rejected',
+          });
         });
-      });
     } catch (error) {
       settle({
         kind: 'unavailable',
