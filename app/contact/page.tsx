@@ -114,34 +114,119 @@ export default function ContactPage() {
             Verified Business
           </p>
           <div className="mt-6 space-y-4">
-            <div className="flex items-center gap-3 rounded-lg border border-[#2A2A2D] bg-[#151517] p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C4AA6E]/10">
-                <CheckShieldIcon />
-              </div>
-              <div className="flex-1">
-                <p className="text-[13px] font-medium text-[#F4F1EA]">Verified on TikTok</p>
-                <p className="text-[11px] text-[#7A766C]">Official business account</p>
+            <div className="group relative overflow-hidden rounded-lg border border-[#2A2A2D] bg-[#151517] transition-all hover:border-[#C4AA6E]/50 hover:shadow-lg hover:shadow-[#C4AA6E]/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#C4AA6E]/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="relative p-4">
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C4AA6E]/10">
+                    <CheckShieldIcon />
+                  </div>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-[#7A766C] transition-colors group-hover:text-[#C4AA6E]"
+                  >
+                    <path
+                      d="M5.25 2.91669L9.33333 7.00002L5.25 11.0834"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-medium text-[#F4F1EA]">Verified on TikTok</p>
+                  <p className="text-[11px] text-[#7A766C]">Official business account</p>
+                </div>
+                <div className="mt-3 rounded border border-[#2A2A2D] bg-[#0E0E10] p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-6 items-center justify-center rounded bg-[#C4AA6E]/20">
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.875 0H9.6075C9.7335 0.625625 10.08 1.41488 10.6881 2.198C11.2831 2.96537 12.0724 3.5 13.125 3.5V5.25C11.5911 5.25 10.4387 4.53775 9.625 3.64963V9.625C9.625 10.4903 9.36841 11.3362 8.88768 12.0556C8.40695 12.7751 7.72367 13.3358 6.92424 13.667C6.12481 13.9981 5.24515 14.0847 4.39648 13.9159C3.54781 13.7471 2.76826 13.3304 2.15641 12.7186C1.54455 12.1067 1.12787 11.3272 0.959063 10.4785C0.790252 9.62985 0.876892 8.75019 1.20803 7.95076C1.53916 7.15133 2.09991 6.46805 2.81938 5.98732C3.53884 5.50659 4.38471 5.25 5.25 5.25V7C4.73082 7 4.2233 7.15395 3.79163 7.44239C3.35995 7.73083 3.02349 8.1408 2.82481 8.62046C2.62613 9.10011 2.57415 9.62791 2.67544 10.1371C2.77672 10.6463 3.02673 11.114 3.39384 11.4812C3.76096 11.8483 4.22869 12.0983 4.73789 12.1996C5.24709 12.3008 5.77489 12.2489 6.25454 12.0502C6.7342 11.8515 7.14417 11.5151 7.43261 11.0834C7.72104 10.6517 7.875 10.1442 7.875 9.625V0Z" fill="#C4AA6E"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-1 h-2 w-16 rounded bg-[#C4AA6E]/30"></div>
+                      <div className="h-1.5 w-12 rounded bg-[#2A2A2D]"></div>
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="h-1.5 w-full rounded bg-[#2A2A2D]"></div>
+                    <div className="h-1.5 w-3/4 rounded bg-[#2A2A2D]"></div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="h-1.5 w-8 rounded bg-[#C4AA6E]/20"></div>
+                    <div className="text-[9px] text-[#7A766C]">VERIFIED</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-lg border border-[#2A2A2D] bg-[#151517] p-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C4AA6E]/10">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M10 0L12.5 7.5H20L14 12L16.5 20L10 15L3.5 20L6 12L0 7.5H7.5L10 0Z"
-                    fill="#C4AA6E"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-[13px] font-medium text-[#F4F1EA]">CAC Registered</p>
-                <p className="text-[11px] text-[#7A766C]">RC {siteConfig.registrationNumber}</p>
+            <div className="group relative overflow-hidden rounded-lg border border-[#2A2A2D] bg-[#151517] transition-all hover:border-[#C4AA6E]/50 hover:shadow-lg hover:shadow-[#C4AA6E]/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#C4AA6E]/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+              <div className="relative p-4">
+                <div className="mb-3 flex items-start justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C4AA6E]/10">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 0L12.5 7.5H20L14 12L16.5 20L10 15L3.5 20L6 12L0 7.5H7.5L10 0Z"
+                        fill="#C4AA6E"
+                      />
+                    </svg>
+                  </div>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-[#7A766C] transition-colors group-hover:text-[#C4AA6E]"
+                  >
+                    <path
+                      d="M5.25 2.91669L9.33333 7.00002L5.25 11.0834"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-medium text-[#F4F1EA]">CAC Registered</p>
+                  <p className="text-[11px] text-[#7A766C]">RC {siteConfig.registrationNumber}</p>
+                </div>
+                <div className="mt-3 rounded border border-[#2A2A2D] bg-[#0E0E10] p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-6 items-center justify-center rounded bg-[#C4AA6E]/20">
+                      <svg width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 0L12.5 7.5H20L14 12L16.5 20L10 15L3.5 20L6 12L0 7.5H7.5L10 0Z" fill="#C4AA6E"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="mb-1 h-2 w-16 rounded bg-[#C4AA6E]/30"></div>
+                      <div className="h-1.5 w-12 rounded bg-[#2A2A2D]"></div>
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    <div className="h-1.5 w-full rounded bg-[#2A2A2D]"></div>
+                    <div className="h-1.5 w-3/4 rounded bg-[#2A2A2D]"></div>
+                    <div className="h-1.5 w-1/2 rounded bg-[#2A2A2D]"></div>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="h-1.5 w-8 rounded bg-[#C4AA6E]/20"></div>
+                    <div className="text-[9px] text-[#7A766C]">REGISTERED</div>
+                  </div>
+                </div>
               </div>
             </div>
 
