@@ -418,16 +418,40 @@ export default function OrderSummaryClient({
       // order at checkout; signed-in orders authenticate via the session
       // cookie the action forwards, so no token is sent for them.
       const orderToken = readPendingOrderSecret() ?? undefined;
-      const result = await updateOrderShippingAction(orderId, {
-        label: formData.get('label') as string || 'Home',
-        line1: formData.get('address') as string,
-        line2: formData.get('line2') as string || '',
-        city: formData.get('city') as string,
-        state: formData.get('state') as string,
-        country: formData.get('country') as string,
-        postal_code: formData.get('zipCode') as string || '',
-        phone: formData.get('phone') as string || '',
-      }, orderToken);
+
+      // A saved address renders no manual fields, so when one is selected the
+      // payload must come from the stored address — reading the (absent)
+      // inputs used to POST null line1/city/state/country, which the backend
+      // rejected with 400 "Missing required field".
+      const saved = usingSavedAddress
+        ? savedAddresses.find((a) => a.id === selectedAddressId)
+        : undefined;
+      const shippingAddress = saved
+        ? {
+            label: saved.label || 'Home',
+            line1: saved.line1,
+            line2: saved.line2 || '',
+            city: saved.city,
+            state: saved.state,
+            country: saved.country,
+            postal_code: saved.postal_code,
+            phone: saved.phone || '',
+          }
+        : {
+            label: formData.get('label') as string || 'Home',
+            line1: formData.get('address') as string,
+            line2: formData.get('line2') as string || '',
+            city: formData.get('city') as string,
+            state: formData.get('state') as string,
+            country: formData.get('country') as string,
+            postal_code: formData.get('zipCode') as string || '',
+            phone: formData.get('phone') as string || '',
+          };
+      const result = await updateOrderShippingAction(
+        orderId,
+        shippingAddress,
+        orderToken,
+      );
 
       showToast.dismiss(toastId);
 
