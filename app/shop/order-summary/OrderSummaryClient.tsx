@@ -9,7 +9,6 @@ import Footer from '@/components/footer';
 import { EnrichedCartItem } from '@/components/home/nav/types';
 import {
   cancelPendingOrderAction,
-  captureCartEmailAction,
   checkoutAction,
   applyDiscountCodeAction,
   resumePaymentAction,
@@ -18,21 +17,21 @@ import {
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
-import { mediaThumb } from '@/lib/images';
 import { useCurrency } from '@/lib/currency-context';
 import { PENDING_CREATOR_CODE_COOKIE } from '@/components/RefCapture';
 import { openInlineCheckout } from '@/lib/bachs-overlay';
 import {
   readPendingOrder,
+  readPendingOrderSecret,
   writePendingOrder,
   clearPendingOrder,
 } from './pending-order';
-import {
-  SHIPPING_COUNTRIES,
-  NIGERIAN_STATES,
-  DEFAULT_COUNTRY,
-  isDomestic,
-} from '@/lib/countries';
+import { DEFAULT_COUNTRY, isDomestic } from '@/lib/countries';
+import { OrderSummaryItem } from './OrderSummaryItem';
+import { PendingOrderBanner } from './PendingOrderBanner';
+import { OrderSummaryTotals } from './OrderSummaryTotals';
+import CheckoutStepPayment from './CheckoutStepPayment';
+import CheckoutStepAddress, { SavedAddress } from './CheckoutStepAddress';
 
 function readCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
@@ -47,17 +46,19 @@ function clearCookie(name: string) {
   document.cookie = `${name}=; path=/; max-age=0; samesite=lax`;
 }
 
-interface SavedAddress {
-  id: string;
-  label?: string;
-  line1: string;
-  line2?: string;
-  city: string;
-  state: string;
-  country: string;
-  postal_code: string;
-  phone?: string;
-  is_default?: boolean;
+interface AppliedDiscountData {
+  code?: string;
+  valid?: boolean;
+  subtotal?: number;
+  discount_percentage?: number;
+  discount_amount?: number;
+  final_total?: number;
+  creator?: {
+    id: string;
+    username: string;
+    first_name: string;
+    last_name: string;
+  };
 }
 
 interface OrderSummaryClientProps {
@@ -81,41 +82,6 @@ interface OrderSummaryClientProps {
   shippingFee?: number | null;
 }
 
-/**
- * A labelled form field.
- *
- * Every checkout input used to be placeholder-only. Placeholders disappear the
- * moment someone types, so a half-filled form gives no clue what each box was
- * for — and screen readers get no accessible name at all. The label is real and
- * stays put.
- */
-function Field({
-  label,
-  htmlFor,
-  hint,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="w-full">
-      <label
-        htmlFor={htmlFor}
-        className="mb-[6px] block text-[12px] font-medium text-[#35373C] normal-case"
-      >
-        {label}
-        {hint && (
-          <span className="ml-[6px] font-normal text-[#8E8E93]">{hint}</span>
-        )}
-      </label>
-      {children}
-    </div>
-  );
-}
-
 export default function OrderSummaryClient({
   cart,
   isLoggedIn,
@@ -130,7 +96,7 @@ export default function OrderSummaryClient({
   cartLoadFailed = false,
   shippingFee = null,
 }: OrderSummaryClientProps) {
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice } = useCurrency();
   const router = useRouter();
   const submittingRef = useRef(false);
   const [pending, setPending] = useState(false);
@@ -172,7 +138,7 @@ export default function OrderSummaryClient({
   const [discountPending, setDiscountPending] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
   const [finalTotal, setFinalTotal] = useState<number | null>(null);
-  const [discountData, setDiscountData] = useState<any>(null);
+  const [discountData, setDiscountData] = useState<AppliedDiscountData | null>(null);
   const [apiSubtotal, setApiSubtotal] = useState<number | null>(null);
   const [showSavingsPulse, setShowSavingsPulse] = useState(false);
 
@@ -326,6 +292,9 @@ export default function OrderSummaryClient({
     }
   }
 
+  // Step 1 form action. Two-step checkout: only email/name is submitted here —
+  // the shipping address is collected in Step 2 (handleAddressSubmit) after
+  // payment is underway, so any address fields are stripped from the payload.
   async function handleSubmit(formData: FormData) {
     // Re-entrancy guard: block a second submit firing before `pending` renders,
     // preventing duplicate orders / duplicate /cart/checkout POSTs.
@@ -342,23 +311,15 @@ export default function OrderSummaryClient({
       formData.set('use_store_credit', 'true');
     }
 
-    // Two-step checkout: Step 1 only submits email/name, no shipping address
-    if (checkoutStep === 'payment') {
-      // Remove any shipping address fields for Step 1
-      formData.delete('address');
-      formData.delete('city');
-      formData.delete('state');
-      formData.delete('country');
-      formData.delete('zipCode');
-      formData.delete('phone');
-      formData.delete('line2');
-      formData.delete('selected_address_id');
-    } else {
-      // Step 2: include shipping address
-      if (usingSavedAddress) {
-        formData.set('selected_address_id', selectedAddressId);
-      }
-    }
+    // Remove any shipping address fields for Step 1
+    formData.delete('address');
+    formData.delete('city');
+    formData.delete('state');
+    formData.delete('country');
+    formData.delete('zipCode');
+    formData.delete('phone');
+    formData.delete('line2');
+    formData.delete('selected_address_id');
 
     const toastId = showToast.loading('Processing your order...');
 
@@ -369,9 +330,11 @@ export default function OrderSummaryClient({
 
       // The order now exists server-side. Remember it before we navigate so a
       // dropped redirect is recoverable on reload (see the resume banner).
+      // Guest orders also stash their per-order secret here so Step 2 can
+      // prove ownership when it sets the shipping address.
       if (result?.orderId) {
         try {
-          writePendingOrder(result.orderId);
+          writePendingOrder(result.orderId, result.orderSecret);
           setOrderId(result.orderId);
         } catch {
           /* private mode / storage disabled — banner just won't show */
@@ -438,15 +401,23 @@ export default function OrderSummaryClient({
     }
   }
 
+  // Step 2 form action: attach the shipping address to the order created in
+  // Step 1, then reopen payment for it. Guest orders present their per-order
+  // secret (X-Order-Token) to prove ownership of the account-less order.
   async function handleAddressSubmit(formData: FormData) {
     if (!orderId) return;
-    
+
     setPending(true);
     setError(null);
-    
+
     const toastId = showToast.loading('Saving your delivery details...');
-    
+
     try {
+      // Guest orders need their per-order secret (X-Order-Token) to prove
+      // ownership of the account-less order. It was stashed with the pending
+      // order at checkout; signed-in orders authenticate via the session
+      // cookie the action forwards, so no token is sent for them.
+      const orderToken = readPendingOrderSecret() ?? undefined;
       const result = await updateOrderShippingAction(orderId, {
         label: formData.get('label') as string || 'Home',
         line1: formData.get('address') as string,
@@ -456,10 +427,10 @@ export default function OrderSummaryClient({
         country: formData.get('country') as string,
         postal_code: formData.get('zipCode') as string || '',
         phone: formData.get('phone') as string || '',
-      });
-      
+      }, orderToken);
+
       showToast.dismiss(toastId);
-      
+
       if (result.success) {
         showToast.success('Delivery details saved');
         // Proceed to payment if not already initiated
@@ -675,63 +646,16 @@ export default function OrderSummaryClient({
     clearCookie(PENDING_CREATOR_CODE_COOKIE);
   }
 
-  const handlePhoneInput = (e: React.InputEvent<HTMLInputElement>) => {
-    const target = e.target as HTMLInputElement;
-    const value = target.value.replace(/\D/g, ''); // Remove non-numeric characters
-    if (value.length <= 11) {
-      target.value = value;
-    } else {
-      target.value = value.slice(0, 11);
-    }
-  };
-
   return (
     <>
       <Toaster position="top-center" richColors />
       {pendingOrderId && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="page-shell flex flex-col gap-y-4 border-b border-[#F0C36B] bg-[#FFF8EC] px-[20px] py-[16px] normal-case md:flex-row md:items-center md:gap-x-6"
-        >
-          {/* min-w-0 so the copy can actually use the space. Previously the
-              action was .btn_black, which carries w-full from an UNLAYERED
-              rule in globals.css — that beats the md:w-auto utility, so the
-              button never shrank and squeezed this column to about 90px, one
-              word per line. These buttons are styled inline for that reason. */}
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] font-semibold text-[#121212]">
-              You have an order awaiting payment
-            </p>
-            <p className="mt-[2px] text-[12px] leading-relaxed text-[#7A6320]">
-              Your order is saved and nothing has been charged yet. Reopening
-              checkout continues that same order — it will not create a
-              second one.
-            </p>
-          </div>
-          {/* One control, split 1:3. Cancel is the smaller, quieter half —
-              present so the banner isn't a one-way door, but never competing
-              with the action we actually want. */}
-          <div className="flex w-full shrink-0 overflow-hidden rounded-[10px] md:w-[360px]">
-            <button
-              type="button"
-              onClick={handleCancelPending}
-              disabled={resuming || cancelling}
-              className="w-1/4 cursor-pointer border border-r-0 border-[#121212] bg-transparent px-[8px] py-[13px] text-[11px] font-bold tracking-wide text-[#121212] uppercase transition-colors duration-200 hover:bg-[#121212]/5 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {cancelling ? '…' : 'Cancel'}
-            </button>
-            <button
-              type="button"
-              onClick={handleResume}
-              disabled={resuming || cancelling}
-              className="w-3/4 cursor-pointer bg-[#121212] px-[16px] py-[13px] text-[12px] font-bold tracking-wide text-white uppercase transition-colors duration-200 hover:bg-[#2a2a2a] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {resuming ? 'Opening…' : 'Complete payment'}
-            </button>
-          </div>
-        </motion.div>
+        <PendingOrderBanner
+          resuming={resuming}
+          cancelling={cancelling}
+          onResume={handleResume}
+          onCancel={handleCancelPending}
+        />
       )}
       <div className="page-shell">
         <div className="pb-[50px]">
@@ -928,7 +852,7 @@ export default function OrderSummaryClient({
                   <span className="font-medium tracking-widest text-[#32AC5B] uppercase">
                     {discountData.code}
                   </span>
-                  {discountData.discount_percentage > 0 && (
+                  {(discountData.discount_percentage ?? 0) > 0 && (
                     <span className="rounded-full bg-[#CCEAD6] px-[8px] py-[2px] text-[10px] font-medium text-[#32AC5B]">
                       -{discountData.discount_percentage}%
                     </span>
@@ -1051,464 +975,51 @@ export default function OrderSummaryClient({
             </div>
           )}
 
-          <div className="pt-[24px] uppercase">
-            <div className="flex items-center justify-between text-[12px] text-[#8E8E93]">
-              <div>Subtotal</div>
-              <div>{formatPrice(subtotal)}</div>
-            </div>
-            <AnimatePresence>
-              {appliedDiscount > 0 && (
-                <motion.div
-                  className="flex items-center justify-between pt-[8px] text-[12px] text-green-600"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div>Discount</div>
-                  <div>-{formatPrice(appliedDiscount)}</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            <AnimatePresence>
-              {creditApplied > 0 && (
-                <motion.div
-                  className="flex items-center justify-between pt-[8px] text-[12px] text-green-600"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div>Store credit</div>
-                  <div>-{formatPrice(creditApplied)}</div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            {/* Always shown, including when it's free. A shopper who can't see
-                a shipping line assumes one is coming at the payment step — say
-                it plainly here instead. */}
-            <div className="flex items-center justify-between pt-[8px] text-[12px] text-[#8E8E93]">
-              <div>Shipping</div>
-              {shipping > 0 ? (
-                <div>{formatPrice(shipping)}</div>
-              ) : domestic ? (
-                <div className="font-medium text-green-600">Free</div>
-              ) : (
-                // Free delivery is a Nigeria-only promise. The backend charges
-                // zero shipping for every order, so an international address
-                // would otherwise be shown "Free" — a claim nobody made.
-                <div className="text-[#8E8E93]">Confirmed after order</div>
-              )}
-            </div>
-            <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
-              <div>Total</div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={totalAfterCredit}
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 6 }}
-                  transition={{ duration: 0.25 }}
-                  className={showSavingsPulse ? 'text-green-600' : ''}
-                >
-                  {formatPrice(totalAfterCredit)}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            {shipping === 0 && domestic && (
-              <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
-                Free delivery anywhere in Nigeria. Nothing is added at payment.
-              </p>
-            )}
-            {shipping === 0 && !domestic && (
-              <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
-                International delivery — we&apos;ll confirm shipping with you
-                after you order.
-              </p>
-            )}
-            {currency === 'USD' && (
-              <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
-                * Displayed in USD for reference. Payment is processed in NGN.
-              </p>
-            )}
-          </div>
+          <OrderSummaryTotals
+            subtotal={subtotal}
+            appliedDiscount={appliedDiscount}
+            creditApplied={creditApplied}
+            shipping={shipping}
+            domestic={domestic}
+            totalAfterCredit={totalAfterCredit}
+            showSavingsPulse={showSavingsPulse}
+          />
         </div>
 
         <div className="my-[24px] border-t border-[#AEAEB2]"></div>
         {cart.length > 0 && (
           <div className="px-[20px]">
-            <form action={checkoutStep === 'payment' ? handleSubmit : handleAddressSubmit} className="mb-[36px]">
-              <div>
-                <h1 className="text-[16px] font-bold uppercase">
-                  {checkoutStep === 'payment' ? 'Your details' : 'Delivery address'}
-                </h1>
-
-                {error && (
-                  <div className="mt-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
-                    {error}
-                  </div>
-                )}
-
-                <div className="mt-[24px] mb-[18px] space-y-[10px]">
-                  {/* Step 1: Email and name for payment initiation */}
-                  {checkoutStep === 'payment' && (
-                    <>
-                      {!isLoggedIn && (
-                        <Field
-                          label="Email address"
-                          htmlFor="email"
-                          hint="For your receipt and delivery updates"
-                        >
-                          <input
-                            id="email"
-                            type="email"
-                            name="email"
-                            className="solid"
-                            autoComplete="email"
-                            required
-                            // Real-time capture for abandoned cart recovery
-                            onChange={(e) => {
-                              const value = e.target.value.trim();
-                              if (value.includes('@')) {
-                                void captureCartEmailAction(value);
-                              }
-                            }}
-                          />
-                        </Field>
-                      )}
-
-                      <div className="grid gap-[10px] sm:grid-cols-2">
-                        <Field label="First name" htmlFor="firstName">
-                          <input
-                            id="firstName"
-                            type="text"
-                            name="firstName"
-                            className="solid"
-                            autoComplete="given-name"
-                            defaultValue={prefillFirstName}
-                            required
-                          />
-                        </Field>
-                        <Field label="Last name" htmlFor="lastName">
-                          <input
-                            id="lastName"
-                            type="text"
-                            name="lastName"
-                            className="solid"
-                            autoComplete="family-name"
-                            defaultValue={prefillLastName}
-                            required
-                          />
-                        </Field>
-                      </div>
-
-                      <div className="mb-[16px] rounded-[10px] border border-[#EAEAEA] bg-[#F7F7F7] px-[14px] py-[12px]">
-                        <p className="text-[13px] font-medium text-[#121212]">
-                          Step 1 of 2
-                        </p>
-                        <p className="mt-[2px] text-[12px] text-[#8E8E93]">
-                          Enter your details to proceed to payment. Delivery address will be collected next.
-                        </p>
-                      </div>
-                    </>
-                  )}
-
-                  {/* Step 2: Full shipping address after payment */}
-                  {checkoutStep === 'address' && (
-                    <>
-                      <div className="mb-[16px] rounded-[10px] border border-[#CCEAD6] bg-[#F5FCF7] px-[14px] py-[12px]">
-                        <p className="text-[13px] font-medium text-[#121212]">
-                          Step 2 of 2
-                        </p>
-                        <p className="mt-[2px] text-[12px] text-[#8E8E93]">
-                          Please provide your delivery details to complete your order.
-                        </p>
-                      </div>
-
-                      {savedAddresses.length > 0 && (
-                        <div className="space-y-[8px] pb-[4px]">
-                          {savedAddresses.map((addr) => (
-                            <label
-                              key={addr.id}
-                              className={`flex cursor-pointer items-start gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
-                                selectedAddressId === addr.id
-                                  ? 'border-[#121212] bg-[#F7F7F7]'
-                                  : 'border-[#D1D1D6]'
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                name="address_choice"
-                                className="mt-[3px]"
-                                checked={selectedAddressId === addr.id}
-                                onChange={() => setSelectedAddressId(addr.id)}
-                              />
-                              <span>
-                                <span className="font-medium">
-                                  {addr.label || 'Address'}
-                                  {addr.is_default ? ' · Default' : ''}
-                                </span>
-                                <br />
-                                <span className="text-[#8E8E93]">
-                                  {addr.line1}
-                                  {addr.line2 ? `, ${addr.line2}` : ''},{' '}
-                                  {addr.city}, {addr.state}
-                                </span>
-                              </span>
-                            </label>
-                          ))}
-                          <label
-                            className={`flex cursor-pointer items-center gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
-                              selectedAddressId === 'new'
-                                ? 'border-[#121212] bg-[#F7F7F7]'
-                                : 'border-[#D1D1D6]'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="address_choice"
-                              checked={selectedAddressId === 'new'}
-                              onChange={() => setSelectedAddressId('new')}
-                            />
-                            <span className="font-medium">
-                              Use a new address
-                            </span>
-                          </label>
-                        </div>
-                      )}
-
-                      {!usingSavedAddress && (
-                        <>
-                          {/* Country drives everything below it. Soise ships to
-                              diaspora customers, so this cannot be assumed. */}
-                          <Field label="Country" htmlFor="country">
-                            <select
-                              id="country"
-                              name="country"
-                              className="solid"
-                              autoComplete="country-name"
-                              value={country}
-                              onChange={(e) => setCountry(e.target.value)}
-                              required
-                            >
-                              {SHIPPING_COUNTRIES.map((c) => (
-                                <option key={c} value={c}>
-                                  {c}
-                                </option>
-                              ))}
-                            </select>
-                          </Field>
-                          <Field label="Street address" htmlFor="address">
-                            <input
-                              id="address"
-                              type="text"
-                              name="address"
-                              className="solid"
-                              placeholder="House number and street"
-                              autoComplete="address-line1"
-                              required
-                            />
-                          </Field>
-                          <div className="grid gap-[10px] sm:grid-cols-2">
-                          <Field label="City" htmlFor="city">
-                            <input
-                              id="city"
-                              type="text"
-                              name="city"
-                              className="solid"
-                              autoComplete="address-level2"
-                              required
-                            />
-                          </Field>
-                          {/* A fixed list only works for Nigeria. Everywhere else
-                              gets free text — no single list covers county,
-                              province, prefecture and emirate at once. */}
-                          <Field
-                            label={domestic ? 'State' : 'State / Province / Region'}
-                            htmlFor="state"
-                          >
-                            {domestic ? (
-                              <select
-                                id="state"
-                                name="state"
-                                className="solid"
-                                autoComplete="address-level1"
-                                required
-                              >
-                                <option value="">Select state</option>
-                                {NIGERIAN_STATES.map((state) => (
-                                  <option key={state} value={state}>
-                                    {state}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <input
-                                id="state"
-                                type="text"
-                                name="state"
-                                className="solid"
-                                autoComplete="address-level1"
-                                required
-                              />
-                            )}
-                          </Field>
-                          </div>
-                          <div className="grid gap-[10px] sm:grid-cols-2">
-                          {/* Optional in Nigeria, where postal codes are barely
-                              used and requiring one is a field with no answer.
-                              Required everywhere else, where a parcel genuinely
-                              cannot be delivered without it — and not digits-only,
-                              because UK and Canadian codes contain letters. */}
-                          <Field
-                            label="Postal / ZIP code"
-                            htmlFor="zipCode"
-                            hint={domestic ? 'Optional' : undefined}
-                          >
-                            <input
-                              id="zipCode"
-                              type="text"
-                              name="zipCode"
-                              inputMode={domestic ? 'numeric' : 'text'}
-                              className="solid"
-                              autoComplete="postal-code"
-                              required={!domestic}
-                              onInput={
-                                domestic
-                                  ? (e: any) => {
-                                      e.target.value = e.target.value.replace(/\D/g, '');
-                                    }
-                                  : undefined
-                              }
-                            />
-                          </Field>
-                          <Field
-                            label="Phone number"
-                            htmlFor="phone"
-                            hint={
-                              domestic
-                                ? 'Optional for first-time shoppers'
-                                : 'Include your country code'
-                            }
-                          >
-                            <input
-                              id="phone"
-                              type="tel"
-                              name="phone"
-                              className="solid"
-                              autoComplete="tel"
-                              defaultValue={prefillPhone}
-                              required={false}
-                              // Removed maxLength restriction to allow various formats
-                              // Removed aggressive input filtering
-                            />
-                          </Field>
-                          </div>
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn_black"
-                  disabled={pending || cart.length === 0}
-                >
-                  {pending
-                    ? 'Processing...'
-                    : checkoutStep === 'payment'
-                      ? 'Continue to payment'
-                      : `Pay ${formatPrice(totalAfterCredit)}`}
-                </button>
-              </div>
-            </form>
+            {checkoutStep === 'payment' ? (
+              <CheckoutStepPayment
+                isLoggedIn={isLoggedIn}
+                prefillFirstName={prefillFirstName}
+                prefillLastName={prefillLastName}
+                pending={pending}
+                error={error}
+                cartEmpty={cart.length === 0}
+                onSubmit={handleSubmit}
+              />
+            ) : (
+              <CheckoutStepAddress
+                savedAddresses={savedAddresses}
+                selectedAddressId={selectedAddressId}
+                onSelectAddress={setSelectedAddressId}
+                usingSavedAddress={usingSavedAddress}
+                country={country}
+                onCountryChange={setCountry}
+                domestic={domestic}
+                prefillPhone={prefillPhone}
+                pending={pending}
+                error={error}
+                cartEmpty={cart.length === 0}
+                totalAfterCredit={totalAfterCredit}
+                onSubmit={handleAddressSubmit}
+              />
+            )}
           </div>
         )}
       </div>
       <Footer />
     </>
-  );
-}
-
-function OrderSummaryItem({
-  item,
-  index = 0,
-  onRemove,
-  removing = false,
-}: {
-  item: EnrichedCartItem;
-  index?: number;
-  onRemove?: (id: string) => void;
-  removing?: boolean;
-}) {
-  const { formatPrice } = useCurrency();
-  const name = item.variantDetails?.product_name ?? 'Product';
-  const color = item.variantDetails?.color ?? 'N/A';
-  const size = item.variantDetails?.size ?? 'N/A';
-  const price = item.variantDetails?.price ?? 0;
-  const image =
-    mediaThumb(item.variantDetails?.display_media?.[0]) ??
-    mediaThumb(item.variantDetails?.media?.[0]) ??
-    item.variantDetails?.product_primary_image ??
-    undefined;
-
-  return (
-    <motion.div
-      className="h-[120px] px-[20px]"
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{
-        duration: 0.4,
-        delay: index * 0.08,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-    >
-      <div className="flex w-full justify-between gap-x-[16px]">
-        <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
-          <div className="flex justify-between">
-            <div></div>
-            <div className="z-10 m-[8px] flex h-[18px] w-[18px] items-center justify-center rounded-[4px] bg-[#121212] text-center text-[12px] text-white">
-              {item.quantity}
-            </div>
-          </div>
-          {image && (
-            <img
-              src={image}
-              alt={name}
-              className="absolute inset-0 h-full w-full rounded-[6px] object-cover"
-            />
-          )}
-        </div>
-        <div className="flex w-full justify-between">
-          <div className="flex flex-col py-[3px] text-[14px]">
-            <div className="flex-wrap pb-[16px] font-medium uppercase">
-              {name}
-            </div>
-            <div className="text-[#8E8E93]">
-              <div>
-                Color: <span className="uppercase">{color}</span>
-              </div>
-              <div>
-                Size: <span className="uppercase">{size}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
-            <div>{formatPrice(price)}</div>
-            <motion.button
-              type="button"
-              onClick={() => item.id && onRemove?.(item.id)}
-              disabled={removing}
-              className="cursor-pointer uppercase underline hover:no-underline disabled:cursor-not-allowed disabled:opacity-50"
-              whileHover={removing ? {} : { scale: 1.05 }}
-              whileTap={removing ? {} : { scale: 0.95 }}
-            >
-              {removing ? 'Removing...' : 'Remove'}
-            </motion.button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
   );
 }

@@ -15,15 +15,31 @@ export const PENDING_ORDER_KEY = 'soise_pending_order';
 // helpful (price changes, stock, backend expiry).
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-type StoredPendingOrder = { id: string; at: number };
+type StoredPendingOrder = { id: string; at: number; secret?: string };
 
-export function writePendingOrder(orderId: string) {
+export function writePendingOrder(orderId: string, secret?: string) {
   if (!orderId || typeof window === 'undefined') return;
   try {
-    const payload: StoredPendingOrder = { id: orderId, at: Date.now() };
+    const payload: StoredPendingOrder = { id: orderId, at: Date.now(), ...(secret ? { secret } : {}) };
     localStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(payload));
   } catch {
     /* private mode / quota — recovery is best-effort */
+  }
+}
+
+// The per-order secret stored alongside the pending id (guest checkouts only;
+// signed-in orders never mint one). Needed to present X-Order-Token when the
+// shopper reaches Step 2's shipping-address endpoint. Returns null for legacy
+// bare-id markers, which predate secret storage.
+export function readPendingOrderSecret(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(PENDING_ORDER_KEY) ?? '';
+    if (!raw.startsWith('{')) return null;
+    const parsed = JSON.parse(raw) as StoredPendingOrder;
+    return parsed.secret ?? null;
+  } catch {
+    return null;
   }
 }
 

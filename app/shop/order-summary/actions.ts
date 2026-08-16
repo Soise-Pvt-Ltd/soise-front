@@ -43,6 +43,11 @@ interface CheckoutResult {
   // would reintroduce exactly the client-sets-its-own-price hole that
   // shipping_total already was.
   checkoutUrl?: string;
+  // Per-order secret minted for guest orders at checkout. The shopper must
+  // present it (X-Order-Token header) to mutate the order afterwards — e.g.
+  // Step 2's shipping-address endpoint — since a guest has no account to
+  // prove ownership with. Signed-in checkouts never receive one.
+  orderSecret?: string;
 }
 
 interface UpdateShippingResult {
@@ -211,6 +216,10 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     // redirect below never lands — the order + a payable URL already exist
     // server-side, so a dropped redirect must not strand the shopper.
     const orderId = data?.data?.order?.id as string | undefined;
+    // Guest checkouts mint a per-order ownership secret at creation; it rides
+    // at the top level of the response (deliberately NOT inside `order`, which
+    // flows into the confirmation email and event payloads).
+    const orderSecret = data?.data?.order_secret as string | undefined;
 
     if (payUrl) {
       return {
@@ -218,16 +227,17 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
         redirectUrl: payUrl,
         checkoutUrl: payUrl,
         orderId,
+        orderSecret,
       };
     }
     if (fullyCovered) {
       // Store credit covered everything — there is no payment step at all.
-      return { success: true as const, redirectUrl: '/thank-you', orderId };
+      return { success: true as const, redirectUrl: '/thank-you', orderId, orderSecret };
     }
     // 201 but no URL: the order exists and its checkout_url is stored on
     // the payment record — recover via resume rather than dead-ending.
     if (orderId) {
-      return { success: false as const, error: 'no_payment_link', orderId };
+      return { success: false as const, error: 'no_payment_link', orderId, orderSecret };
     }
     return {
       success: false,
@@ -477,7 +487,10 @@ export async function updateOrderShippingAction(
     country: string;
     postal_code?: string;
     phone?: string;
-  }
+  },
+  // Per-order secret for guest orders (see CheckoutResult.orderSecret). The
+  // backend rejects a shipping update to an account-less order without it.
+  orderToken?: string
 ): Promise<UpdateShippingResult> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
@@ -491,6 +504,7 @@ export async function updateOrderShippingAction(
       headers: {
         'Content-Type': 'application/json',
         ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+        ...(orderToken ? { 'X-Order-Token': orderToken } : {}),
       },
       body: JSON.stringify({ shipping_address: shippingAddress }),
       cache: 'no-store',
