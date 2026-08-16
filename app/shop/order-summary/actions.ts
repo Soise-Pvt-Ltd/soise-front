@@ -81,14 +81,20 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     const state = formData.get('state') as string;
     const phone = formData.get('phone') as string;
     const zipCode = ((formData.get('zipCode') as string) || '').trim();
+    // The raw form value — the guard below MUST test this, not `country`:
+    // `country` falls back to DEFAULT_COUNTRY, which is always truthy, so
+    // checking it there would make the guard pass on every Step 1 submit and
+    // block checkout with "address is required".
+    const rawCountry = (formData.get('country') as string) || '';
     // Soise ships to diaspora customers, so country is a real choice and must
     // come from the form. It defaults to Nigeria only when absent entirely.
-    const country =
-      ((formData.get('country') as string) || DEFAULT_COUNTRY).trim();
+    const country = rawCountry.trim() || DEFAULT_COUNTRY;
 
-    // Two-step checkout: address fields are optional in Step 1
-    // Only validate if at least one address field is provided (Step 2)
-    const hasAddressFields = address || city || state || country || phone;
+    // Two-step checkout: address fields are optional in Step 1 — only validate
+    // when at least one was actually entered (Step 2).
+    const hasAddressFields = Boolean(
+      address || city || state || rawCountry || phone,
+    );
     if (hasAddressFields) {
       const requiredManualFields = { country, address, city, state };
       for (const [key, value] of Object.entries(requiredManualFields)) {
