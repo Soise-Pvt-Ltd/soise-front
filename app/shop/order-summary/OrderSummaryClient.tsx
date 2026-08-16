@@ -142,6 +142,9 @@ export default function OrderSummaryClient({
   const [pendingOrderId, setPendingOrderId] = useState<string | null>(null);
   const [resuming, setResuming] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  // Two-step checkout: Step 1 = email/name for payment, Step 2 = full address
+  const [checkoutStep, setCheckoutStep] = useState<'payment' | 'address'>('payment');
+  const [orderId, setOrderId] = useState<string | null>(null);
 
   // Address selection: default to a saved address when one exists so
   // returning customers don't have to retype anything. 'new' reveals the
@@ -338,8 +341,22 @@ export default function OrderSummaryClient({
       formData.set('use_store_credit', 'true');
     }
 
-    if (usingSavedAddress) {
-      formData.set('selected_address_id', selectedAddressId);
+    // Two-step checkout: Step 1 only submits email/name, no shipping address
+    if (checkoutStep === 'payment') {
+      // Remove any shipping address fields for Step 1
+      formData.delete('address');
+      formData.delete('city');
+      formData.delete('state');
+      formData.delete('country');
+      formData.delete('zipCode');
+      formData.delete('phone');
+      formData.delete('line2');
+      formData.delete('selected_address_id');
+    } else {
+      // Step 2: include shipping address
+      if (usingSavedAddress) {
+        formData.set('selected_address_id', selectedAddressId);
+      }
     }
 
     const toastId = showToast.loading('Processing your order...');
@@ -354,9 +371,18 @@ export default function OrderSummaryClient({
       if (result?.orderId) {
         try {
           writePendingOrder(result.orderId);
+          setOrderId(result.orderId);
         } catch {
           /* private mode / storage disabled — banner just won't show */
         }
+      }
+
+      // Step 1: Order created without address, move to Step 2
+      if (checkoutStep === 'payment' && result?.orderId) {
+        setCheckoutStep('address');
+        setPending(false);
+        submittingRef.current = false;
+        return;
       }
 
       if (result?.success && result.redirectUrl) {
@@ -408,6 +434,61 @@ export default function OrderSummaryClient({
       const stored = readPendingOrder();
       if (stored) setPendingOrderId(stored);
       console.error('Checkout error:', err);
+    }
+  }
+
+  async function handleAddressSubmit(formData: FormData) {
+    if (!orderId) return;
+    
+    setPending(true);
+    setError(null);
+    
+    const toastId = showToast.loading('Saving your delivery details...');
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cart/orders/${orderId}/shipping`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(isLoggedIn && accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+        },
+        body: JSON.stringify({
+          shipping_address: {
+            label: formData.get('label') || 'Home',
+            line1: formData.get('address'),
+            line2: formData.get('line2') || '',
+            city: formData.get('city'),
+            state: formData.get('state'),
+            country: formData.get('country'),
+            postal_code: formData.get('zipCode') || '',
+            phone: formData.get('phone') || '',
+          }
+        }),
+      });
+      
+      const data = await response.json();
+      
+      showToast.dismiss(toastId);
+      
+      if (data.success) {
+        showToast.success('Delivery details saved');
+        // Proceed to payment if not already initiated
+        // The order already exists from Step 1, so we just need to resume payment
+        const resumed = await resumePaymentAction(orderId);
+        if (resumed?.success && resumed.redirectUrl) {
+          await goToPayment(resumed);
+        }
+      } else {
+        showToast.error(data.message || 'Failed to save delivery details');
+        setError(data.message || 'Failed to save delivery details');
+      }
+    } catch (err) {
+      showToast.dismiss(toastId);
+      showToast.error('An error occurred while saving your details. Please try again.');
+      setError('An unexpected error occurred');
+      console.error('Address submission error:', err);
+    } finally {
+      setPending(false);
     }
   }
 
@@ -1066,9 +1147,11 @@ export default function OrderSummaryClient({
         <div className="my-[24px] border-t border-[#AEAEB2]"></div>
         {cart.length > 0 && (
           <div className="px-[20px]">
-            <form action={handleSubmit} className="mb-[36px]">
+            <form action={checkoutStep === 'payment' ? handleSubmit : handleAddressSubmit} className="mb-[36px]">
               <div>
-                <h1 className="text-[16px] font-bold uppercase">Delivery</h1>
+                <h1 className="text-[16px] font-bold uppercase">
+                  {checkoutStep === 'payment' ? 'Your details' : 'Delivery address'}
+                </h1>
 
                 {error && (
                   <div className="mt-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
@@ -1077,236 +1160,262 @@ export default function OrderSummaryClient({
                 )}
 
                 <div className="mt-[24px] mb-[18px] space-y-[10px]">
-                  {!isLoggedIn && (
-                    <Field
-                      label="Email address"
-                      htmlFor="email"
-                      hint="For your receipt and delivery updates"
-                    >
-                    <input
-                      id="email"
-                      type="email"
-                      name="email"
-                      className="solid"
-                      autoComplete="email"
-                      required
-                      // Real-time capture for abandoned cart recovery - changed from onBlur to onChange
-                      onChange={(e) => {
-                        const value = e.target.value.trim();
-                        if (value.includes('@')) {
-                          void captureCartEmailAction(value);
-                        }
-                      }}
-                    />
-                    </Field>
-                  )}
-
-                  {savedAddresses.length > 0 && (
-                    <div className="space-y-[8px] pb-[4px]">
-                      {savedAddresses.map((addr) => (
-                        <label
-                          key={addr.id}
-                          className={`flex cursor-pointer items-start gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
-                            selectedAddressId === addr.id
-                              ? 'border-[#121212] bg-[#F7F7F7]'
-                              : 'border-[#D1D1D6]'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="address_choice"
-                            className="mt-[3px]"
-                            checked={selectedAddressId === addr.id}
-                            onChange={() => setSelectedAddressId(addr.id)}
-                          />
-                          <span>
-                            <span className="font-medium">
-                              {addr.label || 'Address'}
-                              {addr.is_default ? ' · Default' : ''}
-                            </span>
-                            <br />
-                            <span className="text-[#8E8E93]">
-                              {addr.line1}
-                              {addr.line2 ? `, ${addr.line2}` : ''},{' '}
-                              {addr.city}, {addr.state}
-                            </span>
-                          </span>
-                        </label>
-                      ))}
-                      <label
-                        className={`flex cursor-pointer items-center gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
-                          selectedAddressId === 'new'
-                            ? 'border-[#121212] bg-[#F7F7F7]'
-                            : 'border-[#D1D1D6]'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="address_choice"
-                          checked={selectedAddressId === 'new'}
-                          onChange={() => setSelectedAddressId('new')}
-                        />
-                        <span className="font-medium">
-                          Use a new address
-                        </span>
-                      </label>
-                    </div>
-                  )}
-
-                  {/* Paired: two short related fields in one full-width
-                      column each made the form read far longer than it is. */}
-                  <div className="grid gap-[10px] sm:grid-cols-2">
-                    <Field label="First name" htmlFor="firstName">
-                      <input
-                        id="firstName"
-                        type="text"
-                        name="firstName"
-                        className="solid"
-                        autoComplete="given-name"
-                        defaultValue={prefillFirstName}
-                        required
-                      />
-                    </Field>
-                    <Field label="Last name" htmlFor="lastName">
-                      <input
-                        id="lastName"
-                        type="text"
-                        name="lastName"
-                        className="solid"
-                        autoComplete="family-name"
-                        defaultValue={prefillLastName}
-                        required
-                      />
-                    </Field>
-                  </div>
-
-                  {!usingSavedAddress && (
+                  {/* Step 1: Email and name for payment initiation */}
+                  {checkoutStep === 'payment' && (
                     <>
-                      {/* Country drives everything below it. Soise ships to
-                          diaspora customers, so this cannot be assumed. */}
-                      <Field label="Country" htmlFor="country">
-                        <select
-                          id="country"
-                          name="country"
-                          className="solid"
-                          autoComplete="country-name"
-                          value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                          required
+                      {!isLoggedIn && (
+                        <Field
+                          label="Email address"
+                          htmlFor="email"
+                          hint="For your receipt and delivery updates"
                         >
-                          {SHIPPING_COUNTRIES.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label="Street address" htmlFor="address">
-                        <input
-                          id="address"
-                          type="text"
-                          name="address"
-                          className="solid"
-                          placeholder="House number and street"
-                          autoComplete="address-line1"
-                          required
-                        />
-                      </Field>
-                      <div className="grid gap-[10px] sm:grid-cols-2">
-                      <Field label="City" htmlFor="city">
-                        <input
-                          id="city"
-                          type="text"
-                          name="city"
-                          className="solid"
-                          autoComplete="address-level2"
-                          required
-                        />
-                      </Field>
-                      {/* A fixed list only works for Nigeria. Everywhere else
-                          gets free text — no single list covers county,
-                          province, prefecture and emirate at once. */}
-                      <Field
-                        label={domestic ? 'State' : 'State / Province / Region'}
-                        htmlFor="state"
-                      >
-                        {domestic ? (
-                          <select
-                            id="state"
-                            name="state"
-                            className="solid"
-                            autoComplete="address-level1"
-                            required
-                          >
-                            <option value="">Select state</option>
-                            {NIGERIAN_STATES.map((state) => (
-                              <option key={state} value={state}>
-                                {state}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
                           <input
-                            id="state"
-                            type="text"
-                            name="state"
+                            id="email"
+                            type="email"
+                            name="email"
                             className="solid"
-                            autoComplete="address-level1"
+                            autoComplete="email"
+                            required
+                            // Real-time capture for abandoned cart recovery
+                            onChange={(e) => {
+                              const value = e.target.value.trim();
+                              if (value.includes('@')) {
+                                void captureCartEmailAction(value);
+                              }
+                            }}
+                          />
+                        </Field>
+                      )}
+
+                      <div className="grid gap-[10px] sm:grid-cols-2">
+                        <Field label="First name" htmlFor="firstName">
+                          <input
+                            id="firstName"
+                            type="text"
+                            name="firstName"
+                            className="solid"
+                            autoComplete="given-name"
+                            defaultValue={prefillFirstName}
                             required
                           />
-                        )}
-                      </Field>
+                        </Field>
+                        <Field label="Last name" htmlFor="lastName">
+                          <input
+                            id="lastName"
+                            type="text"
+                            name="lastName"
+                            className="solid"
+                            autoComplete="family-name"
+                            defaultValue={prefillLastName}
+                            required
+                          />
+                        </Field>
                       </div>
-                      <div className="grid gap-[10px] sm:grid-cols-2">
-                      {/* Optional in Nigeria, where postal codes are barely
-                          used and requiring one is a field with no answer.
-                          Required everywhere else, where a parcel genuinely
-                          cannot be delivered without it — and not digits-only,
-                          because UK and Canadian codes contain letters. */}
-                      <Field
-                        label="Postal / ZIP code"
-                        htmlFor="zipCode"
-                        hint={domestic ? 'Optional' : undefined}
-                      >
-                        <input
-                          id="zipCode"
-                          type="text"
-                          name="zipCode"
-                          inputMode={domestic ? 'numeric' : 'text'}
-                          className="solid"
-                          autoComplete="postal-code"
-                          required={!domestic}
-                          onInput={
-                            domestic
-                              ? (e: any) => {
-                                  e.target.value = e.target.value.replace(/\D/g, '');
-                                }
-                              : undefined
-                          }
-                        />
-                      </Field>
-                      <Field
-                        label="Phone number"
-                        htmlFor="phone"
-                        hint={
-                          domestic
-                            ? 'Optional for first-time shoppers'
-                            : 'Include your country code'
-                        }
-                      >
-                        <input
-                          id="phone"
-                          type="tel"
-                          name="phone"
-                          className="solid"
-                          autoComplete="tel"
-                          defaultValue={prefillPhone}
-                          required={false}
-                          // Removed maxLength restriction to allow various formats
-                          // Removed aggressive input filtering
-                        />
-                      </Field>
+
+                      <div className="mb-[16px] rounded-[10px] border border-[#EAEAEA] bg-[#F7F7F7] px-[14px] py-[12px]">
+                        <p className="text-[13px] font-medium text-[#121212]">
+                          Step 1 of 2
+                        </p>
+                        <p className="mt-[2px] text-[12px] text-[#8E8E93]">
+                          Enter your details to proceed to payment. Delivery address will be collected next.
+                        </p>
                       </div>
+                    </>
+                  )}
+
+                  {/* Step 2: Full shipping address after payment */}
+                  {checkoutStep === 'address' && (
+                    <>
+                      <div className="mb-[16px] rounded-[10px] border border-[#CCEAD6] bg-[#F5FCF7] px-[14px] py-[12px]">
+                        <p className="text-[13px] font-medium text-[#121212]">
+                          Step 2 of 2
+                        </p>
+                        <p className="mt-[2px] text-[12px] text-[#8E8E93]">
+                          Please provide your delivery details to complete your order.
+                        </p>
+                      </div>
+
+                      {savedAddresses.length > 0 && (
+                        <div className="space-y-[8px] pb-[4px]">
+                          {savedAddresses.map((addr) => (
+                            <label
+                              key={addr.id}
+                              className={`flex cursor-pointer items-start gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
+                                selectedAddressId === addr.id
+                                  ? 'border-[#121212] bg-[#F7F7F7]'
+                                  : 'border-[#D1D1D6]'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="address_choice"
+                                className="mt-[3px]"
+                                checked={selectedAddressId === addr.id}
+                                onChange={() => setSelectedAddressId(addr.id)}
+                              />
+                              <span>
+                                <span className="font-medium">
+                                  {addr.label || 'Address'}
+                                  {addr.is_default ? ' · Default' : ''}
+                                </span>
+                                <br />
+                                <span className="text-[#8E8E93]">
+                                  {addr.line1}
+                                  {addr.line2 ? `, ${addr.line2}` : ''},{' '}
+                                  {addr.city}, {addr.state}
+                                </span>
+                              </span>
+                            </label>
+                          ))}
+                          <label
+                            className={`flex cursor-pointer items-center gap-x-3 rounded-[10px] border p-3 text-[13px] transition-colors ${
+                              selectedAddressId === 'new'
+                                ? 'border-[#121212] bg-[#F7F7F7]'
+                                : 'border-[#D1D1D6]'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="address_choice"
+                              checked={selectedAddressId === 'new'}
+                              onChange={() => setSelectedAddressId('new')}
+                            />
+                            <span className="font-medium">
+                              Use a new address
+                            </span>
+                          </label>
+                        </div>
+                      )}
+
+                      {!usingSavedAddress && (
+                        <>
+                          {/* Country drives everything below it. Soise ships to
+                              diaspora customers, so this cannot be assumed. */}
+                          <Field label="Country" htmlFor="country">
+                            <select
+                              id="country"
+                              name="country"
+                              className="solid"
+                              autoComplete="country-name"
+                              value={country}
+                              onChange={(e) => setCountry(e.target.value)}
+                              required
+                            >
+                              {SHIPPING_COUNTRIES.map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </select>
+                          </Field>
+                          <Field label="Street address" htmlFor="address">
+                            <input
+                              id="address"
+                              type="text"
+                              name="address"
+                              className="solid"
+                              placeholder="House number and street"
+                              autoComplete="address-line1"
+                              required
+                            />
+                          </Field>
+                          <div className="grid gap-[10px] sm:grid-cols-2">
+                          <Field label="City" htmlFor="city">
+                            <input
+                              id="city"
+                              type="text"
+                              name="city"
+                              className="solid"
+                              autoComplete="address-level2"
+                              required
+                            />
+                          </Field>
+                          {/* A fixed list only works for Nigeria. Everywhere else
+                              gets free text — no single list covers county,
+                              province, prefecture and emirate at once. */}
+                          <Field
+                            label={domestic ? 'State' : 'State / Province / Region'}
+                            htmlFor="state"
+                          >
+                            {domestic ? (
+                              <select
+                                id="state"
+                                name="state"
+                                className="solid"
+                                autoComplete="address-level1"
+                                required
+                              >
+                                <option value="">Select state</option>
+                                {NIGERIAN_STATES.map((state) => (
+                                  <option key={state} value={state}>
+                                    {state}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                id="state"
+                                type="text"
+                                name="state"
+                                className="solid"
+                                autoComplete="address-level1"
+                                required
+                              />
+                            )}
+                          </Field>
+                          </div>
+                          <div className="grid gap-[10px] sm:grid-cols-2">
+                          {/* Optional in Nigeria, where postal codes are barely
+                              used and requiring one is a field with no answer.
+                              Required everywhere else, where a parcel genuinely
+                              cannot be delivered without it — and not digits-only,
+                              because UK and Canadian codes contain letters. */}
+                          <Field
+                            label="Postal / ZIP code"
+                            htmlFor="zipCode"
+                            hint={domestic ? 'Optional' : undefined}
+                          >
+                            <input
+                              id="zipCode"
+                              type="text"
+                              name="zipCode"
+                              inputMode={domestic ? 'numeric' : 'text'}
+                              className="solid"
+                              autoComplete="postal-code"
+                              required={!domestic}
+                              onInput={
+                                domestic
+                                  ? (e: any) => {
+                                      e.target.value = e.target.value.replace(/\D/g, '');
+                                    }
+                                  : undefined
+                              }
+                            />
+                          </Field>
+                          <Field
+                            label="Phone number"
+                            htmlFor="phone"
+                            hint={
+                              domestic
+                                ? 'Optional for first-time shoppers'
+                                : 'Include your country code'
+                            }
+                          >
+                            <input
+                              id="phone"
+                              type="tel"
+                              name="phone"
+                              className="solid"
+                              autoComplete="tel"
+                              defaultValue={prefillPhone}
+                              required={false}
+                              // Removed maxLength restriction to allow various formats
+                              // Removed aggressive input filtering
+                            />
+                          </Field>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>
@@ -1318,7 +1427,9 @@ export default function OrderSummaryClient({
                 >
                   {pending
                     ? 'Processing...'
-                    : `Pay ${formatPrice(totalAfterCredit)}`}
+                    : checkoutStep === 'payment'
+                      ? 'Continue to payment'
+                      : `Pay ${formatPrice(totalAfterCredit)}`}
                 </button>
               </div>
             </form>
