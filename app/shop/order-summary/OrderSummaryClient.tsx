@@ -13,6 +13,7 @@ import {
   checkoutAction,
   applyDiscountCodeAction,
   resumePaymentAction,
+  updateOrderShippingAction,
 } from './actions';
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -446,31 +447,20 @@ export default function OrderSummaryClient({
     const toastId = showToast.loading('Saving your delivery details...');
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/cart/orders/${orderId}/shipping`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(isLoggedIn && accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
-        },
-        body: JSON.stringify({
-          shipping_address: {
-            label: formData.get('label') || 'Home',
-            line1: formData.get('address'),
-            line2: formData.get('line2') || '',
-            city: formData.get('city'),
-            state: formData.get('state'),
-            country: formData.get('country'),
-            postal_code: formData.get('zipCode') || '',
-            phone: formData.get('phone') || '',
-          }
-        }),
+      const result = await updateOrderShippingAction(orderId, {
+        label: formData.get('label') as string || 'Home',
+        line1: formData.get('address') as string,
+        line2: formData.get('line2') as string || '',
+        city: formData.get('city') as string,
+        state: formData.get('state') as string,
+        country: formData.get('country') as string,
+        postal_code: formData.get('zipCode') as string || '',
+        phone: formData.get('phone') as string || '',
       });
-      
-      const data = await response.json();
       
       showToast.dismiss(toastId);
       
-      if (data.success) {
+      if (result.success) {
         showToast.success('Delivery details saved');
         // Proceed to payment if not already initiated
         // The order already exists from Step 1, so we just need to resume payment
@@ -479,8 +469,8 @@ export default function OrderSummaryClient({
           await goToPayment(resumed);
         }
       } else {
-        showToast.error(data.message || 'Failed to save delivery details');
-        setError(data.message || 'Failed to save delivery details');
+        showToast.error(result.error || 'Failed to save delivery details');
+        setError(result.error || 'Failed to save delivery details');
       }
     } catch (err) {
       showToast.dismiss(toastId);

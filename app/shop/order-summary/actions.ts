@@ -45,6 +45,11 @@ interface CheckoutResult {
   checkoutUrl?: string;
 }
 
+interface UpdateShippingResult {
+  success: boolean;
+  error?: string;
+}
+
 export async function checkoutAction(formData: FormData): Promise<CheckoutResult> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
@@ -451,5 +456,44 @@ export async function cancelPendingOrderAction(
     return { success: true };
   } catch {
     return { success: false, error: 'Could not cancel this order. Please try again.' };
+  }
+}
+
+export async function updateOrderShippingAction(
+  orderId: string,
+  shippingAddress: {
+    label?: string;
+    line1: string;
+    line2?: string;
+    city: string;
+    state: string;
+    country: string;
+    postal_code?: string;
+    phone?: string;
+  }
+): Promise<UpdateShippingResult> {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+
+  if (!baseUrl) return { success: false, error: 'API base URL is not configured' };
+
+  try {
+    const res = await fetch(`${baseUrl}/cart/orders/${orderId}/shipping`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ shipping_address: shippingAddress }),
+      cache: 'no-store',
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      return { success: false, error: json?.message || 'Failed to update shipping address.' };
+    }
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Could not update shipping address. Please try again.' };
   }
 }
