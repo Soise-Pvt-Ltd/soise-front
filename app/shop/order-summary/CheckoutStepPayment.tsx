@@ -10,13 +10,18 @@ interface CheckoutStepPaymentProps {
   pending: boolean;
   error: string | null;
   cartEmpty: boolean;
+  /** Rendered on the button so the shopper sees the exact charge before paying. */
+  payLabel: string;
   onSubmit: (formData: FormData) => void;
 }
 
 /**
- * Step 1 of the two-step checkout: email + name only, enough to create the
- * order and initiate payment. The shipping address is collected in Step 2
- * (CheckoutStepAddress) after payment is underway.
+ * Step 1 of the two-step checkout: email + name, then straight to payment.
+ *
+ * Three fields stand between the shopper and the pay button — that is the
+ * entire point. Collecting the delivery address here as well would just be the
+ * old nine-field form with a page break in it; the address is asked for in
+ * Step 2 (CheckoutStepAddress) once the payment has actually landed.
  */
 export default function CheckoutStepPayment({
   isLoggedIn,
@@ -25,6 +30,7 @@ export default function CheckoutStepPayment({
   pending,
   error,
   cartEmpty,
+  payLabel,
   onSubmit,
 }: CheckoutStepPaymentProps) {
   return (
@@ -90,10 +96,10 @@ export default function CheckoutStepPayment({
 
           <div className="mb-[16px] rounded-[10px] border border-[#EAEAEA] bg-[#F7F7F7] px-[14px] py-[12px]">
             <p className="text-[13px] font-medium text-[#121212]">
-              Step 1 of 2
+              Step 1 of 2 · Pay
             </p>
             <p className="mt-[2px] text-[12px] text-[#8E8E93]">
-              Enter your details to proceed to payment. Delivery address will be collected next.
+              We’ll ask where to send it right after — no long form before you pay.
             </p>
           </div>
         </div>
@@ -103,7 +109,7 @@ export default function CheckoutStepPayment({
           className="btn_black"
           disabled={pending || cartEmpty}
         >
-          {pending ? 'Processing...' : 'Continue to payment'}
+          {pending ? 'Processing...' : payLabel}
         </button>
       </div>
     </form>

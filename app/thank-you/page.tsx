@@ -7,6 +7,7 @@ import RecommendationCarousel from '@/components/RecommendationCarousel';
 import StatueWatermark from '@/components/brand/StatueWatermark';
 import { getRecommendations, getFeaturedProducts } from '@/app/shop/product-listing/[id]/recs-actions';
 import ClearPendingOrderMarker from './ClearPendingOrderMarker';
+import PostPaymentAddress from './PostPaymentAddress';
 import { apiForwardCookie } from '@/lib/tracking';
 
 import type { Metadata } from 'next';
@@ -40,6 +41,12 @@ export default async function ThankYouPage({
   // so this is safe to run alongside the webhook. Without this, a paid order
   // can sit forever in `pending_payment` if the webhook is missed.
   let paymentConfirmed = false;
+  // Checkout takes payment before asking where to ship, so a confirmed order can
+  // still owe us an address. The verify response is the only place that knows,
+  // and it answers with the order id too — the address endpoint is keyed by id
+  // while this page only holds a payment reference, and since references became
+  // per-attempt the two are no longer the same string.
+  let addressPendingOrderId: string | null = null;
   if (orderRef) {
     try {
       // Forward TikTok attribution cookies (_ttp / ttclid) so the Purchase
@@ -62,6 +69,12 @@ export default async function ThankYouPage({
         },
       );
       paymentConfirmed = res.ok;
+      if (res.ok) {
+        const json = await res.json().catch(() => null);
+        if (json?.data?.address_pending && json?.data?.order_id) {
+          addressPendingOrderId = json.data.order_id as string;
+        }
+      }
     } catch {
       // Network/verify hiccup — the webhook is the backup. Show a soft
       // "processing" state rather than a hard error.
@@ -83,7 +96,11 @@ export default async function ThankYouPage({
     <>
       {/* Payment confirmed (or store-credit covered): drop the resume marker so
           the order-summary page stops nudging to pay for this order. */}
-      {showConfirmed && <ClearPendingOrderMarker />}
+      {/* Hold the marker until the address is in: it carries the guest order's
+          per-order secret, and PostPaymentAddress needs that to prove ownership
+          when it PATCHes the shipping address. It clears the marker itself once
+          saved, so the resume nudge still goes away. */}
+      {showConfirmed && !addressPendingOrderId && <ClearPendingOrderMarker />}
       <Nav />
       <main className="bg-[#F4F1EA] text-[#14110E]" role="main">
         {/* ── Confirmation ─────────────────────────────────────── */}
@@ -109,6 +126,13 @@ export default async function ThankYouPage({
                 ? 'Your order is confirmed, and a receipt is on its way to your inbox.'
                 : 'We’re confirming your payment — this can take a moment. You don’t need to do anything.'}
             </p>
+
+            {/* Paid, but we still don't know where to send it. Only reached
+                when the overlay was unavailable and the hosted redirect landed
+                here — the overlay path asks on the order-summary page instead. */}
+            {addressPendingOrderId && (
+              <PostPaymentAddress orderId={addressPendingOrderId} />
+            )}
           </div>
 
           {/* Order details — quiet ledger, not a card shout */}

@@ -33,6 +33,12 @@ interface CheckoutStepAddressProps {
   error: string | null;
   cartEmpty: boolean;
   totalAfterCredit: number;
+  /**
+   * The money is already in — this form is finishing a paid order, not paying
+   * for one. Drives the copy and the button: telling a shopper who has just
+   * paid to "Pay ₦150,000" again reads as a double charge.
+   */
+  isPaid: boolean;
   onSubmit: (formData: FormData) => void;
 }
 
@@ -54,6 +60,7 @@ export default function CheckoutStepAddress({
   error,
   cartEmpty,
   totalAfterCredit,
+  isPaid,
   onSubmit,
 }: CheckoutStepAddressProps) {
   const { formatPrice } = useCurrency();
@@ -72,10 +79,12 @@ export default function CheckoutStepAddress({
         <div className="mt-[24px] mb-[18px] space-y-[10px]">
           <div className="mb-[16px] rounded-[10px] border border-[#CCEAD6] bg-[#F5FCF7] px-[14px] py-[12px]">
             <p className="text-[13px] font-medium text-[#121212]">
-              Step 2 of 2
+              {isPaid ? 'Payment received ✓ · Last step' : 'Step 2 of 2'}
             </p>
             <p className="mt-[2px] text-[12px] text-[#8E8E93]">
-              Please provide your delivery details to complete your order.
+              {isPaid
+                ? 'Where should we send it? Your order is confirmed either way — we’ll email you if anything’s missing.'
+                : 'Please provide your delivery details to complete your order.'}
             </p>
           </div>
 
@@ -265,7 +274,11 @@ export default function CheckoutStepAddress({
           className="btn_black"
           disabled={pending || cartEmpty}
         >
-          {pending ? 'Processing...' : `Pay ${formatPrice(totalAfterCredit)}`}
+          {pending
+            ? 'Processing...'
+            : isPaid
+              ? 'Confirm delivery details'
+              : `Pay ${formatPrice(totalAfterCredit)}`}
         </button>
       </div>
     </form>

@@ -112,6 +112,14 @@ export default function OrderSummaryClient({
   // Two-step checkout: Step 1 = email/name for payment, Step 2 = full address
   const [checkoutStep, setCheckoutStep] = useState<'payment' | 'address'>('payment');
   const [orderId, setOrderId] = useState<string | null>(null);
+  // This order was created without a delivery address, so one is owed once
+  // payment lands. Cleared for signed-in shoppers whose saved default address
+  // was attached at checkout.
+  const [awaitingAddress, setAwaitingAddress] = useState(false);
+  // Set only after the money is actually in. Its presence is what tells the
+  // address step "this order is paid — finish, don't reopen payment", and it
+  // carries the confirmation URL (with the payment reference) to land on.
+  const [paidThankYouUrl, setPaidThankYouUrl] = useState<string | null>(null);
 
   // Address selection: default to a saved address when one exists so
   // returning customers don't have to retype anything. 'new' reveals the
@@ -229,11 +237,27 @@ export default function OrderSummaryClient({
       const outcome = await openInlineCheckout(result.checkoutUrl);
 
       if (outcome.kind === 'success') {
-        showToast.success('Payment received — confirming…');
         const ref = outcome.reference || result.orderId || '';
-        window.location.href = ref
+        const thankYou = ref
           ? `/thank-you?reference=${encodeURIComponent(ref)}`
           : '/thank-you';
+
+        // Paid, and we still don't know where to send it. Ask now, in-page,
+        // while the shopper is right here and at their most committed — this
+        // is the moment the two-step flow exists for. Navigating to
+        // /thank-you first would mean chasing the address by email instead.
+        if (awaitingAddress && result.orderId) {
+          setPaidThankYouUrl(thankYou);
+          setOrderId(result.orderId);
+          setCheckoutStep('address');
+          setPending(false);
+          submittingRef.current = false;
+          showToast.success('Payment received — last step: where should we send it?');
+          return;
+        }
+
+        showToast.success('Payment received — confirming…');
+        window.location.href = thankYou;
         return;
       }
 
@@ -341,13 +365,12 @@ export default function OrderSummaryClient({
         }
       }
 
-      // Step 1: Order created without address, move to Step 2
-      if (checkoutStep === 'payment' && result?.orderId) {
-        setCheckoutStep('address');
-        setPending(false);
-        submittingRef.current = false;
-        return;
-      }
+      // Step 1 ends at the PAYMENT button, not at another form. The whole
+      // point of splitting checkout is that a shopper reaches "pay" after three
+      // fields instead of nine; collecting the address here first just
+      // paginated the same form and added a screen. The address is asked for
+      // once the money is in — see goToPayment's success branch.
+      if (result?.addressPending) setAwaitingAddress(true);
 
       if (result?.success && result.redirectUrl) {
         await goToPayment(result);
@@ -457,12 +480,27 @@ export default function OrderSummaryClient({
 
       if (result.success) {
         showToast.success('Delivery details saved');
-        // Proceed to payment if not already initiated
-        // The order already exists from Step 1, so we just need to resume payment
+        // The order is already PAID by the time this form is shown, so there is
+        // no payment left to resume — go straight to the confirmation. (This
+        // used to call resumePaymentAction, which was correct only while the
+        // address was collected before payment.)
+        if (paidThankYouUrl) {
+          window.location.href = paidThankYouUrl;
+          return;
+        }
+        // No payment recorded yet: the shopper reached this form some other way
+        // (an unpaid order resumed from the banner). Open payment as before, so
+        // that path still completes rather than silently doing nothing.
         const resumed = await resumePaymentAction(orderId);
         if (resumed?.success && resumed.redirectUrl) {
           await goToPayment(resumed);
+          return;
         }
+        const msg =
+          resumed?.error ||
+          'Details saved, but we couldn’t reopen payment. Tap “Complete payment” to try again.';
+        showToast.error(msg);
+        setError(msg);
       } else {
         showToast.error(result.error || 'Failed to save delivery details');
         setError(result.error || 'Failed to save delivery details');
@@ -1021,6 +1059,7 @@ export default function OrderSummaryClient({
                 pending={pending}
                 error={error}
                 cartEmpty={cart.length === 0}
+                payLabel={`Pay ${formatPrice(totalAfterCredit)}`}
                 onSubmit={handleSubmit}
               />
             ) : (
@@ -1037,6 +1076,7 @@ export default function OrderSummaryClient({
                 error={error}
                 cartEmpty={cart.length === 0}
                 totalAfterCredit={totalAfterCredit}
+                isPaid={paidThankYouUrl !== null}
                 onSubmit={handleAddressSubmit}
               />
             )}

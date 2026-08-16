@@ -48,6 +48,10 @@ interface CheckoutResult {
   // Step 2's shipping-address endpoint — since a guest has no account to
   // prove ownership with. Signed-in checkouts never receive one.
   orderSecret?: string;
+  // The order was created with no delivery address, so one must be collected
+  // after payment. False when a signed-in shopper's saved default address was
+  // attached at checkout — asking those shoppers again is pure friction.
+  addressPending?: boolean;
 }
 
 interface UpdateShippingResult {
@@ -226,6 +230,12 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     // at the top level of the response (deliberately NOT inside `order`, which
     // flows into the confirmation email and event payloads).
     const orderSecret = data?.data?.order_secret as string | undefined;
+    // Did this order go out without a delivery address? Step 1 never sends one,
+    // but a signed-in shopper with a saved default address gets it attached
+    // server-side — and must NOT be asked for it again after paying.
+    const addressPending = Boolean(
+      data?.data?.order?.checkout_metadata?.shipping_address_pending,
+    );
 
     if (payUrl) {
       return {
@@ -234,11 +244,18 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
         checkoutUrl: payUrl,
         orderId,
         orderSecret,
+        addressPending,
       };
     }
     if (fullyCovered) {
       // Store credit covered everything — there is no payment step at all.
-      return { success: true as const, redirectUrl: '/thank-you', orderId, orderSecret };
+      return {
+        success: true as const,
+        redirectUrl: '/thank-you',
+        orderId,
+        orderSecret,
+        addressPending,
+      };
     }
     // 201 but no URL: the order exists and its checkout_url is stored on
     // the payment record — recover via resume rather than dead-ending.
