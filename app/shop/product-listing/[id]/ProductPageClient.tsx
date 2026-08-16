@@ -315,7 +315,20 @@ export default function ProductPageClient({
       if (then === 'checkout') {
         // Nav still needs to know, even though we're navigating away.
         notifyCartChanged();
-        router.push('/shop/order-summary');
+        // Hard navigation, deliberately — NOT router.push.
+        //
+        // addToBagAction writes the `soise_guestId` cookie on every call, and a
+        // cookie written inside a server action makes Next refresh the current
+        // route. That refresh raced the client-side push and won: the item
+        // landed in the bag, the URL never changed, and "Buy it now" looked
+        // like a dead button on the product page. (Verified in a real browser:
+        // bag went to 1 item, URL unchanged, no console error — twice, so it
+        // is not just the first-visit cookie write.)
+        //
+        // A full navigation cannot be cancelled by that refresh, and it also
+        // guarantees the freshly-set cookie rides along on the request for the
+        // order summary — which is the page that needs it most.
+        window.location.assign('/shop/order-summary');
         return;
       }
       // Tell the Nav (client-side, static shell) to refresh AND open the bag.
