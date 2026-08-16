@@ -1090,11 +1090,8 @@ export default function OrderSummaryClient({
                       className="solid"
                       autoComplete="email"
                       required
-                      // Save it on blur, not just on submit. A shopper who
-                      // types their email and then leaves is exactly who an
-                      // abandoned-cart reminder is for — and until now they
-                      // left no address behind at all.
-                      onBlur={(e) => {
+                      // Real-time capture for abandoned cart recovery - changed from onBlur to onChange
+                      onChange={(e) => {
                         const value = e.target.value.trim();
                         if (value.includes('@')) {
                           void captureCartEmailAction(value);
@@ -1293,7 +1290,7 @@ export default function OrderSummaryClient({
                         htmlFor="phone"
                         hint={
                           domestic
-                            ? '11 digits'
+                            ? 'Optional for first-time shoppers'
                             : 'Include your country code'
                         }
                       >
@@ -1304,13 +1301,9 @@ export default function OrderSummaryClient({
                           className="solid"
                           autoComplete="tel"
                           defaultValue={prefillPhone}
-                          required
-                          // 11 digits is the Nigerian format. An international
-                          // number is up to 15 digits (E.164) and may be typed
-                          // with a leading +, so the domestic cap would
-                          // silently truncate a diaspora shopper's number.
-                          maxLength={domestic ? 11 : 16}
-                          onInput={domestic ? handlePhoneInput : undefined}
+                          required={false}
+                          // Removed maxLength restriction to allow various formats
+                          // Removed aggressive input filtering
                         />
                       </Field>
                       </div>
