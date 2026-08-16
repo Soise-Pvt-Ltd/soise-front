@@ -443,7 +443,7 @@ export default function ProductPageClient({
                 <AnimatePresence mode="wait">
                   <motion.p
                     key={currentPrice}
-                    className="mt-2 text-[15px] font-medium text-[#3A3A3C]"
+                    className="font-display mt-2 text-[22px] text-[#121212]"
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
@@ -579,7 +579,7 @@ export default function ProductPageClient({
                 {typeof selectedVariant?.stock === 'number' &&
                   selectedVariant.stock > 0 &&
                   selectedVariant.stock <= 5 && (
-                    <p className="text-[11px] tracking-[0.15em] text-[#9A3412] uppercase">
+                    <p className="text-[11px] font-bold tracking-[0.15em] text-[#B3101C] uppercase">
                       Only {selectedVariant.stock} left
                     </p>
                   )}
@@ -707,9 +707,9 @@ export default function ProductPageClient({
                 <p className="truncate text-[12px] tracking-[0.08em] text-[#121212] uppercase">
                   {product.name}
                 </p>
-                <p className="text-[13px] font-medium text-[#3A3A3C]">
+                <p className="font-display text-[15px] text-[#121212]">
                   {formatPrice(currentPrice)}
-                  <span className="ml-2 text-[10px] tracking-[0.08em] text-[#8E8E93] uppercase">
+                  <span className="font-sans ml-2 text-[10px] tracking-[0.08em] text-[#B3101C] uppercase">
                     Free delivery
                   </span>
                 </p>

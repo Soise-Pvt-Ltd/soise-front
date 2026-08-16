@@ -197,7 +197,7 @@ export default function ProductListingClient({
                       {/* Badge */}
                       {product.isNew && (
                         <motion.div
-                          className="absolute top-[10px] left-[10px] text-[12px] font-medium uppercase"
+                          className="absolute top-[10px] left-[10px] text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase"
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: 0.2 + index * 0.06 }}
@@ -238,16 +238,17 @@ export default function ProductListingClient({
                     </motion.div>
                   </Link>
 
-                  {/* Product name + price */}
+                  {/* Product name + price — money speaks serif, the same
+                      voice it keeps in the bag and at PAY. */}
                   <div className="mt-[10px] px-[7.5px] text-[14px] md:text-base">
                     <p className="truncate uppercase">{product.name}</p>
-                    <div className="mt-1 font-medium">
+                    <div className="font-display mt-1 text-[16px]">
                       {(() => {
                         const { amount, isFrom } = getDisplayPrice(product);
                         return (
                           <>
                             {isFrom && (
-                              <span className="mr-1 text-[11px] font-normal text-[#8E8E93]">
+                              <span className="font-sans mr-1 text-[11px] font-normal text-[#8E8E93]">
                                 from
                               </span>
                             )}

@@ -220,9 +220,11 @@ export default function FooterClient() {
         </div>
       </div>
 
+      {/* 2px ink rule — the pressed-ink signature closing every page, same
+          weight as the checkout masthead rules. */}
       <motion.div
         ref={bottomRef}
-        className="border-t border-[#AEAEB2]"
+        className="border-t-2 border-[#121212]"
         initial={{ opacity: 0 }}
         animate={bottomInView ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}

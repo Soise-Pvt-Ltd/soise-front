@@ -778,14 +778,16 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                       second. Sticky so it stays put once the recommendations are
                       scrolled into view. */}
                   <motion.div
-                    className="sticky bottom-0 z-10 shrink-0 border-t border-[#EFEFEF] bg-white pt-[20px] pb-[12px]"
+                    className="sticky bottom-0 z-10 shrink-0 border-t-2 border-[#121212] bg-white pt-[20px] pb-[12px]"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.4 }}
                   >
-                    <div className="flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
+                    <div className="flex items-baseline justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
                       <div>Subtotal:</div>
-                      <div>{formatPrice(subtotal)}</div>
+                      <div className="font-display text-[16px] text-[#121212]">
+                        {formatPrice(subtotal)}
+                      </div>
                     </div>
                     {/* Said here, before they commit to checkout — an unknown
                         delivery cost is a reason to close the bag and think
@@ -794,17 +796,28 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                         ships to diaspora customers. */}
                     <div className="mt-[6px] flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
                       <div>Shipping:</div>
-                      <div className="text-green-600">Free in Nigeria</div>
+                      <div className="font-bold tracking-[0.08em] text-[#B3101C]">
+                        Free in Nigeria
+                      </div>
                     </div>
-                    <motion.button
-                      className="btn_outline mt-4 disabled:cursor-not-allowed disabled:opacity-40"
+                    {/* The panel's primary action, dressed as the SAME pressed
+                        plate the shopper meets again at PAY — one button
+                        language from bag to money. It used to be btn_outline:
+                        the most important tap in the cart→checkout hop wore
+                        the quietest style in the system. Carries the amount so
+                        the number on this button is the number on the next.
+                        Plain <button>: brut-press animates via CSS transforms,
+                        which Framer's whileHover/whileTap inline transforms
+                        would silently override. */}
+                    <button
+                      className="brut-btn brut-press mt-4"
                       onClick={() => router.push('/shop/order-summary')}
                       disabled={cart.length === 0}
-                      whileHover={cart.length > 0 ? { scale: 1.02 } : {}}
-                      whileTap={cart.length > 0 ? { scale: 0.98 } : {}}
                     >
-                      Tap To Checkout
-                    </motion.button>
+                      {cart.length > 0
+                        ? `Checkout · ${formatPrice(subtotal)}`
+                        : 'Checkout'}
+                    </button>
                   </motion.div>
 
                   {/* Complete the look — recommendations seeded from the first

@@ -181,13 +181,15 @@ export default function SwiperCarouselClient({ items: products }: any) {
                 <div className="truncate text-[12px] tracking-[0.08em] text-[#121212] uppercase">
                   {item.name}
                 </div>
-                <div className="mt-1 text-[13px] font-medium text-[#3A3A3C]">
+                {/* Money speaks serif — the same voice as the bag subtotal
+                    and the checkout total, from first glance to PAY. */}
+                <div className="font-display mt-1 text-[15px] text-[#121212]">
                   {(() => {
                     const { amount, isFrom } = getDisplayPrice(item);
                     return (
                       <>
                         {isFrom && (
-                          <span className="mr-1 text-[11px] font-normal text-[#8E8E93]">
+                          <span className="font-sans mr-1 text-[11px] font-normal text-[#8E8E93]">
                             from
                           </span>
                         )}

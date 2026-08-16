@@ -21,7 +21,9 @@ export default function SectionHeader({
   return (
     <div className="mb-[24px] flex items-end justify-between md:mb-[36px]">
       <div className="flex items-baseline gap-3">
-        <span className="text-[11px] tracking-[0.2em] text-[#AEAEB2]">
+        {/* Crimson index — the same accent that marks 1/2 · 2/2 at checkout,
+            threading the ad creatives' palette through the homepage. */}
+        <span className="text-[11px] font-bold tracking-[0.2em] text-[#B3101C]">
           {index}
         </span>
         <h2 className="font-display text-[26px] leading-none text-[#121212] md:text-[34px]">
