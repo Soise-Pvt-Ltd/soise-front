@@ -64,7 +64,7 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     return { success: false, error: 'firstName and lastName are required' };
   }
 
-  let shippingPayload: Record<string, unknown>;
+  let shippingPayload: Record<string, unknown> | undefined;
 
   if (selectedAddressId) {
     // Reusing a saved address — the backend looks it up by id and re-verifies
@@ -81,39 +81,46 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
     const country =
       ((formData.get('country') as string) || DEFAULT_COUNTRY).trim();
 
-    const requiredManualFields = { country, address, city, state, phone };
-    for (const [key, value] of Object.entries(requiredManualFields)) {
-      if (!value || value.trim() === '') {
-        return { success: false, error: `${key} is required` };
+    // Two-step checkout: address fields are optional in Step 1
+    // Only validate if at least one address field is provided (Step 2)
+    const hasAddressFields = address || city || state || country || phone;
+    if (hasAddressFields) {
+      const requiredManualFields = { country, address, city, state };
+      for (const [key, value] of Object.entries(requiredManualFields)) {
+        if (!value || value.trim() === '') {
+          return { success: false, error: `${key} is required` };
+        }
       }
-    }
 
-    // Postal code is optional in Nigeria, where it's rarely known and gating
-    // payment on it loses shoppers with nothing valid to type. Everywhere else
-    // a parcel genuinely cannot be delivered without one.
-    if (!isDomestic(country) && !zipCode) {
-      return {
-        success: false,
-        error: 'A postal / ZIP code is required for international delivery',
+      // Postal code is optional in Nigeria, where it's rarely known and gating
+      // payment on it loses shoppers with nothing valid to type. Everywhere else
+      // a parcel genuinely cannot be delivered without one.
+      if (!isDomestic(country) && !zipCode) {
+        return {
+          success: false,
+          error: 'A postal / ZIP code is required for international delivery',
+        };
+      }
+
+      // Maps our form field names onto the backend's reusable address schema
+      // (label/line1/line2/city/state/country/postal_code/phone). Sending this
+      // as `shipping_address` (rather than flat top-level fields) is what
+      // actually triggers auto-save + default-address logic server-side.
+      shippingPayload = {
+        shipping_address: {
+          label: 'Home',
+          line1: address,
+          line2: '',
+          city,
+          state,
+          country,
+          postal_code: zipCode,
+          phone,
+        },
       };
     }
-
-    // Maps our form field names onto the backend's reusable address schema
-    // (label/line1/line2/city/state/country/postal_code/phone). Sending this
-    // as `shipping_address` (rather than flat top-level fields) is what
-    // actually triggers auto-save + default-address logic server-side.
-    shippingPayload = {
-      shipping_address: {
-        label: 'Home',
-        line1: address,
-        line2: '',
-        city,
-        state,
-        country,
-        postal_code: zipCode,
-        phone,
-      },
-    };
+    // If no address fields provided (Step 1), shippingPayload remains empty
+    // Backend will create order without address (two-step checkout)
   }
 
   const creatorCode = formData.get('creator_code') as string | null;
@@ -163,7 +170,7 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
       body: JSON.stringify({
         first_name: firstName,
         last_name: lastName,
-        ...shippingPayload,
+        ...(shippingPayload ? shippingPayload : {}),
         ...(creatorCode ? { creator_code: creatorCode } : {}),
         ...(!accessToken && email ? { email } : {}),
         ...(useStoreCredit ? { use_store_credit: true } : {}),
