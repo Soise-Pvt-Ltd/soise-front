@@ -248,6 +248,115 @@ input[type='number'].adminsolid,
 }
 
 /* ----------------------------------------------------------------------------
+   PRESSED INK — neo-brutalist plates (checkout + contact)
+   ----------------------------------------------------------------------------
+   Soise's quiet-luxury editorial language run through a letterpress: the same
+   ink (#121212), Instrument Serif and uppercase micro-labels, but structure is
+   allowed to SHOW — 2px ink rules instead of hairlines, hard offset shadows
+   with zero blur (a plate sitting proud of the paper), sharp corners, and one
+   accent lifted verbatim from the ad creatives' crimson (#B3101C on #F5F0E8
+   bone). A shopper arriving from an ad lands on the palette they just tapped.
+
+   Prefix is `brut-` — never `ad-` (EasyList generic cosmetic filters hide
+   .ad-* class names; see the suite- note above).
+   ---------------------------------------------------------------------------- */
+:root {
+  --brut-ink: #121212;
+  --brut-paper: #ffffff;
+  --brut-bone: #f5f0e8;
+  --brut-crimson: #b3101c;
+}
+
+/* A plate: content block sitting proud of the page. */
+.brut-plate {
+  @apply rounded-[2px] border-2 border-[#121212] bg-white;
+}
+.brut-shadow {
+  box-shadow: 4px 4px 0 var(--brut-ink);
+}
+.brut-shadow-crimson {
+  box-shadow: 4px 4px 0 var(--brut-crimson);
+}
+
+/* Press physics: hover lifts the plate off the paper, :active pushes it flush
+   — the shadow is the distance between plate and page. */
+.brut-press {
+  transition:
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 4px 4px 0 var(--brut-ink);
+}
+.brut-press:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--brut-ink);
+}
+.brut-press:active:not(:disabled) {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--brut-ink);
+}
+
+/* The money button. Ink plate, hard shadow, no radius softness. */
+.brut-btn {
+  @apply flex h-[58px] w-full cursor-pointer items-center justify-center rounded-[2px] border-2 border-[#121212] bg-[#121212] text-[13px] font-bold tracking-[0.1em] text-white uppercase disabled:cursor-not-allowed disabled:opacity-40;
+}
+.brut-btn-paper {
+  @apply flex h-[58px] w-full cursor-pointer items-center justify-center rounded-[2px] border-2 border-[#121212] bg-white text-[13px] font-bold tracking-[0.1em] text-[#121212] uppercase disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+/* Inputs: honest boxes. The focus state trades the shadow to crimson so the
+   active field is the loudest thing on the page exactly while it's in use. */
+input.brut-input,
+select.brut-input,
+.brut-input {
+  @apply h-[56px] w-full appearance-none rounded-[2px] border-2 border-[#121212] bg-white px-[16px] text-[15px] text-[#121212] transition-shadow duration-150 placeholder:text-[#AEAEB2] focus:border-[#121212] focus:ring-0 focus:outline-none;
+}
+.brut-input:focus {
+  box-shadow: 4px 4px 0 var(--brut-crimson);
+}
+
+/* Micro-label — the Soise uppercase eyebrow, pressed harder. */
+.brut-label {
+  @apply text-[11px] font-bold tracking-[0.16em] text-[#121212] uppercase;
+}
+
+/* 2px ink rule — the hairline, promoted. */
+.brut-rule {
+  @apply border-t-2 border-[#121212];
+}
+
+/* Stamp: crimson, slightly off-register, like a hand-inked mark. */
+.brut-stamp {
+  @apply inline-flex rotate-[-2deg] items-center rounded-[2px] border-2 border-[#B3101C] px-[8px] py-[2px] text-[10px] font-bold tracking-[0.18em] text-[#B3101C] uppercase;
+}
+
+/* CSS-only staggered entrance for server-rendered pages (contact): no JS, no
+   hydration cost between an ad tap and the content. */
+@keyframes brut-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.brut-rise {
+  animation: brut-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brut-rise {
+    animation: none;
+  }
+  .brut-press,
+  .brut-press:hover:not(:disabled),
+  .brut-press:active:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ----------------------------------------------------------------------------
    LVMH-style signifier cursor + interactivity cues (see components/cursor)
    ---------------------------------------------------------------------------- */
 

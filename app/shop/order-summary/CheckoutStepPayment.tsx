@@ -5,8 +5,6 @@ import { captureCartEmailAction } from './actions';
 
 interface CheckoutStepPaymentProps {
   isLoggedIn: boolean;
-  prefillFirstName: string;
-  prefillLastName: string;
   pending: boolean;
   error: string | null;
   cartEmpty: boolean;
@@ -16,17 +14,17 @@ interface CheckoutStepPaymentProps {
 }
 
 /**
- * Step 1 of the two-step checkout: email + name, then straight to payment.
+ * Step 1 of the two-step checkout: an email, then straight to payment.
  *
- * Three fields stand between the shopper and the pay button — that is the
- * entire point. Collecting the delivery address here as well would just be the
- * old nine-field form with a page break in it; the address is asked for in
- * Step 2 (CheckoutStepAddress) once the payment has actually landed.
+ * ONE field stands between the shopper and the pay button — that is the entire
+ * point. The recipient's name moved to Step 2 (CheckoutStepAddress) with the
+ * rest of the delivery details: the parcel needs a name, the payment doesn't,
+ * and the backend never required one here (first/last are Optional in the
+ * checkout schema — only the guest email hard-fails). Signed-in shoppers see
+ * no fields at all: their email and profile name are already known.
  */
 export default function CheckoutStepPayment({
   isLoggedIn,
-  prefillFirstName,
-  prefillLastName,
   pending,
   error,
   cartEmpty,
@@ -36,15 +34,27 @@ export default function CheckoutStepPayment({
   return (
     <form action={onSubmit} className="mb-[36px]">
       <div>
-        <h1 className="text-[16px] font-bold uppercase">Your details</h1>
+        {/* Step marker: a stamped index, not a status card. */}
+        <div className="flex items-baseline gap-x-3">
+          <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
+            1/2
+          </span>
+          <h1
+            className="text-[26px] leading-none tracking-tight uppercase"
+            style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
+          >
+            Pay
+          </h1>
+          <span className="mt-auto mb-[5px] flex-1 border-t-2 border-[#121212] opacity-20" />
+        </div>
 
         {error && (
-          <div className="mt-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
+          <div className="mt-4 rounded-[2px] border-2 border-[#B3101C] bg-[#B3101C]/5 p-4 text-[13px] text-[#B3101C]">
             {error}
           </div>
         )}
 
-        <div className="mt-[24px] mb-[18px] space-y-[10px]">
+        <div className="mt-[20px] mb-[20px]">
           {!isLoggedIn && (
             <Field
               label="Email address"
@@ -55,7 +65,7 @@ export default function CheckoutStepPayment({
                 id="email"
                 type="email"
                 name="email"
-                className="solid"
+                className="brut-input"
                 autoComplete="email"
                 required
                 // Real-time capture for abandoned cart recovery
@@ -68,49 +78,25 @@ export default function CheckoutStepPayment({
               />
             </Field>
           )}
-
-          <div className="grid gap-[10px] sm:grid-cols-2">
-            <Field label="First name" htmlFor="firstName">
-              <input
-                id="firstName"
-                type="text"
-                name="firstName"
-                className="solid"
-                autoComplete="given-name"
-                defaultValue={prefillFirstName}
-                required
-              />
-            </Field>
-            <Field label="Last name" htmlFor="lastName">
-              <input
-                id="lastName"
-                type="text"
-                name="lastName"
-                className="solid"
-                autoComplete="family-name"
-                defaultValue={prefillLastName}
-                required
-              />
-            </Field>
-          </div>
-
-          <div className="mb-[16px] rounded-[10px] border border-[#EAEAEA] bg-[#F7F7F7] px-[14px] py-[12px]">
-            <p className="text-[13px] font-medium text-[#121212]">
-              Step 1 of 2 · Pay
-            </p>
-            <p className="mt-[2px] text-[12px] text-[#8E8E93]">
-              We’ll ask where to send it right after — no long form before you pay.
-            </p>
-          </div>
+          <p className="mt-[12px] text-[12px] leading-relaxed text-[#8E8E93] normal-case">
+            We’ll ask for your name and delivery address right after — nothing
+            else before you pay.
+          </p>
         </div>
 
         <button
           type="submit"
-          className="btn_black"
+          className="brut-btn brut-press"
           disabled={pending || cartEmpty}
         >
-          {pending ? 'Processing...' : payLabel}
+          {pending ? 'Processing…' : payLabel}
         </button>
+
+        {/* Reassurance at the exact moment of doubt: the button. */}
+        <p className="mt-4 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
+          Secure payment via Bachs&ensp;·&ensp;
+          <span className="text-[#B3101C]">Free delivery in Nigeria</span>
+        </p>
       </div>
     </form>
   );

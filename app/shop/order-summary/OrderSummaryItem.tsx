@@ -39,46 +39,46 @@ export function OrderSummaryItem({
       }}
     >
       <div className="flex w-full justify-between gap-x-[16px]">
-        <div className="relative h-[120px] w-[100px] rounded-[6px] bg-[#f5f5f5]">
-          <div className="flex justify-between">
-            <div></div>
-            <div className="z-10 m-[8px] flex h-[18px] w-[18px] items-center justify-center rounded-[4px] bg-[#121212] text-center text-[12px] text-white">
-              {item.quantity}
-            </div>
+        {/* Plate thumb: 2px ink border, hard corner, quantity as a stamped
+            square riding the frame. */}
+        <div className="relative h-[120px] w-[100px] shrink-0 rounded-[2px] border-2 border-[#121212] bg-[#f5f5f5]">
+          <div className="absolute -top-[2px] -right-[2px] z-10 flex h-[22px] w-[22px] items-center justify-center border-2 border-[#121212] bg-[#121212] text-center text-[12px] font-bold text-white">
+            {item.quantity}
           </div>
           {image && (
             <img
               src={image}
               alt={name}
-              className="absolute inset-0 h-full w-full rounded-[6px] object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           )}
         </div>
         <div className="flex w-full justify-between">
           <div className="flex flex-col py-[3px] text-[14px]">
-            <div className="flex-wrap pb-[16px] font-medium uppercase">
+            <div className="flex-wrap pb-[12px] font-medium tracking-[0.02em] uppercase">
               {name}
             </div>
-            <div className="text-[#8E8E93]">
-              <div>
-                Color: <span className="uppercase">{color}</span>
-              </div>
-              <div>
-                Size: <span className="uppercase">{size}</span>
-              </div>
+            <div className="text-[12px] tracking-[0.06em] text-[#5C544A] uppercase">
+              <div>{color}</div>
+              <div className="mt-[2px]">Size {size}</div>
             </div>
           </div>
           <div className="flex flex-col justify-between py-[3px] text-right text-[14px]">
-            <div>{formatPrice(price)}</div>
+            <div
+              className="text-[16px]"
+              style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
+            >
+              {formatPrice(price)}
+            </div>
             <motion.button
               type="button"
               onClick={() => item.id && onRemove?.(item.id)}
               disabled={removing}
-              className="cursor-pointer uppercase underline hover:no-underline disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer text-[11px] font-bold tracking-[0.1em] uppercase underline underline-offset-2 hover:no-underline disabled:cursor-not-allowed disabled:opacity-50"
               whileHover={removing ? {} : { scale: 1.05 }}
               whileTap={removing ? {} : { scale: 0.95 }}
             >
-              {removing ? 'Removing...' : 'Remove'}
+              {removing ? 'Removing…' : 'Remove'}
             </motion.button>
           </div>
         </div>

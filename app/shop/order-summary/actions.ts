@@ -65,13 +65,12 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
   const guestId = cookieStore.get('soise_guestId')?.value;
 
   const selectedAddressId = formData.get('selected_address_id') as string | null;
-  const firstName = formData.get('firstName') as string;
-  const lastName = formData.get('lastName') as string;
-
-  // Required regardless of which address path is used: who it's for.
-  if (!firstName?.trim() || !lastName?.trim()) {
-    return { success: false, error: 'firstName and lastName are required' };
-  }
+  // Optional since the two-step split: Step 1 asks for nothing but an email,
+  // so the recipient's name normally arrives with the address in Step 2 (and
+  // the backend falls back to the account profile for signed-in shoppers).
+  // Forwarded when present so any older/one-step caller keeps working.
+  const firstName = ((formData.get('firstName') as string) || '').trim();
+  const lastName = ((formData.get('lastName') as string) || '').trim();
 
   let shippingPayload: Record<string, unknown> | undefined;
 
@@ -183,8 +182,8 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
         ...(forwardCookie ? { Cookie: forwardCookie } : {}),
       },
       body: JSON.stringify({
-        first_name: firstName,
-        last_name: lastName,
+        ...(firstName ? { first_name: firstName } : {}),
+        ...(lastName ? { last_name: lastName } : {}),
         ...(shippingPayload ? shippingPayload : {}),
         ...(creatorCode ? { creator_code: creatorCode } : {}),
         ...(!accessToken && email ? { email } : {}),
@@ -513,7 +512,11 @@ export async function updateOrderShippingAction(
   },
   // Per-order secret for guest orders (see CheckoutResult.orderSecret). The
   // backend rejects a shipping update to an account-less order without it.
-  orderToken?: string
+  orderToken?: string,
+  // Who the parcel is for. Collected with the address since the two-step
+  // split left Step 1 with nothing but an email; the backend stores it as
+  // checkout_metadata.recipient_name and keeps any existing name if omitted.
+  recipient?: { firstName?: string; lastName?: string }
 ): Promise<UpdateShippingResult> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
@@ -529,7 +532,15 @@ export async function updateOrderShippingAction(
         ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
         ...(orderToken ? { 'X-Order-Token': orderToken } : {}),
       },
-      body: JSON.stringify({ shipping_address: shippingAddress }),
+      body: JSON.stringify({
+        shipping_address: shippingAddress,
+        ...(recipient?.firstName?.trim()
+          ? { first_name: recipient.firstName.trim() }
+          : {}),
+        ...(recipient?.lastName?.trim()
+          ? { last_name: recipient.lastName.trim() }
+          : {}),
+      }),
       cache: 'no-store',
     });
     const json = await res.json().catch(() => null);

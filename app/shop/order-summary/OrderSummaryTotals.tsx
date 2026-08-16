@@ -30,7 +30,7 @@ export function OrderSummaryTotals({
 
   return (
     <div className="pt-[24px] uppercase">
-      <div className="flex items-center justify-between text-[12px] text-[#8E8E93]">
+      <div className="flex items-center justify-between text-[12px] tracking-[0.08em] text-[#5C544A]">
         <div>Subtotal</div>
         <div>{formatPrice(subtotal)}</div>
       </div>
@@ -65,12 +65,12 @@ export function OrderSummaryTotals({
       {/* Always shown, including when it's free. A shopper who can't see
           a shipping line assumes one is coming at the payment step — say
           it plainly here instead. */}
-      <div className="flex items-center justify-between pt-[8px] text-[12px] text-[#8E8E93]">
+      <div className="flex items-center justify-between pt-[8px] text-[12px] tracking-[0.08em] text-[#5C544A]">
         <div>Shipping</div>
         {shipping > 0 ? (
           <div>{formatPrice(shipping)}</div>
         ) : domestic ? (
-          <div className="font-medium text-green-600">Free</div>
+          <div className="font-bold tracking-[0.1em] text-[#B3101C]">Free</div>
         ) : (
           // Free delivery is a Nigeria-only promise. The backend charges
           // zero shipping for every order, so an international address
@@ -78,8 +78,10 @@ export function OrderSummaryTotals({
           <div className="text-[#8E8E93]">Confirmed after order</div>
         )}
       </div>
-      <div className="flex items-center justify-between pt-[12px] text-[14px] font-medium text-[#121212]">
-        <div>Total</div>
+      {/* The total is the page's second-loudest object after PAY: serif,
+          oversized, over a 2px ink rule — a printed invoice line. */}
+      <div className="mt-[14px] flex items-baseline justify-between border-t-2 border-[#121212] pt-[12px]">
+        <div className="text-[12px] font-bold tracking-[0.16em]">Total</div>
         <AnimatePresence mode="wait">
           <motion.div
             key={totalAfterCredit}
@@ -87,7 +89,10 @@ export function OrderSummaryTotals({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.25 }}
-            className={showSavingsPulse ? 'text-green-600' : ''}
+            className={`text-[26px] leading-none tracking-tight ${
+              showSavingsPulse ? 'text-[#B3101C]' : 'text-[#121212]'
+            }`}
+            style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
           >
             {formatPrice(totalAfterCredit)}
           </motion.div>

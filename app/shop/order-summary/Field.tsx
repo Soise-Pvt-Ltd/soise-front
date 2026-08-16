@@ -21,13 +21,12 @@ export function Field({
 }) {
   return (
     <div className="w-full">
-      <label
-        htmlFor={htmlFor}
-        className="mb-[6px] block text-[12px] font-medium text-[#35373C] normal-case"
-      >
+      <label htmlFor={htmlFor} className="brut-label mb-[8px] block">
         {label}
         {hint && (
-          <span className="ml-[6px] font-normal text-[#8E8E93]">{hint}</span>
+          <span className="ml-[8px] font-medium tracking-[0.04em] text-[#8E8E93] normal-case">
+            {hint}
+          </span>
         )}
       </label>
       {children}

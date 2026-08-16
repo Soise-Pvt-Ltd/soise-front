@@ -618,9 +618,13 @@ export default function ProductPageClient({
                 Buy it now
               </motion.button>
 
-              {/* Checkout confidence — factual, quiet, right where doubt lives. */}
+              {/* Checkout confidence — factual, quiet, right where doubt lives.
+                  Leads with FREE delivery because that's the promise every live
+                  ad makes: a shopper weighing ₦90-150k is silently adding an
+                  imagined delivery fee on this exact screen, and "ships across
+                  Nigeria" never told them the answer is zero. */}
               <p className="mt-3 mb-[32px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-                Secure checkout via Bachs&ensp;·&ensp;Ships across Nigeria
+                Free delivery anywhere in Nigeria&ensp;·&ensp;Secure checkout
               </p>
 
               <motion.button
@@ -682,7 +686,13 @@ export default function ProductPageClient({
         </div>
       </div>
 
-      {/* Mobile sticky buy bar — the purchase affordance follows the reader. */}
+      {/* Mobile sticky buy bar — the purchase affordance follows the reader.
+          Its button is BUY NOW, not add-to-bag: ad traffic is ~all mobile, a
+          scrolling shopper is exactly who this bar exists for, and the one-tap
+          path to the order summary otherwise disappears the moment the main
+          buttons scroll off-screen — leaving only the multi-tap bag-panel
+          route. Anyone who wants the bag instead can scroll back up; the item
+          is in their bag either way. */}
       <AnimatePresence>
         {showStickyBar && (
           <motion.div
@@ -699,15 +709,18 @@ export default function ProductPageClient({
                 </p>
                 <p className="text-[13px] font-medium text-[#3A3A3C]">
                   {formatPrice(currentPrice)}
+                  <span className="ml-2 text-[10px] tracking-[0.08em] text-[#8E8E93] uppercase">
+                    Free delivery
+                  </span>
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => addToBag('bag')}
+                onClick={() => addToBag('checkout')}
                 disabled={isAdding || !selectedVariant || isOutOfStock}
                 className="h-[46px] shrink-0 cursor-pointer rounded-[10px] bg-[#121212] px-6 text-[12px] font-bold text-white uppercase transition-all duration-300 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {isOutOfStock ? 'Sold out' : isAdding ? 'Adding...' : 'Add to bag'}
+                {isOutOfStock ? 'Sold out' : isAdding ? 'One sec…' : 'Buy now'}
               </button>
             </div>
           </motion.div>

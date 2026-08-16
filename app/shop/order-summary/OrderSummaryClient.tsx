@@ -142,6 +142,13 @@ export default function OrderSummaryClient({
   const [useStoreCredit, setUseStoreCredit] = useState(false);
 
   // Creator code states
+  //
+  // The input starts collapsed behind a quiet link. An open code field at the
+  // pay step is a classic leak: shoppers leave to hunt for a code (and rarely
+  // come back), and everyone without one is reminded they might be overpaying.
+  // Shoppers who arrived via a creator's share link never need the field at
+  // all — their code auto-applies from the cookie below.
+  const [showCodeInput, setShowCodeInput] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [discountPending, setDiscountPending] = useState(false);
   const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
@@ -474,6 +481,12 @@ export default function OrderSummaryClient({
         orderId,
         shippingAddress,
         orderToken,
+        // The recipient's name lives on this form now (Step 1 is email-only),
+        // so it rides to the backend with the address it belongs to.
+        {
+          firstName: ((formData.get('firstName') as string) || '').trim(),
+          lastName: ((formData.get('lastName') as string) || '').trim(),
+        },
       );
 
       showToast.dismiss(toastId);
@@ -722,13 +735,18 @@ export default function OrderSummaryClient({
       <div className="page-shell">
         <div className="pb-[50px]">
           <motion.div
-            className="flex items-center justify-between border-y border-[#AEAEB2] px-[20px] py-[25px]"
+            className="flex items-baseline justify-between border-y-2 border-[#121212] px-[20px] py-[22px]"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center gap-x-2 text-[10px] uppercase">
-              Order Summary{' '}
+            <div className="flex items-center gap-x-3">
+              <span
+                className="text-[22px] leading-none tracking-tight uppercase"
+                style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
+              >
+                Order
+              </span>
               <motion.div
                 onClick={() => setShow(!show)}
                 className="cursor-pointer"
@@ -743,7 +761,8 @@ export default function OrderSummaryClient({
             <AnimatePresence mode="wait">
               <motion.div
                 key={total}
-                className="text-[16px] font-medium"
+                className="text-[18px] leading-none"
+                style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 4 }}
@@ -858,38 +877,55 @@ export default function OrderSummaryClient({
             </div>
           )}
 
-          {/* Code input — hidden when a code is already active */}
+          {/* Code entry — collapsed behind a link until asked for, hidden
+              entirely when a code is already active */}
           <AnimatePresence mode="wait">
             {!discountData ? (
-              <motion.form
-                key="code-input"
-                onSubmit={handleApplyDiscount}
-                className="flex gap-x-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <input
-                  type="text"
-                  className="outlined w-full uppercase focus:border-gray-500 focus:ring-[#AEAEB2] md:w-fit"
-                  placeholder="Creator code"
-                  value={discountCode}
-                  onChange={(e) =>
-                    setDiscountCode(e.target.value.toUpperCase())
-                  }
-                  disabled={discountPending}
-                />
-                <button
-                  type="submit"
-                  className="btn_black !w-fit !px-10"
-                  disabled={
-                    discountPending || !discountCode.trim() || cart.length === 0
-                  }
+              showCodeInput ? (
+                <motion.form
+                  key="code-input"
+                  onSubmit={handleApplyDiscount}
+                  className="flex gap-x-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  {discountPending ? 'applying...' : 'apply'}
-                </button>
-              </motion.form>
+                  <input
+                    type="text"
+                    className="outlined w-full uppercase focus:border-gray-500 focus:ring-[#AEAEB2] md:w-fit"
+                    placeholder="Creator code"
+                    value={discountCode}
+                    onChange={(e) =>
+                      setDiscountCode(e.target.value.toUpperCase())
+                    }
+                    disabled={discountPending}
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    className="btn_black !w-fit !px-10"
+                    disabled={
+                      discountPending || !discountCode.trim() || cart.length === 0
+                    }
+                  >
+                    {discountPending ? 'applying...' : 'apply'}
+                  </button>
+                </motion.form>
+              ) : (
+                <motion.button
+                  key="code-link"
+                  type="button"
+                  onClick={() => setShowCodeInput(true)}
+                  className="text-[12px] text-[#8E8E93] underline underline-offset-2 transition-colors hover:text-[#121212]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Have a creator code?
+                </motion.button>
+              )
             ) : (
               /* Applied code tag */
               <motion.div
@@ -1048,14 +1084,12 @@ export default function OrderSummaryClient({
           />
         </div>
 
-        <div className="my-[24px] border-t border-[#AEAEB2]"></div>
+        <div className="my-[28px] border-t-2 border-[#121212]"></div>
         {cart.length > 0 && (
           <div className="px-[20px]">
             {checkoutStep === 'payment' ? (
               <CheckoutStepPayment
                 isLoggedIn={isLoggedIn}
-                prefillFirstName={prefillFirstName}
-                prefillLastName={prefillLastName}
                 pending={pending}
                 error={error}
                 cartEmpty={cart.length === 0}
@@ -1071,6 +1105,8 @@ export default function OrderSummaryClient({
                 country={country}
                 onCountryChange={setCountry}
                 domestic={domestic}
+                prefillFirstName={prefillFirstName}
+                prefillLastName={prefillLastName}
                 prefillPhone={prefillPhone}
                 pending={pending}
                 error={error}

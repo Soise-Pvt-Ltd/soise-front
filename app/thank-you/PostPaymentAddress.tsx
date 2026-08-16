@@ -55,11 +55,13 @@ export default function PostPaymentAddress({
     setPending(true);
     setError(null);
 
+    const firstName = ((formData.get('firstName') as string) || '').trim();
+    const lastName = ((formData.get('lastName') as string) || '').trim();
     const line1 = ((formData.get('address') as string) || '').trim();
     const city = ((formData.get('city') as string) || '').trim();
     const state = ((formData.get('state') as string) || '').trim();
-    if (!line1 || !city || !state) {
-      setError('Please fill in your address, city and state.');
+    if (!firstName || !line1 || !city || !state) {
+      setError('Please fill in your name, address, city and state.');
       setPending(false);
       return;
     }
@@ -88,6 +90,9 @@ export default function PostPaymentAddress({
         // sent to a server — so it authorizes the call without landing in any
         // access log.
         readPendingOrderSecret() ?? readSecretFromHash() ?? undefined,
+        // Step 1 of checkout is email-only now, so the recipient's name is
+        // collected here with the address it belongs to.
+        { firstName, lastName },
       );
 
       if (result.success) {
@@ -121,7 +126,7 @@ export default function PostPaymentAddress({
   return (
     <form
       action={onSubmit}
-      className="mx-auto mt-8 max-w-[520px] rounded-[12px] border border-[#E4DFD4] bg-white px-5 py-5 text-left"
+      className="brut-plate brut-shadow mx-auto mt-8 max-w-[520px] px-5 py-5 text-left"
     >
       <p className="text-[14px] font-medium text-[#14110E]">
         One last thing — where should we send it?
@@ -137,9 +142,27 @@ export default function PostPaymentAddress({
       )}
 
       <div className="mt-4 space-y-[12px]">
+        {/* Who it's for — checkout's Step 1 is email-only, so the name
+            arrives here with the address. */}
+        <div className="grid grid-cols-2 gap-[12px]">
+          <input
+            name="firstName"
+            className="brut-input"
+            placeholder="First name"
+            autoComplete="given-name"
+            required
+          />
+          <input
+            name="lastName"
+            className="brut-input"
+            placeholder="Last name"
+            autoComplete="family-name"
+            required
+          />
+        </div>
         <input
           name="address"
-          className="solid w-full"
+          className="brut-input"
           placeholder="Street address"
           autoComplete="address-line1"
           required
@@ -147,14 +170,14 @@ export default function PostPaymentAddress({
         <div className="grid grid-cols-2 gap-[12px]">
           <input
             name="city"
-            className="solid w-full"
+            className="brut-input"
             placeholder="City"
             autoComplete="address-level2"
             required
           />
           <input
             name="state"
-            className="solid w-full"
+            className="brut-input"
             placeholder="State"
             autoComplete="address-level1"
             required
@@ -163,7 +186,7 @@ export default function PostPaymentAddress({
         <input
           name="phone"
           type="tel"
-          className="solid w-full"
+          className="brut-input"
           placeholder={domestic ? 'Phone (optional)' : 'Phone with country code'}
           autoComplete="tel"
         />
@@ -171,7 +194,7 @@ export default function PostPaymentAddress({
         {showCountry ? (
           <div className="grid grid-cols-2 gap-[12px]">
             <input
-              className="solid w-full"
+              className="brut-input"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               placeholder="Country"
@@ -179,7 +202,7 @@ export default function PostPaymentAddress({
             />
             <input
               name="zipCode"
-              className="solid w-full"
+              className="brut-input"
               placeholder={domestic ? 'Postal code' : 'ZIP / postal code'}
               autoComplete="postal-code"
               required={!domestic}
@@ -196,7 +219,7 @@ export default function PostPaymentAddress({
         )}
       </div>
 
-      <button type="submit" className="btn_black mt-5 w-full" disabled={pending}>
+      <button type="submit" className="brut-btn brut-press mt-5" disabled={pending}>
         {pending ? 'Saving…' : 'Confirm delivery details'}
       </button>
     </form>
