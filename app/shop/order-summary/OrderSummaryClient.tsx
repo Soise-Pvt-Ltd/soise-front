@@ -1116,6 +1116,62 @@ export default function OrderSummaryClient({
                 onSubmit={handleAddressSubmit}
               />
             )}
+
+            {/* Trust, below the fold of the decision. Everything here is
+                VERIFIABLE — a policy page, a CAC certificate, a phone that
+                answers. No review counts, no "N happy customers": the store's
+                own rule is no reviews, and at this stage any social proof
+                would be fabricated — which reads worse than silence the
+                moment a skeptical shopper checks. Sits AFTER the pay button
+                so a committed buyer never scrolls past it; a hesitating one
+                finds it exactly where doubt takes them. */}
+            <div className="mb-[44px] border-t-2 border-[#121212] pt-[18px] normal-case">
+              <div className="space-y-[14px]">
+                <div>
+                  <p className="brut-label">7-day exchange</p>
+                  <p className="mt-[3px] text-[12px] leading-relaxed text-[#5C544A]">
+                    Wrong size or change of heart? Exchanges ship free within
+                    Nigeria, or take a full refund to your card.{' '}
+                    <Link
+                      href="/returns"
+                      className="font-semibold text-[#B3101C] underline-offset-2 hover:underline"
+                    >
+                      The promise →
+                    </Link>
+                  </p>
+                </div>
+                <div>
+                  <p className="brut-label">A registered business</p>
+                  <p className="mt-[3px] text-[12px] leading-relaxed text-[#5C544A]">
+                    Soise is incorporated with Nigeria&apos;s Corporate Affairs
+                    Commission — RC 8413888.{' '}
+                    <a
+                      href="/cac-registration.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[#B3101C] underline-offset-2 hover:underline"
+                    >
+                      Certificate →
+                    </a>
+                  </p>
+                </div>
+                <div>
+                  <p className="brut-label">A human answers</p>
+                  <p className="mt-[3px] text-[12px] leading-relaxed text-[#5C544A]">
+                    Questions before you pay?{' '}
+                    <a
+                      href="https://wa.me/2348135757947"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[#B3101C] underline-offset-2 hover:underline"
+                    >
+                      WhatsApp us
+                    </a>{' '}
+                    — Mon–Sat, 9:00–18:00 WAT.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

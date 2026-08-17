@@ -818,6 +818,13 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                         ? `Checkout · ${formatPrice(subtotal)}`
                         : 'Checkout'}
                     </button>
+                    {/* One verifiable whisper under the commit button — the
+                        guarantee and the registration, never review-counts
+                        (store rule: no reviews, and fabricated proof reads
+                        worse than silence). */}
+                    <p className="mt-[10px] text-center text-[10px] tracking-[0.12em] text-[#8E8E93] uppercase">
+                      7-day exchange&ensp;·&ensp;CAC-registered business
+                    </p>
                   </motion.div>
 
                   {/* Complete the look — recommendations seeded from the first
