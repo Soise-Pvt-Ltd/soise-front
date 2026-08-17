@@ -37,5 +37,11 @@ export async function apiForwardCookie(): Promise<string> {
   const fbc = store.get('_fbc')?.value;
   if (fbc) parts.push(`_fbc=${fbc}`);
 
+  // Last ad touch (utm_* + click ids as JSON, set by AttributionCapture).
+  // The backend stamps it onto the order at checkout so the orders table
+  // itself answers "which platform bought this".
+  const attrib = store.get('soise_attrib')?.value;
+  if (attrib) parts.push(`soise_attrib=${attrib}`);
+
   return parts.join('; ');
 }

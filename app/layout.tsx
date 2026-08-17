@@ -5,6 +5,7 @@ import Providers from './providers';
 import LuxeCursor from '@/components/cursor/LuxeCursor';
 import AmbientStatue from '@/components/brand/AmbientStatue';
 import TikTokClickId from '@/components/tracking/TikTokClickId';
+import AttributionCapture from '@/components/tracking/AttributionCapture';
 import {
   SITE_URL,
   SITE_NAME,
@@ -189,6 +190,7 @@ fbq('track', 'PageView');`,
       <body className="font-body shell-max antialiased">
         <Providers>{children}</Providers>
         <TikTokClickId />
+        <AttributionCapture />
         <AmbientStatue />
         <LuxeCursor />
         <Analytics />
