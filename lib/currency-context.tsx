@@ -80,19 +80,17 @@ const RATE_TTL_MS = 60 * 60 * 1000; // 1 hour — matches the backend's cache
 
 type Rates = Record<Exclude<Currency, 'NGN'>, number>;
 
-// Rates are HYBRID by necessity: Frankfurter serves ECB reference rates,
-// which cover the majors but NOT the naira — so the NGN→USD leg comes from
-// open.er-api.com (the same feed the backend charges off), and the
-// USD→GBP/EUR/CAD display crosses come from Frankfurter's ECB data.
-// GBP price = naira × (NGN→USD) × (USD→GBP).
-const NGN_RATE_URL = 'https://open.er-api.com/v6/latest/NGN';
-const CROSS_RATE_URL =
-  'https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR,CAD';
+// One Frankfurter v2 call covers everything: the naira leg via the Central
+// Bank of Nigeria provider (official daily fix — the same feed the backend
+// charges off, so shown-USD == charged-USD) and the ECB crosses for the
+// display currencies. GBP price = naira × (NGN→USD) × (USD→GBP).
+const RATES_URL =
+  'https://api.frankfurter.dev/v2/rates?base=USD&quotes=NGN,CAD,EUR,GBP';
 
-// Deliberately slightly naira-pessimistic so a stale fallback can't show a
-// price below what the backend would charge.
-const FALLBACK_USD_PER_NGN = 0.00063; // ~₦1,590/$
-const FALLBACK_CROSSES = { GBP: 0.74, EUR: 0.86, CAD: 1.39 }; // per USD, ECB ballpark
+// ~₦1,360/$ (CBN, Aug 2026) + ECB-ballpark crosses. Matches the backend's
+// fallback so a double feed failure still shows what it charges.
+const FALLBACK_USD_PER_NGN = 0.000735;
+const FALLBACK_CROSSES = { GBP: 0.74, EUR: 0.86, CAD: 1.39 }; // per USD
 
 function buildRates(
   usdPerNgn: number,
@@ -187,40 +185,31 @@ export function CurrencyProvider({
 
       setIsRateLoading(true);
       try {
-        // The two legs fail independently: a dead cross feed still leaves
-        // live USD pricing (the leg that matches what cards are charged),
-        // and vice versa.
-        const [ngnRes, crossRes] = await Promise.allSettled([
-          fetch(NGN_RATE_URL),
-          fetch(CROSS_RATE_URL),
-        ]);
-
-        let usdPerNgn = FALLBACK_USD_PER_NGN;
-        if (ngnRes.status === 'fulfilled' && ngnRes.value.ok) {
-          const data = await ngnRes.value.json();
-          if (typeof data?.rates?.USD === 'number' && data.rates.USD > 0) {
-            usdPerNgn = data.rates.USD;
-          }
+        const res = await fetch(RATES_URL);
+        if (res.ok) {
+          // v2 shape: [{base:"USD", quote:"NGN", rate:1355.76}, ...] —
+          // quotes are per-USD, so the naira leg inverts into NGN→USD.
+          const data: Array<{ quote: string; rate: number }> =
+            await res.json();
+          const byQuote = Object.fromEntries(
+            (Array.isArray(data) ? data : []).map((r) => [r.quote, r.rate]),
+          );
+          const usdPerNgn =
+            byQuote.NGN && byQuote.NGN > 0
+              ? 1 / byQuote.NGN
+              : FALLBACK_USD_PER_NGN;
+          const crosses = {
+            GBP: byQuote.GBP ?? FALLBACK_CROSSES.GBP,
+            EUR: byQuote.EUR ?? FALLBACK_CROSSES.EUR,
+            CAD: byQuote.CAD ?? FALLBACK_CROSSES.CAD,
+          };
+          const r = buildRates(usdPerNgn, crosses);
+          setRates(r);
+          localStorage.setItem(
+            RATE_CACHE_KEY,
+            JSON.stringify({ rates: r, ts: Date.now() }),
+          );
         }
-
-        let crosses = FALLBACK_CROSSES;
-        if (crossRes.status === 'fulfilled' && crossRes.value.ok) {
-          const data = await crossRes.value.json();
-          if (typeof data?.rates?.GBP === 'number') {
-            crosses = {
-              GBP: data.rates.GBP,
-              EUR: data.rates.EUR ?? FALLBACK_CROSSES.EUR,
-              CAD: data.rates.CAD ?? FALLBACK_CROSSES.CAD,
-            };
-          }
-        }
-
-        const r = buildRates(usdPerNgn, crosses);
-        setRates(r);
-        localStorage.setItem(
-          RATE_CACHE_KEY,
-          JSON.stringify({ rates: r, ts: Date.now() }),
-        );
       } catch {
         // silently use fallback
       } finally {
