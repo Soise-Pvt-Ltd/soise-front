@@ -75,19 +75,38 @@ const CurrencyContext = createContext<CurrencyContextType>({
 });
 
 const PREF_KEY = 'soise_currency';
-const RATE_CACHE_KEY = 'soise_fx_cache_v2';
+const RATE_CACHE_KEY = 'soise_fx_cache_v3';
 const RATE_TTL_MS = 60 * 60 * 1000; // 1 hour — matches the backend's cache
 
 type Rates = Record<Exclude<Currency, 'NGN'>, number>;
 
+// Rates are HYBRID by necessity: Frankfurter serves ECB reference rates,
+// which cover the majors but NOT the naira — so the NGN→USD leg comes from
+// open.er-api.com (the same feed the backend charges off), and the
+// USD→GBP/EUR/CAD display crosses come from Frankfurter's ECB data.
+// GBP price = naira × (NGN→USD) × (USD→GBP).
+const NGN_RATE_URL = 'https://open.er-api.com/v6/latest/NGN';
+const CROSS_RATE_URL =
+  'https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR,CAD';
+
 // Deliberately slightly naira-pessimistic so a stale fallback can't show a
 // price below what the backend would charge.
-const FALLBACK_RATES: Rates = {
-  USD: 0.00063, // ~₦1,590/$
-  GBP: 0.0005, //  ~₦2,000/£
-  EUR: 0.00058, // ~₦1,720/€
-  CAD: 0.00086, // ~₦1,160/CA$
-};
+const FALLBACK_USD_PER_NGN = 0.00063; // ~₦1,590/$
+const FALLBACK_CROSSES = { GBP: 0.74, EUR: 0.86, CAD: 1.39 }; // per USD, ECB ballpark
+
+function buildRates(
+  usdPerNgn: number,
+  crosses: { GBP: number; EUR: number; CAD: number },
+): Rates {
+  return {
+    USD: usdPerNgn,
+    GBP: usdPerNgn * crosses.GBP,
+    EUR: usdPerNgn * crosses.EUR,
+    CAD: usdPerNgn * crosses.CAD,
+  };
+}
+
+const FALLBACK_RATES: Rates = buildRates(FALLBACK_USD_PER_NGN, FALLBACK_CROSSES);
 
 /** Round UP to the nearest 5 whole units — the international price rule. */
 function roundUp5(value: number): number {
@@ -168,21 +187,40 @@ export function CurrencyProvider({
 
       setIsRateLoading(true);
       try {
-        const res = await fetch('https://open.er-api.com/v6/latest/NGN');
-        if (res.ok) {
-          const data = await res.json();
-          const r: Rates = {
-            USD: data?.rates?.USD ?? FALLBACK_RATES.USD,
-            GBP: data?.rates?.GBP ?? FALLBACK_RATES.GBP,
-            EUR: data?.rates?.EUR ?? FALLBACK_RATES.EUR,
-            CAD: data?.rates?.CAD ?? FALLBACK_RATES.CAD,
-          };
-          setRates(r);
-          localStorage.setItem(
-            RATE_CACHE_KEY,
-            JSON.stringify({ rates: r, ts: Date.now() }),
-          );
+        // The two legs fail independently: a dead cross feed still leaves
+        // live USD pricing (the leg that matches what cards are charged),
+        // and vice versa.
+        const [ngnRes, crossRes] = await Promise.allSettled([
+          fetch(NGN_RATE_URL),
+          fetch(CROSS_RATE_URL),
+        ]);
+
+        let usdPerNgn = FALLBACK_USD_PER_NGN;
+        if (ngnRes.status === 'fulfilled' && ngnRes.value.ok) {
+          const data = await ngnRes.value.json();
+          if (typeof data?.rates?.USD === 'number' && data.rates.USD > 0) {
+            usdPerNgn = data.rates.USD;
+          }
         }
+
+        let crosses = FALLBACK_CROSSES;
+        if (crossRes.status === 'fulfilled' && crossRes.value.ok) {
+          const data = await crossRes.value.json();
+          if (typeof data?.rates?.GBP === 'number') {
+            crosses = {
+              GBP: data.rates.GBP,
+              EUR: data.rates.EUR ?? FALLBACK_CROSSES.EUR,
+              CAD: data.rates.CAD ?? FALLBACK_CROSSES.CAD,
+            };
+          }
+        }
+
+        const r = buildRates(usdPerNgn, crosses);
+        setRates(r);
+        localStorage.setItem(
+          RATE_CACHE_KEY,
+          JSON.stringify({ rates: r, ts: Date.now() }),
+        );
       } catch {
         // silently use fallback
       } finally {
