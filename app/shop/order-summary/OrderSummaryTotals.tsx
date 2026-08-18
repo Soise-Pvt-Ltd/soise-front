@@ -29,12 +29,19 @@ export function OrderSummaryTotals({
   const { formatPrice, currency, isDisplayOnly, formatBilledUsd } =
     useCurrency();
 
+  // With no discount and no credit, subtotal === total — printing both is
+  // the same number twice. The row earns its place only when it explains a
+  // difference.
+  const showSubtotal = appliedDiscount > 0 || creditApplied > 0;
+
   return (
     <div className="pt-[24px] uppercase">
-      <div className="flex items-center justify-between text-[12px] tracking-[0.08em] text-[#5C544A]">
-        <div>Subtotal</div>
-        <div>{formatPrice(subtotal)}</div>
-      </div>
+      {showSubtotal && (
+        <div className="flex items-center justify-between text-[12px] tracking-[0.08em] text-[#5C544A]">
+          <div>Subtotal</div>
+          <div>{formatPrice(subtotal)}</div>
+        </div>
+      )}
       <AnimatePresence>
         {appliedDiscount > 0 && (
           <motion.div
@@ -67,13 +74,15 @@ export function OrderSummaryTotals({
           a shipping line assumes one is coming at the payment step — say
           it plainly here instead. */}
       <div className="flex items-center justify-between pt-[8px] text-[12px] tracking-[0.08em] text-[#5C544A]">
-        <div>Shipping</div>
+        <div>Delivery</div>
         {shipping > 0 ? (
           <div>{formatPrice(shipping)}</div>
         ) : (
-          // Free delivery is the promise EVERYWHERE — Lagos or London, the
-          // backend charges zero shipping and Soise absorbs the courier.
-          <div className="font-bold tracking-[0.1em] text-[#B3101C]">Free</div>
+          // The page's ONE free-delivery mention. Free everywhere — Lagos or
+          // London, the backend charges zero and Soise absorbs the courier.
+          <div className="font-bold tracking-[0.1em] text-[#B3101C]">
+            Free · worldwide
+          </div>
         )}
       </div>
       {/* The total is the page's second-loudest object after PAY: serif,
@@ -96,11 +105,6 @@ export function OrderSummaryTotals({
           </motion.div>
         </AnimatePresence>
       </div>
-      {shipping === 0 && (
-        <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
-          Free delivery, anywhere in the world. Nothing is added at payment.
-        </p>
-      )}
       {isDisplayOnly && (
         // GBP/EUR/CAD are display currencies; the card is charged in USD.
         // Same rate feed and round-up rule as the backend, so this figure

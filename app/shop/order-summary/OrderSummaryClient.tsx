@@ -763,18 +763,24 @@ export default function OrderSummaryClient({
                 <ArrowUpIcon />
               </motion.div>
             </div>
+            {/* The total shows here only while the list is COLLAPSED — once
+                it's open, the totals block below owns the number. One price,
+                one job: the same figure used to render five times on this
+                page and read as clutter. */}
             <AnimatePresence mode="wait">
-              <motion.div
-                key={total}
-                className="text-[18px] leading-none"
-                style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                transition={{ duration: 0.2 }}
-              >
-                {formatPrice(total)}
-              </motion.div>
+              {!show && (
+                <motion.div
+                  key={total}
+                  className="text-[18px] leading-none"
+                  style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {formatPrice(total)}
+                </motion.div>
+              )}
             </AnimatePresence>
           </motion.div>
 

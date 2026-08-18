@@ -94,8 +94,7 @@ export default function CheckoutStepPayment({
 
         {/* Reassurance at the exact moment of doubt: the button. */}
         <p className="mt-4 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-          Secure payment via Bachs&ensp;·&ensp;
-          <span className="text-[#B3101C]">Free delivery, worldwide</span>
+          Secure payment via Bachs
         </p>
       </div>
     </form>
