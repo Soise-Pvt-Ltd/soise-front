@@ -624,7 +624,7 @@ export default function ProductPageClient({
                   imagined delivery fee on this exact screen, and "ships across
                   Nigeria" never told them the answer is zero. */}
               <p className="mt-3 mb-[32px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-                Free delivery anywhere in Nigeria&ensp;·&ensp;7-day
+                Free delivery, worldwide&ensp;·&ensp;7-day
                 exchange&ensp;·&ensp;Secure checkout
               </p>
 

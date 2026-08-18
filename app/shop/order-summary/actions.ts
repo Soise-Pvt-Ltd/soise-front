@@ -70,6 +70,8 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
   // the backend falls back to the account profile for signed-in shoppers).
   // Forwarded when present so any older/one-step caller keeps working.
   const firstName = ((formData.get('firstName') as string) || '').trim();
+  // 'NGN' | 'USD' — the only two Bachs charges; backend re-validates.
+  const chargeCurrency = String(formData.get('currency') || '');
   const lastName = ((formData.get('lastName') as string) || '').trim();
 
   let shippingPayload: Record<string, unknown> | undefined;
@@ -183,6 +185,7 @@ export async function checkoutAction(formData: FormData): Promise<CheckoutResult
       },
       body: JSON.stringify({
         ...(firstName ? { first_name: firstName } : {}),
+        ...(chargeCurrency ? { currency: chargeCurrency } : {}),
         ...(lastName ? { last_name: lastName } : {}),
         ...(shippingPayload ? shippingPayload : {}),
         ...(creatorCode ? { creator_code: creatorCode } : {}),

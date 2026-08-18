@@ -791,13 +791,12 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                     </div>
                     {/* Said here, before they commit to checkout — an unknown
                         delivery cost is a reason to close the bag and think
-                        about it. Qualified, because the bag has no address yet
-                        and free delivery is a Nigeria-only promise: Soise also
-                        ships to diaspora customers. */}
+                        about it. Unqualified since the global layer: Soise
+                        absorbs the courier everywhere, Lagos or London. */}
                     <div className="mt-[6px] flex justify-between !text-[12px] font-medium text-[#8E8E93] uppercase">
                       <div>Shipping:</div>
                       <div className="font-bold tracking-[0.08em] text-[#B3101C]">
-                        Free in Nigeria
+                        Free, worldwide
                       </div>
                     </div>
                     {/* The panel's primary action, dressed as the SAME pressed

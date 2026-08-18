@@ -96,7 +96,7 @@ export default function OrderSummaryClient({
   cartLoadFailed = false,
   shippingFee = null,
 }: OrderSummaryClientProps) {
-  const { formatPrice } = useCurrency();
+  const { formatPrice, chargeCurrency } = useCurrency();
   const router = useRouter();
   const submittingRef = useRef(false);
   const [pending, setPending] = useState(false);
@@ -337,6 +337,11 @@ export default function OrderSummaryClient({
     if (discountData?.code) {
       formData.set('creator_code', discountData.code);
     }
+
+    // The charge currency the shopper is browsing in: naira for Nigeria,
+    // USD for the international card rail. The backend stamps it on the
+    // order so every retry re-charges what they originally saw.
+    formData.set('currency', chargeCurrency);
 
     if (useStoreCredit && hasStoreCredit) {
       formData.set('use_store_credit', 'true');
@@ -1131,7 +1136,8 @@ export default function OrderSummaryClient({
                   <p className="brut-label">7-day exchange</p>
                   <p className="mt-[3px] text-[12px] leading-relaxed text-[#5C544A]">
                     Wrong size or change of heart? Exchanges ship free within
-                    Nigeria, or take a full refund to your card.{' '}
+                    Nigeria — everywhere else, take a full refund to your
+                    card.{' '}
                     <Link
                       href="/returns"
                       className="font-semibold text-[#B3101C] underline-offset-2 hover:underline"

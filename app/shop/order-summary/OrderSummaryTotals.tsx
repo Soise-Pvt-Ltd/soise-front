@@ -26,7 +26,8 @@ export function OrderSummaryTotals({
   totalAfterCredit,
   showSavingsPulse,
 }: OrderSummaryTotalsProps) {
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice, currency, isDisplayOnly, formatBilledUsd } =
+    useCurrency();
 
   return (
     <div className="pt-[24px] uppercase">
@@ -69,13 +70,10 @@ export function OrderSummaryTotals({
         <div>Shipping</div>
         {shipping > 0 ? (
           <div>{formatPrice(shipping)}</div>
-        ) : domestic ? (
-          <div className="font-bold tracking-[0.1em] text-[#B3101C]">Free</div>
         ) : (
-          // Free delivery is a Nigeria-only promise. The backend charges
-          // zero shipping for every order, so an international address
-          // would otherwise be shown "Free" — a claim nobody made.
-          <div className="text-[#8E8E93]">Confirmed after order</div>
+          // Free delivery is the promise EVERYWHERE — Lagos or London, the
+          // backend charges zero shipping and Soise absorbs the courier.
+          <div className="font-bold tracking-[0.1em] text-[#B3101C]">Free</div>
         )}
       </div>
       {/* The total is the page's second-loudest object after PAY: serif,
@@ -98,15 +96,18 @@ export function OrderSummaryTotals({
           </motion.div>
         </AnimatePresence>
       </div>
-      {shipping === 0 && domestic && (
+      {shipping === 0 && (
         <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
-          Free delivery anywhere in Nigeria. Nothing is added at payment.
+          Free delivery, anywhere in the world. Nothing is added at payment.
         </p>
       )}
-      {shipping === 0 && !domestic && (
-        <p className="mt-[8px] text-[10px] text-[#8E8E93] normal-case">
-          International delivery — we&apos;ll confirm shipping with you
-          after you order.
+      {isDisplayOnly && (
+        // GBP/EUR/CAD are display currencies; the card is charged in USD.
+        // Same rate feed and round-up rule as the backend, so this figure
+        // is what the Bachs page will show.
+        <p className="mt-[4px] text-[10px] text-[#8E8E93] normal-case">
+          {currency} prices are a guide — your card is billed in USD (
+          {formatBilledUsd(totalAfterCredit)}).
         </p>
       )}
       {currency === 'USD' && (
