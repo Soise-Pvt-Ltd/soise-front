@@ -11,6 +11,7 @@ import {
   resolveAccount,
 } from '../request-payout/actions';
 import { showToast } from '@/lib/toast-utils';
+import { payoutBankDetails } from '@/lib/payout-details';
 
 /** Playfair Display — the Ivory House display face. */
 const luxe = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
@@ -61,7 +62,10 @@ export default function WithdrawalBankPage() {
     if (result.success && result.data?.wallets) {
       const wallet = result.data.wallets;
       setBalance(wallet.balance || 0);
-      const details = wallet.payout_metadata?.details || {};
+      // Reads the current flat shape AND the legacy nested one — see
+      // lib/payout-details.ts. Reading only `.details` is what made a freshly
+      // saved account come back empty.
+      const details = payoutBankDetails(wallet) || ({} as any);
       if (details.bank_name) {
         setHasBank(true);
         setBankName(details.bank_name);

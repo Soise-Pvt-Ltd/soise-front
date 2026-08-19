@@ -17,6 +17,7 @@ import { ChainIcon, TagIcon, DollarIcon } from '@/components/icons';
 import CreatorCode from '../CreatorCode';
 import CreatorNav from '@/components/creators/CreatorNav';
 import { getWallet } from './request-payout/actions';
+import { payoutBankDetails } from '@/lib/payout-details';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -220,7 +221,8 @@ export default function CreatorDashboard({
       const result = await getWallet();
       if (result.success) {
         const wallet = result.data?.wallets;
-        const hasBank = Boolean(wallet?.payout_metadata?.details?.bank_name);
+        // Legacy `.details` only would nag a creator who HAS set up payouts.
+        const hasBank = Boolean(payoutBankDetails(wallet));
         const hasFunds =
           (wallet?.balance || 0) > 0 || summaryTotal > 0 || balance > 0;
         setNeedsPayoutSetup(!hasBank && hasFunds);

@@ -7,6 +7,7 @@ import { EyeIcon, EyeOffIcon, ArrowLeftIcon } from '@/components/icons';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getWallet, requestPayout, getUserPayouts } from './actions';
 import { payoutStatusView, isInFlight } from '@/lib/payout-status';
+import { payoutBankDetails } from '@/lib/payout-details';
 
 const naira = (n: number) =>
   `₦${(n || 0).toLocaleString('en-US', {
@@ -41,7 +42,8 @@ export default function RequestPayoutPage() {
     if (result.success && result.data?.wallets) {
       const wallet = result.data.wallets;
       setBalance(wallet.balance || 0);
-      const details = wallet.payout_metadata?.details;
+      // Flat (Bachs) or legacy nested (Paystack) — see lib/payout-details.ts.
+      const details = payoutBankDetails(wallet);
       setHasBank(Boolean(details?.bank_name));
       setBankName(details?.bank_name || '');
       setAccountNumber(details?.account_number || '');
