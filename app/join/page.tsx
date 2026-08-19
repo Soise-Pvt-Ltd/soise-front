@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import StatueWatermark from '@/components/brand/StatueWatermark';
 import { NOINDEX } from '@/lib/seo';
 
@@ -39,9 +40,21 @@ export default async function JoinPage({
   searchParams: Promise<{ ref?: string }>;
 }) {
   const { ref } = await searchParams;
-  const applyHref = `/auth/register?callbackUrl=${encodeURIComponent('/creators')}${
-    ref ? `&ref=${encodeURIComponent(ref)}` : ''
-  }`;
+
+  // A signed-in visitor already has an account, so sending them to the register
+  // form asked them to create a second one — the invitation dead-ended for the
+  // exact people most likely to accept it. /creators is the right destination in
+  // every signed-in case: it redirects an onboarded creator to their dashboard,
+  // an approved one to onboarding, and shows the application form to everyone
+  // else. Presence of the cookie is enough to route on; /creators does the real
+  // gating, and a stale token simply lands on its login redirect.
+  const isSignedIn = Boolean((await cookies()).get('access_token')?.value);
+
+  const applyHref = isSignedIn
+    ? '/creators'
+    : `/auth/register?callbackUrl=${encodeURIComponent('/creators')}${
+        ref ? `&ref=${encodeURIComponent(ref)}` : ''
+      }`;
   const signInHref = `/auth/login?callbackUrl=${encodeURIComponent('/creators')}`;
 
   return (
@@ -93,15 +106,21 @@ export default async function JoinPage({
             >
               Claim your invitation
             </Link>
-            <Link
-              href={signInHref}
-              className="w-full rounded-full border border-[#3A3A3D] px-8 py-3.5 text-[14px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] sm:w-auto"
-            >
-              I already have an account
-            </Link>
+            {/* Only offered to signed-out visitors — "I already have an
+                account" is noise once you are in one. */}
+            {!isSignedIn && (
+              <Link
+                href={signInHref}
+                className="w-full rounded-full border border-[#3A3A3D] px-8 py-3.5 text-[14px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] sm:w-auto"
+              >
+                I already have an account
+              </Link>
+            )}
           </div>
           <p className="mt-5 text-[12px] text-[#7A766C]">
-            Takes two minutes. Acceptance is reviewed by our team within 48 hours.
+            {isSignedIn
+              ? 'Acceptance is reviewed by our team within 48 hours.'
+              : 'Takes two minutes. Acceptance is reviewed by our team within 48 hours.'}
           </p>
         </div>
       </section>
