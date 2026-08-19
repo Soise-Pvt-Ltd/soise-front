@@ -32,7 +32,12 @@ export default function ProfileClient({ dashboard }: any) {
 
   // Extract data from dashboard prop
   const initialProfile = dashboard?.profile ?? {};
-  const creatorCode = dashboard?.creator_code?.code || 'N/A';
+  const creatorCode = dashboard?.creator_code?.code || '';
+  // 'N/A' was shown when a creator had no code yet — and the copy button
+  // stayed live beside it, so pressing it put the literal string "N/A" on
+  // the clipboard and answered "Copied!". Offer the copy only when there is
+  // something to copy.
+  const hasCreatorCode = Boolean(creatorCode);
   const tier = dashboard?.tier || {};
   const withdrawalBank = dashboard?.withdrawal_bank || {};
   // A destination needs both to be usable; either alone is a half-saved record
@@ -250,41 +255,55 @@ export default function ProfileClient({ dashboard }: any) {
               Creator Code
             </div>
             <div className="flex items-center gap-x-[10px]">
-              <div className="text-[15px] font-medium tracking-widest text-[#F4F1EA] uppercase">
-                {creatorCode}
-              </div>
-              <button
-                type="button"
-                className="flex cursor-pointer items-center gap-x-1 opacity-70 transition-opacity hover:opacity-100"
-                onClick={handleCopyCreatorCode}
-                title="Copy creator code"
-                aria-label="Copy creator code"
+              <div
+                className={`text-[15px] font-medium tracking-widest uppercase ${
+                  hasCreatorCode ? 'text-[#F4F1EA]' : 'text-[#7A766C]'
+                }`}
               >
-                {copiedCreatorCode ? (
-                  <span className="text-[11px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase">
-                    Copied!
-                  </span>
-                ) : (
-                  <CopyIcon />
-                )}
-              </button>
+                {hasCreatorCode ? creatorCode : 'Not yet issued'}
+              </div>
+              {hasCreatorCode && (
+                <button
+                  type="button"
+                  className="flex cursor-pointer items-center gap-x-1 opacity-70 transition-opacity hover:opacity-100"
+                  onClick={handleCopyCreatorCode}
+                  title="Copy creator code"
+                  aria-label="Copy creator code"
+                >
+                  {copiedCreatorCode ? (
+                    <span className="text-[11px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase">
+                      Copied!
+                    </span>
+                  ) : (
+                    <CopyIcon />
+                  )}
+                </button>
+              )}
             </div>
           </div>
-          <div className="flex items-center justify-between">
+          {/* Carried a chevron but was not a link. The tier ladder is a real
+              destination, so the row now goes there. */}
+          <Link
+            href="/creators/dashboard/tier-upgrade"
+            className="-mx-[8px] flex items-center justify-between rounded-[10px] px-[8px] py-[4px] transition-colors hover:bg-[#F4F1EA]/[0.04] focus-visible:ring-2 focus-visible:ring-[#C4AA6E] focus-visible:outline-none"
+          >
             <div className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
               Account Tier
             </div>
             <div className="flex items-center gap-x-[8px]">
               {/* Same display-serif treatment as the dashboard card, so the
                   tier reads as the same thing in both places. */}
-              <div className="text-[21px] font-medium text-[#C4AA6E]" style={luxe}>
-                {tier?.name || 'No Tier'}
+              <div
+                className={`text-[21px] font-medium ${
+                  tier?.name ? 'text-[#C4AA6E]' : 'text-[#7A766C]'
+                }`}
+                style={luxe}
+              >
+                {tier?.name || 'No tier yet'}
               </div>
-              <div>
-                <ArrowProfileRightIcon />
-              </div>
+              <ArrowProfileRightIcon />
             </div>
-          </div>
+          </Link>
         </div>
 
         <div className="space-y-[24px] rounded-[16px] bg-[#121214] p-[22px]">
