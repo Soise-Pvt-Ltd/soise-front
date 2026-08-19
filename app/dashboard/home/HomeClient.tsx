@@ -417,7 +417,10 @@ const AllProductsTable = ({ products }: { products: any[] }) => {
   );
 
   const formatCurrency = (amount: number | null) => {
-    if (amount === null) return 'N/A';
+    // A product with no revenue has sold nothing — that is zero, a real and
+    // useful figure on a "top products" table. 'N/A' read as broken data and
+    // made the column impossible to scan against its neighbours.
+    if (amount === null) return '₦0.00';
     return `₦${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 

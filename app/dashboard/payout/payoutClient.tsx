@@ -111,6 +111,7 @@ export default function PayoutClient({
     hasFetched: (initialData?.length ?? 0) > 0,
   });
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  const [pendingInitiate, setPendingInitiate] = useState<Payout | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
   // Live Bachs balance — payouts draw from it. null = unknown/not loaded.
   const [providerBalance, setProviderBalance] = useState<number | null>(null);
@@ -275,17 +276,19 @@ export default function PayoutClient({
   // Admin initiates the Bachs withdrawal for a queued ('requested') payout.
   // Bachs has no transfer OTP: the withdrawal goes straight to 'processing'
   // and the payout.paid webhook marks it paid.
-  const handleInitiateClick = async (payout: Payout) => {
-    // Warn (don't hard-block — sandbox succeeds regardless) when the payout
-    // exceeds the live Bachs balance it would draw from.
-    if (providerBalance !== null && payout.amount > providerBalance) {
-      const ok = window.confirm(
-        `This payout is ₦${payout.amount.toLocaleString()}, but your Bachs balance is only ₦${providerBalance.toLocaleString()}.\n\n` +
-          `In live mode Bachs will reject it and the amount is returned to the creator. ` +
-          `Top up your Bachs balance first.\n\nInitiate anyway?`,
-      );
-      if (!ok) return;
-    }
+  // Sending money is the least reversible thing this dashboard does, so it
+  // asks first — every time, not only when the balance looks short. Deleting a
+  // product already opened a styled dialog while a bank transfer went straight
+  // through on one click, which had the confirmation scaled backwards. The old
+  // insufficient-balance warning was a raw window.confirm: unstyled, easy to
+  // dismiss out of habit, and suppressible by the browser's "prevent this page
+  // from creating more dialogs". It is now a state of this dialog instead.
+  const handleInitiateClick = (payout: Payout) => setPendingInitiate(payout);
+
+  const confirmInitiate = async () => {
+    const payout = pendingInitiate;
+    if (!payout) return;
+    setPendingInitiate(null);
     setProcessingId(payout.id);
     try {
       const result = await initiatePayout(payout.id);
@@ -459,8 +462,83 @@ export default function PayoutClient({
     );
   };
 
+  const shortfall =
+    pendingInitiate !== null &&
+    providerBalance !== null &&
+    pendingInitiate.amount > providerBalance;
+
   return (
     <GridContainer>
+      {pendingInitiate && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="initiate-payout-title"
+          className="fixed inset-0 z-50 grid place-items-center bg-[#0E0E10]/55 px-4"
+          onClick={() => setPendingInitiate(null)}
+        >
+          <div
+            className="w-full max-w-[420px] rounded-[14px] bg-[#FBF9F4] p-[24px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="initiate-payout-title"
+              className="suite-display text-[19px] text-[#14110E]"
+            >
+              Send {money(pendingInitiate.amount)} to{' '}
+              {getFullName(pendingInitiate.user)}?
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-[#5C544A]">
+              This starts a real bank transfer through Bachs. Once it leaves,
+              it cannot be recalled from here.
+            </p>
+            {/* The destination is restated rather than assumed: the admin is
+                approving a transfer to a specific person, and the row they
+                clicked is behind the overlay. */}
+            <dl className="mt-[16px] rounded-[10px] border border-[#E2DBCC] bg-[#F4F1EA] px-[14px] py-[12px] text-[13px]">
+              <div className="flex justify-between gap-x-4">
+                <dt className="text-[#5C544A]">Amount</dt>
+                <dd className="font-medium text-[#14110E] tabular-nums">
+                  {money(pendingInitiate.amount)}
+                </dd>
+              </div>
+              <div className="mt-[6px] flex justify-between gap-x-4">
+                <dt className="text-[#5C544A]">Creator</dt>
+                <dd className="truncate text-[#14110E]">
+                  {pendingInitiate.user?.email}
+                </dd>
+              </div>
+            </dl>
+            {shortfall && (
+              <p className="mt-[14px] rounded-[10px] bg-[#F3E9D6] px-[14px] py-[10px] text-[13px] leading-relaxed text-[#8A6218]">
+                Your Bachs balance is {money(providerBalance as number)} — less
+                than this payout. In live mode Bachs rejects it and the amount
+                returns to the creator. Top up first.
+              </p>
+            )}
+            <div className="mt-[20px] flex justify-end gap-x-3">
+              <button
+                type="button"
+                onClick={() => setPendingInitiate(null)}
+                className="cursor-pointer rounded-[10px] border border-[#DFD7C6] px-[16px] py-[9px] text-[13px]"
+              >
+                Not yet
+              </button>
+              <button
+                type="button"
+                onClick={confirmInitiate}
+                className={`cursor-pointer rounded-full px-[16px] py-[9px] text-[13px] font-medium text-[#F4F1EA] ${
+                  shortfall ? 'bg-[#8C3A2B]' : 'bg-[#14110E]'
+                }`}
+              >
+                {shortfall
+                  ? 'Send anyway'
+                  : `Send ${money(pendingInitiate.amount)}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <PageHeader
         eyebrow="The stage"
         title="Payout"
