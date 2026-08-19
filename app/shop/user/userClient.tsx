@@ -313,7 +313,7 @@ export default function UserClient({ account }: { account?: any }) {
                         type="button"
                         onClick={() => handleSetDefault(a.id)}
                         disabled={busyAddrId === a.id}
-                        className="text-[#0072BB] underline-offset-2 hover:underline disabled:opacity-50"
+                        className="text-[#9C6F2E] underline-offset-2 hover:underline disabled:opacity-50"
                       >
                         Set default
                       </button>

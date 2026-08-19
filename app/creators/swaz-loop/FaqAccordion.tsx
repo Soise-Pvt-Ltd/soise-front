@@ -19,7 +19,7 @@ function AccordionGroup({ items, idPrefix }: { items: FaqItem[]; idPrefix: strin
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="divide-y divide-[#EAEAEA] rounded-[16px] border border-[#EAEAEA]">
+    <div className="divide-y divide-[#E2DBCC] rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4]">
       {items.map((item, i) => {
         const isOpen = openIndex === i;
         const panelId = `${idPrefix}-panel-${i}`;
@@ -34,10 +34,10 @@ function AccordionGroup({ items, idPrefix }: { items: FaqItem[]; idPrefix: strin
               aria-expanded={isOpen}
               aria-controls={panelId}
             >
-              <span className="text-[15px] font-medium text-[#121212]">
+              <span className="text-[15px] font-medium text-[#14110E]">
                 {item.q}
               </span>
-              <span className="shrink-0 text-[#8E8E93]">
+              <span className="shrink-0 text-[#8C8377]">
                 {isOpen ? <MinusIcon /> : <PlusIcon />}
               </span>
             </button>
@@ -53,7 +53,7 @@ function AccordionGroup({ items, idPrefix }: { items: FaqItem[]; idPrefix: strin
                   transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   style={{ overflow: 'hidden' }}
                 >
-                  <p className="px-5 pb-5 text-[14px] leading-relaxed text-[#35373C]">
+                  <p className="px-5 pb-5 text-[14px] leading-relaxed text-[#3F3830]">
                     {item.a}
                   </p>
                 </motion.div>
@@ -78,7 +78,7 @@ export default function FaqAccordion({ categories }: { categories: FaqCategory[]
         >
           <h3
             id={`${category.id}-heading`}
-            className="mb-[12px] text-[13px] font-bold tracking-wide text-[#8E8E93] uppercase"
+            className="suite-eyebrow mb-[12px]"
           >
             {category.title}
           </h3>

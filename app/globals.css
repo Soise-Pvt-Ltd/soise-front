@@ -83,12 +83,14 @@ input[type='number'].adminsolid,
   @apply mt-[12px] h-[53px] w-full cursor-pointer rounded-[10px] border border-[#121212] text-[13px] font-bold uppercase transition-all duration-300 ease-out hover:bg-[#121212] hover:text-white hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] active:scale-[0.98];
 }
 
+/* The creator blue (#0072BB, a stock-template leftover) is retired: creator
+   CTAs now speak the same brand ink as .btn_black, keeping their own geometry. */
 .btn_creators_solid {
-  @apply h-[53px] w-full cursor-pointer rounded-[10px] bg-[#0072BB] text-[13px] font-bold text-white uppercase transition-all duration-300 ease-out hover:bg-[#005a94] hover:shadow-[0_8px_30px_rgba(0,114,187,0.3)] active:scale-[0.98];
+  @apply h-[53px] w-full cursor-pointer rounded-[10px] bg-[#121212] text-[13px] font-bold text-white uppercase transition-all duration-300 ease-out hover:bg-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.98];
 }
 
 .btn_creators_solid_no_height {
-  @apply cursor-pointer rounded-[10px] bg-[#0072BB] text-[13px] font-bold text-white uppercase;
+  @apply cursor-pointer rounded-[10px] bg-[#121212] text-[13px] font-bold text-white uppercase;
 }
 
 .btn_admin_outline {

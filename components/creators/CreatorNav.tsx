@@ -30,7 +30,7 @@ const NAV_LINKS: NavLink[] = [
 
 // Shared focus-visible ring (matches the main site nav quality bar).
 const FOCUS_RING =
-  'focus-visible:ring-2 focus-visible:ring-[#0072BB] focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:outline-none';
+  'focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F1EA] focus-visible:outline-none';
 
 function formatBalance(balance: number) {
   return `₦${balance.toLocaleString('en-US', {
@@ -81,26 +81,16 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
 
   const hasBalance = typeof balance === 'number';
   const balanceTone =
-    hasBalance && balance > 0 ? 'text-[#15803D]' : 'text-[#FF8073]';
+    hasBalance && balance > 0 ? 'text-[#3D6B4A]' : 'text-[#8C3A2B]';
 
   return (
     <>
-      {/* ---------- Liquid Glass sticky bar ---------- */}
+      {/* ---------- Suite paper sticky bar ---------- */}
       <div className="sticky top-0 z-40 px-[12px] pt-[12px] md:px-[20px] md:pt-[16px]">
         <nav
           aria-label="Creator portal"
-          className="page-shell relative flex items-center justify-between gap-x-3 overflow-hidden rounded-[18px] border border-white/50 bg-white/55 px-[14px] py-[10px] shadow-[0_8px_32px_rgba(15,23,42,0.10)] ring-1 ring-white/40 backdrop-blur-xl backdrop-saturate-150 md:px-[20px]"
+          className="page-shell relative flex items-center justify-between gap-x-3 overflow-hidden rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4]/95 px-[14px] py-[10px] backdrop-blur-md md:px-[20px]"
         >
-          {/* Refractive top highlight — a soft inset gradient hairline that gives
-              the glass its "lit edge" without hurting legibility. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-[18px] bg-gradient-to-b from-white/70 via-white/0 to-white/20"
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-white/90 to-transparent"
-          />
 
           {/* Logo → dashboard */}
           <Link
@@ -129,8 +119,8 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
                   aria-current={active ? 'page' : undefined}
                   className={`rounded-full px-[14px] py-[8px] text-[13px] font-medium transition-all duration-200 ${FOCUS_RING} ${
                     active
-                      ? 'border border-white/60 bg-white/70 text-[#0072BB] shadow-[0_2px_10px_rgba(0,114,187,0.18)]'
-                      : 'text-[#35373C] hover:bg-white/50 hover:text-[#121212]'
+                      ? 'border border-[#14110E] bg-[#14110E] text-[#F4F1EA]'
+                      : 'text-[#5C544A] hover:bg-[#14110E]/[0.04] hover:text-[#14110E]'
                   }`}
                 >
                   {link.name}
@@ -142,7 +132,7 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
           {/* Right cluster */}
           <div className="relative z-10 flex shrink-0 items-center gap-x-2 md:gap-x-3">
             {hasBalance && (
-              <div className="flex items-center gap-x-2 rounded-full border border-white/60 bg-white/70 px-[12px] py-[7px] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
+              <div className="flex items-center gap-x-2 rounded-full border border-[#E2DBCC] bg-[#F4F1EA] px-[12px] py-[7px]">
                 <WalletIcon />
                 <span className={`text-[13px] font-semibold tabular-nums ${balanceTone}`}>
                   {formatBalance(balance!)}
@@ -153,7 +143,7 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
             {/* Back to Shop — the key missing affordance, made obvious. */}
             <Link
               href="/"
-              className={`hidden items-center gap-x-1.5 rounded-full bg-[#121212] px-[16px] py-[9px] text-[12px] font-semibold tracking-wide text-white uppercase transition-all duration-200 hover:bg-[#2a2a2a] hover:shadow-[0_6px_20px_rgba(0,0,0,0.25)] active:scale-[0.97] sm:inline-flex ${FOCUS_RING}`}
+              className={`hidden items-center gap-x-1.5 rounded-full bg-[#14110E] px-[16px] py-[9px] text-[12px] font-semibold tracking-wide text-[#F4F1EA] uppercase transition-all duration-200 hover:bg-[#241f19] active:scale-[0.97] sm:inline-flex ${FOCUS_RING}`}
             >
               Back to Shop <ArrowUpRightIcon />
             </Link>
@@ -169,7 +159,7 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
               aria-haspopup="dialog"
               aria-expanded={isMenuOpen}
               aria-controls="creator-nav-drawer"
-              className={`grid h-11 w-11 place-items-center rounded-full border border-white/60 bg-white/70 text-[#121212] transition-colors duration-200 hover:bg-white/90 lg:hidden ${FOCUS_RING}`}
+              className={`grid h-11 w-11 place-items-center rounded-full border border-[#E2DBCC] bg-[#FBF9F4] text-[#14110E] transition-colors duration-200 hover:bg-[#EFEBE1] lg:hidden ${FOCUS_RING}`}
             >
               <MenuIcon />
             </button>
@@ -245,16 +235,16 @@ function CreatorDrawer({
 
   const hasBalance = typeof balance === 'number';
   const balanceTone =
-    hasBalance && balance! > 0 ? 'text-[#15803D]' : 'text-[#FF8073]';
+    hasBalance && balance! > 0 ? 'text-[#3D6B4A]' : 'text-[#8C3A2B]';
 
   return (
     <>
       {/* Scrim */}
       <div
-        className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+        className="fixed inset-0 z-40 bg-[#0E0E10]/30 backdrop-blur-[2px]"
         onClick={onClose}
       />
-      {/* Glass drawer */}
+      {/* Paper drawer */}
       <div
         ref={panelRef}
         id="creator-nav-drawer"
@@ -262,10 +252,10 @@ function CreatorDrawer({
         aria-modal="true"
         aria-label="Creator portal menu"
         onKeyDown={handleKeyDown}
-        className="fixed inset-y-0 right-0 z-50 flex w-[84%] max-w-[340px] flex-col border-l border-white/50 bg-white/80 shadow-[0_8px_40px_rgba(15,23,42,0.25)] ring-1 ring-white/40 backdrop-blur-2xl backdrop-saturate-150"
+        className="fixed inset-y-0 right-0 z-50 flex w-[84%] max-w-[340px] flex-col border-l border-[#E2DBCC] bg-[#FBF9F4]"
       >
         <div className="flex items-center justify-between px-[20px] pt-[22px] pb-[18px]">
-          <span className="text-[12px] font-semibold tracking-[0.14em] text-[#8E8E93] uppercase">
+          <span className="text-[12px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">
             Creator Portal
           </span>
           <button
@@ -273,15 +263,15 @@ function CreatorDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className={`grid h-11 w-11 place-items-center rounded-full border border-white/60 bg-white/70 text-[#121212] transition-colors hover:bg-white/90 ${FOCUS_RING}`}
+            className={`grid h-11 w-11 place-items-center rounded-full border border-[#E2DBCC] bg-[#F4F1EA] text-[#14110E] transition-colors hover:bg-[#EFEBE1] ${FOCUS_RING}`}
           >
             <CloseIcon />
           </button>
         </div>
 
         {hasBalance && (
-          <div className="mx-[20px] mb-[8px] flex items-center justify-between rounded-[14px] border border-white/60 bg-white/70 px-[16px] py-[12px] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
-            <span className="flex items-center gap-x-2 text-[13px] font-medium text-[#35373C]">
+          <div className="mx-[20px] mb-[8px] flex items-center justify-between rounded-[14px] border border-[#E2DBCC] bg-[#F4F1EA] px-[16px] py-[12px]">
+            <span className="flex items-center gap-x-2 text-[13px] font-medium text-[#3F3830]">
               <WalletIcon /> Balance
             </span>
             <span className={`text-[14px] font-semibold tabular-nums ${balanceTone}`}>
@@ -304,8 +294,8 @@ function CreatorDrawer({
                 onClick={onClose}
                 className={`flex min-h-[48px] items-center rounded-[12px] px-[16px] text-[15px] font-medium transition-all duration-200 ${FOCUS_RING} ${
                   active
-                    ? 'border border-white/60 bg-white/80 text-[#0072BB] shadow-[0_2px_10px_rgba(0,114,187,0.18)]'
-                    : 'text-[#35373C] hover:bg-white/60 hover:text-[#121212]'
+                    ? 'bg-[#14110E] text-[#F4F1EA]'
+                    : 'text-[#3F3830] hover:bg-[#14110E]/[0.04] hover:text-[#14110E]'
                 }`}
               >
                 {link.name}
@@ -315,11 +305,11 @@ function CreatorDrawer({
         </nav>
 
         {/* Back to Shop, pinned at the bottom */}
-        <div className="border-t border-white/50 px-[20px] py-[18px]">
+        <div className="border-t border-[#E2DBCC] px-[20px] py-[18px]">
           <Link
             href="/"
             onClick={onClose}
-            className={`flex min-h-[48px] items-center justify-center gap-x-1.5 rounded-[12px] bg-[#121212] px-[16px] text-[13px] font-semibold tracking-wide text-white uppercase transition-all hover:bg-[#2a2a2a] active:scale-[0.98] ${FOCUS_RING}`}
+            className={`flex min-h-[48px] items-center justify-center gap-x-1.5 rounded-full bg-[#14110E] px-[16px] text-[13px] font-semibold tracking-wide text-[#F4F1EA] uppercase transition-all hover:bg-[#241f19] active:scale-[0.98] ${FOCUS_RING}`}
           >
             Back to Shop <ArrowUpRightIcon />
           </Link>

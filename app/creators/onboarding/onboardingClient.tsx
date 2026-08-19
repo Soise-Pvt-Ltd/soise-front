@@ -73,13 +73,10 @@ export default function OnBoardingCreatorClient({
             <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#9C6F2E] text-[22px] text-[#9C6F2E]">
               ✓
             </span>
-            <p className="mt-6 text-[12px] font-medium uppercase tracking-[0.32em] text-[#9C6F2E]">
+            <p className="suite-eyebrow mt-6">
               You’re in
             </p>
-            <h1
-              className="mt-4 max-w-[420px] text-[28px] leading-[1.15] tracking-tight sm:text-[34px]"
-              style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
-            >
+            <h1 className="suite-display mt-4 max-w-[420px] text-[28px] leading-[1.15] sm:text-[34px]">
               Welcome to the founding cohort.
             </h1>
             <p className="mt-3 max-w-[380px] text-[14px] leading-relaxed text-[#5C544A]">
@@ -88,7 +85,7 @@ export default function OnBoardingCreatorClient({
             </p>
             <button
               onClick={handleNextStep}
-              className="mt-9 rounded-full bg-[#14110E] px-9 py-3.5 text-[14px] font-semibold tracking-wide text-[#F4F1EA] transition-transform hover:scale-[1.02]"
+              className="suite-btn suite-btn-primary mt-9 !px-9 !py-3.5 !text-[14px]"
             >
               Get onboard
             </button>
@@ -96,13 +93,10 @@ export default function OnBoardingCreatorClient({
         )}
         {step === 2 && (
           <div className="mx-auto max-w-[440px] pt-8">
-            <p className="text-[12px] font-medium uppercase tracking-[0.28em] text-[#9C6F2E]">
+            <p className="suite-eyebrow">
               Step 2 of 2
             </p>
-            <h1
-              className="mt-2 text-[24px] tracking-tight"
-              style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
-            >
+            <h1 className="suite-display mt-2 text-[24px]">
               Where should we send your earnings?
             </h1>
             <div className="mt-8 flex flex-col gap-y-6">
@@ -115,7 +109,7 @@ export default function OnBoardingCreatorClient({
                   name="bankCode"
                   value={formData.bankCode}
                   onChange={handleChange}
-                  className="mt-2 w-full rounded-[10px] border border-[#D9D3C4] bg-white px-4 py-3 text-[14px] text-[#14110E] outline-none transition-colors focus:border-[#9C6F2E]"
+                  className="suite-input mt-2 !h-[46px] !px-4 !text-[14px]"
                 >
                   <option value="">Select your bank</option>
                   {banks?.map((bank: any) => (
@@ -135,7 +129,7 @@ export default function OnBoardingCreatorClient({
                   value={formData.accountName}
                   onChange={handleChange}
                   type="text"
-                  className="mt-2 w-full rounded-[10px] border border-[#D9D3C4] bg-white px-4 py-3 text-[14px] text-[#14110E] outline-none transition-colors focus:border-[#9C6F2E]"
+                  className="suite-input mt-2 !h-[46px] !px-4 !text-[14px]"
                   placeholder="John Sosie"
                 />
               </div>
@@ -150,7 +144,7 @@ export default function OnBoardingCreatorClient({
                   onChange={handleChange}
                   type="text"
                   inputMode="numeric"
-                  className="mt-2 w-full rounded-[10px] border border-[#D9D3C4] bg-white px-4 py-3 text-[14px] text-[#14110E] outline-none transition-colors focus:border-[#9C6F2E]"
+                  className="suite-input mt-2 !h-[46px] !px-4 !text-[14px]"
                   placeholder="0123456789"
                   maxLength={10}
                   onInput={(e: any) => {
@@ -161,7 +155,7 @@ export default function OnBoardingCreatorClient({
             </div>
             <button
               onClick={handleNextStep}
-              className="mt-9 w-full rounded-full bg-[#14110E] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#F4F1EA] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+              className="suite-btn suite-btn-primary mt-9 w-full !px-8 !py-3.5 !text-[14px]"
               disabled={isLoading}
             >
               {isLoading ? 'Saving...' : 'Next'}
@@ -175,13 +169,10 @@ export default function OnBoardingCreatorClient({
               <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#9C6F2E] text-[22px] text-[#9C6F2E]">
                 ✓
               </span>
-              <p className="mt-6 text-[12px] font-medium uppercase tracking-[0.32em] text-[#9C6F2E]">
+              <p className="suite-eyebrow mt-6">
                 Wallet created
               </p>
-              <h1
-                className="mt-4 text-[26px] tracking-tight"
-                style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
-              >
+              <h1 className="suite-display mt-4 text-[26px]">
                 Your code is live. Let’s make some noise.
               </h1>
               <p className="mt-3 max-w-[360px] text-[14px] leading-relaxed text-[#5C544A]">
@@ -193,7 +184,7 @@ export default function OnBoardingCreatorClient({
                 withdrawal — plus fresh Soise gear, on us.
               </p>
             </div>
-            <div className="rounded-[16px] border border-[#E4DECF] bg-white p-5">
+            <div className="suite-panel p-5">
               <CreatorCode
                 code={Array.isArray(codes) ? codes[0]?.code : codes?.code}
               />
@@ -201,7 +192,7 @@ export default function OnBoardingCreatorClient({
             <div className="text-center">
               <button
                 onClick={() => router.push('/creators/dashboard')}
-                className="mt-9 rounded-full bg-[#14110E] px-9 py-3.5 text-[14px] font-semibold tracking-wide text-[#F4F1EA] transition-transform hover:scale-[1.02]"
+                className="suite-btn suite-btn-primary mt-9 !px-9 !py-3.5 !text-[14px]"
               >
                 Go to Dashboard
               </button>

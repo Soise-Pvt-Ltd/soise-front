@@ -182,17 +182,17 @@ export default function ProfileClient({ dashboard }: any) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-[#F4F1EA]">
       <CreatorNav balance={currentBalance} />
       <div className="page-shell flex flex-col gap-[16px] px-[16px] pt-[24px] pb-[121px] md:px-0">
         <div
-          className="flex items-center gap-x-2 hover:cursor-pointer"
+          className="flex items-center gap-x-2 text-[#14110E] hover:cursor-pointer"
           onClick={() => router.back()}
         >
           <ArrowLeftIcon />{' '}
-          <span className="font-bold uppercase">My profile</span>
+          <span className="font-bold tracking-[0.08em] uppercase">My profile</span>
         </div>
-        <div className="space-y-[30px] rounded-[10px] bg-white p-[16px]">
+        <div className="suite-panel space-y-[30px] p-[16px]">
           <div className="relative mx-auto mb-[36px] size-[64px] rounded-full md:mx-0">
             <img
               src={avatarSrc}
@@ -206,7 +206,7 @@ export default function ProfileClient({ dashboard }: any) {
               className="hidden"
               onChange={handleAvatarSelected}
             />
-            <div className="absolute bottom-0 flex h-1/2 w-full items-center justify-center rounded-b-full bg-[#D1D1D6E5]">
+            <div className="absolute bottom-0 flex h-1/2 w-full items-center justify-center rounded-b-full bg-[#E2DBCC]/90">
               <button
                 type="button"
                 title="Change profile picture"
@@ -216,7 +216,7 @@ export default function ProfileClient({ dashboard }: any) {
                 className="flex h-full w-full cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {uploadingAvatar ? (
-                  <span className="text-[10px] font-medium text-[#121212]">
+                  <span className="text-[10px] font-medium text-[#14110E]">
                     …
                   </span>
                 ) : (
@@ -226,8 +226,8 @@ export default function ProfileClient({ dashboard }: any) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <div>Creator Code</div>
-            <div className="flex items-center gap-x-[8px] text-[#AEAEB2]">
+            <div className="text-[#3F3830]">Creator Code</div>
+            <div className="flex items-center gap-x-[8px] text-[#8C8377]">
               <div>{creatorCode}</div>
               <button
                 type="button"
@@ -237,7 +237,7 @@ export default function ProfileClient({ dashboard }: any) {
                 aria-label="Copy creator code"
               >
                 {copiedCreatorCode ? (
-                  <span className="text-green-600">Copied!</span>
+                  <span className="text-[#3D6B4A]">Copied!</span>
                 ) : (
                   <CopyIcon />
                 )}
@@ -245,12 +245,12 @@ export default function ProfileClient({ dashboard }: any) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <div>Account Tier</div>
-            <div className="flex items-center gap-x-[8px] text-[#AEAEB2]">
+            <div className="text-[#3F3830]">Account Tier</div>
+            <div className="flex items-center gap-x-[8px] text-[#8C8377]">
               {/* Same serif treatment as the dashboard card, so the tier reads
                   as the same thing in both places. */}
               <div
-                className="text-[16px] text-[#121212]"
+                className="text-[16px] text-[#14110E]"
                 style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
               >
                 {tier?.name || 'No Tier'}
@@ -262,16 +262,16 @@ export default function ProfileClient({ dashboard }: any) {
           </div>
         </div>
 
-        <div className="space-y-[24px] rounded-[10px] bg-white p-[16px]">
+        <div className="suite-panel space-y-[24px] p-[16px]">
           <div className="flex items-center justify-between">
-            <div className="text-[14px] font-semibold text-[#121212]">
+            <div className="text-[14px] font-semibold text-[#14110E]">
               Personal details
             </div>
             {!isEditing ? (
               <button
                 type="button"
                 onClick={startEditing}
-                className="flex items-center gap-x-1 rounded-full border border-[#E5E5EA] px-[12px] py-[6px] text-[12px] font-medium text-[#121212] transition-colors hover:bg-[#F5F5F5]"
+                className="flex cursor-pointer items-center gap-x-1 rounded-full border border-[#DFD7C6] px-[12px] py-[6px] text-[12px] font-medium text-[#14110E] transition-colors hover:bg-[#EFEBE1]"
               >
                 <AdminEditIcon /> Edit profile
               </button>
@@ -281,7 +281,7 @@ export default function ProfileClient({ dashboard }: any) {
                   type="button"
                   onClick={cancelEditing}
                   disabled={saving}
-                  className="flex items-center gap-x-1 rounded-full border border-[#E5E5EA] px-[12px] py-[6px] text-[12px] font-medium text-[#8E8E93] transition-colors hover:bg-[#F5F5F5] disabled:opacity-50"
+                  className="flex cursor-pointer items-center gap-x-1 rounded-full border border-[#DFD7C6] px-[12px] py-[6px] text-[12px] font-medium text-[#5C544A] transition-colors hover:bg-[#EFEBE1] disabled:opacity-50"
                 >
                   <CloseIcon /> Cancel
                 </button>
@@ -289,7 +289,7 @@ export default function ProfileClient({ dashboard }: any) {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex items-center gap-x-1 rounded-full bg-[#121212] px-[14px] py-[6px] text-[12px] font-medium text-white transition-colors hover:bg-[#2a2a2a] disabled:opacity-50"
+                  className="flex cursor-pointer items-center gap-x-1 rounded-full bg-[#14110E] px-[14px] py-[6px] text-[12px] font-medium text-[#F4F1EA] transition-colors hover:bg-[#241f19] disabled:opacity-50"
                 >
                   <AdminSuccessCheckIcon />{' '}
                   {saving ? 'Saving…' : 'Save'}
@@ -301,7 +301,7 @@ export default function ProfileClient({ dashboard }: any) {
           {isEditing ? (
             <div className="space-y-[16px]">
               <label className="block">
-                <span className="mb-1 block text-[13px] text-[#121212]">
+                <span className="mb-1 block text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">
                   First name
                 </span>
                 <input
@@ -311,11 +311,11 @@ export default function ProfileClient({ dashboard }: any) {
                     setForm((f) => ({ ...f, first: e.target.value }))
                   }
                   placeholder="First name"
-                  className="h-[44px] w-full rounded-[10px] border border-[#E5E5EA] bg-[#F9F9F9] px-[14px] text-[14px] outline-none focus:border-[#0072BB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  className="suite-input"
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[13px] text-[#121212]">
+                <span className="mb-1 block text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">
                   Last name
                 </span>
                 <input
@@ -325,11 +325,11 @@ export default function ProfileClient({ dashboard }: any) {
                     setForm((f) => ({ ...f, last: e.target.value }))
                   }
                   placeholder="Last name"
-                  className="h-[44px] w-full rounded-[10px] border border-[#E5E5EA] bg-[#F9F9F9] px-[14px] text-[14px] outline-none focus:border-[#0072BB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  className="suite-input"
                 />
               </label>
               <label className="block">
-                <span className="mb-1 block text-[13px] text-[#121212]">
+                <span className="mb-1 block text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">
                   Mobile number
                 </span>
                 <input
@@ -339,7 +339,7 @@ export default function ProfileClient({ dashboard }: any) {
                     setForm((f) => ({ ...f, phone: e.target.value }))
                   }
                   placeholder="Mobile number"
-                  className="h-[44px] w-full rounded-[10px] border border-[#E5E5EA] bg-[#F9F9F9] px-[14px] text-[14px] outline-none focus:border-[#0072BB] focus-visible:ring-2 focus-visible:ring-[#0072BB]"
+                  className="suite-input"
                 />
               </label>
             </div>
@@ -350,8 +350,8 @@ export default function ProfileClient({ dashboard }: any) {
                   key={item.label}
                   className="flex items-center justify-between"
                 >
-                  <div className="w-[40%] text-[#121212]">{item.label}</div>
-                  <div className="flex w-[60%] items-center justify-end gap-x-[8px] text-[#AEAEB2]">
+                  <div className="w-[40%] text-[#14110E]">{item.label}</div>
+                  <div className="flex w-[60%] items-center justify-end gap-x-[8px] text-[#8C8377]">
                     <div className={item.truncate ? 'truncate' : ''}>
                       {item.value}
                     </div>
@@ -362,10 +362,10 @@ export default function ProfileClient({ dashboard }: any) {
           )}
         </div>
 
-        <div className="rounded-[10px] bg-white p-[16px]">
+        <div className="suite-panel p-[16px]">
           <div className="flex items-center justify-between">
-            <div>Withdrawal Bank</div>
-            <div className="flex items-center gap-x-[8px] text-[#AEAEB2]">
+            <div className="text-[#3F3830]">Withdrawal Bank</div>
+            <div className="flex items-center gap-x-[8px] text-[#8C8377]">
               <div className="text-right">
                 <div>{withdrawalBank?.bank_name || 'Not set'}</div>
                 <div className="text-[12px]">

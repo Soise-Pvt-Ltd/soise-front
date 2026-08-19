@@ -7,9 +7,11 @@ interface ReferralPromoCardProps {
   /** Optional extra wrapper classes. */
   className?: string;
   /**
-   * Visual language. `default` is the blue Swaz Loop gradient used on the
-   * referral hub; `editorial` is the ivory-house dark panel (as on /about and
-   * the admin surfaces) for pages that live in the quiet-luxury language.
+   * Visual language. Both speak the house ink-and-gold: `editorial` is the
+   * ivory-house dark panel (as on /about and the admin surfaces); `default`
+   * is a rounded card version of the same palette for softer storefront
+   * placements. (The old blue Swaz Loop gradient was the last survivor of the
+   * retired stock-template accent.)
    */
   variant?: 'default' | 'editorial';
 }
@@ -57,9 +59,9 @@ export default function ReferralPromoCard({
   return (
     <Link
       href="/swaz-loop"
-      className={`group block rounded-[20px] bg-gradient-to-br from-[#0072BB] to-[#2D2C54] p-6 text-left text-white transition-shadow hover:shadow-[0_12px_40px_rgba(0,114,187,0.35)] ${className}`}
+      className={`group block rounded-[20px] bg-gradient-to-br from-[#0E0E10] to-[#2A2A2D] p-6 text-left text-[#F4F1EA] transition-shadow hover:shadow-[0_12px_40px_rgba(14,14,16,0.35)] ${className}`}
     >
-      <div className="mb-2 inline-flex items-center gap-x-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium tracking-wide uppercase">
+      <div className="mb-2 inline-flex items-center gap-x-2 rounded-full bg-[#C4AA6E]/15 px-3 py-1 text-[11px] font-medium tracking-wide text-[#C4AA6E] uppercase">
         Swaz Loop
       </div>
       <div className="flex items-start justify-between gap-x-4">
@@ -67,16 +69,16 @@ export default function ReferralPromoCard({
           <h3 className="text-[20px] font-bold leading-tight md:text-[22px]">
             {title}
           </h3>
-          <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-white/85">
+          <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-[#B7B2A6]">
             When a friend places their FIRST paid order with your link, you earn{' '}
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-[#F4F1EA]">
               10% of it as store credit
             </span>{' '}
             (up to ₦10,000). They get{' '}
-            <span className="font-semibold text-white">₦1,000 off</span> their
+            <span className="font-semibold text-[#F4F1EA]">₦1,000 off</span> their
             next order too. Store credit is spendable at checkout.
           </p>
-          <span className="mt-4 inline-flex items-center gap-x-1 text-[13px] font-semibold underline-offset-4 group-hover:underline">
+          <span className="mt-4 inline-flex items-center gap-x-1 text-[13px] font-semibold text-[#C4AA6E] underline-offset-4 group-hover:underline">
             Get your link
             <ArrowUpRightIcon />
           </span>

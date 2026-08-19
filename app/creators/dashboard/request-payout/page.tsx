@@ -118,7 +118,7 @@ export default function RequestPayoutPage() {
       : '';
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-[#F4F1EA]">
       <CreatorNav balance={balance} />
       {/* A single-column money form, not a dashboard grid — so it gets a
           reading-width column instead of page-shell's 7xl. At 1280px the
@@ -127,36 +127,36 @@ export default function RequestPayoutPage() {
       <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
         <button
           type="button"
-          className="flex w-fit cursor-pointer items-center gap-x-2"
+          className="flex w-fit cursor-pointer items-center gap-x-2 text-[#14110E]"
           onClick={() => router.back()}
         >
           <ArrowLeftIcon />
-          <span className="font-bold uppercase">Request payout</span>
+          <span className="font-bold tracking-[0.08em] uppercase">Request payout</span>
         </button>
 
         {/* Balance — ink, matching the tier card on the dashboard. The old
             card was white text on #B3D5EB, roughly 1.4:1, which is below any
             legibility threshold; this is 17:1. */}
-        <div className="rounded-2xl bg-[#121212] px-[20px] py-[24px] text-white">
+        <div className="rounded-[14px] bg-[#0E0E10] px-[20px] py-[24px] text-[#F4F1EA]">
           <div className="flex items-center justify-between">
-            <p className="text-[13px] text-white/60">Available to withdraw</p>
+            <p className="text-[13px] text-[#F4F1EA]/60">Available to withdraw</p>
             <button
               type="button"
               onClick={() => setIsBalanceVisible((v) => !v)}
               aria-label={isBalanceVisible ? 'Hide balance' : 'Show balance'}
               aria-pressed={!isBalanceVisible}
-              className="cursor-pointer rounded-full p-[6px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+              className="cursor-pointer rounded-full p-[6px] text-[#F4F1EA]/60 transition-colors hover:bg-[#F4F1EA]/10 hover:text-[#F4F1EA]"
             >
               {isBalanceVisible ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
 
           <div
-            className="mt-[6px] text-[30px] leading-tight font-semibold tabular-nums"
+            className="suite-display mt-[6px] text-[30px] leading-tight text-[#C4AA6E] tabular-nums"
             aria-live="polite"
           >
             {isLoading ? (
-              <span className="inline-block h-[34px] w-[180px] animate-pulse rounded bg-white/15 align-middle" />
+              <span className="inline-block h-[34px] w-[180px] animate-pulse rounded bg-[#F4F1EA]/15 align-middle" />
             ) : isBalanceVisible ? (
               naira(balance)
             ) : (
@@ -165,7 +165,7 @@ export default function RequestPayoutPage() {
           </div>
 
           {!isLoading && hasBank && (
-            <p className="mt-[12px] text-[12px] text-white/50">
+            <p className="mt-[12px] text-[12px] text-[#F4F1EA]/50">
               Paid to {bankName}
               {accountNumber ? ` ••${accountNumber.slice(-4)}` : ''}
             </p>
@@ -175,11 +175,11 @@ export default function RequestPayoutPage() {
         {/* Money already committed. Shown before the form, because it changes
             what a sensible request looks like. */}
         {!isLoading && pending.length > 0 && (
-          <div className="rounded-2xl border border-[#E6E6E6] bg-white px-[16px] py-[14px]">
-            <p className="text-[14px] font-medium text-[#121212]">
+          <div className="suite-panel px-[16px] py-[14px]">
+            <p className="text-[14px] font-medium text-[#14110E]">
               {naira(pendingTotal)} already on the way
             </p>
-            <p className="mt-[2px] text-[13px] text-[#8E8E93]">
+            <p className="mt-[2px] text-[13px] text-[#5C544A]">
               {pending.length} request{pending.length === 1 ? '' : 's'} being
               processed. That amount has already left your balance.
             </p>
@@ -189,7 +189,7 @@ export default function RequestPayoutPage() {
         {successMessage && (
           <div
             role="status"
-            className="rounded-[10px] bg-[#CCEAD6] px-4 py-3 text-sm text-[#1B7A3D]"
+            className="rounded-[10px] bg-[#E4EDE3] px-4 py-3 text-sm text-[#3D6B4A]"
           >
             {successMessage}
           </div>
@@ -197,7 +197,7 @@ export default function RequestPayoutPage() {
         {errorMessage && (
           <div
             role="alert"
-            className="rounded-[10px] bg-[#E5C6BF] px-4 py-3 text-sm text-[#991C00]"
+            className="rounded-[10px] bg-[#F2E1DB] px-4 py-3 text-sm text-[#8C3A2B]"
           >
             {errorMessage}
           </div>
@@ -205,35 +205,35 @@ export default function RequestPayoutPage() {
 
         {isLoading ? (
           <div className="space-y-[12px]">
-            <div className="h-[80px] animate-pulse rounded-2xl bg-black/5" />
-            <div className="h-[53px] animate-pulse rounded-[10px] bg-black/5" />
+            <div className="h-[80px] animate-pulse rounded-[14px] bg-[#14110E]/5" />
+            <div className="h-[53px] animate-pulse rounded-[10px] bg-[#14110E]/5" />
           </div>
         ) : !hasBank ? (
-          <div className="rounded-2xl bg-white px-[16px] py-[32px] text-center">
-            <h3 className="text-[16px] font-semibold text-[#121212]">
+          <div className="suite-panel px-[16px] py-[32px] text-center">
+            <h3 className="text-[16px] font-semibold text-[#14110E]">
               Add a payout account to withdraw
             </h3>
-            <p className="mx-auto mt-2 max-w-md text-sm text-[#8E8E93]">
+            <p className="mx-auto mt-2 max-w-md text-sm text-[#5C544A]">
               We need the bank account your earnings should be sent to before
               you can request a payout.
             </p>
             <Link
               href="/creators/dashboard/withdrawal-bank"
-              className="btn_creators_solid mt-[24px] inline-flex w-fit items-center justify-center px-[40px] py-[15px]"
+              className="suite-btn suite-btn-gold mt-[24px] w-fit px-[40px]"
             >
               Add payout account
             </Link>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white p-[16px]">
+          <div className="suite-panel p-[16px]">
             <label
               htmlFor="amount_to_withdraw"
-              className="text-[14px] text-[#8E8E93]"
+              className="text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase"
             >
               Amount to withdraw
             </label>
-            <div className="mt-[7px] flex items-center rounded-[10px] border border-[#E6E6E6] focus-within:border-[#121212]">
-              <span className="pl-[14px] text-[22px] text-[#8E8E93]">₦</span>
+            <div className="mt-[7px] flex items-center rounded-[10px] border border-[#DFD7C6] bg-[#EFEBE1] focus-within:border-[#9C6F2E] focus-within:bg-[#F8F5EE]">
+              <span className="pl-[14px] text-[22px] text-[#8C8377]">₦</span>
               {/* border-0/ring-0: @tailwindcss/forms puts a grey 1px border on
                   bare inputs, which drew a second rectangle inside this
                   field's own rounded wrapper. */}
@@ -242,7 +242,7 @@ export default function RequestPayoutPage() {
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
-                className="w-full border-0 bg-transparent px-[8px] py-[12px] text-[22px] font-medium tabular-nums outline-none focus:ring-0"
+                className="suite-display w-full border-0 bg-transparent px-[8px] py-[12px] text-[22px] text-[#14110E] tabular-nums outline-none focus:ring-0"
                 placeholder="0.00"
                 value={amount}
                 aria-describedby="amount_help"
@@ -264,33 +264,33 @@ export default function RequestPayoutPage() {
                   setErrorMessage('');
                 }}
                 disabled={balance <= 0}
-                className="mr-[8px] shrink-0 cursor-pointer rounded-[6px] px-[10px] py-[6px] text-[12px] font-bold text-[#0072BB] uppercase transition-colors hover:bg-[#E4EDF5] disabled:cursor-not-allowed disabled:opacity-40"
+                className="mr-[8px] shrink-0 cursor-pointer rounded-[6px] px-[10px] py-[6px] text-[12px] font-bold text-[#9C6F2E] uppercase transition-colors hover:bg-[#F3E9D6] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 All
               </button>
             </div>
-            <p id="amount_help" className="mt-[6px] text-[12px] text-[#8E8E93]">
+            <p id="amount_help" className="mt-[6px] text-[12px] text-[#8C8377]">
               {numAmount > balance
                 ? `You only have ${naira(balance)} available.`
                 : `Up to ${naira(balance)}.`}
             </p>
 
             <div className="mt-[20px]">
-              <p className="text-[14px] text-[#8E8E93]">Sent to</p>
-              <div className="mt-[7px] flex items-center justify-between rounded-[10px] bg-[#F6F6F6] px-[14px] py-[13px]">
+              <p className="text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">Sent to</p>
+              <div className="mt-[7px] flex items-center justify-between rounded-[10px] bg-[#EFEBE1] px-[14px] py-[13px]">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-medium text-[#121212]">
+                  <p className="truncate text-[15px] font-medium text-[#14110E]">
                     {bankName}
                   </p>
                   {accountNumber && (
-                    <p className="text-[13px] text-[#8E8E93] tabular-nums">
+                    <p className="text-[13px] text-[#8C8377] tabular-nums">
                       {accountNumber}
                     </p>
                   )}
                 </div>
                 <Link
                   href="/creators/dashboard/withdrawal-bank"
-                  className="shrink-0 pl-3 text-[13px] font-medium text-[#0072BB] hover:underline"
+                  className="shrink-0 pl-3 text-[13px] font-medium text-[#9C6F2E] hover:underline"
                 >
                   Change
                 </Link>
@@ -300,7 +300,7 @@ export default function RequestPayoutPage() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !amountValid}
-              className="btn_creators_solid mt-[24px] disabled:cursor-not-allowed disabled:opacity-50"
+              className="suite-btn suite-btn-gold mt-[24px] w-full"
             >
               {isSubmitting
                 ? 'Submitting…'
@@ -308,21 +308,21 @@ export default function RequestPayoutPage() {
                   ? `Withdraw ${naira(numAmount)}`
                   : 'Withdraw'}
             </button>
-            <p className="mt-[10px] text-center text-[12px] text-[#8E8E93]">
+            <p className="mt-[10px] text-center text-[12px] text-[#8C8377]">
               Reviewed and sent by our team, usually within one business day.
             </p>
           </div>
         )}
 
         {/* History, always present once loaded. */}
-        <div className="mb-[64px] rounded-2xl bg-white p-[16px]">
-          <h3 className="text-[16px] font-medium text-[#121212]">
+        <div className="suite-panel mb-[64px] p-[16px]">
+          <h3 className="text-[16px] font-medium text-[#14110E]">
             Payout history
           </h3>
           {!historyLoaded ? (
-            <div className="mt-[12px] h-[44px] animate-pulse rounded bg-black/5" />
+            <div className="mt-[12px] h-[44px] animate-pulse rounded bg-[#14110E]/5" />
           ) : payouts.length === 0 ? (
-            <p className="mt-[4px] text-[13px] text-[#8E8E93]">
+            <p className="mt-[4px] text-[13px] text-[#5C544A]">
               Nothing yet. Your withdrawals will appear here.
             </p>
           ) : (
@@ -332,13 +332,13 @@ export default function RequestPayoutPage() {
                 return (
                   <li
                     key={p.id}
-                    className="flex items-start justify-between gap-3 border-b border-[#F0F0F0] py-[12px] last:border-0"
+                    className="flex items-start justify-between gap-3 border-b border-[#E2DBCC] py-[12px] last:border-0"
                   >
                     <div className="min-w-0">
-                      <p className="text-[15px] font-medium text-[#121212] tabular-nums">
+                      <p className="text-[15px] font-medium text-[#14110E] tabular-nums">
                         {naira(p.amount)}
                       </p>
-                      <p className="text-[12px] text-[#8E8E93]">
+                      <p className="text-[12px] text-[#8C8377]">
                         {formatDate(p.created_at)} · {view.meaning}
                       </p>
                     </div>

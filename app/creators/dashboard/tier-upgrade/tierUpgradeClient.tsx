@@ -17,9 +17,9 @@ type Req = {
 };
 
 const statusStyle: Record<string, string> = {
-  pending: 'bg-[#FFF4E5] text-[#B25E09]',
-  approved: 'bg-[#E7F6EC] text-[#1A7F37]',
-  rejected: 'bg-[#FDECEC] text-[#C0362C]',
+  pending: 'suite-badge-warn',
+  approved: 'suite-badge-good',
+  rejected: 'suite-badge-bad',
 };
 
 export default function TierUpgradeClient({ initialRequests }: { initialRequests: Req[] }) {
@@ -56,24 +56,24 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-[#F4F1EA]">
       <Toaster position="top-center" richColors />
       <CreatorNav />
       <div className="mx-auto max-w-xl px-[20px] py-[48px]">
-        <h1 className="font-display text-[26px] text-[#121212]">Request a tier upgrade</h1>
-        <p className="mt-2 text-[14px] text-[#8E8E93]">
+        <h1 className="suite-display text-[26px] text-[#14110E]">Request a tier upgrade</h1>
+        <p className="mt-2 text-[14px] text-[#5C544A]">
           Grown your social following? Submit your latest numbers and our team will
           review you for a higher commission tier.
         </p>
 
         {hasPending ? (
-          <div className="mt-6 rounded-[12px] bg-[#FFF4E5] p-4 text-[14px] text-[#B25E09]">
+          <div className="mt-6 rounded-[10px] bg-[#F3E9D6] p-4 text-[14px] text-[#8A6218]">
             You have a request under review. We&apos;ll update you once it&apos;s decided.
           </div>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <input
-              className="solid"
+              className="suite-input"
               inputMode="numeric"
               placeholder="Current follower count (e.g. 52000)"
               value={followers}
@@ -81,18 +81,18 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
               required
             />
             <input
-              className="solid"
+              className="suite-input"
               placeholder="Social handle (e.g. @yourname on Instagram)"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
             />
             <textarea
-              className="solid min-h-[90px]"
+              className="suite-input !h-auto min-h-[90px] py-2"
               placeholder="Anything else we should know? (optional)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <button type="submit" disabled={submitting} className="btn_creators_solid disabled:opacity-50">
+            <button type="submit" disabled={submitting} className="suite-btn suite-btn-primary w-full">
               {submitting ? 'Submitting…' : 'Submit for review'}
             </button>
           </form>
@@ -100,22 +100,22 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
 
         {requests.length > 0 && (
           <div className="mt-10">
-            <h2 className="text-[14px] font-medium text-[#121212] uppercase">Your requests</h2>
+            <h2 className="text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">Your requests</h2>
             <div className="mt-3 space-y-3">
               {requests.map((r) => (
-                <div key={r.id} className="flex items-center justify-between rounded-[12px] border border-[#F0F0F0] p-4">
+                <div key={r.id} className="suite-panel flex items-center justify-between p-4">
                   <div>
-                    <div className="text-[14px] font-medium text-[#121212]">
+                    <div className="text-[14px] font-medium text-[#14110E]">
                       {(r.follower_count ?? 0).toLocaleString()} followers
                     </div>
                     {r.social_handle && (
-                      <div className="text-[12px] text-[#8E8E93]">{r.social_handle}</div>
+                      <div className="text-[12px] text-[#8C8377]">{r.social_handle}</div>
                     )}
                     {r.review_note && (
-                      <div className="mt-1 text-[12px] text-[#8E8E93]">Note: {r.review_note}</div>
+                      <div className="mt-1 text-[12px] text-[#5C544A]">Note: {r.review_note}</div>
                     )}
                   </div>
-                  <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium capitalize ${statusStyle[r.status || 'pending'] || ''}`}>
+                  <span className={`suite-badge ${statusStyle[r.status || 'pending'] || 'suite-badge-neutral'}`}>
                     {r.status}
                   </span>
                 </div>

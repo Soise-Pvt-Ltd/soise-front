@@ -119,7 +119,7 @@ const faqJsonLd = {
 
 export default function CreatorSwazLoopPage() {
   return (
-    <div className="min-h-screen bg-[#f9f9f9]">
+    <div className="min-h-screen bg-[#F4F1EA] text-[#14110E]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
@@ -128,13 +128,10 @@ export default function CreatorSwazLoopPage() {
       <div className="mx-auto max-w-3xl px-[20px] py-[40px] md:py-[64px]">
         {/* Hero */}
         <div className="rounded-[24px] bg-[#0E0E10] px-6 py-14 text-center text-[#F4F1EA] sm:py-16">
-          <span className="text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
+          <span className="suite-eyebrow-on-ink">
             The Swaz Loop
           </span>
-          <h1
-            className="mx-auto mt-5 max-w-[520px] text-[34px] leading-[1.1] tracking-tight md:text-[46px]"
-            style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
-          >
+          <h1 className="suite-display mx-auto mt-5 max-w-[520px] text-[34px] leading-[1.1] md:text-[46px]">
             Share. Sell. Earn.
           </h1>
           <p className="mx-auto mt-5 max-w-[540px] text-[15px] leading-relaxed text-[#B7B2A6]">
@@ -147,14 +144,14 @@ export default function CreatorSwazLoopPage() {
         {/* Two paths */}
         <div className="mt-[40px] grid gap-[16px] md:grid-cols-2">
           {/* Creators */}
-          <div className="rounded-[20px] border border-[#EAEAEA] p-6">
-            <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#E8F1F9] text-[#0072BB]">
+          <div className="suite-panel p-6">
+            <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#F3E9D6] text-[#9C6F2E]">
               <WalletIcon />
             </div>
-            <h2 className="mt-4 text-[20px] font-bold text-[#121212]">
+            <h2 className="suite-display mt-4 text-[20px] text-[#14110E]">
               For creators — cash commission
             </h2>
-            <ul className="mt-4 space-y-3 text-[14px] leading-relaxed text-[#35373C]">
+            <ul className="mt-4 space-y-3 text-[14px] leading-relaxed text-[#3F3830]">
               <li>
                 Get a unique <span className="font-medium">creator code</span> +
                 shareable link. Your audience gets a checkout discount.
@@ -205,14 +202,14 @@ export default function CreatorSwazLoopPage() {
           </div>
 
           {/* Everyday users */}
-          <div className="rounded-[20px] border border-[#EAEAEA] p-6">
-            <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#E8F1F9] text-[#0072BB]">
+          <div className="suite-panel p-6">
+            <div className="flex h-[40px] w-[40px] items-center justify-center rounded-full bg-[#F3E9D6] text-[#9C6F2E]">
               <TagIcon />
             </div>
-            <h2 className="mt-4 text-[20px] font-bold text-[#121212]">
+            <h2 className="suite-display mt-4 text-[20px] text-[#14110E]">
               For everyone — store credit
             </h2>
-            <ul className="mt-4 space-y-3 text-[14px] leading-relaxed text-[#35373C]">
+            <ul className="mt-4 space-y-3 text-[14px] leading-relaxed text-[#3F3830]">
               <li>
                 Share your personal <span className="font-medium">referral link</span>{' '}
                 — no application needed.
@@ -248,10 +245,10 @@ export default function CreatorSwazLoopPage() {
 
         {/* FAQ */}
         <div className="mt-[48px]">
-          <h2 className="text-[24px] font-bold text-[#121212]">
+          <h2 className="suite-display text-[24px] text-[#14110E]">
             Frequently asked questions
           </h2>
-          <p className="mt-2 text-[14px] text-[#8E8E93]">
+          <p className="mt-2 text-[14px] text-[#5C544A]">
             Everything you need to know about earning with Soise.
           </p>
           {/* Category index */}
@@ -263,7 +260,7 @@ export default function CreatorSwazLoopPage() {
               <a
                 key={category.id}
                 href={`#${category.id}`}
-                className="rounded-full border border-[#EAEAEA] bg-white px-4 py-2 text-[13px] font-medium text-[#35373C] transition-colors hover:border-[#0072BB] hover:text-[#0072BB]"
+                className="rounded-full border border-[#DFD7C6] bg-[#FBF9F4] px-4 py-2 text-[13px] font-medium text-[#5C544A] transition-colors hover:border-[#9C6F2E] hover:text-[#14110E]"
               >
                 {category.title}
               </a>
@@ -276,10 +273,7 @@ export default function CreatorSwazLoopPage() {
 
         {/* Footer CTA */}
         <div className="mt-[40px] rounded-[20px] bg-[#0E0E10] p-8 text-center text-[#F4F1EA]">
-          <h3
-            className="text-[24px]"
-            style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
-          >
+          <h3 className="suite-display text-[24px]">
             Ready to start earning?
           </h3>
           <p className="mx-auto mt-2 max-w-[420px] text-[14px] text-[#B7B2A6]">

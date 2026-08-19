@@ -40,31 +40,31 @@ const VIEWS: Record<PayoutStatus, PayoutStatusView> = {
   requested: {
     label: 'Requested',
     meaning: 'Received. Waiting for our team to send it.',
-    className: 'bg-[#F0F0F0] text-[#5A5A5E]',
+    className: 'bg-[#EAE4D7] text-[#57503F]',
     inFlight: true,
   },
   processing: {
     label: 'Processing',
     meaning: 'The transfer is on its way to your bank.',
-    className: 'bg-[#E4EDF5] text-[#0072BB]',
+    className: 'bg-[#E3E6EC] text-[#4A5568]',
     inFlight: true,
   },
   paid: {
     label: 'Paid',
     meaning: 'Sent to your bank account.',
-    className: 'bg-[#CCEAD6] text-[#1B7A3D]',
+    className: 'bg-[#E4EDE3] text-[#3D6B4A]',
     inFlight: false,
   },
   failed: {
     label: 'Failed',
     meaning: "The transfer didn't go through. The amount is back in your balance.",
-    className: 'bg-[#E5C6BF] text-[#991C00]',
+    className: 'bg-[#F2E1DB] text-[#8C3A2B]',
     inFlight: false,
   },
   cancelled: {
     label: 'Cancelled',
     meaning: 'This request was cancelled. The amount is back in your balance.',
-    className: 'bg-[#F0F0F0] text-[#5A5A5E]',
+    className: 'bg-[#EAE4D7] text-[#57503F]',
     inFlight: false,
   },
 };
@@ -72,7 +72,7 @@ const VIEWS: Record<PayoutStatus, PayoutStatusView> = {
 const UNKNOWN: PayoutStatusView = {
   label: 'Unknown',
   meaning: 'We could not read the state of this payout. Contact support.',
-  className: 'bg-[#F0F0F0] text-[#5A5A5E]',
+  className: 'bg-[#EAE4D7] text-[#57503F]',
   inFlight: false,
 };
 

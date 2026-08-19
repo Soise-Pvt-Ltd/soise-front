@@ -31,14 +31,14 @@ function StatusScreen({
       <span
         className={`mb-3 rounded-full px-3 py-1 text-[12px] font-medium uppercase ${
           tone === 'pending'
-            ? 'bg-[#FFF4E5] text-[#B25E09]'
-            : 'bg-[#FDECEC] text-[#C0362C]'
+            ? 'bg-[#F3E9D6] text-[#8A6218]'
+            : 'bg-[#F2E1DB] text-[#8C3A2B]'
         }`}
       >
         {tone === 'pending' ? 'Under review' : 'Not approved'}
       </span>
       <h1 className="font-display text-[32px] leading-tight text-[#121212]">{title}</h1>
-      <p className="mt-3 max-w-[420px] text-[14px] text-[#8E8E93]">{body}</p>
+      <p className="mt-3 max-w-[420px] text-[14px] text-[#5C544A]">{body}</p>
       <Link
         href="/"
         className="btn_black mt-8 flex max-w-[280px] items-center justify-center"
@@ -136,7 +136,7 @@ export default async function creatorsPage({
   return (
     <>
       {reason === 'not-creator' && (
-        <div className="bg-[#FFF4E5] px-6 py-3 text-center text-[13px] font-medium text-[#B25E09]">
+        <div className="bg-[#F3E9D6] px-6 py-3 text-center text-[13px] font-medium text-[#8A6218]">
           You need an approved creator account to access the Creator Portal —
           apply below to get started.
         </div>

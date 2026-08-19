@@ -184,11 +184,11 @@ export default function CreatorCode({
   if (!code) {
     return (
       <div>
-        <p className="text-[#8E8E93]">Your creator code</p>
-        <p className="mt-[8px] text-[16px] font-medium text-[#121212]">
+        <p className="suite-eyebrow">Your creator code</p>
+        <p className="mt-[8px] text-[16px] font-medium text-[#14110E]">
           You don&apos;t have an active code yet
         </p>
-        <p className="mt-[4px] text-[13px] text-[#8E8E93]">
+        <p className="mt-[4px] text-[13px] text-[#5C544A]">
           Once your creator code is issued it appears here, along with your
           shareable link. Contact us if you think this is a mistake.
         </p>
@@ -200,11 +200,11 @@ export default function CreatorCode({
     <div>
       {/* Header: label + usage */}
       <div className="flex items-center justify-between">
-        <p className="text-[#8E8E93]">Your creator code</p>
+        <p className="suite-eyebrow">Your creator code</p>
         {usageCount > 0 && (
-          <span className="text-[13px] text-[#8E8E93]">
+          <span className="text-[13px] text-[#8C8377]">
             Used{' '}
-            <span className="font-medium text-[#121212]">
+            <span className="font-medium text-[#14110E]">
               {usageCount.toLocaleString()}
             </span>{' '}
             {usageCount === 1 ? 'time' : 'times'}
@@ -212,19 +212,19 @@ export default function CreatorCode({
         )}
       </div>
 
-      {/* The code + copy */}
-      <div className="mt-[12px] flex items-center justify-between gap-x-[12px] rounded-[12px] bg-[#f9f9f9] px-[16px] py-[14px]">
-        <span className="truncate text-[18px] font-semibold tracking-widest text-[#0072BB] uppercase">
+      {/* The code + copy — an ink plate, gold type: the centerpiece. */}
+      <div className="mt-[12px] flex items-center justify-between gap-x-[12px] rounded-[12px] bg-[#0E0E10] px-[16px] py-[14px]">
+        <span className="suite-display truncate text-[22px] tracking-widest text-[#C4AA6E] uppercase">
           {code || '—'}
         </span>
         <button
           onClick={() => copy(code)}
-          className="flex shrink-0 cursor-pointer items-center gap-x-1 text-[#8E8E93] transition-colors hover:text-[#121212]"
+          className="flex shrink-0 cursor-pointer items-center gap-x-1 text-[#F4F1EA]/60 transition-colors hover:text-[#F4F1EA]"
           title="Copy creator code"
           type="button"
         >
           {isCopied ? (
-            <span className="text-sm font-medium text-green-600">Copied!</span>
+            <span className="text-sm font-medium text-[#C4AA6E]">Copied!</span>
           ) : (
             <CopyIcon />
           )}
@@ -234,14 +234,14 @@ export default function CreatorCode({
       {/* What the code does */}
       <div className="mt-[20px] space-y-[12px]">
         <div className="flex items-start gap-x-[12px]">
-          <div className="mt-[1px] rounded-full bg-[#121212] p-[8px]">
+          <div className="mt-[1px] rounded-full bg-[#0E0E10] p-[8px]">
             <TagIcon />
           </div>
           <div>
-            <p className="text-[14px] font-medium text-[#121212]">
+            <p className="text-[14px] font-medium text-[#14110E]">
               Customers save {fmtPct(discountPercentage)}
             </p>
-            <p className="text-[13px] text-[#8E8E93]">
+            <p className="text-[13px] text-[#5C544A]">
               Anyone who enters your code at checkout gets{' '}
               {fmtPct(discountPercentage)} off their order.
             </p>
@@ -249,14 +249,14 @@ export default function CreatorCode({
         </div>
 
         <div className="flex items-start gap-x-[12px]">
-          <div className="mt-[1px] rounded-full bg-[#121212] p-[8px]">
+          <div className="mt-[1px] rounded-full bg-[#0E0E10] p-[8px]">
             <DollarIcon />
           </div>
           <div>
-            <p className="text-[14px] font-medium text-[#121212]">
+            <p className="text-[14px] font-medium text-[#14110E]">
               You earn {fmtPct(commissionRate)} commission
             </p>
-            <p className="text-[13px] text-[#8E8E93]">
+            <p className="text-[13px] text-[#5C544A]">
               Every order placed with your code pays {fmtPct(commissionRate)}{' '}
               into your wallet
               {hasTier ? (
@@ -268,7 +268,7 @@ export default function CreatorCode({
                       Nudged up a size because Playfair sits small next to
                       Poppins at the same px. */}
                   <span
-                    className="text-[15px] text-[#121212]"
+                    className="text-[15px] text-[#14110E]"
                     style={{ fontFamily: 'var(--font-luxe, Georgia, serif)' }}
                   >
                     {tierName}
@@ -284,13 +284,13 @@ export default function CreatorCode({
 
       {/* 24h change-code window */}
       {withinWindow ? (
-        <div className="mt-[20px] rounded-[10px] bg-[#F5F8FB] px-[14px] py-[12px]">
-          <p className="text-[13px] font-medium text-[#121212]">
+        <div className="mt-[20px] rounded-[10px] border border-[#E2DBCC] bg-[#F8F5EE] px-[14px] py-[12px]">
+          <p className="text-[13px] font-medium text-[#14110E]">
             Not happy with your code?
           </p>
-          <p className="mt-1 text-[12px] text-[#8E8E93]">
+          <p className="mt-1 text-[12px] text-[#5C544A]">
             You can change it within{' '}
-            <span className="font-medium text-[#0072BB]">24 hours</span> of
+            <span className="font-medium text-[#9C6F2E]">24 hours</span> of
             onboarding
             {hoursLeft > 0
               ? ` — about ${hoursLeft} ${hoursLeft === 1 ? 'hour' : 'hours'} left.`
@@ -300,13 +300,13 @@ export default function CreatorCode({
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="mt-[12px] cursor-pointer text-[13px] font-semibold text-[#0072BB] underline-offset-2 hover:underline"
+            className="mt-[12px] cursor-pointer text-[13px] font-semibold text-[#9C6F2E] underline-offset-2 hover:underline"
           >
             Request a new code
           </button>
         </div>
       ) : codeCreatedAt ? (
-        <p className="mt-[16px] text-[12px] text-[#8E8E93]">
+        <p className="mt-[16px] text-[12px] text-[#8C8377]">
           Your code is now permanent.
         </p>
       ) : null}
@@ -315,19 +315,19 @@ export default function CreatorCode({
       <div className="mt-[20px] flex flex-col gap-[12px] sm:flex-row sm:items-center">
         <button
           onClick={handleShare}
-          className="btn_black flex items-center justify-center gap-x-2 !text-[12px] !font-medium !capitalize sm:!w-fit sm:!px-[40px]"
+          className="suite-btn suite-btn-primary w-full capitalize sm:w-fit sm:px-[40px]"
         >
           share link <ShareIcon />
         </button>
         <button
           onClick={copyLink}
           type="button"
-          className="text-[13px] font-medium text-[#0072BB] transition-opacity hover:opacity-70 sm:px-[8px]"
+          className="text-[13px] font-medium text-[#9C6F2E] transition-opacity hover:opacity-70 sm:px-[8px]"
         >
           {linkCopied ? 'Link copied!' : 'Copy link'}
         </button>
       </div>
-      <p className="mt-[10px] text-[13px] text-[#8E8E93]">
+      <p className="mt-[10px] text-[13px] text-[#5C544A]">
         Your link applies your creator code automatically at checkout — they
         never have to type it.
       </p>
@@ -342,20 +342,20 @@ export default function CreatorCode({
           onClick={closeModal}
         >
           <div
-            className="w-full max-w-sm rounded-[20px] bg-white p-[24px] shadow-xl"
+            className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between">
               <h2
                 id="change-code-title"
-                className="text-lg font-medium text-[#121212]"
+                className="suite-display text-lg text-[#14110E]"
               >
                 Change your code
               </h2>
               <button
                 onClick={closeModal}
                 disabled={isSubmitting}
-                className="flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-gray-100 disabled:opacity-50"
+                className="flex h-[28px] w-[28px] cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[#EFEBE1] disabled:opacity-50"
                 aria-label="Close dialog"
                 type="button"
               >
@@ -363,9 +363,9 @@ export default function CreatorCode({
               </button>
             </div>
 
-            <p className="mb-4 text-[13px] text-[#8E8E93]">
+            <p className="mb-4 text-[13px] text-[#5C544A]">
               Every code starts with{' '}
-              <span className="font-medium text-[#121212]">
+              <span className="font-medium text-[#14110E]">
                 {CREATOR_CODE_PREFIX}
               </span>{' '}
               — you pick what comes after it. You can only do this within 24
@@ -374,15 +374,15 @@ export default function CreatorCode({
 
             <label
               htmlFor="code-suffix"
-              className="mb-2 block text-[12px] font-medium text-[#121212]"
+              className="mb-2 block text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase"
             >
               Your ending
             </label>
-            <div className="flex items-stretch overflow-hidden rounded-[10px] border border-gray-200 bg-[#F5F5F5] focus-within:ring-2 focus-within:ring-[#0072BB]">
+            <div className="flex items-stretch overflow-hidden rounded-[10px] border border-[#DFD7C6] bg-[#EFEBE1] focus-within:border-[#9C6F2E] focus-within:bg-[#F8F5EE]">
               {/* Not aria-hidden: it is the first half of the code, and a
                   screen reader user needs to hear it to make sense of the
                   field. Unselectable so a copy of the field is just the tail. */}
-              <span className="flex select-none items-center border-r border-gray-200 bg-[#ECECEC] px-3 text-[14px] font-semibold tracking-widest text-[#8E8E93]">
+              <span className="flex select-none items-center border-r border-[#DFD7C6] bg-[#E7E1D3] px-3 text-[14px] font-semibold tracking-widest text-[#8C8377]">
                 {CREATOR_CODE_PREFIX}
               </span>
               <input
@@ -397,17 +397,17 @@ export default function CreatorCode({
                 autoFocus
                 disabled={isSubmitting}
                 aria-describedby="code-suffix-hint"
-                className="w-full bg-transparent px-3 py-2 text-[14px] tracking-widest uppercase outline-none disabled:opacity-50"
+                className="w-full border-0 bg-transparent px-3 py-2 text-[14px] tracking-widest text-[#14110E] uppercase outline-none focus:ring-0 disabled:opacity-50"
               />
             </div>
-            <p id="code-suffix-hint" className="mt-1 text-[11px] text-[#8E8E93]">
+            <p id="code-suffix-hint" className="mt-1 text-[11px] text-[#8C8377]">
               {codeSuffix ? (
                 suffixError ? (
                   suffixError
                 ) : (
                   <>
                     Your code will be{' '}
-                    <span className="font-medium text-[#121212]">
+                    <span className="font-medium text-[#14110E]">
                       {buildCreatorCode(codeSuffix)}
                     </span>
                     . Must be unique.
@@ -423,7 +423,7 @@ export default function CreatorCode({
                 type="button"
                 onClick={() => submitChange(buildCreatorCode(codeSuffix))}
                 disabled={isSubmitting || !!suffixError}
-                className="btn_black flex items-center justify-center !text-[13px] !font-medium disabled:opacity-50"
+                className="suite-btn suite-btn-primary w-full"
               >
                 {isSubmitting ? 'Saving…' : 'Use this code'}
               </button>
@@ -431,7 +431,7 @@ export default function CreatorCode({
                 type="button"
                 onClick={() => submitChange(undefined)}
                 disabled={isSubmitting}
-                className="flex items-center justify-center rounded-[10px] border border-[#0072BB] px-4 py-2 text-[13px] font-medium text-[#0072BB] transition-colors hover:bg-[#F5F8FB] disabled:opacity-50"
+                className="suite-btn suite-btn-ghost w-full"
               >
                 {isSubmitting ? 'Please wait…' : 'Randomize a new code'}
               </button>

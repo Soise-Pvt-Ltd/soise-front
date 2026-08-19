@@ -92,10 +92,10 @@ function engagementLabel(n?: number): string | null {
 }
 
 const TIER_STYLES: Record<string, string> = {
-  A: 'bg-[#E8F6EE] text-[#1E7A45]',
-  B: 'bg-[#FBF4E0] text-[#9A7B12]',
-  C: 'bg-[#F1F1F3] text-[#6B6B70]',
-  unscored: 'bg-[#F1F1F3] text-[#9A9AA0]',
+  A: 'bg-[#E4EDE3] text-[#3D6B4A]',
+  B: 'bg-[#F3E9D6] text-[#8A6218]',
+  C: 'bg-[#EAE4D7] text-[#57503F]',
+  unscored: 'bg-[#EAE4D7] text-[#8C8377]',
 };
 
 function deriveTier(scores: number[]): { total: number; tier: string } {
@@ -285,21 +285,16 @@ export default function ProspectsClient({
     <div>
       <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0072BB]">
-            Swaz Creator Program
-          </p>
-          <h1 className="mt-1 text-[24px] font-semibold tracking-tight text-[#121212]">
+          <p className="suite-eyebrow">Swaz Creator Program</p>
+          <h1 className="suite-display mt-1 text-[26px] text-[#14110E]">
             Prospect Log
           </h1>
-          <p className="mt-1 text-[13px] text-[#8A8A8F]">
+          <p className="mt-1 text-[13px] text-[#8C8377]">
             {stats.total} logged · {stats.by_tier?.A || 0} A-tier ·{' '}
             {stats.by_stage?.onboarded || 0} onboarded
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="rounded-[9px] bg-[#0072BB] px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#005c98]"
-        >
+        <button onClick={openCreate} className="suite-btn suite-btn-primary">
           + Log a creator
         </button>
       </header>
@@ -310,12 +305,12 @@ export default function ProspectsClient({
           value={search}
           onChange={(e) => applyFilters({ search: e.target.value })}
           placeholder="Search handle, niche, location…"
-          className="h-9 w-full max-w-[280px] rounded-[8px] border border-[#DADADE] px-3 text-[13px] outline-none focus:border-[#0072BB] focus:ring-1 focus:ring-[#0072BB]"
+          className="suite-input max-w-[280px]"
         />
         <select
           value={stageFilter}
           onChange={(e) => applyFilters({ stage: e.target.value })}
-          className="h-9 rounded-[8px] border border-[#DADADE] bg-white px-2 text-[13px] capitalize outline-none focus:border-[#0072BB]"
+          className="suite-input w-auto capitalize"
         >
           <option value="all">All stages</option>
           {STAGES.map((s) => (
@@ -327,7 +322,7 @@ export default function ProspectsClient({
         <select
           value={tierFilter}
           onChange={(e) => applyFilters({ tier: e.target.value })}
-          className="h-9 rounded-[8px] border border-[#DADADE] bg-white px-2 text-[13px] outline-none focus:border-[#0072BB]"
+          className="suite-input w-auto"
         >
           <option value="all">All tiers</option>
           <option value="A">A</option>
@@ -338,8 +333,8 @@ export default function ProspectsClient({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[14px] border border-[#ECECEF] bg-white">
-        <div className="hidden grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] gap-3 border-b border-[#F0F0F2] bg-[#FAFBFC] px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#9A9AA0] md:grid">
+      <div className="suite-panel overflow-hidden">
+        <div className="hidden grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] gap-3 border-b border-[#E2DBCC] bg-[#F4F1EA] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#8C8377] md:grid">
           <div>Creator</div>
           <div>Niche / location</div>
           <div>Reach</div>
@@ -349,46 +344,47 @@ export default function ProspectsClient({
         </div>
 
         {rows.length === 0 ? (
-          <div className="px-4 py-12 text-center text-[13px] text-[#9A9AA0]">
+          <div className="px-4 py-12 text-center text-[13px] text-[#8C8377]">
             No prospects match. Log your first creator with “+ Log a creator”.
           </div>
         ) : (
-          rows.map((p) => (
+          <div>
+          {rows.map((p) => (
             <div
               key={p.id}
-              className="grid grid-cols-1 gap-2 border-b border-[#F4F4F6] px-4 py-3 last:border-0 md:grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] md:items-center md:gap-3"
+              className="suite-row first:border-t-0 grid grid-cols-1 gap-2 px-4 py-3 md:grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] md:items-center md:gap-3"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-[14px] font-semibold text-[#121212]">
+                  <p className="truncate text-[14px] font-semibold text-[#14110E]">
                     {p.handle}
                   </p>
-                  <span className="rounded-full bg-[#F0F0F2] px-1.5 py-0.5 text-[10px] capitalize text-[#8A8A8F]">
+                  <span className="rounded-full bg-[#EAE4D7] px-1.5 py-0.5 text-[10px] capitalize text-[#57503F]">
                     {p.platform}
                   </span>
                 </div>
                 {p.display_name && (
-                  <p className="truncate text-[12px] text-[#8A8A8F]">
+                  <p className="truncate text-[12px] text-[#8C8377]">
                     {p.display_name}
                   </p>
                 )}
               </div>
 
-              <div className="min-w-0 text-[13px] text-[#48484C]">
+              <div className="min-w-0 text-[13px] text-[#3F3830]">
                 <span className="truncate">{p.niche || '—'}</span>
                 {p.location && (
-                  <span className="text-[#9A9AA0]"> · {p.location}</span>
+                  <span className="text-[#8C8377]"> · {p.location}</span>
                 )}
               </div>
 
-              <div className="text-[13px] text-[#48484C]">
+              <div className="text-[13px] text-[#3F3830]">
                 {p.follower_count != null
                   ? Intl.NumberFormat('en', { notation: 'compact' }).format(
                       p.follower_count,
                     )
                   : '—'}
                 {engagementLabel(p.engagement_rate) && (
-                  <span className="text-[#9A9AA0]">
+                  <span className="text-[#8C8377]">
                     {' '}
                     · {engagementLabel(p.engagement_rate)}
                   </span>
@@ -412,7 +408,7 @@ export default function ProspectsClient({
                 <select
                   value={p.stage}
                   onChange={(e) => changeStage(p, e.target.value)}
-                  className="h-8 w-full max-w-[140px] rounded-[7px] border border-[#E0E0E4] bg-white px-2 text-[12px] capitalize outline-none focus:border-[#0072BB]"
+                  className="h-8 w-full max-w-[140px] cursor-pointer rounded-[10px] border border-[#DFD7C6] bg-[#EFEBE1] px-2 text-[12px] capitalize text-[#14110E] outline-none focus:border-[#9C6F2E]"
                 >
                   {STAGES.map((s) => (
                     <option key={s} value={s} className="capitalize">
@@ -425,20 +421,21 @@ export default function ProspectsClient({
               <div className="flex items-center justify-start gap-1 md:justify-end">
                 <button
                   onClick={() => openEdit(p)}
-                  className="rounded-[7px] px-2.5 py-1 text-[12px] font-medium text-[#0072BB] transition-colors hover:bg-[#E7F1F8]"
+                  className="cursor-pointer rounded-full px-2.5 py-1 text-[12px] font-medium text-[#9C6F2E] transition-colors hover:bg-[#9C6F2E]/[0.08] hover:text-[#7E5722]"
                 >
                   Score / edit
                 </button>
                 <button
                   onClick={() => remove(p)}
                   aria-label="Remove prospect"
-                  className="rounded-[7px] px-2 py-1 text-[12px] font-medium text-[#B0413A] transition-colors hover:bg-[#FBEEEB]"
+                  className="cursor-pointer rounded-full px-2 py-1 text-[12px] font-medium text-[#8C3A2B] transition-colors hover:bg-[#8C3A2B]/[0.06]"
                 >
                   ✕
                 </button>
               </div>
             </div>
-          ))
+          ))}
+          </div>
         )}
       </div>
 
@@ -451,7 +448,7 @@ export default function ProspectsClient({
           />
           <form
             onSubmit={submitForm}
-            className="relative h-full w-full max-w-[480px] overflow-y-auto bg-white p-6 shadow-xl"
+            className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-[#E2DBCC] bg-[#F4F1EA] p-6"
           >
             <StatueWatermark
               tone="dark"
@@ -460,13 +457,13 @@ export default function ProspectsClient({
               className="pointer-events-none absolute -top-2 right-2 z-0"
             />
             <div className="relative z-10 mb-4 flex items-center justify-between">
-              <h2 className="text-[17px] font-semibold text-[#121212]">
+              <h2 className="suite-display text-[19px] text-[#14110E]">
                 {editing ? 'Score / edit prospect' : 'Log a creator'}
               </h2>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-[7px] px-2 py-1 text-[18px] leading-none text-[#9A9AA0] hover:bg-[#F4F4F6]"
+                className="cursor-pointer rounded-full px-2 py-1 text-[18px] leading-none text-[#8C8377] hover:bg-[#14110E]/[0.04] hover:text-[#14110E]"
                 aria-label="Close"
               >
                 ×
@@ -595,9 +592,9 @@ export default function ProspectsClient({
               </div>
 
               {/* Scorecard */}
-              <div className="mt-1 rounded-[12px] border border-[#ECECEF] bg-[#FAFBFC] p-3">
+              <div className="suite-panel mt-1 p-3">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-[#121212]">
+                  <p className="text-[13px] font-semibold text-[#14110E]">
                     Scorecard
                   </p>
                   <span
@@ -616,10 +613,10 @@ export default function ProspectsClient({
                     return (
                       <div
                         key={d.field}
-                        className="rounded-[8px] bg-white p-2.5 ring-1 ring-[#EFEFF1]"
+                        className="rounded-[10px] bg-[#F4F1EA] p-2.5 ring-1 ring-[#E2DBCC]/60"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[13px] font-medium text-[#2E2E32]">
+                          <span className="text-[13px] font-medium text-[#14110E]">
                             {d.label}
                           </span>
                           <div className="flex gap-1">
@@ -630,10 +627,10 @@ export default function ProspectsClient({
                                 onClick={() =>
                                   setForm({ ...form, [d.field]: cur === n ? 0 : n })
                                 }
-                                className={`h-7 w-7 rounded-[6px] text-[12px] font-semibold transition-colors ${
+                                className={`h-7 w-7 cursor-pointer rounded-full text-[12px] font-semibold transition-colors ${
                                   cur >= n && cur > 0
-                                    ? 'bg-[#0072BB] text-white'
-                                    : 'bg-[#FAFBFC] text-[#9A9AA0] ring-1 ring-[#E0E0E4] hover:ring-[#0072BB]'
+                                    ? 'bg-[#14110E] text-[#F4F1EA]'
+                                    : 'bg-[#FBF9F4] text-[#8C8377] ring-1 ring-[#DFD7C6] hover:ring-[#9C6F2E]'
                                 }`}
                                 aria-label={`${d.label} ${n}`}
                               >
@@ -642,14 +639,14 @@ export default function ProspectsClient({
                             ))}
                           </div>
                         </div>
-                        <p className="mt-1.5 text-[11px] leading-snug text-[#9A9AA0]">
+                        <p className="mt-1.5 text-[11px] leading-snug text-[#8C8377]">
                           {d.hint}
                         </p>
                       </div>
                     );
                   })}
                 </div>
-                <p className="mt-2 text-[11px] text-[#9A9AA0]">
+                <p className="mt-2 text-[11px] text-[#8C8377]">
                   Click a number to set 1–5; click it again to clear. All five must
                   be set to earn a tier.
                 </p>
@@ -669,14 +666,14 @@ export default function ProspectsClient({
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 rounded-[9px] bg-[#0072BB] px-4 py-2.5 text-[14px] font-semibold text-white transition-colors hover:bg-[#005c98] disabled:opacity-60"
+                className="suite-btn suite-btn-primary flex-1"
               >
                 {saving ? 'Saving…' : editing ? 'Save changes' : 'Log prospect'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="rounded-[9px] border border-[#DADADE] px-4 py-2.5 text-[14px] font-medium text-[#48484C] transition-colors hover:bg-[#F4F4F6]"
+                className="suite-btn suite-btn-ghost"
               >
                 Cancel
               </button>
@@ -688,8 +685,7 @@ export default function ProspectsClient({
   );
 }
 
-const inputCls =
-  'h-9 w-full rounded-[8px] border border-[#DADADE] px-3 text-[13px] outline-none focus:border-[#0072BB] focus:ring-1 focus:ring-[#0072BB]';
+const inputCls = 'suite-input';
 
 function Field({
   label,
@@ -700,7 +696,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[12px] font-medium text-[#6B6B70]">
+      <span className="mb-1 block text-[12px] font-medium text-[#5C544A]">
         {label}
       </span>
       {children}

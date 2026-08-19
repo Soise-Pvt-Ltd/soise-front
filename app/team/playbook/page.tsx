@@ -53,14 +53,14 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-[#ECECEF] py-7 first:border-t-0 first:pt-0">
+    <section className="border-t border-[#E2DBCC] py-7 first:border-t-0 first:pt-0">
       <div className="flex items-baseline gap-3">
-        <span className="text-[12px] font-semibold text-[#0072BB]">{n}</span>
-        <h2 className="text-[18px] font-semibold tracking-tight text-[#121212]">
+        <span className="text-[12px] font-semibold text-[#9C6F2E]">{n}</span>
+        <h2 className="suite-display text-[19px] text-[#14110E]">
           {title}
         </h2>
       </div>
-      <div className="mt-3 space-y-3 text-[14px] leading-relaxed text-[#48484C]">
+      <div className="mt-3 space-y-3 text-[14px] leading-relaxed text-[#3F3830]">
         {children}
       </div>
     </section>
@@ -71,23 +71,21 @@ export default function PlaybookPage() {
   return (
     <div className="mx-auto max-w-[760px]">
       <header className="mb-8">
-        <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#0072BB]">
-          The Swaz Creator Program
-        </p>
-        <h1 className="mt-1 text-[28px] font-semibold tracking-tight text-[#121212]">
+        <p className="suite-eyebrow">The Swaz Creator Program</p>
+        <h1 className="suite-display mt-1 text-[32px] text-[#14110E]">
           Creator Outreach Playbook
         </h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-[#6B6B70]">
+        <p className="mt-3 text-[15px] leading-relaxed text-[#5C544A]">
           How we find, evaluate, and invite creators — proactively and at scale,
           but always as an{' '}
-          <span className="font-medium text-[#121212]">exclusive invitation</span>,
+          <span className="font-medium text-[#14110E]">exclusive invitation</span>,
           never a discount blast. The premium voice is the thing that makes a
           creator want the code; protect it.
         </p>
       </header>
 
-      <div className="rounded-[14px] border border-[#E6E0F0] bg-[#FAF8FE] p-5">
-        <p className="text-[14px] leading-relaxed text-[#4A4458]">
+      <div className="suite-panel p-5">
+        <p className="text-[14px] leading-relaxed text-[#3F3830]">
           <span className="font-semibold">The one principle:</span> exclusivity is
           earned by real <em>selectivity</em> + a considered <em>experience</em>,
           not by the adjectives in the message. If we send “you’ve been selected”
@@ -134,22 +132,22 @@ export default function PlaybookPage() {
             (max 25) and assigns a tier automatically. Only contact A’s and B’s —
             the rubric <em>is</em> the exclusivity.
           </p>
-          <div className="mt-2 overflow-hidden rounded-[12px] border border-[#ECECEF]">
+          <div className="mt-2 overflow-hidden rounded-[14px] border border-[#E2DBCC]">
             {SCORECARD.map((s, i) => (
               <div
                 key={s.field}
                 className={`flex gap-3 px-4 py-3 ${
-                  i % 2 ? 'bg-[#FAFBFC]' : 'bg-white'
+                  i % 2 ? 'bg-[#F4F1EA]' : 'bg-[#FBF9F4]'
                 }`}
               >
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E7F1F8] text-[12px] font-semibold text-[#0072BB]">
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EFEBE1] text-[12px] font-semibold text-[#9C6F2E]">
                   {i + 1}
                 </span>
                 <div>
-                  <p className="text-[14px] font-semibold text-[#121212]">
+                  <p className="text-[14px] font-semibold text-[#14110E]">
                     {s.key}
                   </p>
-                  <p className="text-[13px] leading-relaxed text-[#6B6B70]">
+                  <p className="text-[13px] leading-relaxed text-[#5C544A]">
                     {s.desc}
                   </p>
                 </div>
@@ -157,13 +155,13 @@ export default function PlaybookPage() {
             ))}
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
-            <span className="rounded-full bg-[#E8F6EE] px-3 py-1 font-semibold text-[#1E7A45]">
+            <span className="rounded-full bg-[#E4EDE3] px-3 py-1 font-semibold text-[#3D6B4A]">
               A · 20–25 — invite now
             </span>
-            <span className="rounded-full bg-[#FBF4E0] px-3 py-1 font-semibold text-[#9A7B12]">
+            <span className="rounded-full bg-[#F3E9D6] px-3 py-1 font-semibold text-[#8A6218]">
               B · 14–19 — worth a thoughtful reach
             </span>
-            <span className="rounded-full bg-[#F1F1F3] px-3 py-1 font-semibold text-[#6B6B70]">
+            <span className="rounded-full bg-[#EAE4D7] px-3 py-1 font-semibold text-[#57503F]">
               C · under 14 — pass / revisit later
             </span>
           </div>
@@ -211,7 +209,7 @@ export default function PlaybookPage() {
             send. Structure: a specific opener about <em>their</em> work → the
             invitation → the hooks above, in order → one low-friction step.
           </p>
-          <blockquote className="rounded-[12px] border-l-[3px] border-[#0072BB] bg-[#F7FAFD] px-4 py-3 text-[13.5px] italic leading-relaxed text-[#3A3A3E]">
+          <blockquote className="rounded-[14px] border-l-[3px] border-[#9C6F2E] bg-[#FBF9F4] px-4 py-3 text-[13.5px] italic leading-relaxed text-[#3F3830]">
             “Hi [name] — we’ve been watching your [specific thing, e.g.
             thrift-flip reels] and how your audience responds to the way you style
             fits. We’re opening a small first cohort of the Swaz Creator program —
@@ -221,7 +219,7 @@ export default function PlaybookPage() {
             founding-creator status. We’re keeping it to ~25 people this round
             and I’d like one of them to be you. Want the details?”
           </blockquote>
-          <p className="rounded-[10px] bg-[#FBEEEB] px-4 py-3 text-[13px] text-[#8A3320]">
+          <p className="rounded-[10px] bg-[#F2E1DB] px-4 py-3 text-[13px] text-[#8C3A2B]">
             <b>What kills it:</b> 🔥💰 urgency emojis, “EARN BIG NOW,” generic “hey
             hun collab?”, anything that reads as copy-paste.
           </p>
@@ -231,7 +229,7 @@ export default function PlaybookPage() {
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
               Send invitees to{' '}
-              <Link href="/join" className="font-medium text-[#0072BB] hover:underline">
+              <Link href="/join" className="font-medium text-[#9C6F2E] hover:underline">
                 soise.ng/join
               </Link>{' '}
               — the public invitation page. It sells the program first, then hands
@@ -277,16 +275,10 @@ export default function PlaybookPage() {
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
-        <Link
-          href="/team/prospects"
-          className="inline-flex items-center gap-1.5 rounded-[9px] bg-[#0072BB] px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#005c98]"
-        >
+        <Link href="/team/prospects" className="suite-btn suite-btn-primary">
           Go to prospect log →
         </Link>
-        <Link
-          href="/team"
-          className="inline-flex items-center gap-1.5 rounded-[9px] border border-[#DADADE] px-4 py-2.5 text-[13px] font-semibold text-[#48484C] transition-colors hover:bg-[#F4F4F6]"
-        >
+        <Link href="/team" className="suite-btn suite-btn-ghost">
           Back to overview
         </Link>
       </div>
