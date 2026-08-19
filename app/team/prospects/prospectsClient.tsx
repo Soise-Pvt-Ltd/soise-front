@@ -35,6 +35,15 @@ interface Prospect {
   owner_first_name?: string;
 }
 
+/**
+ * PRESSED INK — the storefront's editorial language run through a letterpress
+ * (see the brut- tokens in globals.css and app/contact/page.tsx). Dense data
+ * follows the language's own rule: plate the container, rule the rows — never
+ * a shadow per row.
+ */
+
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
 const PLATFORMS = ['instagram', 'tiktok', 'twitter', 'youtube', 'other'];
 const STAGES = [
   'sourced',
@@ -91,11 +100,15 @@ function engagementLabel(n?: number): string | null {
   return n >= 6 ? 'Buzzing' : n >= 2.5 ? 'Healthy' : 'Quiet';
 }
 
+// Tier marks: A is the hand-inked crimson stamp, B/C are ink plates, unscored
+// is the same plate with the ink pulled back. Status is carried by ink weight
+// and the one accent — never by a hue palette.
 const TIER_STYLES: Record<string, string> = {
-  A: 'bg-[#E4EDE3] text-[#3D6B4A]',
-  B: 'bg-[#F3E9D6] text-[#8A6218]',
-  C: 'bg-[#EAE4D7] text-[#57503F]',
-  unscored: 'bg-[#EAE4D7] text-[#8C8377]',
+  A: 'brut-stamp gap-1',
+  B: 'inline-flex items-center gap-1 rounded-[2px] border-2 border-[#121212] bg-white px-[8px] py-[2px] text-[10px] font-bold tracking-[0.18em] text-[#121212] uppercase',
+  C: 'inline-flex items-center gap-1 rounded-[2px] border-2 border-[#121212] bg-white px-[8px] py-[2px] text-[10px] font-bold tracking-[0.18em] text-[#5C544A] uppercase',
+  unscored:
+    'inline-flex items-center gap-1 rounded-[2px] border-2 border-[#121212]/25 px-[8px] py-[2px] text-[10px] font-bold tracking-[0.18em] text-[#5C544A] uppercase',
 };
 
 function deriveTier(scores: number[]): { total: number; tier: string } {
@@ -283,34 +296,43 @@ export default function ProspectsClient({
 
   return (
     <div>
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <header className="brut-rise mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="suite-eyebrow">Swaz Creator Program</p>
-          <h1 className="suite-display mt-1 text-[26px] text-[#14110E]">
-            Prospect Log
+          <p className="brut-label text-[#B3101C]">Swaz Creator Program</p>
+          <h1
+            className="mt-4 text-[40px] leading-[0.95] tracking-tight uppercase sm:text-[56px]"
+            style={serif}
+          >
+            Prospect Log<span className="text-[#B3101C]">.</span>
           </h1>
-          <p className="mt-1 text-[13px] text-[#8C8377]">
+          <p className="mt-4 text-[13px] font-bold tracking-[0.14em] text-[#5C544A] uppercase">
             {stats.total} logged · {stats.by_tier?.A || 0} A-tier ·{' '}
             {stats.by_stage?.onboarded || 0} onboarded
           </p>
         </div>
-        <button onClick={openCreate} className="suite-btn suite-btn-primary">
+        <button
+          onClick={openCreate}
+          className="brut-press cursor-pointer rounded-[2px] border-2 border-[#121212] bg-[#121212] px-6 py-4 text-[13px] font-bold tracking-[0.1em] text-white uppercase"
+        >
           + Log a creator
         </button>
       </header>
 
       {/* Filter bar */}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div
+        className="brut-rise mb-5 flex flex-wrap items-center gap-3"
+        style={{ animationDelay: '0.08s' }}
+      >
         <input
           value={search}
           onChange={(e) => applyFilters({ search: e.target.value })}
           placeholder="Search handle, niche, location…"
-          className="suite-input max-w-[280px]"
+          className="brut-input max-w-[280px]"
         />
         <select
           value={stageFilter}
           onChange={(e) => applyFilters({ stage: e.target.value })}
-          className="suite-input w-auto capitalize"
+          className="brut-input w-auto cursor-pointer capitalize"
         >
           <option value="all">All stages</option>
           {STAGES.map((s) => (
@@ -322,7 +344,7 @@ export default function ProspectsClient({
         <select
           value={tierFilter}
           onChange={(e) => applyFilters({ tier: e.target.value })}
-          className="suite-input w-auto"
+          className="brut-input w-auto cursor-pointer"
         >
           <option value="all">All tiers</option>
           <option value="A">A</option>
@@ -332,9 +354,13 @@ export default function ProspectsClient({
         </select>
       </div>
 
-      {/* Table */}
-      <div className="suite-panel overflow-hidden">
-        <div className="hidden grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] gap-3 border-b border-[#E2DBCC] bg-[#F4F1EA] px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#8C8377] md:grid">
+      {/* Table — the container is the plate; rows are separated by 2px ink
+          rules, not by a shadow each (unreadable at length). */}
+      <div
+        className="brut-rise brut-plate overflow-hidden"
+        style={{ animationDelay: '0.16s' }}
+      >
+        <div className="hidden grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] gap-3 border-b-2 border-[#121212] bg-[#121212] px-4 py-3 text-[11px] font-bold tracking-[0.18em] text-white uppercase md:grid">
           <div>Creator</div>
           <div>Niche / location</div>
           <div>Reach</div>
@@ -344,7 +370,7 @@ export default function ProspectsClient({
         </div>
 
         {rows.length === 0 ? (
-          <div className="px-4 py-12 text-center text-[13px] text-[#8C8377]">
+          <div className="px-4 py-12 text-center text-[13px] text-[#5C544A]">
             No prospects match. Log your first creator with “+ Log a creator”.
           </div>
         ) : (
@@ -352,19 +378,19 @@ export default function ProspectsClient({
           {rows.map((p) => (
             <div
               key={p.id}
-              className="suite-row first:border-t-0 grid grid-cols-1 gap-2 px-4 py-3 md:grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] md:items-center md:gap-3"
+              className="brut-rule first:border-t-0 grid grid-cols-1 gap-2 px-4 py-3 transition-colors hover:bg-[#F5F0E8] md:grid-cols-[1.6fr_1.2fr_0.7fr_0.7fr_1.1fr_0.6fr] md:items-center md:gap-3"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-[14px] font-semibold text-[#14110E]">
+                  <p className="truncate text-[14px] font-bold text-[#121212]">
                     {p.handle}
                   </p>
-                  <span className="rounded-full bg-[#EAE4D7] px-1.5 py-0.5 text-[10px] capitalize text-[#57503F]">
+                  <span className="rounded-[2px] border-2 border-[#121212]/25 px-1.5 py-0 text-[10px] font-bold tracking-[0.1em] text-[#5C544A] uppercase">
                     {p.platform}
                   </span>
                 </div>
                 {p.display_name && (
-                  <p className="truncate text-[12px] text-[#8C8377]">
+                  <p className="truncate text-[12px] text-[#5C544A]">
                     {p.display_name}
                   </p>
                 )}
@@ -373,7 +399,7 @@ export default function ProspectsClient({
               <div className="min-w-0 text-[13px] text-[#3F3830]">
                 <span className="truncate">{p.niche || '—'}</span>
                 {p.location && (
-                  <span className="text-[#8C8377]"> · {p.location}</span>
+                  <span className="text-[#5C544A]"> · {p.location}</span>
                 )}
               </div>
 
@@ -384,7 +410,7 @@ export default function ProspectsClient({
                     )
                   : '—'}
                 {engagementLabel(p.engagement_rate) && (
-                  <span className="text-[#8C8377]">
+                  <span className="text-[#5C544A]">
                     {' '}
                     · {engagementLabel(p.engagement_rate)}
                   </span>
@@ -392,11 +418,7 @@ export default function ProspectsClient({
               </div>
 
               <div>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                    TIER_STYLES[p.tier] || TIER_STYLES.unscored
-                  }`}
-                >
+                <span className={TIER_STYLES[p.tier] || TIER_STYLES.unscored}>
                   {p.tier === 'unscored' ? '—' : p.tier}
                   {p.total_score > 0 && (
                     <span className="opacity-70">{p.total_score}/25</span>
@@ -408,7 +430,7 @@ export default function ProspectsClient({
                 <select
                   value={p.stage}
                   onChange={(e) => changeStage(p, e.target.value)}
-                  className="h-8 w-full max-w-[140px] cursor-pointer rounded-[10px] border border-[#DFD7C6] bg-[#EFEBE1] px-2 text-[12px] capitalize text-[#14110E] outline-none focus:border-[#9C6F2E]"
+                  className="h-9 w-full max-w-[150px] cursor-pointer appearance-none rounded-[2px] border-2 border-[#121212] bg-white px-2 text-[12px] font-medium text-[#121212] capitalize outline-none focus:ring-0"
                 >
                   {STAGES.map((s) => (
                     <option key={s} value={s} className="capitalize">
@@ -418,17 +440,17 @@ export default function ProspectsClient({
                 </select>
               </div>
 
-              <div className="flex items-center justify-start gap-1 md:justify-end">
+              <div className="flex items-center justify-start gap-2 md:justify-end">
                 <button
                   onClick={() => openEdit(p)}
-                  className="cursor-pointer rounded-full px-2.5 py-1 text-[12px] font-medium text-[#9C6F2E] transition-colors hover:bg-[#9C6F2E]/[0.08] hover:text-[#7E5722]"
+                  className="cursor-pointer rounded-[2px] border-2 border-[#121212] bg-white px-2.5 py-1 text-[11px] font-bold tracking-[0.1em] text-[#121212] uppercase transition-colors hover:bg-[#121212] hover:text-white"
                 >
                   Score / edit
                 </button>
                 <button
                   onClick={() => remove(p)}
                   aria-label="Remove prospect"
-                  className="cursor-pointer rounded-full px-2 py-1 text-[12px] font-medium text-[#8C3A2B] transition-colors hover:bg-[#8C3A2B]/[0.06]"
+                  className="cursor-pointer rounded-[2px] border-2 border-[#B3101C] bg-white px-2 py-1 text-[11px] font-bold text-[#B3101C] transition-colors hover:bg-[#B3101C] hover:text-white"
                 >
                   ✕
                 </button>
@@ -441,14 +463,14 @@ export default function ProspectsClient({
 
       {/* Form drawer */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/30">
+        <div className="fixed inset-0 z-50 flex justify-end bg-[#121212]/40">
           <div
             className="absolute inset-0"
             onClick={() => !saving && setShowForm(false)}
           />
           <form
             onSubmit={submitForm}
-            className="relative h-full w-full max-w-[480px] overflow-y-auto border-l border-[#E2DBCC] bg-[#F4F1EA] p-6"
+            className="relative h-full w-full max-w-[480px] overflow-y-auto border-l-2 border-[#121212] bg-[#F5F0E8] p-6"
           >
             <StatueWatermark
               tone="dark"
@@ -456,14 +478,18 @@ export default function ProspectsClient({
               opacity={0.05}
               className="pointer-events-none absolute -top-2 right-2 z-0"
             />
-            <div className="relative z-10 mb-4 flex items-center justify-between">
-              <h2 className="suite-display text-[19px] text-[#14110E]">
+            <div className="relative z-10 mb-5 flex items-center justify-between">
+              <h2
+                className="text-[28px] leading-[0.95] tracking-tight uppercase"
+                style={serif}
+              >
                 {editing ? 'Score / edit prospect' : 'Log a creator'}
+                <span className="text-[#B3101C]">.</span>
               </h2>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="cursor-pointer rounded-full px-2 py-1 text-[18px] leading-none text-[#8C8377] hover:bg-[#14110E]/[0.04] hover:text-[#14110E]"
+                className="cursor-pointer rounded-[2px] border-2 border-[#121212] bg-white px-2 py-0.5 text-[18px] leading-none text-[#121212] transition-colors hover:bg-[#121212] hover:text-white"
                 aria-label="Close"
               >
                 ×
@@ -592,16 +618,10 @@ export default function ProspectsClient({
               </div>
 
               {/* Scorecard */}
-              <div className="suite-panel mt-1 p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-[#14110E]">
-                    Scorecard
-                  </p>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${
-                      TIER_STYLES[preview.tier]
-                    }`}
-                  >
+              <div className="brut-plate brut-shadow mt-2 p-4">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="brut-label">Scorecard</p>
+                  <span className={TIER_STYLES[preview.tier]}>
                     {preview.tier === 'unscored'
                       ? `${preview.total}/25 · finish scoring`
                       : `Tier ${preview.tier} · ${preview.total}/25`}
@@ -613,10 +633,10 @@ export default function ProspectsClient({
                     return (
                       <div
                         key={d.field}
-                        className="rounded-[10px] bg-[#F4F1EA] p-2.5 ring-1 ring-[#E2DBCC]/60"
+                        className="rounded-[2px] border-2 border-[#121212]/15 bg-[#F5F0E8] p-3"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[13px] font-medium text-[#14110E]">
+                          <span className="text-[13px] font-bold text-[#121212]">
                             {d.label}
                           </span>
                           <div className="flex gap-1">
@@ -627,10 +647,10 @@ export default function ProspectsClient({
                                 onClick={() =>
                                   setForm({ ...form, [d.field]: cur === n ? 0 : n })
                                 }
-                                className={`h-7 w-7 cursor-pointer rounded-full text-[12px] font-semibold transition-colors ${
+                                className={`h-7 w-7 cursor-pointer rounded-[2px] border-2 text-[12px] font-bold transition-colors ${
                                   cur >= n && cur > 0
-                                    ? 'bg-[#14110E] text-[#F4F1EA]'
-                                    : 'bg-[#FBF9F4] text-[#8C8377] ring-1 ring-[#DFD7C6] hover:ring-[#9C6F2E]'
+                                    ? 'border-[#121212] bg-[#121212] text-white'
+                                    : 'border-[#121212]/25 bg-white text-[#5C544A] hover:border-[#121212] hover:text-[#121212]'
                                 }`}
                                 aria-label={`${d.label} ${n}`}
                               >
@@ -639,14 +659,14 @@ export default function ProspectsClient({
                             ))}
                           </div>
                         </div>
-                        <p className="mt-1.5 text-[11px] leading-snug text-[#8C8377]">
+                        <p className="mt-1.5 text-[11px] leading-snug text-[#5C544A]">
                           {d.hint}
                         </p>
                       </div>
                     );
                   })}
                 </div>
-                <p className="mt-2 text-[11px] text-[#8C8377]">
+                <p className="mt-3 text-[11px] leading-relaxed text-[#5C544A]">
                   Click a number to set 1–5; click it again to clear. All five must
                   be set to earn a tier.
                 </p>
@@ -657,23 +677,23 @@ export default function ProspectsClient({
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={3}
-                  className={`${inputCls} resize-none`}
+                  className={`${inputCls} h-auto resize-none py-3`}
                 />
               </Field>
             </div>
 
-            <div className="mt-5 flex gap-2">
+            <div className="mt-6 flex gap-3">
               <button
                 type="submit"
                 disabled={saving}
-                className="suite-btn suite-btn-primary flex-1"
+                className="brut-btn flex-1"
               >
                 {saving ? 'Saving…' : editing ? 'Save changes' : 'Log prospect'}
               </button>
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="suite-btn suite-btn-ghost"
+                className="brut-btn-paper w-auto px-6"
               >
                 Cancel
               </button>
@@ -685,7 +705,7 @@ export default function ProspectsClient({
   );
 }
 
-const inputCls = 'suite-input';
+const inputCls = 'brut-input';
 
 function Field({
   label,
@@ -696,9 +716,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[12px] font-medium text-[#5C544A]">
-        {label}
-      </span>
+      <span className="brut-label mb-2 block text-[#5C544A]">{label}</span>
       {children}
     </label>
   );

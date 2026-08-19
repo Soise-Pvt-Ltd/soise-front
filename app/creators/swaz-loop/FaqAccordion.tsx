@@ -19,25 +19,30 @@ function AccordionGroup({ items, idPrefix }: { items: FaqItem[]; idPrefix: strin
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <div className="divide-y divide-[#E2DBCC] rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4]">
+    /* Plate the container, rule the rows — an accordion of shadowed cards is
+       noise at this length. */
+    <div className="brut-plate">
       {items.map((item, i) => {
         const isOpen = openIndex === i;
         const panelId = `${idPrefix}-panel-${i}`;
         const buttonId = `${idPrefix}-button-${i}`;
         return (
-          <div key={i}>
+          <div
+            key={i}
+            className="border-b-2 border-[#121212] last:border-b-0"
+          >
             <button
               type="button"
               id={buttonId}
               onClick={() => setOpenIndex(isOpen ? null : i)}
-              className="flex w-full items-center justify-between gap-x-4 px-5 py-4 text-left"
+              className="flex w-full items-center justify-between gap-x-4 px-5 py-4 text-left transition-colors hover:bg-[#F5F0E8]"
               aria-expanded={isOpen}
               aria-controls={panelId}
             >
-              <span className="text-[15px] font-medium text-[#14110E]">
+              <span className="text-[15px] font-bold text-[#121212]">
                 {item.q}
               </span>
-              <span className="shrink-0 text-[#8C8377]">
+              <span className="shrink-0 text-[#B3101C]">
                 {isOpen ? <MinusIcon /> : <PlusIcon />}
               </span>
             </button>
@@ -78,7 +83,7 @@ export default function FaqAccordion({ categories }: { categories: FaqCategory[]
         >
           <h3
             id={`${category.id}-heading`}
-            className="suite-eyebrow mb-[12px]"
+            className="brut-label mb-[12px] text-[#B3101C]"
           >
             {category.title}
           </h3>

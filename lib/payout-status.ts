@@ -16,6 +16,11 @@
  *
  * Anything unrecognised now renders neutral rather than amber, so a future
  * status added backend-first degrades to "unknown", not to a false "pending".
+ *
+ * The badge styling is Pressed Ink: state is carried by ink weight and the one
+ * crimson accent, not by a traffic-light hue palette. PAID is the ink-filled
+ * plate (the settled state), FAILED is the crimson one (the only thing that
+ * needs a creator's attention), everything else is plain paper.
  */
 
 export type PayoutStatus =
@@ -40,31 +45,31 @@ const VIEWS: Record<PayoutStatus, PayoutStatusView> = {
   requested: {
     label: 'Requested',
     meaning: 'Received. Waiting for our team to send it.',
-    className: 'bg-[#EAE4D7] text-[#57503F]',
+    className: 'border-2 border-[#121212] bg-white text-[#121212]',
     inFlight: true,
   },
   processing: {
     label: 'Processing',
     meaning: 'The transfer is on its way to your bank.',
-    className: 'bg-[#E3E6EC] text-[#4A5568]',
+    className: 'border-2 border-[#121212] bg-white text-[#121212]',
     inFlight: true,
   },
   paid: {
     label: 'Paid',
     meaning: 'Sent to your bank account.',
-    className: 'bg-[#E4EDE3] text-[#3D6B4A]',
+    className: 'border-2 border-[#121212] bg-[#121212] text-white',
     inFlight: false,
   },
   failed: {
     label: 'Failed',
     meaning: "The transfer didn't go through. The amount is back in your balance.",
-    className: 'bg-[#F2E1DB] text-[#8C3A2B]',
+    className: 'border-2 border-[#B3101C] bg-white text-[#B3101C]',
     inFlight: false,
   },
   cancelled: {
     label: 'Cancelled',
     meaning: 'This request was cancelled. The amount is back in your balance.',
-    className: 'bg-[#EAE4D7] text-[#57503F]',
+    className: 'border-2 border-[#121212] bg-white text-[#5C544A]',
     inFlight: false,
   },
 };
@@ -72,7 +77,7 @@ const VIEWS: Record<PayoutStatus, PayoutStatusView> = {
 const UNKNOWN: PayoutStatusView = {
   label: 'Unknown',
   meaning: 'We could not read the state of this payout. Contact support.',
-  className: 'bg-[#EAE4D7] text-[#57503F]',
+  className: 'border-2 border-[#121212] bg-white text-[#5C544A]',
   inFlight: false,
 };
 

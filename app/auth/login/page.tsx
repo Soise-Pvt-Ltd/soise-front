@@ -7,27 +7,30 @@ import Link from 'next/link';
 import { Toaster } from 'sonner';
 import { login } from './actions';
 import { googleAuth } from '../google/actions';
-import { motion } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
+
+/**
+ * PRESSED INK — the auth screens run through the same letterpress as
+ * /contact and checkout (see the brut- tokens in globals.css). These pages
+ * render outside the global Nav, so each carries its own masthead bar: a logo
+ * plate back to the shop on the left, an escape hatch on the right.
+ *
+ * Entrance is the CSS-only .brut-rise stagger rather than Framer Motion — a
+ * shopper bounced here by the middleware gets painted content, not a
+ * hydration pause.
+ */
+
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
 
 function Divider() {
   return (
-    <div className="flex w-full items-center">
-      <div className="h-px flex-grow bg-[#AEAEB2]"></div>
-      <span className="px-3 text-[13px] text-[#8E8E93]">or</span>
-      <div className="h-px flex-grow bg-[#AEAEB2]"></div>
+    <div className="flex w-full items-center gap-x-3">
+      <span className="brut-rule flex-1 opacity-20"></span>
+      <span className="brut-label text-[#5C544A]">or</span>
+      <span className="brut-rule flex-1 opacity-20"></span>
     </div>
   );
 }
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 20 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
-  }),
-};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -92,140 +95,136 @@ export default function LoginPage() {
   };
 
   return (
-    <>
+    <main className="min-h-screen bg-[#F5F0E8] text-[#121212]">
       <Toaster position="top-center" />
-      <div className="mx-auto px-[16px] py-[100px] md:max-w-xl">
-        <motion.div
-          className="mb-2 cursor-pointer"
-          onClick={() => router.push('/')}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+
+      {/* Masthead bar — these pages render without the site Nav. */}
+      <div className="mx-auto flex max-w-[440px] items-center justify-between px-5 pt-7">
+        <Link
+          href="/"
+          aria-label="Back to shop"
+          className="brut-plate brut-press flex h-[48px] w-[48px] items-center justify-center bg-white"
         >
-          <Image src="/logo.png" alt="Soise Logo" width={100} height={58} />
-        </motion.div>
-        <div className="auth">
-          <form onSubmit={handleLogin}>
-            <motion.div
-              className="gap-y-[16px] pb-[40px]"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <div className="text-[18px]">Welcome Back</div>
-              <div className="text-[14px] text-[#8E8E93]">
-                Please enter your details.
-              </div>
-            </motion.div>
-            <div>
-              <motion.div
-                className="pt-[40px]"
-                custom={0}
-                variants={staggerItem}
-                initial="hidden"
-                animate="show"
-              >
-                <motion.button
-                  type="button"
-                  className="btn_black flex items-center justify-center gap-x-[4px]"
-                  onClick={handleGoogleLogin}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <img src="/google.png" alt="google" className="size-[16px]" />
-                  Continue with Google
-                </motion.button>
-              </motion.div>
-              <motion.div
-                className="py-[16px]"
-                custom={1}
-                variants={staggerItem}
-                initial="hidden"
-                animate="show"
-              >
-                <Divider />
-              </motion.div>
-              <div className="space-y-4">
-                <motion.div
-                  custom={2}
-                  variants={staggerItem}
-                  initial="hidden"
-                  animate="show"
-                >
-                  <input
-                    type="email"
-                    className="solid"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </motion.div>
-                <motion.div
-                  custom={3}
-                  variants={staggerItem}
-                  initial="hidden"
-                  animate="show"
-                >
-                  <input
-                    type="password"
-                    className="solid"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </motion.div>
-              </div>
-              <motion.div
-                className="mt-3 text-right text-sm"
-                custom={4}
-                variants={staggerItem}
-                initial="hidden"
-                animate="show"
-              >
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-[#8E8E93] underline hover:text-black"
-                >
-                  Forgot password?
-                </Link>
-              </motion.div>
-              <motion.div
-                custom={5}
-                variants={staggerItem}
-                initial="hidden"
-                animate="show"
-              >
-                <motion.button
-                  type="submit"
-                  className="btn_black !my-[36px]"
-                  disabled={isLoading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
-                </motion.button>
-              </motion.div>
-              <motion.div
-                className="text-center text-sm text-[#8E8E93]"
-                custom={5}
-                variants={staggerItem}
-                initial="hidden"
-                animate="show"
-              >
-                Don't have an account?{' '}
-                <Link
-                  href="/auth/register"
-                  className="font-medium text-black underline"
-                >
-                  Sign up
-                </Link>
-              </motion.div>
-            </div>
-          </form>
-        </div>
+          <Image
+            src="/main-logo.png"
+            alt="Soise"
+            width={34}
+            height={34}
+            className="h-[30px] w-[30px] object-contain"
+          />
+        </Link>
+        <Link
+          href="/"
+          className="brut-plate brut-press px-4 py-2.5 text-[11px] font-bold tracking-[0.14em] uppercase"
+        >
+          Back to shop
+        </Link>
       </div>
-    </>
+
+      <div className="mx-auto max-w-[440px] px-5 pt-12 pb-24">
+        <header className="brut-rise">
+          <p className="brut-label text-[#B3101C]">Sign in</p>
+          <h1
+            className="mt-4 text-[44px] leading-[0.95] tracking-tight uppercase sm:text-[64px]"
+            style={serif}
+          >
+            Welcome Back<span className="text-[#B3101C]">.</span>
+          </h1>
+          <p className="mt-5 text-[15px] leading-relaxed text-[#3F3830]">
+            Please enter your details.
+          </p>
+        </header>
+
+        <form onSubmit={handleLogin} className="mt-10">
+          <div className="brut-rise" style={{ animationDelay: '0.08s' }}>
+            <button
+              type="button"
+              className="brut-btn-paper brut-press gap-x-[8px]"
+              onClick={handleGoogleLogin}
+            >
+              <img src="/google.png" alt="google" className="size-[16px]" />
+              Continue with Google
+            </button>
+          </div>
+
+          <div
+            className="brut-rise py-[24px]"
+            style={{ animationDelay: '0.16s' }}
+          >
+            <Divider />
+          </div>
+
+          <div className="space-y-[16px]">
+            <div className="brut-rise" style={{ animationDelay: '0.24s' }}>
+              <label htmlFor="email" className="brut-label mb-[8px] block">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                className="brut-input"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="brut-rise" style={{ animationDelay: '0.32s' }}>
+              <label htmlFor="password" className="brut-label mb-[8px] block">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                className="brut-input"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div
+            className="brut-rise mt-4 text-right text-[13px]"
+            style={{ animationDelay: '0.4s' }}
+          >
+            <Link
+              href="/auth/forgot-password"
+              className="font-bold text-[#B3101C] underline underline-offset-2"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
+          {/* The one thing we want pressed gets the ink plate. */}
+          <div
+            className="brut-rise mt-[32px]"
+            style={{ animationDelay: '0.48s' }}
+          >
+            <button
+              type="submit"
+              className="brut-btn brut-press"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </div>
+
+          <div
+            className="brut-rise mt-[28px] text-center text-[13px] text-[#5C544A]"
+            style={{ animationDelay: '0.56s' }}
+          >
+            Don't have an account?{' '}
+            <Link
+              href="/auth/register"
+              className="font-bold text-[#B3101C] underline underline-offset-2"
+            >
+              Sign up
+            </Link>
+          </div>
+        </form>
+      </div>
+    </main>
   );
 }

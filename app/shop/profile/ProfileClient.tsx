@@ -25,7 +25,12 @@ export interface ProfileUser {
   memberSince: string | null;
 }
 
-const LUXE = { fontFamily: 'var(--font-luxe)' };
+/**
+ * PRESSED INK — the private wardrobe, pressed to match the checkout it sits
+ * beside (see the brut- tokens in globals.css). Bone paper, plated garments
+ * hanging from an ink rod, Instrument Serif display type, one crimson accent.
+ */
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function formatAcquired(iso: string | null): string {
@@ -45,20 +50,20 @@ function Hanger() {
       viewBox="0 0 58 46"
       fill="none"
       aria-hidden="true"
-      className="text-[#1c1c1c]"
+      className="text-[#121212]"
     >
       {/* hook curling over the rod */}
       <path
         d="M29 17 C29 11 33 11 33 7 A4 4 0 1 0 25 7"
         stroke="currentColor"
-        strokeWidth="1.1"
+        strokeWidth="1.6"
         strokeLinecap="round"
       />
       {/* triangular shoulders + bottom bar */}
       <path
         d="M29 17 L7 35 A1.6 1.6 0 0 0 8 38 H50 A1.6 1.6 0 0 0 51 35 L29 17 Z"
         stroke="currentColor"
-        strokeWidth="1.1"
+        strokeWidth="1.6"
         strokeLinejoin="round"
         fill="none"
       />
@@ -79,7 +84,7 @@ function Chevron({ dir }: { dir: 'left' | 'right' }) {
       <path
         d="M5.25 2.91675L9.33333 7.00008L5.25 11.0834"
         stroke="currentColor"
-        strokeWidth="1.3"
+        strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -99,10 +104,10 @@ function GarmentImage({ piece }: { piece: WardrobePiece }) {
       />
     );
   }
-  // Delisted / image-less piece: a quiet ivory plate with a serif glyph.
+  // Delisted / image-less piece: a quiet bone plate with a serif glyph.
   return (
-    <div className="flex h-full w-full items-center justify-center bg-[#EFEAE2]">
-      <span className="text-[40px] text-[#C9BEA9]" style={LUXE}>
+    <div className="flex h-full w-full items-center justify-center bg-[#F5F0E8]">
+      <span className="text-[40px] text-[#5C544A]" style={serif}>
         S
       </span>
     </div>
@@ -120,9 +125,11 @@ function WardrobeCard({ piece, index }: { piece: WardrobePiece; index: number })
         <Hanger />
       </div>
 
-      {/* The garment, hanging. Sways gently from the hook on hover. */}
+      {/* The garment, hanging. Sways gently from the hook on hover. Not
+          `.brut-plate` — that class hard-sets a white fill, and the garment
+          sits on bone the way it does on the listing. */}
       <motion.div
-        className="relative aspect-[3/4] w-full overflow-hidden rounded-[3px] bg-[#EFEAE2] shadow-[0_18px_40px_-26px_rgba(0,0,0,0.55)]"
+        className="brut-shadow relative aspect-[3/4] w-full overflow-hidden rounded-[2px] border-2 border-[#121212] bg-[#F5F0E8]"
         style={{ transformOrigin: '50% 0%' }}
         whileHover={{ rotate: 1.4 }}
         transition={{ type: 'spring', stiffness: 120, damping: 8 }}
@@ -130,7 +137,7 @@ function WardrobeCard({ piece, index }: { piece: WardrobePiece; index: number })
         <GarmentImage piece={piece} />
         {piece.timesPurchased > 1 && (
           <span
-            className="absolute top-[10px] right-[10px] rounded-full bg-white/85 px-[8px] py-[2px] text-[10px] font-medium tracking-[0.12em] text-[#1c1c1c] backdrop-blur-sm"
+            className="absolute top-[8px] right-[8px] rounded-[2px] border-2 border-[#121212] bg-white px-[6px] py-[1px] text-[10px] font-bold tracking-[0.12em] text-[#121212]"
             title={`Collected ${piece.timesPurchased} times`}
           >
             ×{piece.timesPurchased}
@@ -140,16 +147,19 @@ function WardrobeCard({ piece, index }: { piece: WardrobePiece; index: number })
 
       {/* Editorial caption */}
       <div className="mt-[18px] text-center">
-        <div className="truncate text-[16px] leading-snug" style={LUXE}>
+        <div
+          className="truncate text-[17px] leading-snug tracking-tight uppercase"
+          style={serif}
+        >
           {piece.name ?? 'A Soise Piece'}
         </div>
         {meta ? (
-          <div className="mt-[4px] truncate text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
+          <div className="mt-[4px] truncate text-[11px] font-bold tracking-[0.14em] text-[#5C544A] uppercase">
             {meta}
           </div>
         ) : null}
         {acquired ? (
-          <div className="mt-[6px] text-[11px] tracking-[0.16em] text-[#B8945F] uppercase">
+          <div className="mt-[6px] text-[11px] font-bold tracking-[0.16em] text-[#5C544A] uppercase">
             Acquired {acquired}
           </div>
         ) : null}
@@ -169,7 +179,7 @@ function WardrobeCard({ piece, index }: { piece: WardrobePiece; index: number })
         <Link
           href={`/shop/product-listing/${piece.slug}`}
           aria-label={`View ${piece.name ?? 'this piece'}`}
-          className="group block rounded-[6px] focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-4 focus-visible:outline-none"
+          className="group block rounded-[2px] focus-visible:ring-2 focus-visible:ring-[#B3101C] focus-visible:ring-offset-4 focus-visible:outline-none"
         >
           {inner}
         </Link>
@@ -231,29 +241,24 @@ export default function ProfileClient({
   };
 
   return (
-    <main className="text-[#121212]">
-      {/* ——— Maison header ——— */}
-      <section className="px-[24px] pt-[8px] pb-[44px] md:px-[40px]">
-        <div className="flex items-center gap-[12px]">
-          <span className="h-px w-[34px] bg-[#1c1c1c]" />
-          <span className="text-[11px] tracking-[0.34em] text-[#8E8E93] uppercase">
-            Soise Maison · Private Wardrobe
-          </span>
-        </div>
+    // Bone ground runs behind the footer too, so the page has one paper.
+    <main className="bg-[#F5F0E8] text-[#121212]">
+      {/* ——— Masthead ——— */}
+      <section className="brut-rise px-[24px] pt-[24px] pb-[44px] md:px-[40px]">
+        <p className="brut-label text-[#B3101C]">
+          Soise Maison · Private Wardrobe
+        </p>
 
-        <div className="mt-[26px] flex items-end justify-between gap-[20px]">
+        <div className="mt-[18px] flex items-end justify-between gap-[20px]">
           <div className="min-w-0">
             <h1
-              className="text-[44px] leading-[0.98] sm:text-[60px] md:text-[76px]"
-              style={LUXE}
+              className="text-[48px] leading-[0.95] tracking-tight uppercase sm:text-[64px] md:text-[80px]"
+              style={serif}
             >
               {firstName}
-              <span className="text-[#B8945F]">.</span>
+              <span className="text-[#B3101C]">.</span>
             </h1>
-            <p
-              className="mt-[8px] text-[18px] text-[#6b6b6b] italic sm:text-[22px]"
-              style={LUXE}
-            >
+            <p className="mt-[10px] max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
               Your collection, archived.
             </p>
           </div>
@@ -263,20 +268,20 @@ export default function ProfileClient({
             <img
               src={user.avatar}
               alt=""
-              className="hidden h-[84px] w-[84px] shrink-0 rounded-full object-cover ring-1 ring-[#121212]/10 sm:block"
+              className="brut-plate hidden h-[84px] w-[84px] shrink-0 object-cover sm:block"
             />
           ) : null}
         </div>
 
         {/* Member ledger */}
-        <div className="mt-[30px] flex flex-wrap items-center gap-x-[28px] gap-y-[10px] border-t border-[#ECECEC] pt-[18px] text-[11px] tracking-[0.18em] text-[#8E8E93] uppercase">
+        <div className="brut-rule mt-[30px] flex flex-wrap items-center gap-x-[28px] gap-y-[10px] pt-[16px] text-[11px] font-bold tracking-[0.16em] text-[#5C544A] uppercase">
           {memberYear ? <span>Member since {memberYear}</span> : null}
           <span>
             {pieces.length} {pieces.length === 1 ? 'Piece' : 'Pieces'} Collected
           </span>
           <Link
             href="/shop/order-history"
-            className="text-[#121212] underline-offset-4 transition-opacity hover:underline focus-visible:underline focus-visible:outline-none"
+            className="text-[#B3101C] underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-none"
           >
             Order history
           </Link>
@@ -285,29 +290,42 @@ export default function ProfileClient({
 
       {/* ——— The wardrobe ——— */}
       {pieces.length === 0 ? (
-        <section className="mx-[24px] mb-[60px] rounded-[6px] bg-[#F7F4EF] px-[24px] py-[80px] text-center md:mx-[40px]">
-          <h2 className="text-[30px] sm:text-[40px]" style={LUXE}>
-            Your wardrobe awaits.
+        <section
+          className="brut-rise brut-plate brut-shadow mx-[24px] mb-[60px] px-[24px] py-[72px] text-center md:mx-[40px]"
+          style={{ animationDelay: '0.08s' }}
+        >
+          <h2
+            className="text-[32px] leading-[0.95] tracking-tight uppercase sm:text-[44px]"
+            style={serif}
+          >
+            Your wardrobe awaits<span className="text-[#B3101C]">.</span>
           </h2>
-          <p className="mx-auto mt-[14px] max-w-[440px] text-[14px] leading-relaxed text-[#6b6b6b]">
+          <p className="mx-auto mt-[14px] max-w-[440px] text-[14px] leading-relaxed text-[#3F3830]">
             Every Soise piece you collect is archived here — a private record of
             your taste, kept beautifully. Begin with your first.
           </p>
+          {/* The heaviest plate on the page: the one thing worth pressing. */}
           <Link
             href="/shop/product-listing"
-            className="mt-[28px] inline-flex h-[50px] items-center justify-center rounded-[10px] bg-[#121212] px-[34px] text-[12px] font-bold tracking-[0.14em] text-white uppercase transition-all duration-300 hover:bg-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.98]"
+            className="brut-press mt-[28px] inline-flex h-[50px] items-center justify-center rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[34px] text-[12px] font-bold tracking-[0.14em] text-white uppercase"
           >
             Begin your collection
           </Link>
         </section>
       ) : (
-        <section className="bg-[#F7F4EF] py-[48px]">
+        <section
+          className="brut-rise brut-rule border-b-2 border-[#121212] py-[48px]"
+          style={{ animationDelay: '0.08s' }}
+        >
           <div className="mb-[26px] flex items-center justify-between px-[24px] md:px-[40px]">
             <div className="flex items-baseline gap-[14px]">
-              <h2 className="text-[24px] sm:text-[30px]" style={LUXE}>
+              <h2
+                className="text-[26px] leading-none tracking-tight uppercase sm:text-[32px]"
+                style={serif}
+              >
                 The Rail
               </h2>
-              <span className="text-[11px] tracking-[0.22em] text-[#8E8E93] uppercase">
+              <span className="text-[11px] font-bold tracking-[0.18em] text-[#5C544A] uppercase">
                 {pieces.length} {pieces.length === 1 ? 'piece' : 'pieces'}
               </span>
             </div>
@@ -319,7 +337,7 @@ export default function ProfileClient({
                 onClick={() => scrollBy('left')}
                 disabled={!canPrev}
                 aria-label="Scroll wardrobe left"
-                className="grid h-[42px] w-[42px] place-items-center rounded-full border border-[#1c1c1c]/15 text-[#1c1c1c] transition-all duration-200 hover:border-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-25 focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="brut-plate brut-press grid h-[42px] w-[42px] cursor-pointer place-items-center text-[#121212] disabled:cursor-not-allowed disabled:opacity-25"
               >
                 <Chevron dir="left" />
               </button>
@@ -328,7 +346,7 @@ export default function ProfileClient({
                 onClick={() => scrollBy('right')}
                 disabled={!canNext}
                 aria-label="Scroll wardrobe right"
-                className="grid h-[42px] w-[42px] place-items-center rounded-full border border-[#1c1c1c]/15 text-[#1c1c1c] transition-all duration-200 hover:border-[#1c1c1c] disabled:cursor-not-allowed disabled:opacity-25 focus-visible:ring-2 focus-visible:ring-[#121212] focus-visible:ring-offset-2 focus-visible:outline-none"
+                className="brut-plate brut-press grid h-[42px] w-[42px] cursor-pointer place-items-center text-[#121212] disabled:cursor-not-allowed disabled:opacity-25"
               >
                 <Chevron dir="right" />
               </button>
@@ -348,7 +366,7 @@ export default function ProfileClient({
               className="flex w-max gap-[24px] px-[24px] pt-[6px] pb-[40px] sm:gap-[34px] md:px-[40px]"
               style={{
                 backgroundImage:
-                  'linear-gradient(to right, transparent, rgba(28,28,28,0.28) 6%, rgba(28,28,28,0.28) 94%, transparent)',
+                  'linear-gradient(to right, transparent, #121212 6%, #121212 94%, transparent)',
                 backgroundRepeat: 'no-repeat',
                 backgroundSize: '100% 2px',
                 backgroundPosition: '0 18px',
@@ -360,7 +378,7 @@ export default function ProfileClient({
             </div>
           </div>
 
-          <p className="mt-[14px] px-[24px] text-[11px] tracking-[0.14em] text-[#A79B86] uppercase md:px-[40px]">
+          <p className="mt-[14px] px-[24px] text-[11px] font-bold tracking-[0.14em] text-[#5C544A] uppercase md:px-[40px]">
             Drag or swipe to browse your rail
           </p>
         </section>
@@ -369,15 +387,15 @@ export default function ProfileClient({
       {/* ——— Atelier closing note ——— */}
       <section className="px-[24px] py-[60px] text-center md:px-[40px]">
         <p
-          className="mx-auto max-w-[560px] text-[22px] leading-snug text-[#1c1c1c] sm:text-[28px]"
-          style={LUXE}
+          className="mx-auto max-w-[560px] text-[24px] leading-snug tracking-tight text-[#121212] sm:text-[30px]"
+          style={serif}
         >
           “Style is a way to say who you are without having to speak.”
         </p>
         <div className="mt-[28px]">
           <Link
             href="/shop/product-listing"
-            className="inline-flex h-[50px] items-center justify-center rounded-[10px] border border-[#121212] px-[34px] text-[12px] font-bold tracking-[0.14em] text-[#121212] uppercase transition-all duration-300 hover:bg-[#121212] hover:text-white active:scale-[0.98]"
+            className="brut-press inline-flex h-[50px] items-center justify-center rounded-[2px] border-2 border-[#121212] bg-white px-[34px] text-[12px] font-bold tracking-[0.14em] text-[#121212] uppercase"
           >
             Continue the collection
           </Link>

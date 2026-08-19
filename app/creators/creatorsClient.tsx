@@ -9,7 +9,30 @@ import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
 import StatueWatermark from '@/components/brand/StatueWatermark';
 
-const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+/**
+ * PRESSED INK — the creator pitch, letterpressed. This page used to be the one
+ * dark gold-on-charcoal surface left in the app, a register of its own that
+ * predated both design systems. It now speaks the same language as /contact and
+ * the checkout: bone paper, 2px ink rules, Instrument Serif, one crimson accent.
+ *
+ * The watermark flipped to `tone="dark"` because the ground went from ink to
+ * paper — a light statue on bone is invisible.
+ */
+
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
+/** Index number + rule — the editorial section head, pressed harder. */
+function IndexHead({ n, title }: { n: string; title: string }) {
+  return (
+    <div className="flex items-baseline gap-x-3">
+      <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
+        {n}
+      </span>
+      <span className="brut-label">{title}</span>
+      <span className="brut-rule mt-auto mb-[6px] flex-1 opacity-20" />
+    </div>
+  );
+}
 
 const BENEFITS = [
   {
@@ -76,28 +99,32 @@ export default function CreatorsApplicationClient() {
   return (
     <>
       <Toaster position="top-center" richColors />
-      <main className="relative min-h-screen overflow-hidden bg-[#0E0E10] text-[#F4F1EA]">
+      <main className="relative min-h-screen overflow-hidden bg-[#F5F0E8] text-[#121212]">
         <StatueWatermark
-          tone="light"
+          tone="dark"
           width={460}
-          opacity={0.06}
+          opacity={0.05}
           className="fixed top-1/2 left-[-110px] z-0 hidden -translate-y-1/2 lg:block"
         />
 
-        {/* Top bar */}
-        <div className="relative z-10 mx-auto flex max-w-[980px] items-center justify-between px-6 pt-8">
-          <Link href="/" aria-label="Back to shop">
+        {/* Masthead bar */}
+        <div className="relative z-10 mx-auto flex max-w-[880px] items-center justify-between px-5 pt-7">
+          <Link
+            href="/"
+            aria-label="Back to shop"
+            className="brut-plate brut-press flex h-[48px] w-[48px] items-center justify-center bg-white"
+          >
             <Image
               src="/main-logo.png"
               alt="Soise"
-              width={44}
-              height={44}
-              className="h-[40px] w-[40px] object-contain"
+              width={34}
+              height={34}
+              className="h-[30px] w-[30px] object-contain"
             />
           </Link>
           <Link
             href="/"
-            className="rounded-full border border-[#3A3A3D] px-4 py-2 text-[12px] font-medium tracking-wide text-[#D8D3C7] uppercase transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA]"
+            className="brut-plate brut-press px-4 py-2.5 text-[11px] font-bold tracking-[0.14em] uppercase"
           >
             Back to shop
           </Link>
@@ -105,83 +132,79 @@ export default function CreatorsApplicationClient() {
 
         {submissionSuccess ? (
           /* ── Success state ─────────────────────────────────── */
-          <div className="relative z-10 mx-auto flex max-w-[560px] flex-col items-center px-6 py-28 text-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#C4AA6E] text-[22px] text-[#C4AA6E]">
-              ✓
-            </span>
-            <p className="mt-8 text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
-              Application received
-            </p>
+          <div className="relative z-10 mx-auto max-w-[880px] px-5 pt-20 pb-24">
+            <span className="brut-rise brut-stamp">Application received</span>
             <h1
-              className="mt-4 text-[32px] leading-[1.1] tracking-tight sm:text-[42px]"
-              style={serif}
+              className="brut-rise mt-6 text-[44px] leading-[0.95] tracking-tight uppercase sm:text-[64px]"
+              style={{ ...serif, animationDelay: '0.08s' }}
             >
-              You’re in the room. Now let’s see if you’re in the cohort.
+              You’re in the room. Now let’s see if you’re in the cohort
+              <span className="text-[#B3101C]">.</span>
             </h1>
-            <p className="mt-5 max-w-[420px] text-[15px] leading-relaxed text-[#B7B2A6]">
+            <p
+              className="brut-rise mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]"
+              style={{ animationDelay: '0.16s' }}
+            >
               Our team reviews every application within 48 hours. The moment
               you’re approved, your code, your rate, and your first drop are
               waiting.
             </p>
-            <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
+            <div
+              className="brut-rise mt-10 flex flex-col gap-3 sm:flex-row"
+              style={{ animationDelay: '0.24s' }}
+            >
               <button
                 onClick={() => router.push('/')}
-                className="w-full rounded-full bg-[#F4F1EA] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] sm:w-auto"
+                className="brut-btn brut-press sm:w-auto sm:px-[40px]"
               >
                 Shop while you wait
               </button>
               <Link
                 href="/creators/swaz-loop"
-                className="w-full rounded-full border border-[#3A3A3D] px-8 py-3.5 text-[14px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] sm:w-auto"
+                className="brut-btn-paper brut-press sm:w-auto sm:px-[40px]"
               >
                 See how earning works
               </Link>
             </div>
           </div>
         ) : (
-          <>
+          <div className="relative z-10 mx-auto max-w-[880px] px-5 pt-14 pb-24">
             {/* ── Hero ──────────────────────────────────────────── */}
-            <section className="relative z-10">
-              <div
-                className="pointer-events-none absolute inset-0 opacity-60"
-                style={{
-                  background:
-                    'radial-gradient(120% 80% at 50% -10%, rgba(196,170,110,0.16), transparent 60%)',
-                }}
-              />
-              <div className="relative mx-auto max-w-[820px] px-6 pt-14 pb-16 text-center">
-                <p className="text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
-                  The Swaz Creator Program
-                </p>
-                <h1
-                  className="mx-auto mt-6 max-w-[680px] text-[36px] leading-[1.08] tracking-tight sm:text-[54px]"
-                  style={serif}
-                >
-                  Your fit already moves people. Get paid for it.
-                </h1>
-                <p className="mx-auto mt-6 max-w-[520px] text-[15px] leading-relaxed text-[#B7B2A6] sm:text-[17px]">
-                  Get your own SOISE code, real cash commission on every sale,
-                  and first look at every drop — before it’s public. Apply
-                  below; our team reviews every application within 48 hours.
-                </p>
-                <div className="mt-9">
-                  <a
-                    href="#apply"
-                    className="inline-block w-full rounded-full bg-[#C4AA6E] px-9 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] sm:w-auto"
-                  >
-                    Apply to become a creator
-                  </a>
-                </div>
-              </div>
-            </section>
+            <header className="brut-rise">
+              <p className="brut-label text-[#B3101C]">
+                The Swaz Creator Program
+              </p>
+              <h1
+                className="mt-4 text-[52px] leading-[0.95] tracking-tight uppercase sm:text-[80px]"
+                style={serif}
+              >
+                Your fit already moves people. Get paid for it
+                <span className="text-[#B3101C]">.</span>
+              </h1>
+              <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
+                Get your own SOISE code, real cash commission on every sale,
+                and first look at every drop — before it’s public. Apply
+                below; our team reviews every application within 48 hours.
+              </p>
+              <a
+                href="#apply"
+                className="brut-btn brut-press mt-9 sm:w-fit sm:px-[48px]"
+              >
+                Apply to become a creator
+              </a>
+            </header>
 
-            {/* ── Milestone hook ───────────────────────────────── */}
-            <section className="relative z-10 border-t border-[#1C1C1F] bg-[#121214]">
-              <div className="mx-auto max-w-[640px] px-6 py-9 text-center">
-                <p className="text-[12px] font-medium uppercase tracking-[0.28em] text-[#C4AA6E]">
+            {/* ── Milestone hook — the loudest offer on the page, so it
+                 takes the heaviest plate (ink fill, white type). ──── */}
+            <section
+              className="brut-rise mt-16"
+              style={{ animationDelay: '0.08s' }}
+            >
+              <div className="brut-press rounded-[2px] border-2 border-[#121212] bg-[#121212] px-6 py-7 text-white">
+                <p className="text-[11px] font-bold tracking-[0.16em] text-[#B3101C] uppercase">
                   Every 10 sales
                 </p>
-                <p className="mx-auto mt-3 max-w-[480px] text-[16px] leading-relaxed text-[#F4F1EA] sm:text-[18px]">
+                <p className="mt-3 max-w-[52ch] text-[16px] leading-relaxed sm:text-[18px]">
                   Hit 10 verified sales on your code and you unlock ₦100,000 on
                   top of your commission — added to your payout when you
                   withdraw — plus fresh Soise gear from the drop, on us.
@@ -190,125 +213,146 @@ export default function CreatorsApplicationClient() {
             </section>
 
             {/* ── Benefits ──────────────────────────────────────── */}
-            <section className="relative z-10 border-t border-[#1C1C1F]">
-              <div className="mx-auto max-w-[980px] px-6 py-16">
-                <div className="grid gap-px overflow-hidden rounded-[16px] border border-[#1F1F22] bg-[#1F1F22] sm:grid-cols-2">
-                  {BENEFITS.map((b) => (
-                    <div key={b.title} className="bg-[#121214] p-7">
-                      <h3 className="text-[20px] font-medium text-[#F4F1EA]" style={serif}>
-                        {b.title}
-                      </h3>
-                      <p className="mt-2 text-[14px] leading-relaxed text-[#9F9A8E]">
-                        {b.body}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+            <section
+              className="brut-rise mt-14"
+              style={{ animationDelay: '0.16s' }}
+            >
+              <IndexHead n="01" title="What you get" />
+              {/* Ink-grounded grid: the 2px gaps ARE the rules between cells. */}
+              <div className="brut-plate mt-5 grid gap-[2px] overflow-hidden bg-[#121212] sm:grid-cols-2">
+                {BENEFITS.map((b) => (
+                  <div key={b.title} className="bg-white p-6">
+                    <h3 className="text-[22px] uppercase" style={serif}>
+                      {b.title}
+                    </h3>
+                    <p className="mt-2 text-[14px] leading-relaxed text-[#5C544A]">
+                      {b.body}
+                    </p>
+                  </div>
+                ))}
               </div>
             </section>
 
             {/* ── Who thrives here ──────────────────────────────── */}
-            <section className="relative z-10 border-t border-[#1C1C1F]">
-              <div className="mx-auto max-w-[640px] px-6 py-16 text-center">
-                <h2 className="text-[24px] leading-snug sm:text-[30px]" style={serif}>
-                  You don’t need a million followers. You need a real one.
-                </h2>
-                <ul className="mx-auto mt-8 max-w-[480px] space-y-4 text-left">
-                  {FIT.map((line) => (
-                    <li key={line} className="flex gap-3">
-                      <span className="mt-[3px] h-[6px] w-[6px] shrink-0 rounded-full bg-[#C4AA6E]" />
-                      <span className="text-[14px] leading-relaxed text-[#B7B2A6]">
-                        {line}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-8 text-[13px] text-[#7A766C]">
-                  Not there yet? You can still earn — grab your{' '}
-                  <Link href="/swaz-loop" className="font-medium text-[#C4AA6E] underline">
-                    referral link
-                  </Link>{' '}
-                  and start banking store credit today, no application needed.
-                </p>
-              </div>
+            <section
+              className="brut-rise mt-14"
+              style={{ animationDelay: '0.24s' }}
+            >
+              <IndexHead n="02" title="Who thrives here" />
+              <h2
+                className="mt-5 max-w-[20ch] text-[30px] leading-[1.0] tracking-tight uppercase sm:text-[40px]"
+                style={serif}
+              >
+                You don’t need a million followers. You need a real one
+                <span className="text-[#B3101C]">.</span>
+              </h2>
+              <ul className="brut-plate mt-6 divide-y-2 divide-[#121212]">
+                {FIT.map((line) => (
+                  <li key={line} className="flex gap-3 px-6 py-4">
+                    <span className="mt-[7px] h-[6px] w-[6px] shrink-0 bg-[#B3101C]" />
+                    <span className="text-[14px] leading-relaxed text-[#3F3830]">
+                      {line}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-[13px] leading-relaxed text-[#5C544A]">
+                Not there yet? You can still earn — grab your{' '}
+                <Link
+                  href="/swaz-loop"
+                  className="font-bold text-[#B3101C] underline underline-offset-2"
+                >
+                  referral link
+                </Link>{' '}
+                and start banking store credit today, no application needed.
+              </p>
             </section>
 
             {/* ── Application form ──────────────────────────────── */}
-            <section id="apply" className="relative z-10 border-t border-[#1C1C1F] bg-[#0E0E10]">
-              <div className="mx-auto max-w-[560px] px-6 py-16">
-                <p className="text-[12px] font-medium uppercase tracking-[0.28em] text-[#C4AA6E]">
-                  Two minutes. That’s it.
-                </p>
-                <h2 className="mt-3 text-[26px] leading-snug sm:text-[30px]" style={serif}>
-                  Tell us who you are.
-                </h2>
-                <p className="mt-4 text-[14px] leading-relaxed text-[#9F9A8E]">
-                  Earn cash commission on every order placed with your code.{' '}
-                  <Link
-                    href="/creators/swaz-loop"
-                    className="font-medium text-[#C4AA6E] underline"
-                  >
-                    Learn how the Swaz Loop works
-                  </Link>
-                  .
-                </p>
+            <section
+              id="apply"
+              className="brut-rise mt-14"
+              style={{ animationDelay: '0.32s' }}
+            >
+              <IndexHead n="03" title="Two minutes. That’s it." />
+              <h2
+                className="mt-5 text-[30px] leading-[1.0] tracking-tight uppercase sm:text-[40px]"
+                style={serif}
+              >
+                Tell us who you are
+                <span className="text-[#B3101C]">.</span>
+              </h2>
+              <p className="mt-4 max-w-[46ch] text-[14px] leading-relaxed text-[#3F3830]">
+                Earn cash commission on every order placed with your code.{' '}
+                <Link
+                  href="/creators/swaz-loop"
+                  className="font-bold text-[#B3101C] underline underline-offset-2"
+                >
+                  Learn how the Swaz Loop works
+                </Link>
+                .
+              </p>
 
-                <div className="mt-8 space-y-6">
-                  <div>
-                    <label className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#9F9A8E]">
-                      Portfolio / social link
-                    </label>
-                    <input
-                      name="portfolioUrl"
-                      value={formData.portfolioUrl}
-                      onChange={handleChange}
-                      type="text"
-                      placeholder="instagram.com/yourhandle"
-                      className="mt-2 w-full rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] placeholder-[#5C584F] outline-none transition-colors focus:border-[#C4AA6E]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#9F9A8E]">
-                      Bio
-                    </label>
-                    <textarea
-                      name="bio"
-                      value={formData.bio}
-                      onChange={handleChange}
-                      placeholder="A short line on who you are and what you post."
-                      className="mt-2 min-h-[100px] w-full resize-none rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] placeholder-[#5C584F] outline-none transition-colors focus:border-[#C4AA6E]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#9F9A8E]">
-                      Your niche
-                    </label>
-                    <input
-                      name="niche"
-                      value={formData.niche}
-                      onChange={handleChange}
-                      type="text"
-                      placeholder="Streetwear, styling, lifestyle…"
-                      className="mt-2 w-full rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] placeholder-[#5C584F] outline-none transition-colors focus:border-[#C4AA6E]"
-                    />
-                  </div>
+              <div className="mt-8 space-y-6">
+                <div>
+                  <label htmlFor="portfolioUrl" className="brut-label mb-[8px] block">
+                    Portfolio / social link
+                  </label>
+                  <input
+                    id="portfolioUrl"
+                    name="portfolioUrl"
+                    value={formData.portfolioUrl}
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="instagram.com/yourhandle"
+                    className="brut-input"
+                  />
                 </div>
 
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !formData.portfolioUrl || !formData.bio || !formData.niche}
-                  className="mt-9 w-full rounded-full bg-[#C4AA6E] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
-                >
-                  {isLoading ? 'Submitting…' : 'Submit application'}
-                </button>
-                <p className="mt-5 text-center text-[12px] text-[#6E6A60]">
-                  Reviewed within 48 hours · The Swaz Creator Program · SOISE
-                </p>
+                <div>
+                  <label htmlFor="bio" className="brut-label mb-[8px] block">
+                    Bio
+                  </label>
+                  {/* brut-input hard-sets a 56px height; a textarea needs its
+                      own so the field can breathe. */}
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    placeholder="A short line on who you are and what you post."
+                    className="brut-input h-auto min-h-[120px] resize-none py-[14px]"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="niche" className="brut-label mb-[8px] block">
+                    Your niche
+                  </label>
+                  <input
+                    id="niche"
+                    name="niche"
+                    value={formData.niche}
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="Streetwear, styling, lifestyle…"
+                    className="brut-input"
+                  />
+                </div>
               </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading || !formData.portfolioUrl || !formData.bio || !formData.niche}
+                className="brut-btn brut-press mt-9"
+              >
+                {isLoading ? 'Submitting…' : 'Submit application'}
+              </button>
+              <p className="mt-5 text-center text-[12px] text-[#5C544A]">
+                Reviewed within 48 hours · The Swaz Creator Program · SOISE
+              </p>
             </section>
-          </>
+          </div>
         )}
       </main>
     </>

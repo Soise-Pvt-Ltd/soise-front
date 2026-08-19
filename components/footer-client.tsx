@@ -89,7 +89,7 @@ export default function FooterClient() {
               href={siteConfig.social.swazChannel}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex w-fit items-center gap-x-[8px] rounded-[10px] bg-[#121212] px-[16px] py-[10px] text-[13px] text-white uppercase transition-opacity hover:opacity-90"
+              className="inline-flex w-fit items-center gap-x-[8px] rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[16px] py-[10px] text-[13px] font-bold tracking-[0.1em] text-white uppercase transition-opacity hover:opacity-90"
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{
@@ -171,14 +171,14 @@ export default function FooterClient() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={submitting}
-                  className="h-[40px] w-full rounded-[10px] border border-[#AEAEB2] pr-[42px] pl-[10px] transition-all duration-300 focus:border-[#121212] focus:shadow-[0_0_0_1px_#121212] disabled:opacity-60"
+                  className="h-[44px] w-full rounded-[2px] border-2 border-[#121212] bg-white pr-[46px] pl-[12px] transition-shadow duration-150 focus:border-[#121212] focus:shadow-[4px_4px_0_#B3101C] focus:outline-none disabled:opacity-60"
                   placeholder="EMAIL"
                 />
                 <motion.button
                   type="submit"
                   disabled={submitting}
                   aria-label="Subscribe to the mailing list"
-                  className="absolute top-1/2 right-[6px] flex size-[30px] -translate-y-1/2 items-center justify-center rounded-md bg-[#121212] disabled:opacity-60"
+                  className="absolute top-1/2 right-[6px] flex size-[32px] -translate-y-1/2 items-center justify-center rounded-[2px] bg-[#121212] disabled:opacity-60"
                   whileHover={{
                     scale: 1.1,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.2)',

@@ -8,7 +8,7 @@ import { MenuIcon, CloseIcon, WalletIcon, ArrowUpRightIcon } from '@/components/
 
 interface CreatorNavProps {
   /**
-   * Optional creator wallet balance. When provided, a glass balance chip is
+   * Optional creator wallet balance. When provided, a plated balance chip is
    * shown in the bar (matching the old DashboardHeader capability).
    */
   balance?: number;
@@ -30,7 +30,7 @@ const NAV_LINKS: NavLink[] = [
 
 // Shared focus-visible ring (matches the main site nav quality bar).
 const FOCUS_RING =
-  'focus-visible:ring-2 focus-visible:ring-[#9C6F2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F4F1EA] focus-visible:outline-none';
+  'focus-visible:ring-2 focus-visible:ring-[#B3101C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F5F0E8] focus-visible:outline-none';
 
 function formatBalance(balance: number) {
   return `₦${balance.toLocaleString('en-US', {
@@ -80,23 +80,25 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
   }, [isMenuOpen]);
 
   const hasBalance = typeof balance === 'number';
+  // One accent only: a funded wallet is plain ink, an empty one is the crimson
+  // that needs attention. No traffic-light green/red.
   const balanceTone =
-    hasBalance && balance > 0 ? 'text-[#3D6B4A]' : 'text-[#8C3A2B]';
+    hasBalance && balance > 0 ? 'text-[#121212]' : 'text-[#B3101C]';
 
   return (
     <>
-      {/* ---------- Suite paper sticky bar ---------- */}
-      <div className="sticky top-0 z-40 px-[12px] pt-[12px] md:px-[20px] md:pt-[16px]">
+      {/* ---------- Pressed Ink masthead ---------- */}
+      <div className="sticky top-0 z-40 border-b-2 border-[#121212] bg-[#F5F0E8]">
         <nav
           aria-label="Creator portal"
-          className="page-shell relative flex items-center justify-between gap-x-3 overflow-hidden rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4]/95 px-[14px] py-[10px] backdrop-blur-md md:px-[20px]"
+          className="page-shell relative flex items-center justify-between gap-x-3 px-[14px] py-[12px] md:px-[20px]"
         >
 
           {/* Logo → dashboard */}
           <Link
             href="/creators/dashboard"
             aria-label="Creator dashboard home"
-            className={`relative z-10 inline-flex shrink-0 items-center rounded-[8px] ${FOCUS_RING}`}
+            className={`brut-plate brut-press relative z-10 inline-flex shrink-0 items-center px-[10px] py-[6px] ${FOCUS_RING}`}
           >
             <Image
               src="/logo.png"
@@ -104,12 +106,12 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
               width={76}
               height={44}
               priority
-              className="h-auto w-[68px] md:w-[76px]"
+              className="h-auto w-[62px] md:w-[70px]"
             />
           </Link>
 
-          {/* Desktop primary links */}
-          <div className="relative z-10 hidden items-center gap-x-1 lg:flex">
+          {/* Desktop primary links — small plates; the active one is inked in. */}
+          <div className="relative z-10 hidden items-center gap-x-1.5 lg:flex">
             {NAV_LINKS.map((link) => {
               const active = isActive(link.href);
               return (
@@ -117,10 +119,10 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`rounded-full px-[14px] py-[8px] text-[13px] font-medium transition-all duration-200 ${FOCUS_RING} ${
+                  className={`rounded-[2px] border-2 px-[12px] py-[7px] text-[11px] font-bold tracking-[0.1em] uppercase transition-colors duration-200 ${FOCUS_RING} ${
                     active
-                      ? 'border border-[#14110E] bg-[#14110E] text-[#F4F1EA]'
-                      : 'text-[#5C544A] hover:bg-[#14110E]/[0.04] hover:text-[#14110E]'
+                      ? 'border-[#121212] bg-[#121212] text-white'
+                      : 'border-transparent text-[#5C544A] hover:border-[#121212] hover:text-[#121212]'
                   }`}
                 >
                   {link.name}
@@ -132,18 +134,19 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
           {/* Right cluster */}
           <div className="relative z-10 flex shrink-0 items-center gap-x-2 md:gap-x-3">
             {hasBalance && (
-              <div className="flex items-center gap-x-2 rounded-full border border-[#E2DBCC] bg-[#F4F1EA] px-[12px] py-[7px]">
+              <div className="brut-plate flex items-center gap-x-2 px-[12px] py-[8px]">
                 <WalletIcon />
-                <span className={`text-[13px] font-semibold tabular-nums ${balanceTone}`}>
+                <span className={`text-[13px] font-bold tabular-nums ${balanceTone}`}>
                   {formatBalance(balance!)}
                 </span>
               </div>
             )}
 
-            {/* Back to Shop — the key missing affordance, made obvious. */}
+            {/* Back to Shop — the key missing affordance, made obvious. The one
+                ink-filled plate in the bar. */}
             <Link
               href="/"
-              className={`hidden items-center gap-x-1.5 rounded-full bg-[#14110E] px-[16px] py-[9px] text-[12px] font-semibold tracking-wide text-[#F4F1EA] uppercase transition-all duration-200 hover:bg-[#241f19] active:scale-[0.97] sm:inline-flex ${FOCUS_RING}`}
+              className={`brut-press hidden items-center gap-x-1.5 rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[16px] py-[9px] text-[11px] font-bold tracking-[0.14em] text-white uppercase sm:inline-flex ${FOCUS_RING}`}
             >
               Back to Shop <ArrowUpRightIcon />
             </Link>
@@ -159,7 +162,7 @@ export default function CreatorNav({ balance }: CreatorNavProps) {
               aria-haspopup="dialog"
               aria-expanded={isMenuOpen}
               aria-controls="creator-nav-drawer"
-              className={`grid h-11 w-11 place-items-center rounded-full border border-[#E2DBCC] bg-[#FBF9F4] text-[#14110E] transition-colors duration-200 hover:bg-[#EFEBE1] lg:hidden ${FOCUS_RING}`}
+              className={`brut-plate brut-press grid h-11 w-11 place-items-center text-[#121212] lg:hidden ${FOCUS_RING}`}
             >
               <MenuIcon />
             </button>
@@ -235,16 +238,16 @@ function CreatorDrawer({
 
   const hasBalance = typeof balance === 'number';
   const balanceTone =
-    hasBalance && balance! > 0 ? 'text-[#3D6B4A]' : 'text-[#8C3A2B]';
+    hasBalance && balance! > 0 ? 'text-[#121212]' : 'text-[#B3101C]';
 
   return (
     <>
-      {/* Scrim */}
+      {/* Scrim — flat ink, no blur. */}
       <div
-        className="fixed inset-0 z-40 bg-[#0E0E10]/30 backdrop-blur-[2px]"
+        className="fixed inset-0 z-40 bg-[#121212]/40"
         onClick={onClose}
       />
-      {/* Paper drawer */}
+      {/* Plated paper drawer */}
       <div
         ref={panelRef}
         id="creator-nav-drawer"
@@ -252,10 +255,10 @@ function CreatorDrawer({
         aria-modal="true"
         aria-label="Creator portal menu"
         onKeyDown={handleKeyDown}
-        className="fixed inset-y-0 right-0 z-50 flex w-[84%] max-w-[340px] flex-col border-l border-[#E2DBCC] bg-[#FBF9F4]"
+        className="fixed inset-y-0 right-0 z-50 flex w-[84%] max-w-[340px] flex-col border-l-2 border-[#121212] bg-[#F5F0E8]"
       >
-        <div className="flex items-center justify-between px-[20px] pt-[22px] pb-[18px]">
-          <span className="text-[12px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">
+        <div className="flex items-center justify-between border-b-2 border-[#121212] px-[20px] pt-[22px] pb-[18px]">
+          <span className="brut-label text-[#B3101C]">
             Creator Portal
           </span>
           <button
@@ -263,26 +266,28 @@ function CreatorDrawer({
             type="button"
             onClick={onClose}
             aria-label="Close menu"
-            className={`grid h-11 w-11 place-items-center rounded-full border border-[#E2DBCC] bg-[#F4F1EA] text-[#14110E] transition-colors hover:bg-[#EFEBE1] ${FOCUS_RING}`}
+            className={`brut-plate brut-press grid h-11 w-11 place-items-center text-[#121212] ${FOCUS_RING}`}
           >
             <CloseIcon />
           </button>
         </div>
 
         {hasBalance && (
-          <div className="mx-[20px] mb-[8px] flex items-center justify-between rounded-[14px] border border-[#E2DBCC] bg-[#F4F1EA] px-[16px] py-[12px]">
+          <div className="brut-plate mx-[20px] mt-[18px] mb-[10px] flex items-center justify-between px-[16px] py-[12px]">
             <span className="flex items-center gap-x-2 text-[13px] font-medium text-[#3F3830]">
               <WalletIcon /> Balance
             </span>
-            <span className={`text-[14px] font-semibold tabular-nums ${balanceTone}`}>
+            <span className={`text-[14px] font-bold tabular-nums ${balanceTone}`}>
               {formatBalance(balance!)}
             </span>
           </div>
         )}
 
+        {/* Plate the container, rule the rows — a stack of shadowed cards is
+            unreadable at this length. */}
         <nav
           aria-label="Creator portal"
-          className="flex-1 overflow-y-auto px-[12px] py-[8px]"
+          className="brut-plate mx-[20px] mt-[8px] flex-1 overflow-y-auto p-0"
         >
           {NAV_LINKS.map((link) => {
             const active = isActive(link.href);
@@ -292,10 +297,10 @@ function CreatorDrawer({
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
                 onClick={onClose}
-                className={`flex min-h-[48px] items-center rounded-[12px] px-[16px] text-[15px] font-medium transition-all duration-200 ${FOCUS_RING} ${
+                className={`flex min-h-[52px] items-center border-b-2 border-[#121212] px-[16px] text-[12px] font-bold tracking-[0.1em] uppercase transition-colors duration-200 last:border-b-0 ${FOCUS_RING} ${
                   active
-                    ? 'bg-[#14110E] text-[#F4F1EA]'
-                    : 'text-[#3F3830] hover:bg-[#14110E]/[0.04] hover:text-[#14110E]'
+                    ? 'bg-[#121212] text-white'
+                    : 'text-[#3F3830] hover:bg-[#F5F0E8] hover:text-[#121212]'
                 }`}
               >
                 {link.name}
@@ -305,11 +310,11 @@ function CreatorDrawer({
         </nav>
 
         {/* Back to Shop, pinned at the bottom */}
-        <div className="border-t border-[#E2DBCC] px-[20px] py-[18px]">
+        <div className="border-t-2 border-[#121212] px-[20px] py-[18px]">
           <Link
             href="/"
             onClick={onClose}
-            className={`flex min-h-[48px] items-center justify-center gap-x-1.5 rounded-full bg-[#14110E] px-[16px] text-[13px] font-semibold tracking-wide text-[#F4F1EA] uppercase transition-all hover:bg-[#241f19] active:scale-[0.98] ${FOCUS_RING}`}
+            className={`brut-btn brut-press gap-x-1.5 ${FOCUS_RING}`}
           >
             Back to Shop <ArrowUpRightIcon />
           </Link>

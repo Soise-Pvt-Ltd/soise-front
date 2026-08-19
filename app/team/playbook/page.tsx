@@ -15,6 +15,16 @@ export const metadata: Metadata = pageMetadata({
     'How we find, score, and invite the creators shaping how Nigeria wears SOISE.',
 });
 
+/**
+ * PRESSED INK — the storefront's editorial language run through a letterpress
+ * (see the brut- tokens in globals.css and app/contact/page.tsx). This page is
+ * public and shareable, so it gets the full editorial treatment: oversized
+ * Instrument Serif masthead, index-numbered sections, ink plates, hard offset
+ * shadows and the ad creatives' crimson (#B3101C) as the only accent.
+ */
+
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
 const SCORECARD = [
   {
     key: 'Aesthetic fit',
@@ -43,6 +53,19 @@ const SCORECARD = [
   },
 ];
 
+/** Index number + rule — the editorial section head, pressed harder. */
+function IndexHead({ n, title }: { n: string; title: string }) {
+  return (
+    <div className="flex items-baseline gap-x-3">
+      <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
+        {n}
+      </span>
+      <span className="brut-label">{title}</span>
+      <span className="brut-rule mt-auto mb-[6px] flex-1 opacity-20" />
+    </div>
+  );
+}
+
 function Section({
   n,
   title,
@@ -52,15 +75,13 @@ function Section({
   title: string;
   children: React.ReactNode;
 }) {
+  // Stagger the CSS-only entrance in 0.06s steps off the section number, capped
+  // so the last section never waits on a long chain.
+  const step = Math.min(Number(n) || 0, 6) * 0.06;
   return (
-    <section className="border-t border-[#E2DBCC] py-7 first:border-t-0 first:pt-0">
-      <div className="flex items-baseline gap-3">
-        <span className="text-[12px] font-semibold text-[#9C6F2E]">{n}</span>
-        <h2 className="suite-display text-[19px] text-[#14110E]">
-          {title}
-        </h2>
-      </div>
-      <div className="mt-3 space-y-3 text-[14px] leading-relaxed text-[#3F3830]">
+    <section className="brut-rise mt-10" style={{ animationDelay: `${step}s` }}>
+      <IndexHead n={n} title={title} />
+      <div className="mt-4 space-y-3 text-[14px] leading-relaxed text-[#3F3830]">
         {children}
       </div>
     </section>
@@ -70,31 +91,38 @@ function Section({
 export default function PlaybookPage() {
   return (
     <div className="mx-auto max-w-[760px]">
-      <header className="mb-8">
-        <p className="suite-eyebrow">The Swaz Creator Program</p>
-        <h1 className="suite-display mt-1 text-[32px] text-[#14110E]">
-          Creator Outreach Playbook
+      <header className="brut-rise">
+        <p className="brut-label text-[#B3101C]">The Swaz Creator Program</p>
+        <h1
+          className="mt-4 text-[44px] leading-[0.95] tracking-tight uppercase sm:text-[64px]"
+          style={serif}
+        >
+          Creator Outreach Playbook<span className="text-[#B3101C]">.</span>
         </h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-[#5C544A]">
+        <p className="mt-6 max-w-[52ch] text-[15px] leading-relaxed text-[#3F3830]">
           How we find, evaluate, and invite creators — proactively and at scale,
           but always as an{' '}
-          <span className="font-medium text-[#14110E]">exclusive invitation</span>,
+          <span className="font-bold text-[#121212]">exclusive invitation</span>,
           never a discount blast. The premium voice is the thing that makes a
           creator want the code; protect it.
         </p>
       </header>
 
-      <div className="suite-panel p-5">
+      {/* The single principle gets the one shadowed plate above the fold. */}
+      <div
+        className="brut-rise brut-plate brut-shadow mt-10 px-6 py-6"
+        style={{ animationDelay: '0.08s' }}
+      >
         <p className="text-[14px] leading-relaxed text-[#3F3830]">
-          <span className="font-semibold">The one principle:</span> exclusivity is
-          earned by real <em>selectivity</em> + a considered <em>experience</em>,
-          not by the adjectives in the message. If we send “you’ve been selected”
-          to 5,000 handles, creators smell it instantly. The discipline of who we{' '}
-          <em>don’t</em> contact is the product.
+          <span className="font-bold text-[#121212]">The one principle:</span>{' '}
+          exclusivity is earned by real <em>selectivity</em> + a considered{' '}
+          <em>experience</em>, not by the adjectives in the message. If we send
+          “you’ve been selected” to 5,000 handles, creators smell it instantly.
+          The discipline of who we <em>don’t</em> contact is the product.
         </p>
       </div>
 
-      <div className="mt-4">
+      <div>
         <Section n="01" title="Narrow the target before you write a word">
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
@@ -132,36 +160,34 @@ export default function PlaybookPage() {
             (max 25) and assigns a tier automatically. Only contact A’s and B’s —
             the rubric <em>is</em> the exclusivity.
           </p>
-          <div className="mt-2 overflow-hidden rounded-[14px] border border-[#E2DBCC]">
+          {/* Dense rows: plate the container, rule the rows — never a shadow
+              per row. */}
+          <div className="brut-plate mt-2 divide-y-2 divide-[#121212]">
             {SCORECARD.map((s, i) => (
-              <div
-                key={s.field}
-                className={`flex gap-3 px-4 py-3 ${
-                  i % 2 ? 'bg-[#F4F1EA]' : 'bg-[#FBF9F4]'
-                }`}
-              >
-                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EFEBE1] text-[12px] font-semibold text-[#9C6F2E]">
+              <div key={s.field} className="flex gap-4 px-4 py-4">
+                <span
+                  className="mt-[2px] shrink-0 text-[18px] leading-none text-[#B3101C]"
+                  style={serif}
+                >
                   {i + 1}
                 </span>
                 <div>
-                  <p className="text-[14px] font-semibold text-[#14110E]">
-                    {s.key}
-                  </p>
-                  <p className="text-[13px] leading-relaxed text-[#5C544A]">
+                  <p className="text-[14px] font-bold text-[#121212]">{s.key}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-[#5C544A]">
                     {s.desc}
                   </p>
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-3 flex flex-wrap gap-2 text-[13px]">
-            <span className="rounded-full bg-[#E4EDE3] px-3 py-1 font-semibold text-[#3D6B4A]">
+          <div className="mt-4 flex flex-wrap gap-2 text-[12px]">
+            <span className="inline-flex rotate-[-2deg] items-center rounded-[2px] border-2 border-[#B3101C] px-3 py-1.5 font-bold tracking-[0.1em] text-[#B3101C] uppercase">
               A · 20–25 — invite now
             </span>
-            <span className="rounded-full bg-[#F3E9D6] px-3 py-1 font-semibold text-[#8A6218]">
+            <span className="inline-flex items-center rounded-[2px] border-2 border-[#121212] bg-white px-3 py-1.5 font-bold tracking-[0.1em] text-[#121212] uppercase">
               B · 14–19 — worth a thoughtful reach
             </span>
-            <span className="rounded-full bg-[#EAE4D7] px-3 py-1 font-semibold text-[#57503F]">
+            <span className="inline-flex items-center rounded-[2px] border-2 border-[#121212]/25 px-3 py-1.5 font-bold tracking-[0.1em] text-[#5C544A] uppercase">
               C · under 14 — pass / revisit later
             </span>
           </div>
@@ -209,7 +235,7 @@ export default function PlaybookPage() {
             send. Structure: a specific opener about <em>their</em> work → the
             invitation → the hooks above, in order → one low-friction step.
           </p>
-          <blockquote className="rounded-[14px] border-l-[3px] border-[#9C6F2E] bg-[#FBF9F4] px-4 py-3 text-[13.5px] italic leading-relaxed text-[#3F3830]">
+          <blockquote className="rounded-[2px] border-2 border-l-[6px] border-[#121212] border-l-[#B3101C] bg-white px-5 py-4 text-[13.5px] leading-relaxed italic">
             “Hi [name] — we’ve been watching your [specific thing, e.g.
             thrift-flip reels] and how your audience responds to the way you style
             fits. We’re opening a small first cohort of the Swaz Creator program —
@@ -219,7 +245,7 @@ export default function PlaybookPage() {
             founding-creator status. We’re keeping it to ~25 people this round
             and I’d like one of them to be you. Want the details?”
           </blockquote>
-          <p className="rounded-[10px] bg-[#F2E1DB] px-4 py-3 text-[13px] text-[#8C3A2B]">
+          <p className="rounded-[2px] border-2 border-[#B3101C] bg-white px-4 py-3 text-[13px] leading-relaxed text-[#B3101C]">
             <b>What kills it:</b> 🔥💰 urgency emojis, “EARN BIG NOW,” generic “hey
             hun collab?”, anything that reads as copy-paste.
           </p>
@@ -229,7 +255,10 @@ export default function PlaybookPage() {
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
               Send invitees to{' '}
-              <Link href="/join" className="font-medium text-[#9C6F2E] hover:underline">
+              <Link
+                href="/join"
+                className="font-bold text-[#B3101C] underline underline-offset-2"
+              >
                 soise.ng/join
               </Link>{' '}
               — the public invitation page. It sells the program first, then hands
@@ -274,14 +303,23 @@ export default function PlaybookPage() {
         </Section>
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link href="/team/prospects" className="suite-btn suite-btn-primary">
+      <footer
+        className="brut-rise brut-rule mt-14 flex flex-wrap gap-3 pt-8"
+        style={{ animationDelay: '0.42s' }}
+      >
+        <Link
+          href="/team/prospects"
+          className="brut-press inline-flex items-center rounded-[2px] border-2 border-[#121212] bg-[#121212] px-6 py-4 text-[13px] font-bold tracking-[0.1em] text-white uppercase"
+        >
           Go to prospect log →
         </Link>
-        <Link href="/team" className="suite-btn suite-btn-ghost">
+        <Link
+          href="/team"
+          className="brut-plate brut-press inline-flex items-center px-6 py-4 text-[13px] font-bold tracking-[0.1em] uppercase"
+        >
           Back to overview
         </Link>
-      </div>
+      </footer>
     </div>
   );
 }

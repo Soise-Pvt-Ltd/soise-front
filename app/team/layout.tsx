@@ -18,7 +18,7 @@ export default async function TeamLayout({
   const role = await getCurrentRole();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#F4F1EA]">
+    <div className="relative min-h-screen overflow-hidden bg-[#F5F0E8] text-[#121212]">
       {/* sonner is a no-op without a mounted Toaster. /team calls showToast
           from @/lib/toast-utils (prospect create/delete), so every success and
           every error here rendered nothing at all — a failed delete removed

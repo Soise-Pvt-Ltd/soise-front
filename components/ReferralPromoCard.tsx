@@ -7,16 +7,18 @@ interface ReferralPromoCardProps {
   /** Optional extra wrapper classes. */
   className?: string;
   /**
-   * Visual language. Both speak the house ink-and-gold: `editorial` is the
-   * ivory-house dark panel (as on /about and the admin surfaces); `default`
-   * is a rounded card version of the same palette for softer storefront
-   * placements. (The old blue Swaz Loop gradient was the last survivor of the
-   * retired stock-template accent.)
+   * Visual language. Both speak PRESSED INK — a white plate with a 2px ink
+   * border, sharp `rounded-[2px]` corners and a hard offset shadow, with the
+   * crimson accent doing the pointing: `editorial` wears the plain uppercase
+   * eyebrow (as on /thank-you and the referral hub); `default` wears the
+   * off-register `brut-stamp` for louder storefront placements. (The old blue
+   * Swaz Loop gradient was the last survivor of the retired stock-template
+   * accent; the gold that replaced it went out with the letterpress.)
    */
   variant?: 'default' | 'editorial';
 }
 
-const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
 
 /**
  * Reusable Swaz Loop awareness card. Repeats the core offer ("share your link,
@@ -33,22 +35,23 @@ export default function ReferralPromoCard({
     return (
       <Link
         href="/swaz-loop"
-        className={`group block bg-[#0E0E10] p-7 text-left text-[#F4F1EA] transition-shadow hover:shadow-[0_12px_40px_rgba(14,14,16,0.35)] sm:p-8 ${className}`}
+        className={`group brut-plate brut-press block px-6 py-7 text-left sm:px-8 sm:py-8 ${className}`}
       >
-        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-[#C4AA6E]">
-          The Swaz Loop
-        </p>
-        <h3 className="mt-4 text-[22px] leading-snug sm:text-[26px]" style={serif}>
+        <p className="brut-label text-[#B3101C]">The Swaz Loop</p>
+        <h3
+          className="mt-4 text-[24px] leading-[1.02] uppercase sm:text-[30px]"
+          style={serif}
+        >
           {title}
         </h3>
-        <p className="mt-4 max-w-[440px] text-[13px] leading-relaxed text-[#B7B2A6] sm:text-[14px]">
+        <p className="mt-4 max-w-[440px] text-[13px] leading-relaxed text-[#3F3830] sm:text-[14px]">
           When a friend places their first paid order with your link, you earn{' '}
-          <span className="font-semibold text-[#F4F1EA]">10% of it as store credit</span>{' '}
+          <span className="font-semibold text-[#121212]">10% of it as store credit</span>{' '}
           (up to ₦10,000). They get{' '}
-          <span className="font-semibold text-[#F4F1EA]">₦1,000 off</span> their next
+          <span className="font-semibold text-[#121212]">₦1,000 off</span> their next
           order too. Store credit is spendable at checkout.
         </p>
-        <span className="mt-5 inline-flex items-center gap-x-1 text-[13px] font-semibold text-[#C4AA6E] underline-offset-4 group-hover:underline">
+        <span className="mt-5 inline-flex items-center gap-x-1 text-[11px] font-bold tracking-[0.16em] text-[#B3101C] uppercase underline-offset-2 group-hover:underline">
           Get your link
           <ArrowUpRightIcon />
         </span>
@@ -59,26 +62,27 @@ export default function ReferralPromoCard({
   return (
     <Link
       href="/swaz-loop"
-      className={`group block rounded-[20px] bg-gradient-to-br from-[#0E0E10] to-[#2A2A2D] p-6 text-left text-[#F4F1EA] transition-shadow hover:shadow-[0_12px_40px_rgba(14,14,16,0.35)] ${className}`}
+      className={`group brut-plate brut-press block px-6 py-6 text-left ${className}`}
     >
-      <div className="mb-2 inline-flex items-center gap-x-2 rounded-full bg-[#C4AA6E]/15 px-3 py-1 text-[11px] font-medium tracking-wide text-[#C4AA6E] uppercase">
-        Swaz Loop
-      </div>
+      <span className="brut-stamp">Swaz Loop</span>
       <div className="flex items-start justify-between gap-x-4">
         <div>
-          <h3 className="text-[20px] font-bold leading-tight md:text-[22px]">
+          <h3
+            className="mt-4 text-[22px] leading-[1.02] uppercase md:text-[26px]"
+            style={serif}
+          >
             {title}
           </h3>
-          <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-[#B7B2A6]">
+          <p className="mt-3 max-w-[440px] text-[13px] leading-relaxed text-[#3F3830]">
             When a friend places their FIRST paid order with your link, you earn{' '}
-            <span className="font-semibold text-[#F4F1EA]">
+            <span className="font-semibold text-[#121212]">
               10% of it as store credit
             </span>{' '}
             (up to ₦10,000). They get{' '}
-            <span className="font-semibold text-[#F4F1EA]">₦1,000 off</span> their
+            <span className="font-semibold text-[#121212]">₦1,000 off</span> their
             next order too. Store credit is spendable at checkout.
           </p>
-          <span className="mt-4 inline-flex items-center gap-x-1 text-[13px] font-semibold text-[#C4AA6E] underline-offset-4 group-hover:underline">
+          <span className="mt-4 inline-flex items-center gap-x-1 text-[11px] font-bold tracking-[0.16em] text-[#B3101C] uppercase underline-offset-2 group-hover:underline">
             Get your link
             <ArrowUpRightIcon />
           </span>

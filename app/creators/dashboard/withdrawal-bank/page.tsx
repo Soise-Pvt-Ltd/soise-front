@@ -12,6 +12,9 @@ import {
 } from '../request-payout/actions';
 import { showToast } from '@/lib/toast-utils';
 
+/** Instrument Serif — the Pressed Ink display face. */
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
 interface Bank {
   name: string;
   code: string;
@@ -168,16 +171,15 @@ export default function WithdrawalBankPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA]">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
       <CreatorNav balance={balance} />
       {/* Reading-width column: this is a form, not a dashboard. */}
-      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[20px] px-[16px] py-[28px] md:px-0">
         <div
-          className="flex items-center gap-x-2 text-[#14110E] hover:cursor-pointer"
+          className="flex w-fit items-center gap-x-2 text-[#121212] hover:cursor-pointer"
           onClick={() => router.back()}
         >
-          <ArrowLeftIcon />{' '}
-          <span className="font-bold tracking-[0.08em] uppercase">Payout account</span>
+          <ArrowLeftIcon /> <span className="brut-label">Payout account</span>
         </div>
         {/* "Funds would be sent in a few minutes" was not true and set the
             wrong expectation: a payout request is queued at status
@@ -185,13 +187,13 @@ export default function WithdrawalBankPage() {
             (a creator must never be able to trigger the transfer OTP). The
             request-payout page already says one business day; these two now
             agree. */}
-        <div className="pt-[13px] text-[#5C544A]">
+        <div className="pt-[8px] text-[15px] leading-relaxed text-[#3F3830]">
           This is where your earnings are sent when you withdraw. Our team
           reviews and sends each transfer, usually within one business day.
         </div>
 
         {isLoading ? (
-          <div className="h-[104px] animate-pulse rounded-[10px] bg-[#14110E]/5" />
+          <div className="h-[104px] animate-pulse rounded-[2px] bg-[#121212]/5" />
         ) : (
           <>
             {/* Saved account card (only when a bank is set and not editing).
@@ -199,29 +201,31 @@ export default function WithdrawalBankPage() {
                 about 1.4:1, so the account number was barely readable. */}
             {hasBank && !isEditing && (
               <div className="space-y-[24px]">
-                <div className="rounded-[14px] bg-[#0E0E10] px-[20px] py-[24px]">
+                <div className="rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[22px] py-[26px]">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 text-[#F4F1EA]">
-                      <p className="text-[16px] font-medium">{bankName}</p>
-                      <p className="mt-[2px] text-[15px] text-[#F4F1EA]/80 tabular-nums">
+                    <div className="min-w-0 text-white">
+                      <p className="text-[26px] leading-[1] tracking-tight uppercase" style={serif}>
+                        {bankName}
+                      </p>
+                      <p className="mt-[8px] text-[15px] text-white/80 tabular-nums">
                         {accountNumber}
                       </p>
                       {accountName && (
-                        <p className="mt-[6px] text-[13px] text-[#C4AA6E]">
+                        <p className="mt-[10px] text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase">
                           {accountName}
                         </p>
                       )}
                     </div>
                     <button
                       onClick={handleCopy}
-                      className="shrink-0 cursor-pointer rounded-full px-[10px] py-[6px] text-[12px] font-medium text-[#F4F1EA]/70 transition-colors hover:bg-[#F4F1EA]/10 hover:text-[#F4F1EA]"
+                      className="shrink-0 cursor-pointer rounded-[2px] px-[10px] py-[6px] text-[11px] font-bold tracking-[0.12em] text-white/70 uppercase transition-colors hover:bg-white/10 hover:text-white"
                       aria-label="Copy account number"
                     >
                       {isCopied ? 'Copied' : <CopyIconSolidWhite />}
                     </button>
                   </div>
                 </div>
-                <button onClick={beginEdit} className="suite-btn suite-btn-primary w-full">
+                <button onClick={beginEdit} className="brut-btn brut-press">
                   Update payout account
                 </button>
               </div>
@@ -230,11 +234,14 @@ export default function WithdrawalBankPage() {
             {/* Empty state (no bank set yet and not editing) */}
             {!hasBank && !isEditing && (
               <div className="space-y-[24px]">
-                <div className="rounded-[10px] bg-[#F3E9D6] px-[16px] py-[24px] text-sm text-[#8A6218]">
-                  <p className="font-medium">
+                <div className="brut-plate px-[20px] py-[24px] text-sm">
+                  <span className="brut-stamp">
+                    No payout account
+                  </span>
+                  <p className="mt-[12px] font-bold text-[#121212]">
                     You haven&apos;t set up a payout account
                   </p>
-                  <p className="mt-1 text-[#8A6218]/75">
+                  <p className="mt-1 leading-relaxed text-[#5C544A]">
                     Add your bank details so we know where to send your earnings
                     when you withdraw.
                   </p>
@@ -246,7 +253,7 @@ export default function WithdrawalBankPage() {
                     setResolveError('');
                     setIsEditing(true);
                   }}
-                  className="suite-btn suite-btn-primary w-full"
+                  className="brut-btn brut-press"
                 >
                   Set up payout account
                 </button>
@@ -259,7 +266,7 @@ export default function WithdrawalBankPage() {
                 <div>
                   <label
                     htmlFor="bank"
-                    className="mb-[7px] block text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase"
+                    className="brut-label mb-[8px] block"
                   >
                     Bank
                   </label>
@@ -270,7 +277,7 @@ export default function WithdrawalBankPage() {
                     onChange={(e) =>
                       setForm({ ...form, bankCode: e.target.value })
                     }
-                    className="suite-input appearance-none"
+                    className="brut-input"
                   >
                     <option value="">Select your bank</option>
                     {banks.map((bank) => (
@@ -284,7 +291,7 @@ export default function WithdrawalBankPage() {
                 <div>
                   <label
                     htmlFor="account_number"
-                    className="mb-[7px] block text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase"
+                    className="brut-label mb-[8px] block"
                   >
                     Account Number
                   </label>
@@ -303,7 +310,7 @@ export default function WithdrawalBankPage() {
                     type="text"
                     inputMode="numeric"
                     autoComplete="off"
-                    className="suite-input"
+                    className="brut-input"
                     placeholder="0123456789"
                     maxLength={10}
                     aria-describedby="account_status"
@@ -314,30 +321,28 @@ export default function WithdrawalBankPage() {
                     nothing here for the creator to author. */}
                 <div id="account_status" aria-live="polite">
                   {isResolving && (
-                    <div className="rounded-[10px] bg-[#EFEBE1] px-[14px] py-[13px] text-[14px] text-[#8C8377]">
+                    <div className="brut-plate px-[16px] py-[14px] text-[14px] text-[#5C544A]">
                       Checking account…
                     </div>
                   )}
                   {!isResolving && resolvedName && (
-                    <div className="rounded-[10px] bg-[#E4EDE3] px-[14px] py-[13px]">
-                      <p className="text-[12px] tracking-[0.08em] text-[#3D6B4A] uppercase">
-                        Account name
-                      </p>
-                      <p className="mt-[2px] text-[16px] font-medium text-[#14110E]">
+                    <div className="brut-plate brut-shadow px-[16px] py-[14px]">
+                      <p className="brut-label text-[#B3101C]">Account name</p>
+                      <p className="mt-[6px] text-[24px] leading-[1] tracking-tight text-[#121212]" style={serif}>
                         {resolvedName}
                       </p>
-                      <p className="mt-[4px] text-[12px] text-[#3D6B4A]">
+                      <p className="mt-[8px] text-[12px] text-[#5C544A]">
                         Check this is you — transfers can&apos;t be reversed.
                       </p>
                     </div>
                   )}
                   {!isResolving && resolveError && (
-                    <div className="rounded-[10px] bg-[#F2E1DB] px-[14px] py-[13px] text-[14px] text-[#8C3A2B]">
+                    <div className="rounded-[2px] border-2 border-[#B3101C] bg-white px-[16px] py-[14px] text-[14px] font-medium text-[#B3101C]">
                       {resolveError}
                     </div>
                   )}
                   {!isResolving && !resolvedName && !resolveError && (
-                    <div className="rounded-[10px] bg-[#EFEBE1] px-[14px] py-[13px] text-[14px] text-[#8C8377]">
+                    <div className="brut-plate px-[16px] py-[14px] text-[14px] leading-relaxed text-[#5C544A]">
                       Pick your bank and enter your 10-digit account number —
                       we&apos;ll confirm the name on the account.
                     </div>
@@ -348,7 +353,7 @@ export default function WithdrawalBankPage() {
                   <button
                     onClick={handleSave}
                     disabled={isSaving || !resolvedName}
-                    className="suite-btn suite-btn-primary w-full sm:w-auto"
+                    className="brut-btn brut-press sm:w-auto sm:px-[40px]"
                   >
                     {isSaving ? 'Saving…' : 'Save payout account'}
                   </button>
@@ -356,7 +361,7 @@ export default function WithdrawalBankPage() {
                     <button
                       onClick={() => setIsEditing(false)}
                       disabled={isSaving}
-                      className="suite-btn suite-btn-ghost w-full sm:w-auto"
+                      className="brut-btn-paper brut-press sm:w-auto sm:px-[40px]"
                     >
                       Cancel
                     </button>

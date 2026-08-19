@@ -14,6 +14,9 @@ const naira = (n: number) =>
     maximumFractionDigits: 2,
   })}`;
 
+/** Instrument Serif — the Pressed Ink display face. */
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
 export default function RequestPayoutPage() {
   const router = useRouter();
   const [isBalanceVisible, setIsBalanceVisible] = useState(true);
@@ -118,45 +121,46 @@ export default function RequestPayoutPage() {
       : '';
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA]">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
       <CreatorNav balance={balance} />
       {/* A single-column money form, not a dashboard grid — so it gets a
           reading-width column instead of page-shell's 7xl. At 1280px the
           amount input was stretching past 1100px, which makes a six-digit
           figure look lost and puts the label a screen-width from its field. */}
-      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[16px] px-[16px] py-[24px] md:px-0">
+      <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[20px] px-[16px] py-[28px] md:px-0">
         <button
           type="button"
-          className="flex w-fit cursor-pointer items-center gap-x-2 text-[#14110E]"
+          className="flex w-fit cursor-pointer items-center gap-x-2 text-[#121212]"
           onClick={() => router.back()}
         >
           <ArrowLeftIcon />
-          <span className="font-bold tracking-[0.08em] uppercase">Request payout</span>
+          <span className="brut-label">Request payout</span>
         </button>
 
         {/* Balance — ink, matching the tier card on the dashboard. The old
             card was white text on #B3D5EB, roughly 1.4:1, which is below any
             legibility threshold; this is 17:1. */}
-        <div className="rounded-[14px] bg-[#0E0E10] px-[20px] py-[24px] text-[#F4F1EA]">
+        <div className="rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[22px] py-[26px] text-white">
           <div className="flex items-center justify-between">
-            <p className="text-[13px] text-[#F4F1EA]/60">Available to withdraw</p>
+            <p className="brut-label text-[#B3101C]">Available to withdraw</p>
             <button
               type="button"
               onClick={() => setIsBalanceVisible((v) => !v)}
               aria-label={isBalanceVisible ? 'Hide balance' : 'Show balance'}
               aria-pressed={!isBalanceVisible}
-              className="cursor-pointer rounded-full p-[6px] text-[#F4F1EA]/60 transition-colors hover:bg-[#F4F1EA]/10 hover:text-[#F4F1EA]"
+              className="cursor-pointer rounded-[2px] p-[6px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
             >
               {isBalanceVisible ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
 
           <div
-            className="suite-display mt-[6px] text-[30px] leading-tight text-[#C4AA6E] tabular-nums"
+            className="mt-[12px] text-[44px] leading-[0.95] tracking-tight tabular-nums sm:text-[56px]"
+            style={serif}
             aria-live="polite"
           >
             {isLoading ? (
-              <span className="inline-block h-[34px] w-[180px] animate-pulse rounded bg-[#F4F1EA]/15 align-middle" />
+              <span className="inline-block h-[44px] w-[220px] animate-pulse rounded-[2px] bg-white/15 align-middle" />
             ) : isBalanceVisible ? (
               naira(balance)
             ) : (
@@ -165,7 +169,7 @@ export default function RequestPayoutPage() {
           </div>
 
           {!isLoading && hasBank && (
-            <p className="mt-[12px] text-[12px] text-[#F4F1EA]/50">
+            <p className="mt-[14px] text-[11px] font-bold tracking-[0.14em] text-white/50 uppercase">
               Paid to {bankName}
               {accountNumber ? ` ••${accountNumber.slice(-4)}` : ''}
             </p>
@@ -175,21 +179,23 @@ export default function RequestPayoutPage() {
         {/* Money already committed. Shown before the form, because it changes
             what a sensible request looks like. */}
         {!isLoading && pending.length > 0 && (
-          <div className="suite-panel px-[16px] py-[14px]">
-            <p className="text-[14px] font-medium text-[#14110E]">
+          <div className="brut-plate px-[20px] py-[16px]">
+            <p className="text-[14px] font-bold text-[#121212]">
               {naira(pendingTotal)} already on the way
             </p>
-            <p className="mt-[2px] text-[13px] text-[#5C544A]">
+            <p className="mt-[4px] text-[13px] leading-relaxed text-[#5C544A]">
               {pending.length} request{pending.length === 1 ? '' : 's'} being
               processed. That amount has already left your balance.
             </p>
           </div>
         )}
 
+        {/* States are carried by ink and the one accent, not a hue palette:
+            a settled message is plain ink on paper, a problem is crimson. */}
         {successMessage && (
           <div
             role="status"
-            className="rounded-[10px] bg-[#E4EDE3] px-4 py-3 text-sm text-[#3D6B4A]"
+            className="brut-plate px-4 py-3 text-sm text-[#121212]"
           >
             {successMessage}
           </div>
@@ -197,7 +203,7 @@ export default function RequestPayoutPage() {
         {errorMessage && (
           <div
             role="alert"
-            className="rounded-[10px] bg-[#F2E1DB] px-4 py-3 text-sm text-[#8C3A2B]"
+            className="rounded-[2px] border-2 border-[#B3101C] bg-white px-4 py-3 text-sm font-medium text-[#B3101C]"
           >
             {errorMessage}
           </div>
@@ -205,35 +211,40 @@ export default function RequestPayoutPage() {
 
         {isLoading ? (
           <div className="space-y-[12px]">
-            <div className="h-[80px] animate-pulse rounded-[14px] bg-[#14110E]/5" />
-            <div className="h-[53px] animate-pulse rounded-[10px] bg-[#14110E]/5" />
+            <div className="h-[80px] animate-pulse rounded-[2px] bg-[#121212]/5" />
+            <div className="h-[53px] animate-pulse rounded-[2px] bg-[#121212]/5" />
           </div>
         ) : !hasBank ? (
-          <div className="suite-panel px-[16px] py-[32px] text-center">
-            <h3 className="text-[16px] font-semibold text-[#14110E]">
+          <div className="brut-plate px-[20px] py-[32px] text-center">
+            <h3
+              className="text-[26px] leading-[0.95] tracking-tight text-[#121212] uppercase"
+              style={serif}
+            >
               Add a payout account to withdraw
             </h3>
-            <p className="mx-auto mt-2 max-w-md text-sm text-[#5C544A]">
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[#3F3830]">
               We need the bank account your earnings should be sent to before
               you can request a payout.
             </p>
             <Link
               href="/creators/dashboard/withdrawal-bank"
-              className="suite-btn suite-btn-gold mt-[24px] w-fit px-[40px]"
+              className="brut-press mt-[24px] inline-flex items-center justify-center rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[40px] py-[16px] text-[13px] font-bold tracking-[0.1em] text-white uppercase"
             >
               Add payout account
             </Link>
           </div>
         ) : (
-          <div className="suite-panel p-[16px]">
-            <label
-              htmlFor="amount_to_withdraw"
-              className="text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase"
-            >
+          <div className="brut-plate p-[20px]">
+            <label htmlFor="amount_to_withdraw" className="brut-label">
               Amount to withdraw
             </label>
-            <div className="mt-[7px] flex items-center rounded-[10px] border border-[#DFD7C6] bg-[#EFEBE1] focus-within:border-[#9C6F2E] focus-within:bg-[#F8F5EE]">
-              <span className="pl-[14px] text-[22px] text-[#8C8377]">₦</span>
+            <div className="mt-[10px] flex items-center rounded-[2px] border-2 border-[#121212] bg-white transition-shadow duration-150 focus-within:shadow-[4px_4px_0_#B3101C]">
+              <span
+                className="pl-[14px] text-[26px] text-[#5C544A]"
+                style={serif}
+              >
+                ₦
+              </span>
               {/* border-0/ring-0: @tailwindcss/forms puts a grey 1px border on
                   bare inputs, which drew a second rectangle inside this
                   field's own rounded wrapper. */}
@@ -242,7 +253,8 @@ export default function RequestPayoutPage() {
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
-                className="suite-display w-full border-0 bg-transparent px-[8px] py-[12px] text-[22px] text-[#14110E] tabular-nums outline-none focus:ring-0"
+                className="w-full border-0 bg-transparent px-[8px] py-[14px] text-[26px] text-[#121212] tabular-nums outline-none focus:ring-0"
+                style={serif}
                 placeholder="0.00"
                 value={amount}
                 aria-describedby="amount_help"
@@ -264,43 +276,44 @@ export default function RequestPayoutPage() {
                   setErrorMessage('');
                 }}
                 disabled={balance <= 0}
-                className="mr-[8px] shrink-0 cursor-pointer rounded-[6px] px-[10px] py-[6px] text-[12px] font-bold text-[#9C6F2E] uppercase transition-colors hover:bg-[#F3E9D6] disabled:cursor-not-allowed disabled:opacity-40"
+                className="mr-[10px] shrink-0 cursor-pointer rounded-[2px] border-2 border-[#121212] px-[10px] py-[6px] text-[11px] font-bold tracking-[0.12em] text-[#121212] uppercase transition-colors hover:bg-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 All
               </button>
             </div>
-            <p id="amount_help" className="mt-[6px] text-[12px] text-[#8C8377]">
+            <p id="amount_help" className="mt-[8px] text-[12px] text-[#5C544A]">
               {numAmount > balance
                 ? `You only have ${naira(balance)} available.`
                 : `Up to ${naira(balance)}.`}
             </p>
 
-            <div className="mt-[20px]">
-              <p className="text-[11px] font-medium tracking-[0.18em] text-[#8C8377] uppercase">Sent to</p>
-              <div className="mt-[7px] flex items-center justify-between rounded-[10px] bg-[#EFEBE1] px-[14px] py-[13px]">
+            <div className="mt-[22px]">
+              <p className="brut-label">Sent to</p>
+              <div className="mt-[10px] flex items-center justify-between rounded-[2px] border-2 border-[#121212] bg-[#F5F0E8] px-[16px] py-[14px]">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-medium text-[#14110E]">
+                  <p className="truncate text-[15px] font-bold text-[#121212]">
                     {bankName}
                   </p>
                   {accountNumber && (
-                    <p className="text-[13px] text-[#8C8377] tabular-nums">
+                    <p className="text-[13px] text-[#5C544A] tabular-nums">
                       {accountNumber}
                     </p>
                   )}
                 </div>
                 <Link
                   href="/creators/dashboard/withdrawal-bank"
-                  className="shrink-0 pl-3 text-[13px] font-medium text-[#9C6F2E] hover:underline"
+                  className="shrink-0 pl-3 text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase underline underline-offset-2"
                 >
                   Change
                 </Link>
               </div>
             </div>
 
+            {/* The money action: the heaviest plate on the page. */}
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !amountValid}
-              className="suite-btn suite-btn-gold mt-[24px] w-full"
+              className="brut-btn brut-press mt-[24px]"
             >
               {isSubmitting
                 ? 'Submitting…'
@@ -308,42 +321,50 @@ export default function RequestPayoutPage() {
                   ? `Withdraw ${naira(numAmount)}`
                   : 'Withdraw'}
             </button>
-            <p className="mt-[10px] text-center text-[12px] text-[#8C8377]">
+            <p className="mt-[12px] text-center text-[12px] text-[#5C544A]">
               Reviewed and sent by our team, usually within one business day.
             </p>
           </div>
         )}
 
         {/* History, always present once loaded. */}
-        <div className="suite-panel mb-[64px] p-[16px]">
-          <h3 className="text-[16px] font-medium text-[#14110E]">
+        <div className="brut-plate mb-[64px] p-[20px]">
+          <h3
+            className="text-[24px] leading-[0.95] tracking-tight text-[#121212] uppercase"
+            style={serif}
+          >
             Payout history
           </h3>
           {!historyLoaded ? (
-            <div className="mt-[12px] h-[44px] animate-pulse rounded bg-[#14110E]/5" />
+            <div className="mt-[12px] h-[44px] animate-pulse rounded-[2px] bg-[#121212]/5" />
           ) : payouts.length === 0 ? (
-            <p className="mt-[4px] text-[13px] text-[#5C544A]">
+            <p className="mt-[8px] text-[13px] text-[#5C544A]">
               Nothing yet. Your withdrawals will appear here.
             </p>
           ) : (
-            <ul className="mt-[8px]">
+            /* Plate the container, rule the rows — a shadowed plate per row is
+               unreadable once the history runs long. */
+            <ul className="mt-[14px]">
               {payouts.map((p: any) => {
                 const view = payoutStatusView(p.status);
                 return (
                   <li
                     key={p.id}
-                    className="flex items-start justify-between gap-3 border-b border-[#E2DBCC] py-[12px] last:border-0"
+                    className="brut-rule flex items-start justify-between gap-3 py-[14px] first:border-t-0 first:pt-0"
                   >
                     <div className="min-w-0">
-                      <p className="text-[15px] font-medium text-[#14110E] tabular-nums">
+                      <p
+                        className="text-[22px] leading-[1] text-[#121212] tabular-nums"
+                        style={serif}
+                      >
                         {naira(p.amount)}
                       </p>
-                      <p className="text-[12px] text-[#8C8377]">
+                      <p className="mt-[4px] text-[12px] text-[#5C544A]">
                         {formatDate(p.created_at)} · {view.meaning}
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-full px-[10px] py-[3px] text-[12px] font-medium ${view.className}`}
+                      className={`shrink-0 rounded-[2px] px-[10px] py-[4px] text-[10px] font-bold tracking-[0.14em] uppercase ${view.className}`}
                     >
                       {view.label}
                     </span>

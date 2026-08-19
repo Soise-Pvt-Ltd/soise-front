@@ -19,7 +19,12 @@ export const metadata: Metadata = {
   ...NOINDEX,
 };
 
-const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+/**
+ * PRESSED INK — the referral hub shell. Renders inside the global site
+ * Nav/Footer, so there is no standalone masthead bar: the bone ground, the
+ * plates and the crimson accent carry the language on their own.
+ */
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
 
 function CenteredMessage({
   title,
@@ -31,24 +36,27 @@ function CenteredMessage({
   cta?: { href: string; label: string };
 }) {
   return (
-    <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-6 py-[64px] text-center">
-      <p className="text-[12px] font-medium uppercase tracking-[0.34em] text-[#9C6F2E]">
-        The Swaz Loop
-      </p>
-      <h1 className="mt-5 text-[34px] leading-[1.08] tracking-tight sm:text-[44px]" style={serif}>
-        {title}
-      </h1>
-      <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-[#5C544A]">
-        {body}
-      </p>
-      {cta && (
-        <Link
-          href={cta.href}
-          className="mt-8 inline-flex h-[53px] items-center justify-center rounded-[10px] bg-[#14110E] px-10 text-[13px] font-bold uppercase text-[#F4F1EA] transition-all duration-300 ease-out hover:bg-[#2a2a2a] hover:shadow-[0_8px_30px_rgba(0,0,0,0.2)] active:scale-[0.98]"
+    <div className="mx-auto flex min-h-[60vh] max-w-[880px] flex-col justify-center px-5 py-[64px]">
+      <div className="brut-rise">
+        <p className="brut-label text-[#B3101C]">The Swaz Loop</p>
+        <h1
+          className="mt-4 text-[44px] leading-[0.95] tracking-tight uppercase sm:text-[68px]"
+          style={serif}
         >
-          {cta.label}
-        </Link>
-      )}
+          {title}
+          <span className="text-[#B3101C]">.</span>
+        </h1>
+        <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
+          {body}
+        </p>
+        {cta && (
+          <div className="mt-9 sm:max-w-[340px]">
+            <Link href={cta.href} className="brut-btn brut-press">
+              {cta.label}
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -60,7 +68,7 @@ export default async function SwazLoopPage() {
     return (
       <>
         <Nav />
-        <main className="bg-[#F4F1EA] text-[#14110E]">
+        <main className="min-h-screen bg-[#F5F0E8] text-[#121212]">
           <CenteredMessage
             title="Invite friends, earn store credit"
             body="Share your link and when a friend places their first paid order, you earn 10% of it as store credit (up to ₦10,000) — they get ₦1,000 off too. Log in to get your unique link."
@@ -81,7 +89,7 @@ export default async function SwazLoopPage() {
     return (
       <>
         <Nav />
-        <main className="bg-[#F4F1EA] text-[#14110E]">
+        <main className="min-h-screen bg-[#F5F0E8] text-[#121212]">
           <CenteredMessage
             title="We couldn’t load your Swaz Loop"
             body="Something went wrong fetching your referral details. Please refresh the page or try again shortly."
@@ -96,7 +104,7 @@ export default async function SwazLoopPage() {
   return (
     <>
       <Nav />
-      <main className="bg-[#F4F1EA] text-[#14110E]">
+      <main className="min-h-screen bg-[#F5F0E8] text-[#121212]">
         <SwazLoopClient referral={result.data} />
       </main>
       <Footer />

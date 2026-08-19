@@ -16,6 +16,9 @@ export const metadata: Metadata = pageMetadata({
     'Your own code, cash commission on every sale, and first access to every drop. Apply to the Swaz Creator Program.',
 });
 
+/** Instrument Serif — the Pressed Ink display face. */
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
 function StatusScreen({
   title,
   body,
@@ -26,26 +29,62 @@ function StatusScreen({
   tone: 'pending' | 'rejected';
 }) {
   return (
-    <div className="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 text-center">
-      <Image src="/logo.png" alt="Soise" width={100} height={58} className="mb-8" />
-      <span
-        className={`mb-3 rounded-full px-3 py-1 text-[12px] font-medium uppercase ${
-          tone === 'pending'
-            ? 'bg-[#F3E9D6] text-[#8A6218]'
-            : 'bg-[#F2E1DB] text-[#8C3A2B]'
-        }`}
-      >
-        {tone === 'pending' ? 'Under review' : 'Not approved'}
-      </span>
-      <h1 className="font-display text-[32px] leading-tight text-[#121212]">{title}</h1>
-      <p className="mt-3 max-w-[420px] text-[14px] text-[#5C544A]">{body}</p>
-      <Link
-        href="/"
-        className="btn_black mt-8 flex max-w-[280px] items-center justify-center"
-      >
-        Back to Home
-      </Link>
-    </div>
+    <main className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+      {/* Masthead bar */}
+      <div className="mx-auto flex max-w-[880px] items-center justify-between px-5 pt-7">
+        <Link
+          href="/"
+          aria-label="Back to shop"
+          className="brut-plate brut-press flex h-[48px] w-[48px] items-center justify-center bg-white"
+        >
+          <Image
+            src="/main-logo.png"
+            alt="Soise"
+            width={34}
+            height={34}
+            className="h-[30px] w-[30px] object-contain"
+          />
+        </Link>
+        <Link
+          href="/"
+          className="brut-plate brut-press px-4 py-2.5 text-[11px] font-bold tracking-[0.14em] uppercase"
+        >
+          Back to shop
+        </Link>
+      </div>
+
+      <div className="mx-auto max-w-[880px] px-5 pt-20 pb-24">
+        {/* Under review is a hand-inked stamp; not approved is a plated,
+            settled mark — state by ink weight and the one accent. */}
+        {tone === 'pending' ? (
+          <span className="brut-rise brut-stamp">Under review</span>
+        ) : (
+          <span className="brut-rise inline-flex rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[10px] py-[4px] text-[10px] font-bold tracking-[0.18em] text-white uppercase">
+            Not approved
+          </span>
+        )}
+        <h1
+          className="brut-rise mt-6 text-[56px] leading-[0.95] tracking-tight uppercase sm:text-[80px]"
+          style={{ ...serif, animationDelay: '0.08s' }}
+        >
+          {title}
+          <span className="text-[#B3101C]">.</span>
+        </h1>
+        <p
+          className="brut-rise mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]"
+          style={{ animationDelay: '0.16s' }}
+        >
+          {body}
+        </p>
+        <Link
+          href="/"
+          className="brut-btn brut-press brut-rise mt-10 sm:w-fit sm:px-[48px]"
+          style={{ animationDelay: '0.24s' }}
+        >
+          Back to Home
+        </Link>
+      </div>
+    </main>
   );
 }
 
@@ -136,7 +175,7 @@ export default async function creatorsPage({
   return (
     <>
       {reason === 'not-creator' && (
-        <div className="bg-[#F3E9D6] px-6 py-3 text-center text-[13px] font-medium text-[#8A6218]">
+        <div className="border-y-2 border-[#121212] bg-[#F5F0E8] px-6 py-3 text-center text-[12px] font-bold tracking-[0.08em] text-[#121212]">
           You need an approved creator account to access the Creator Portal —
           apply below to get started.
         </div>

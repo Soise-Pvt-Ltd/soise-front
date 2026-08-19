@@ -10,6 +10,13 @@ import { NOINDEX } from '@/lib/seo';
 // the index (robots.txt alone can't prevent URL-only indexing).
 export const metadata: Metadata = NOINDEX;
 
+/**
+ * PRESSED INK — the double opt-in landing. Renders inside the global site
+ * Nav/Footer, so no standalone masthead bar: just the bone ground and one
+ * plate carrying the whole message.
+ */
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
 /** Copy for each outcome the backend can redirect here with. */
 const STATES = {
   confirmed: {
@@ -50,34 +57,42 @@ export default async function NewsletterConfirmedPage({
   const key = (params.state ?? '') as StateKey;
   const copy = STATES[key] ?? STATES.invalid;
 
+  // Every state's headline already ends in a full stop. Split it off so the
+  // house signature (a crimson period closing the h1) can be inked without
+  // touching a single character of the copy.
+  const stop = copy.title.endsWith('.');
+  const headline = stop ? copy.title.slice(0, -1) : copy.title;
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
       <Nav />
 
-      <main className="mx-auto max-w-[720px] px-[20px] pt-[120px] pb-[160px]" role="main">
-        <p className="mb-[24px] text-[11px] tracking-[0.2em] text-[#8A8371] uppercase">
-          {copy.eyebrow}
-        </p>
+      <main className="mx-auto max-w-[720px] px-5 pt-[96px] pb-[140px]" role="main">
+        {/* One plate does all the work here — the page has a single thing to
+            say, so it says it on a single sheet. */}
+        <div className="brut-rise brut-plate brut-shadow px-6 py-9 sm:px-10 sm:py-12">
+          <span className="brut-stamp">{copy.eyebrow}</span>
 
-        <h1 className="font-display mb-[28px] text-[40px] leading-[1.15] text-[#121212] md:text-[56px]">
-          {copy.title}
-        </h1>
-
-        <p className="max-w-[520px] text-[16px] leading-[1.7] text-[#55534E]">{copy.body}</p>
-
-        <div className="mt-[48px] flex flex-col gap-[12px] sm:flex-row">
-          <Link
-            href="/shop"
-            className="inline-flex h-[48px] items-center justify-center rounded-[10px] bg-[#121212] px-[32px] text-[13px] tracking-[0.1em] text-white uppercase transition-opacity hover:opacity-90"
+          <h1
+            className="mt-6 text-[40px] leading-[0.95] tracking-tight uppercase md:text-[64px]"
+            style={serif}
           >
-            Shop the collection
-          </Link>
-          <Link
-            href="/"
-            className="inline-flex h-[48px] items-center justify-center rounded-[10px] border border-[#AEAEB2] px-[32px] text-[13px] tracking-[0.1em] text-[#121212] uppercase transition-colors hover:border-[#121212]"
-          >
-            Back home
-          </Link>
+            {headline}
+            {stop && <span className="text-[#B3101C]">.</span>}
+          </h1>
+
+          <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
+            {copy.body}
+          </p>
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <Link href="/shop" className="brut-btn brut-press">
+              Shop the collection
+            </Link>
+            <Link href="/" className="brut-btn-paper brut-press">
+              Back home
+            </Link>
+          </div>
         </div>
       </main>
 

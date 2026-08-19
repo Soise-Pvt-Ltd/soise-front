@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Footer from '@/components/footer';
-import { motion } from 'framer-motion';
 import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
 import {
@@ -18,18 +17,60 @@ import {
   isDomestic,
 } from '@/lib/countries';
 
-const sectionVariant = {
-  hidden: { opacity: 0, y: 25 },
-  show: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      delay: i * 0.12,
-      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-    },
-  }),
-};
+/**
+ * PRESSED INK — the account page, pressed to match the checkout it sits beside
+ * (see the brut- tokens in globals.css and app/contact/page.tsx). Bone paper,
+ * 2px ink rules, Instrument Serif display type, one crimson accent.
+ *
+ * The entrance is the CSS-only `brut-rise` stagger rather than Framer variants:
+ * this page is behind auth and mostly read, so paint beats choreography.
+ */
+
+const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+
+/** Index number + rule — the editorial section head, pressed harder. */
+function IndexHead({ n, title }: { n: string; title: string }) {
+  return (
+    <div className="flex items-baseline gap-x-3">
+      <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
+        {n}
+      </span>
+      <span className="brut-label">{title}</span>
+      <span className="brut-rule mt-auto mb-[6px] flex-1 opacity-20" />
+    </div>
+  );
+}
+
+/**
+ * A labelled field. The old page leaned on `.profile label` for its type; the
+ * label is now the pressed micro-label the whole surface language uses, so the
+ * `profile` class is gone from the shell above.
+ */
+function Field({
+  label,
+  htmlFor,
+  hint,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="w-full">
+      <label htmlFor={htmlFor} className="brut-label mb-[8px] block">
+        {label}
+        {hint && (
+          <span className="ml-[8px] font-medium tracking-[0.04em] text-[#5C544A] normal-case">
+            {hint}
+          </span>
+        )}
+      </label>
+      {children}
+    </div>
+  );
+}
 
 interface Address {
   id: string;
@@ -167,240 +208,291 @@ export default function UserClient({ account }: { account?: any }) {
   return (
     <>
       <Toaster position="top-center" richColors />
-      <div className="profile page-shell space-y-[38px] px-[16px]">
-        {/* Account Management */}
-        <motion.div custom={0} variants={sectionVariant} initial="hidden" animate="show">
-          <h1 className="text-[16px] uppercase">Account Management</h1>
-          <div className="mt-[24px] mb-[18px] space-y-[10px]">
-            <div>
-              <label>Old password</label>
-              <input
-                type="password"
-                className="solid"
-                placeholder="✱✱✱✱✱✱✱✱"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-            <div>
-              <label>New password</label>
-              <input
-                type="password"
-                className="solid"
-                placeholder="✱✱✱✱✱✱✱✱"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                autoComplete="new-password"
-              />
-            </div>
-          </div>
-          <motion.button
-            type="button"
-            onClick={handleSavePassword}
-            disabled={savingPw}
-            className="btn_outline disabled:opacity-50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {savingPw ? 'Saving…' : 'Save Password'}
-          </motion.button>
-        </motion.div>
+      {/* Bone ground runs behind the footer too, so the page has one paper. */}
+      <div className="bg-[#F5F0E8] text-[#121212]">
+        <div className="mx-auto max-w-[880px] px-5 pt-10 pb-24">
+          <header className="brut-rise">
+            <p className="brut-label text-[#B3101C]">Your account</p>
+            <h1
+              className="mt-4 text-[48px] leading-[0.95] tracking-tight uppercase sm:text-[72px]"
+              style={serif}
+            >
+              Settings<span className="text-[#B3101C]">.</span>
+            </h1>
+            {email && (
+              <p className="mt-6 text-[15px] leading-relaxed break-all text-[#3F3830]">
+                Signed in as {email}
+              </p>
+            )}
+          </header>
 
-        {/* Profile Information */}
-        <motion.div custom={1} variants={sectionVariant} initial="hidden" animate="show">
-          <h1 className="text-[16px] uppercase">Profile Information</h1>
-          <div className="mt-[24px] mb-[18px] space-y-[10px]">
-            <div>
-              <label>Username</label>
-              <input
-                type="text"
-                className="solid opacity-60"
-                value={username}
-                disabled
-                readOnly
-              />
+          {/* 01 — Account Management */}
+          <section className="brut-rise mt-14" style={{ animationDelay: '0.08s' }}>
+            <IndexHead n="01" title="Account Management" />
+            <div className="mt-5 space-y-[14px]">
+              <Field label="Old password" htmlFor="old-password">
+                <input
+                  id="old-password"
+                  type="password"
+                  className="brut-input"
+                  placeholder="✱✱✱✱✱✱✱✱"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </Field>
+              <Field
+                label="New password"
+                htmlFor="new-password"
+                hint="At least 8 characters"
+              >
+                <input
+                  id="new-password"
+                  type="password"
+                  className="brut-input"
+                  placeholder="✱✱✱✱✱✱✱✱"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                />
+              </Field>
             </div>
-            <div>
-              <label>Email</label>
-              <input
-                type="text"
-                className="solid opacity-60"
-                value={email}
-                disabled
-                readOnly
-              />
-            </div>
-            <div>
-              <label>Firstname</label>
-              <input
-                type="text"
-                className="solid"
-                placeholder="John"
-                value={profile.first_name}
-                onChange={(e) =>
-                  setProfile((p) => ({ ...p, first_name: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label>Lastname</label>
-              <input
-                type="text"
-                className="solid"
-                placeholder="Sosie"
-                value={profile.last_name}
-                onChange={(e) =>
-                  setProfile((p) => ({ ...p, last_name: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <label>Phone</label>
-              <input
-                type="tel"
-                className="solid"
-                placeholder="08012345678"
-                value={profile.phone}
-                onChange={(e) =>
-                  setProfile((p) => ({ ...p, phone: e.target.value }))
-                }
-              />
-            </div>
-          </div>
-          <motion.button
-            type="button"
-            onClick={handleSaveProfile}
-            disabled={savingProfile}
-            className="btn_outline disabled:opacity-50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {savingProfile ? 'Saving…' : 'Save Changes'}
-          </motion.button>
-        </motion.div>
+            <button
+              type="button"
+              onClick={handleSavePassword}
+              disabled={savingPw}
+              className="brut-btn-paper brut-press mt-5"
+            >
+              {savingPw ? 'Saving…' : 'Save Password'}
+            </button>
+          </section>
 
-        {/* Delivery */}
-        <motion.div custom={2} variants={sectionVariant} initial="hidden" animate="show">
-          <h1 className="text-[16px] uppercase">Delivery</h1>
+          {/* 02 — Profile Information */}
+          <section className="brut-rise mt-14" style={{ animationDelay: '0.16s' }}>
+            <IndexHead n="02" title="Profile Information" />
+            <div className="mt-5 space-y-[14px]">
+              <div className="grid gap-[14px] sm:grid-cols-2">
+                <Field label="Username" htmlFor="username" hint="Locked">
+                  <input
+                    id="username"
+                    type="text"
+                    className="brut-input opacity-60"
+                    value={username}
+                    disabled
+                    readOnly
+                  />
+                </Field>
+                <Field label="Email" htmlFor="email" hint="Locked">
+                  <input
+                    id="email"
+                    type="text"
+                    className="brut-input opacity-60"
+                    value={email}
+                    disabled
+                    readOnly
+                  />
+                </Field>
+              </div>
+              <div className="grid gap-[14px] sm:grid-cols-2">
+                <Field label="Firstname" htmlFor="first-name">
+                  <input
+                    id="first-name"
+                    type="text"
+                    className="brut-input"
+                    placeholder="John"
+                    value={profile.first_name}
+                    onChange={(e) =>
+                      setProfile((p) => ({ ...p, first_name: e.target.value }))
+                    }
+                  />
+                </Field>
+                <Field label="Lastname" htmlFor="last-name">
+                  <input
+                    id="last-name"
+                    type="text"
+                    className="brut-input"
+                    placeholder="Sosie"
+                    value={profile.last_name}
+                    onChange={(e) =>
+                      setProfile((p) => ({ ...p, last_name: e.target.value }))
+                    }
+                  />
+                </Field>
+              </div>
+              <Field label="Phone" htmlFor="phone">
+                <input
+                  id="phone"
+                  type="tel"
+                  className="brut-input"
+                  placeholder="08012345678"
+                  value={profile.phone}
+                  onChange={(e) =>
+                    setProfile((p) => ({ ...p, phone: e.target.value }))
+                  }
+                />
+              </Field>
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              className="brut-btn-paper brut-press mt-5"
+            >
+              {savingProfile ? 'Saving…' : 'Save Changes'}
+            </button>
+          </section>
 
-          {/* Existing addresses */}
-          {addresses.length > 0 && (
-            <div className="mt-[24px] space-y-[10px]">
-              {addresses.map((a) => (
-                <div
-                  key={a.id}
-                  className="flex items-start justify-between gap-3 rounded-[10px] border border-[#E5E5EA] p-[14px]"
-                >
-                  <div className="text-[13px]">
-                    <div className="font-medium text-[#121212]">
-                      {a.line1}
-                      {a.is_default && (
-                        <span className="ml-2 rounded-full bg-[#CCEAD6] px-2 py-[1px] text-[10px] font-medium text-[#32AC5B]">
-                          Default
-                        </span>
+          {/* 03 — Delivery */}
+          <section className="brut-rise mt-14" style={{ animationDelay: '0.24s' }}>
+            <IndexHead n="03" title="Delivery" />
+
+            {/* Existing addresses. A list, not a stack of cards: one plate,
+                rows separated by an ink rule. Giving every address its own
+                shadowed plate reads as noise the moment there are three. */}
+            {addresses.length > 0 && (
+              <div className="brut-plate brut-shadow mt-5">
+                {addresses.map((a, i) => (
+                  <div
+                    key={a.id}
+                    className={`flex items-start justify-between gap-4 px-[18px] py-[16px] ${
+                      i > 0 ? 'brut-rule' : ''
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <p className="text-[15px] font-medium">{a.line1}</p>
+                        {a.is_default && (
+                          <span className="brut-stamp">Default</span>
+                        )}
+                      </div>
+                      <p className="mt-[4px] text-[13px] leading-relaxed text-[#5C544A]">
+                        {[a.city, a.state, a.postal_code, a.country]
+                          .filter(Boolean)
+                          .join(', ')}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-[8px] text-[11px] font-bold tracking-[0.12em] uppercase">
+                      {!a.is_default && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetDefault(a.id)}
+                          disabled={busyAddrId === a.id}
+                          className="cursor-pointer text-[#B3101C] underline-offset-2 hover:underline disabled:opacity-40"
+                        >
+                          Set default
+                        </button>
                       )}
-                    </div>
-                    <div className="text-[#8E8E93]">
-                      {[a.city, a.state, a.postal_code, a.country]
-                        .filter(Boolean)
-                        .join(', ')}
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1 text-[12px]">
-                    {!a.is_default && (
                       <button
                         type="button"
-                        onClick={() => handleSetDefault(a.id)}
+                        onClick={() => handleDeleteAddress(a.id)}
                         disabled={busyAddrId === a.id}
-                        className="text-[#9C6F2E] underline-offset-2 hover:underline disabled:opacity-50"
+                        className="cursor-pointer text-[#5C544A] underline-offset-2 hover:text-[#121212] hover:underline disabled:opacity-40"
                       >
-                        Set default
+                        Delete
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteAddress(a.id)}
-                      disabled={busyAddrId === a.id}
-                      className="text-[#8E8E93] underline-offset-2 hover:text-[#121212] hover:underline disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+
+            {/* Add a new address */}
+            <div className="mt-8 space-y-[14px]">
+              {/* Was a disabled "Nigeria" box. Soise ships to diaspora
+                  customers, so this has to be a real choice. */}
+              <Field label="Country" htmlFor="addr-country">
+                <select
+                  id="addr-country"
+                  className="brut-input"
+                  value={addr.country || DEFAULT_COUNTRY}
+                  onChange={(e) =>
+                    setAddr((a) => ({ ...a, country: e.target.value }))
+                  }
+                >
+                  {SHIPPING_COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Address" htmlFor="addr-line1">
+                <input
+                  id="addr-line1"
+                  type="text"
+                  className="brut-input"
+                  placeholder="Address"
+                  value={addr.line1}
+                  onChange={(e) => setAddr((a) => ({ ...a, line1: e.target.value }))}
+                />
+              </Field>
+              <div className="grid gap-[14px] sm:grid-cols-2">
+                <Field label="City" htmlFor="addr-city">
+                  <input
+                    id="addr-city"
+                    type="text"
+                    className="brut-input"
+                    placeholder="City"
+                    value={addr.city}
+                    onChange={(e) => setAddr((a) => ({ ...a, city: e.target.value }))}
+                  />
+                </Field>
+                <Field label="State" htmlFor="addr-state">
+                  <input
+                    id="addr-state"
+                    type="text"
+                    className="brut-input"
+                    placeholder="State"
+                    value={addr.state}
+                    onChange={(e) => setAddr((a) => ({ ...a, state: e.target.value }))}
+                  />
+                </Field>
+              </div>
+              <div className="grid gap-[14px] sm:grid-cols-2">
+                <Field
+                  label="ZIP code"
+                  htmlFor="addr-zip"
+                  hint={isDomestic(addr.country) ? 'Optional' : undefined}
+                >
+                  <input
+                    id="addr-zip"
+                    type="text"
+                    className="brut-input"
+                    placeholder="ZIP code"
+                    value={addr.postal_code}
+                    onChange={(e) =>
+                      setAddr((a) => ({ ...a, postal_code: e.target.value }))
+                    }
+                  />
+                </Field>
+                <Field label="Label" htmlFor="addr-label" hint="Optional">
+                  <input
+                    id="addr-label"
+                    type="text"
+                    className="brut-input"
+                    placeholder="Label (e.g. Home, Work)"
+                    value={addr.label}
+                    onChange={(e) => setAddr((a) => ({ ...a, label: e.target.value }))}
+                  />
+                </Field>
+              </div>
             </div>
-          )}
 
-          {/* Add a new address */}
-          <div className="mt-[24px] mb-[18px] space-y-[10px] py-[20px]">
-            {/* Was a disabled "Nigeria" box. Soise ships to diaspora
-                customers, so this has to be a real choice. */}
-            <select
-              className="solid"
-              value={addr.country || DEFAULT_COUNTRY}
-              onChange={(e) =>
-                setAddr((a) => ({ ...a, country: e.target.value }))
-              }
+            {/* The one ink plate on the page. A saved default address is the
+                only action here that pays off later — it takes fields out of
+                checkout, which is where this store actually loses people. */}
+            <button
+              type="button"
+              onClick={handleAddAddress}
+              disabled={addingAddr}
+              className="brut-btn brut-press mt-6"
             >
-              {SHIPPING_COUNTRIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              className="solid"
-              placeholder="Address"
-              value={addr.line1}
-              onChange={(e) => setAddr((a) => ({ ...a, line1: e.target.value }))}
-            />
-            <input
-              type="text"
-              className="solid"
-              placeholder="City"
-              value={addr.city}
-              onChange={(e) => setAddr((a) => ({ ...a, city: e.target.value }))}
-            />
-            <input
-              type="text"
-              className="solid"
-              placeholder="State"
-              value={addr.state}
-              onChange={(e) => setAddr((a) => ({ ...a, state: e.target.value }))}
-            />
-            <input
-              type="text"
-              className="solid"
-              placeholder="ZIP code"
-              value={addr.postal_code}
-              onChange={(e) =>
-                setAddr((a) => ({ ...a, postal_code: e.target.value }))
-              }
-            />
-            <input
-              type="text"
-              className="solid"
-              placeholder="Label (e.g. Home, Work)"
-              value={addr.label}
-              onChange={(e) => setAddr((a) => ({ ...a, label: e.target.value }))}
-            />
-          </div>
-
-          <motion.button
-            type="button"
-            onClick={handleAddAddress}
-            disabled={addingAddr}
-            className="btn_outline disabled:opacity-50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            {addingAddr ? 'Adding…' : 'Add Address'}
-          </motion.button>
-        </motion.div>
+              {addingAddr ? 'Adding…' : 'Add Address'}
+            </button>
+          </section>
+        </div>
+        <Footer />
       </div>
-      <Footer />
     </>
   );
 }
