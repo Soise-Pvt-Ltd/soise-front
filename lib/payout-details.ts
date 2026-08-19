@@ -46,3 +46,21 @@ export function payoutBankDetails(wallet: any): PayoutBankDetails | null {
     ),
   };
 }
+
+/**
+ * Show only the last four digits of an account number.
+ *
+ * Profile and dashboard screens get read over shoulders and on shared screens,
+ * and the full number is never what a creator is checking there — they are
+ * confirming *which* account is on file, and the last four plus the bank name
+ * answers that. The bank form still shows and edits the whole number, because
+ * that screen exists to change it.
+ */
+export function maskAccountNumber(accountNumber?: string | null): string {
+  const digits = String(accountNumber ?? '').trim();
+  if (!digits) return '';
+  // Too short to mask meaningfully — showing •••• over 3 digits hides nothing
+  // and just looks broken.
+  if (digits.length <= 4) return digits;
+  return `•••• ${digits.slice(-4)}`;
+}

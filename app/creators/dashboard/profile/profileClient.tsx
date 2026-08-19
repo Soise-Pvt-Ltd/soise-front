@@ -1,6 +1,8 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { maskAccountNumber } from '@/lib/payout-details';
 import CreatorNav from '@/components/creators/CreatorNav';
 import {
   CameraIcon,
@@ -33,6 +35,11 @@ export default function ProfileClient({ dashboard }: any) {
   const creatorCode = dashboard?.creator_code?.code || 'N/A';
   const tier = dashboard?.tier || {};
   const withdrawalBank = dashboard?.withdrawal_bank || {};
+  // A destination needs both to be usable; either alone is a half-saved record
+  // and must not read as "set up".
+  const hasWithdrawalBank = Boolean(
+    withdrawalBank?.bank_name && withdrawalBank?.account_number,
+  );
   const currentBalance = dashboard?.earnings?.current_balance || 0;
 
   // Local, editable copy of the profile so edits + avatar uploads reflect
@@ -391,26 +398,53 @@ export default function ProfileClient({ dashboard }: any) {
           )}
         </div>
 
-        <div className="rounded-[16px] bg-[#121214] p-[22px]">
-          <div className="flex items-center justify-between">
+        {/* The row carried a chevron but was not a link — it looked tappable
+            and did nothing, and "Not set" named a problem without offering the
+            way out of it. It is now the real route to the bank form in both
+            states. The account number is masked to its last four: this is a
+            profile screen, read over shoulders and on shared screens, and the
+            full number is never what the creator is checking for. What they
+            ARE checking is the resolved name, which is the whole point of
+            verifying the account — so that is what is shown alongside. */}
+        <Link
+          href="/creators/dashboard/withdrawal-bank"
+          className="block rounded-[16px] bg-[#121214] p-[22px] transition-colors hover:bg-[#17171A] focus-visible:ring-2 focus-visible:ring-[#C4AA6E] focus-visible:outline-none"
+        >
+          <div className="flex items-center justify-between gap-x-[16px]">
             <div className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
               Withdrawal Bank
             </div>
-            <div className="flex items-center gap-x-[8px]">
-              <div className="text-right">
-                <div className="text-[15px] font-medium text-[#F4F1EA]">
-                  {withdrawalBank?.bank_name || 'Not set'}
-                </div>
-                <div className="text-[13px] text-[#9F9A8E] tabular-nums">
-                  {withdrawalBank?.account_number || 'N/A'}
-                </div>
+            <div className="flex min-w-0 items-center gap-x-[10px]">
+              <div className="min-w-0 text-right">
+                {hasWithdrawalBank ? (
+                  <>
+                    <div className="truncate text-[15px] font-medium text-[#F4F1EA]">
+                      {withdrawalBank.bank_name}
+                    </div>
+                    <div className="truncate text-[13px] text-[#9F9A8E]">
+                      <span className="tabular-nums">
+                        {maskAccountNumber(withdrawalBank.account_number)}
+                      </span>
+                      {withdrawalBank.account_name && (
+                        <> · {withdrawalBank.account_name}</>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-[15px] font-medium text-[#C4AA6E]">
+                      Add account
+                    </div>
+                    <div className="text-[13px] text-[#9F9A8E]">
+                      Needed before you can withdraw
+                    </div>
+                  </>
+                )}
               </div>
-              <div>
-                <ArrowProfileRightIcon />
-              </div>
+              <ArrowProfileRightIcon />
             </div>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );
