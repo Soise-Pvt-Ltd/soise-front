@@ -14,8 +14,12 @@ const naira = (n: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+/** Playfair Display — the Ivory House display face. */
+const luxe = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+
+// components/icons.tsx is shared with the storefront and off-limits here, so
+// its hard-coded dark strokes are flipped at the call site instead.
+const INVERT_ICON = { filter: 'invert(1)' } as const;
 
 export default function RequestPayoutPage() {
   const router = useRouter();
@@ -121,7 +125,7 @@ export default function RequestPayoutPage() {
       : '';
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+    <div className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
       <CreatorNav balance={balance} />
       {/* A single-column money form, not a dashboard grid — so it gets a
           reading-width column instead of page-shell's 7xl. At 1280px the
@@ -130,37 +134,43 @@ export default function RequestPayoutPage() {
       <div className="mx-auto flex w-full max-w-[640px] flex-col gap-[20px] px-[16px] py-[28px] md:px-0">
         <button
           type="button"
-          className="flex w-fit cursor-pointer items-center gap-x-2 text-[#121212]"
+          className="flex w-fit cursor-pointer items-center gap-x-2 text-[#B7B2A6] transition-colors hover:text-[#F4F1EA]"
           onClick={() => router.back()}
         >
-          <ArrowLeftIcon />
-          <span className="brut-label">Request payout</span>
+          <span style={INVERT_ICON}>
+            <ArrowLeftIcon />
+          </span>
+          <span className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+            Request payout
+          </span>
         </button>
 
-        {/* Balance — ink, matching the tier card on the dashboard. The old
-            card was white text on #B3D5EB, roughly 1.4:1, which is below any
-            legibility threshold; this is 17:1. */}
-        <div className="rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[22px] py-[26px] text-white">
+        {/* Balance — the largest figure in the portal, set in the display
+            serif on a raised panel. The old card was white text on #B3D5EB,
+            roughly 1.4:1, which is below any legibility threshold. */}
+        <div className="rounded-[16px] border border-[#1F1F22] bg-[#121214] px-[24px] py-[28px]">
           <div className="flex items-center justify-between">
-            <p className="brut-label text-[#B3101C]">Available to withdraw</p>
+            <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+              Available to withdraw
+            </p>
             <button
               type="button"
               onClick={() => setIsBalanceVisible((v) => !v)}
               aria-label={isBalanceVisible ? 'Hide balance' : 'Show balance'}
               aria-pressed={!isBalanceVisible}
-              className="cursor-pointer rounded-[2px] p-[6px] text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+              className="cursor-pointer rounded-full p-[8px] opacity-60 transition-opacity hover:opacity-100"
             >
               {isBalanceVisible ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
 
           <div
-            className="mt-[12px] text-[44px] leading-[0.95] tracking-tight tabular-nums sm:text-[56px]"
-            style={serif}
+            className="mt-[14px] text-[44px] leading-tight font-medium tracking-tight text-[#F4F1EA] tabular-nums sm:text-[56px]"
+            style={luxe}
             aria-live="polite"
           >
             {isLoading ? (
-              <span className="inline-block h-[44px] w-[220px] animate-pulse rounded-[2px] bg-white/15 align-middle" />
+              <span className="inline-block h-[44px] w-[220px] animate-pulse rounded-[10px] bg-[#F4F1EA]/10 align-middle" />
             ) : isBalanceVisible ? (
               naira(balance)
             ) : (
@@ -169,7 +179,7 @@ export default function RequestPayoutPage() {
           </div>
 
           {!isLoading && hasBank && (
-            <p className="mt-[14px] text-[11px] font-bold tracking-[0.14em] text-white/50 uppercase">
+            <p className="mt-[16px] text-[12px] tracking-[0.14em] text-[#7A766C] uppercase">
               Paid to {bankName}
               {accountNumber ? ` ••${accountNumber.slice(-4)}` : ''}
             </p>
@@ -179,23 +189,24 @@ export default function RequestPayoutPage() {
         {/* Money already committed. Shown before the form, because it changes
             what a sensible request looks like. */}
         {!isLoading && pending.length > 0 && (
-          <div className="brut-plate px-[20px] py-[16px]">
-            <p className="text-[14px] font-bold text-[#121212]">
+          <div className="rounded-[16px] bg-[#121214] px-[22px] py-[18px]">
+            <p className="text-[15px] font-medium text-[#F4F1EA]">
               {naira(pendingTotal)} already on the way
             </p>
-            <p className="mt-[4px] text-[13px] leading-relaxed text-[#5C544A]">
+            <p className="mt-[4px] text-[14px] leading-relaxed text-[#9F9A8E]">
               {pending.length} request{pending.length === 1 ? '' : 's'} being
               processed. That amount has already left your balance.
             </p>
           </div>
         )}
 
-        {/* States are carried by ink and the one accent, not a hue palette:
-            a settled message is plain ink on paper, a problem is crimson. */}
+        {/* States are carried by tone and the one accent, not a hue palette:
+            a settled message is quiet ivory on a panel, a problem takes the
+            restrained red as type only. */}
         {successMessage && (
           <div
             role="status"
-            className="brut-plate px-4 py-3 text-sm text-[#121212]"
+            className="rounded-[16px] bg-[#121214] px-5 py-4 text-[14px] leading-relaxed text-[#F4F1EA]"
           >
             {successMessage}
           </div>
@@ -203,7 +214,7 @@ export default function RequestPayoutPage() {
         {errorMessage && (
           <div
             role="alert"
-            className="rounded-[2px] border-2 border-[#B3101C] bg-white px-4 py-3 text-sm font-medium text-[#B3101C]"
+            className="rounded-[16px] bg-[#C0362C]/12 px-5 py-4 text-[14px] leading-relaxed font-medium text-[#C0362C]"
           >
             {errorMessage}
           </div>
@@ -211,37 +222,40 @@ export default function RequestPayoutPage() {
 
         {isLoading ? (
           <div className="space-y-[12px]">
-            <div className="h-[80px] animate-pulse rounded-[2px] bg-[#121212]/5" />
-            <div className="h-[53px] animate-pulse rounded-[2px] bg-[#121212]/5" />
+            <div className="h-[80px] animate-pulse rounded-[16px] bg-[#F4F1EA]/5" />
+            <div className="h-[53px] animate-pulse rounded-full bg-[#F4F1EA]/5" />
           </div>
         ) : !hasBank ? (
-          <div className="brut-plate px-[20px] py-[32px] text-center">
+          <div className="rounded-[16px] bg-[#121214] px-[22px] py-[34px] text-center">
             <h3
-              className="text-[26px] leading-[0.95] tracking-tight text-[#121212] uppercase"
-              style={serif}
+              className="text-[26px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+              style={luxe}
             >
               Add a payout account to withdraw
             </h3>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-[#3F3830]">
+            <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-[#9F9A8E]">
               We need the bank account your earnings should be sent to before
               you can request a payout.
             </p>
             <Link
               href="/creators/dashboard/withdrawal-bank"
-              className="brut-press mt-[24px] inline-flex items-center justify-center rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[40px] py-[16px] text-[13px] font-bold tracking-[0.1em] text-white uppercase"
+              className="mt-[26px] inline-flex items-center justify-center rounded-full bg-[#F4F1EA] px-9 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02]"
             >
               Add payout account
             </Link>
           </div>
         ) : (
-          <div className="brut-plate p-[20px]">
-            <label htmlFor="amount_to_withdraw" className="brut-label">
+          <div className="rounded-[16px] bg-[#121214] p-[22px]">
+            <label
+              htmlFor="amount_to_withdraw"
+              className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase"
+            >
               Amount to withdraw
             </label>
-            <div className="mt-[10px] flex items-center rounded-[2px] border-2 border-[#121212] bg-white transition-shadow duration-150 focus-within:shadow-[4px_4px_0_#B3101C]">
+            <div className="mt-[10px] flex items-center rounded-[10px] border border-[#2A2A2D] transition-colors focus-within:border-[#C4AA6E]">
               <span
-                className="pl-[14px] text-[26px] text-[#5C544A]"
-                style={serif}
+                className="pl-[16px] text-[26px] text-[#7A766C]"
+                style={luxe}
               >
                 ₦
               </span>
@@ -253,8 +267,8 @@ export default function RequestPayoutPage() {
                 type="text"
                 inputMode="decimal"
                 autoComplete="off"
-                className="w-full border-0 bg-transparent px-[8px] py-[14px] text-[26px] text-[#121212] tabular-nums outline-none focus:ring-0"
-                style={serif}
+                className="w-full border-0 bg-transparent px-[8px] py-[14px] text-[26px] text-[#F4F1EA] tabular-nums outline-none placeholder-[#5C584F] focus:ring-0"
+                style={luxe}
                 placeholder="0.00"
                 value={amount}
                 aria-describedby="amount_help"
@@ -276,44 +290,46 @@ export default function RequestPayoutPage() {
                   setErrorMessage('');
                 }}
                 disabled={balance <= 0}
-                className="mr-[10px] shrink-0 cursor-pointer rounded-[2px] border-2 border-[#121212] px-[10px] py-[6px] text-[11px] font-bold tracking-[0.12em] text-[#121212] uppercase transition-colors hover:bg-[#F5F0E8] disabled:cursor-not-allowed disabled:opacity-40"
+                className="mr-[10px] shrink-0 cursor-pointer rounded-full border border-[#3A3A3D] px-[14px] py-[6px] text-[12px] font-medium tracking-[0.1em] text-[#D8D3C7] uppercase transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 All
               </button>
             </div>
-            <p id="amount_help" className="mt-[8px] text-[12px] text-[#5C544A]">
+            <p id="amount_help" className="mt-[8px] text-[13px] text-[#7A766C]">
               {numAmount > balance
                 ? `You only have ${naira(balance)} available.`
                 : `Up to ${naira(balance)}.`}
             </p>
 
-            <div className="mt-[22px]">
-              <p className="brut-label">Sent to</p>
-              <div className="mt-[10px] flex items-center justify-between rounded-[2px] border-2 border-[#121212] bg-[#F5F0E8] px-[16px] py-[14px]">
+            <div className="mt-[24px]">
+              <p className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+                Sent to
+              </p>
+              <div className="mt-[10px] flex items-center justify-between rounded-[10px] border border-[#2A2A2D] px-[16px] py-[14px]">
                 <div className="min-w-0">
-                  <p className="truncate text-[15px] font-bold text-[#121212]">
+                  <p className="truncate text-[15px] font-medium text-[#F4F1EA]">
                     {bankName}
                   </p>
                   {accountNumber && (
-                    <p className="text-[13px] text-[#5C544A] tabular-nums">
+                    <p className="text-[13px] text-[#9F9A8E] tabular-nums">
                       {accountNumber}
                     </p>
                   )}
                 </div>
                 <Link
                   href="/creators/dashboard/withdrawal-bank"
-                  className="shrink-0 pl-3 text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase underline underline-offset-2"
+                  className="shrink-0 pl-3 text-[12px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase transition-colors hover:text-[#F4F1EA]"
                 >
                   Change
                 </Link>
               </div>
             </div>
 
-            {/* The money action: the heaviest plate on the page. */}
+            {/* The money action: the one gold pill on the page. */}
             <button
               onClick={handleSubmit}
               disabled={isSubmitting || !amountValid}
-              className="brut-btn brut-press mt-[24px]"
+              className="mt-[26px] flex w-full cursor-pointer items-center justify-center rounded-full bg-[#C4AA6E] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {isSubmitting
                 ? 'Submitting…'
@@ -321,50 +337,50 @@ export default function RequestPayoutPage() {
                   ? `Withdraw ${naira(numAmount)}`
                   : 'Withdraw'}
             </button>
-            <p className="mt-[12px] text-center text-[12px] text-[#5C544A]">
+            <p className="mt-[14px] text-center text-[13px] text-[#7A766C]">
               Reviewed and sent by our team, usually within one business day.
             </p>
           </div>
         )}
 
         {/* History, always present once loaded. */}
-        <div className="brut-plate mb-[64px] p-[20px]">
+        <div className="mb-[64px] rounded-[16px] bg-[#121214] p-[22px]">
           <h3
-            className="text-[24px] leading-[0.95] tracking-tight text-[#121212] uppercase"
-            style={serif}
+            className="text-[26px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+            style={luxe}
           >
             Payout history
           </h3>
           {!historyLoaded ? (
-            <div className="mt-[12px] h-[44px] animate-pulse rounded-[2px] bg-[#121212]/5" />
+            <div className="mt-[12px] h-[44px] animate-pulse rounded-[10px] bg-[#F4F1EA]/5" />
           ) : payouts.length === 0 ? (
-            <p className="mt-[8px] text-[13px] text-[#5C544A]">
+            <p className="mt-[8px] text-[14px] text-[#9F9A8E]">
               Nothing yet. Your withdrawals will appear here.
             </p>
           ) : (
-            /* Plate the container, rule the rows — a shadowed plate per row is
-               unreadable once the history runs long. */
-            <ul className="mt-[14px]">
+            /* Panel the container, divide the rows — a separate card per row
+               is unreadable once the history runs long. */
+            <ul className="mt-[14px] divide-y divide-[#1C1C1F]">
               {payouts.map((p: any) => {
                 const view = payoutStatusView(p.status);
                 return (
                   <li
                     key={p.id}
-                    className="brut-rule flex items-start justify-between gap-3 py-[14px] first:border-t-0 first:pt-0"
+                    className="flex items-start justify-between gap-3 py-[16px] first:pt-0"
                   >
                     <div className="min-w-0">
                       <p
-                        className="text-[22px] leading-[1] text-[#121212] tabular-nums"
-                        style={serif}
+                        className="text-[22px] leading-tight font-medium text-[#F4F1EA] tabular-nums"
+                        style={luxe}
                       >
                         {naira(p.amount)}
                       </p>
-                      <p className="mt-[4px] text-[12px] text-[#5C544A]">
+                      <p className="mt-[4px] text-[13px] leading-relaxed text-[#7A766C]">
                         {formatDate(p.created_at)} · {view.meaning}
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 rounded-[2px] px-[10px] py-[4px] text-[10px] font-bold tracking-[0.14em] uppercase ${view.className}`}
+                      className={`shrink-0 rounded-full px-[12px] py-[5px] text-[10px] font-medium tracking-[0.14em] uppercase ${view.className}`}
                     >
                       {view.label}
                     </span>

@@ -16,22 +16,27 @@ type Req = {
   created_at?: string;
 };
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+/** Playfair Display — the Ivory House display face. */
+const luxe = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 
-// State by ink weight and the one accent, not a hue palette: an approved
-// request is the ink-filled plate, a rejected one carries the crimson, and a
-// request still under review is the hand-inked crimson stamp.
+/** Shared field styling — the house form block. */
+const FIELD =
+  'w-full appearance-none rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] outline-none transition-colors placeholder-[#5C584F] focus:border-[#C4AA6E] focus:ring-0';
+
+// State by the one gold accent and by tone, not a hue palette: the request
+// that came good is gold, one still under review is a muted ivory wash, and a
+// rejection carries the restrained red as type only.
 const statusStyle: Record<string, string> = {
-  pending: 'brut-stamp',
+  pending:
+    'inline-flex rounded-full bg-[#F4F1EA]/8 px-[12px] py-[5px] text-[10px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase',
   approved:
-    'inline-flex rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[8px] py-[3px] text-[10px] font-bold tracking-[0.18em] text-white uppercase',
+    'inline-flex rounded-full bg-[#C4AA6E]/12 px-[12px] py-[5px] text-[10px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase',
   rejected:
-    'inline-flex rounded-[2px] border-2 border-[#B3101C] bg-white px-[8px] py-[3px] text-[10px] font-bold tracking-[0.18em] text-[#B3101C] uppercase',
+    'inline-flex rounded-full bg-[#C0362C]/12 px-[12px] py-[5px] text-[10px] font-medium tracking-[0.14em] text-[#C0362C] uppercase',
 };
 
 const NEUTRAL_STATUS =
-  'inline-flex rounded-[2px] border-2 border-[#121212] bg-white px-[8px] py-[3px] text-[10px] font-bold tracking-[0.18em] text-[#5C544A] uppercase';
+  'inline-flex rounded-full bg-[#F4F1EA]/8 px-[12px] py-[5px] text-[10px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase';
 
 export default function TierUpgradeClient({ initialRequests }: { initialRequests: Req[] }) {
   const router = useRouter();
@@ -67,33 +72,37 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+    <div className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
       <Toaster position="top-center" richColors />
       <CreatorNav />
       <div className="mx-auto max-w-xl px-[20px] py-[48px]">
-        <p className="brut-label text-[#B3101C]">Tier upgrade</p>
+        <p className="text-[12px] font-medium tracking-[0.32em] text-[#C4AA6E] uppercase">
+          Tier upgrade
+        </p>
         <h1
-          className="mt-4 text-[44px] leading-[0.95] tracking-tight uppercase sm:text-[56px]"
-          style={serif}
+          className="mt-5 text-[40px] leading-[1.08] font-medium tracking-tight sm:text-[52px]"
+          style={luxe}
         >
-          Request a tier upgrade<span className="text-[#B3101C]">.</span>
+          Request a tier upgrade
         </h1>
-        <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
+        <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-[#B7B2A6]">
           Grown your social following? Submit your latest numbers and our team will
           review you for a higher commission tier.
         </p>
 
         {hasPending ? (
-          <div className="brut-plate mt-8 p-5 text-[14px] leading-relaxed text-[#3F3830]">
-            <span className="brut-stamp">Under review</span>
-            <p className="mt-3">
+          <div className="mt-8 rounded-[16px] border border-[#C4AA6E]/40 bg-[#121214] p-6">
+            <span className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+              Under review
+            </span>
+            <p className="mt-3 text-[14px] leading-relaxed text-[#9F9A8E]">
               You have a request under review. We&apos;ll update you once it&apos;s decided.
             </p>
           </div>
         ) : (
           <form onSubmit={submit} className="mt-8 space-y-4">
             <input
-              className="brut-input"
+              className={FIELD}
               inputMode="numeric"
               placeholder="Current follower count (e.g. 52000)"
               value={followers}
@@ -101,42 +110,51 @@ export default function TierUpgradeClient({ initialRequests }: { initialRequests
               required
             />
             <input
-              className="brut-input"
+              className={FIELD}
               placeholder="Social handle (e.g. @yourname on Instagram)"
               value={handle}
               onChange={(e) => setHandle(e.target.value)}
             />
             <textarea
-              className="brut-input !h-auto min-h-[110px] py-3"
+              className={`${FIELD} min-h-[110px]`}
               placeholder="Anything else we should know? (optional)"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <button type="submit" disabled={submitting} className="brut-btn brut-press">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex w-full cursor-pointer items-center justify-center rounded-full bg-[#C4AA6E] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+            >
               {submitting ? 'Submitting…' : 'Submit for review'}
             </button>
           </form>
         )}
 
         {requests.length > 0 && (
-          <div className="mt-10">
-            <div className="flex items-baseline gap-x-3">
-              <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">01</span>
-              <span className="brut-label">Your requests</span>
-              <span className="brut-rule mt-auto mb-[6px] flex-1 opacity-20" />
-            </div>
-            <div className="mt-5 space-y-4">
+          <div className="mt-12">
+            <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+              Your requests
+            </p>
+            {/* A hairline-divided grid: the 1px gaps ARE the rules. */}
+            <div className="mt-5 grid gap-px overflow-hidden rounded-[16px] border border-[#1F1F22] bg-[#1F1F22]">
               {requests.map((r) => (
-                <div key={r.id} className="brut-plate flex items-center justify-between gap-4 p-5">
+                <div
+                  key={r.id}
+                  className="flex items-center justify-between gap-4 bg-[#121214] p-6"
+                >
                   <div>
-                    <div className="text-[24px] leading-[1] tracking-tight text-[#121212]" style={serif}>
+                    <div
+                      className="text-[24px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+                      style={luxe}
+                    >
                       {(r.follower_count ?? 0).toLocaleString()} followers
                     </div>
                     {r.social_handle && (
-                      <div className="mt-[6px] text-[12px] text-[#5C544A]">{r.social_handle}</div>
+                      <div className="mt-[6px] text-[13px] text-[#9F9A8E]">{r.social_handle}</div>
                     )}
                     {r.review_note && (
-                      <div className="mt-1 text-[12px] text-[#5C544A]">Note: {r.review_note}</div>
+                      <div className="mt-1 text-[13px] text-[#9F9A8E]">Note: {r.review_note}</div>
                     )}
                   </div>
                   <span className={`shrink-0 ${statusStyle[r.status || 'pending'] || NEUTRAL_STATUS}`}>

@@ -117,60 +117,62 @@ const faqJsonLd = {
   ),
 };
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
-
-/** Index number + rule — the editorial section head, pressed harder. */
-function IndexHead({ n, title }: { n: string; title: string }) {
-  return (
-    <div className="flex items-baseline gap-x-3">
-      <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
-        {n}
-      </span>
-      <span className="brut-label">{title}</span>
-      <span className="brut-rule mt-auto mb-[6px] flex-1 opacity-20" />
-    </div>
-  );
-}
+/** Playfair Display — the Ivory House display face. */
+const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 
 export default function CreatorSwazLoopPage() {
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+    /* IVORY HOUSE, light side. Unlike /creators and /join this page sits inside
+       the site chrome — the creator bar above and the shared storefront footer
+       below — so it keeps a light ground rather than going full-bleed charcoal
+       and colliding with them. The register comes through in the type, the gold,
+       the hairlines and the two inset charcoal panels. */
+    <div className="min-h-screen bg-[#F4F1EA] text-[#14110E]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       <CreatorNav />
       <div className="mx-auto max-w-3xl px-[20px] py-[40px] md:py-[64px]">
-        {/* Editorial masthead — the page already carries the portal bar above,
-            so this is the headline block, not a second masthead. */}
-        <header className="brut-rise">
-          <p className="brut-label text-[#B3101C]">The Swaz Loop</p>
-          <h1
-            className="mt-4 text-[64px] leading-[0.95] tracking-tight uppercase sm:text-[88px]"
-            style={serif}
-          >
-            Share. Sell. Earn<span className="text-[#B3101C]">.</span>
-          </h1>
-          <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
-            The Swaz Loop is how SOISE rewards you for spreading the word —
-            whether you&apos;re a creator earning withdrawable cash commission or
-            a shopper earning store credit by inviting friends.
-          </p>
+        {/* Hero — the one charcoal panel that carries the glow. */}
+        <header className="relative overflow-hidden rounded-[16px] bg-[#0E0E10] px-6 py-14 text-center text-[#F4F1EA] sm:py-16">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-60"
+            style={{
+              background:
+                'radial-gradient(120% 80% at 50% -10%, rgba(196,170,110,0.18), transparent 60%)',
+            }}
+          />
+          <div className="relative">
+            <p className="text-[12px] font-medium tracking-[0.32em] text-[#C4AA6E] uppercase">
+              The Swaz Loop
+            </p>
+            <h1
+              className="mx-auto mt-5 max-w-[540px] text-[36px] leading-[1.08] font-medium tracking-tight sm:text-[48px]"
+              style={serif}
+            >
+              Share. Sell. Earn.
+            </h1>
+            <p className="mx-auto mt-5 max-w-[540px] text-[15px] leading-relaxed text-[#B7B2A6]">
+              The Swaz Loop is how SOISE rewards you for spreading the word —
+              whether you&apos;re a creator earning withdrawable cash commission or
+              a shopper earning store credit by inviting friends.
+            </p>
+          </div>
         </header>
 
         {/* Two paths */}
-        <div className="mt-[48px] grid gap-[20px] md:grid-cols-2">
+        <div className="mt-[40px] grid gap-[20px] md:grid-cols-2">
           {/* Creators */}
-          <div className="brut-plate p-6">
-            <div className="flex h-[44px] w-[44px] items-center justify-center rounded-[2px] bg-[#121212] text-white">
+          <div className="rounded-[16px] border border-[#E8E4DA] bg-[#FBF9F4] p-6">
+            <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#0E0E10] text-[#C4AA6E]">
               <WalletIcon />
             </div>
-            <div className="mt-5">
-              <IndexHead n="01" title="Creators" />
-            </div>
+            <p className="mt-5 text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+              Creators
+            </p>
             <h2
-              className="mt-3 text-[28px] leading-[0.95] tracking-tight text-[#121212] uppercase"
+              className="mt-3 text-[24px] leading-snug font-medium tracking-tight text-[#14110E]"
               style={serif}
             >
               For creators — cash commission
@@ -212,13 +214,13 @@ export default function CreatorSwazLoopPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/creators"
-                className="brut-press flex items-center gap-x-1 rounded-[2px] border-2 border-[#121212] bg-[#121212] px-5 py-3 text-[11px] font-bold tracking-[0.14em] text-white uppercase"
+                className="flex items-center gap-x-1 rounded-full bg-[#0E0E10] px-5 py-3 text-[13px] font-semibold tracking-wide text-[#F4F1EA] transition-transform hover:scale-[1.02]"
               >
                 Become a creator <ArrowUpRightIcon />
               </Link>
               <Link
                 href="/creators/dashboard"
-                className="brut-plate brut-press px-5 py-3 text-[11px] font-bold tracking-[0.14em] uppercase"
+                className="rounded-full border border-[#DCD6C8] px-5 py-3 text-[13px] font-medium text-[#3F3830] transition-colors hover:border-[#C4AA6E] hover:text-[#14110E]"
               >
                 Creator dashboard
               </Link>
@@ -226,15 +228,15 @@ export default function CreatorSwazLoopPage() {
           </div>
 
           {/* Everyday users */}
-          <div className="brut-plate p-6">
-            <div className="flex h-[44px] w-[44px] items-center justify-center rounded-[2px] bg-[#121212] text-white">
+          <div className="rounded-[16px] border border-[#E8E4DA] bg-[#FBF9F4] p-6">
+            <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#0E0E10] text-[#C4AA6E]">
               <TagIcon />
             </div>
-            <div className="mt-5">
-              <IndexHead n="02" title="Everyone" />
-            </div>
+            <p className="mt-5 text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+              Everyone
+            </p>
             <h2
-              className="mt-3 text-[28px] leading-[0.95] tracking-tight text-[#121212] uppercase"
+              className="mt-3 text-[24px] leading-snug font-medium tracking-tight text-[#14110E]"
               style={serif}
             >
               For everyone — store credit
@@ -265,7 +267,7 @@ export default function CreatorSwazLoopPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href="/swaz-loop"
-                className="brut-press flex items-center gap-x-1 rounded-[2px] border-2 border-[#121212] bg-[#121212] px-5 py-3 text-[11px] font-bold tracking-[0.14em] text-white uppercase"
+                className="flex items-center gap-x-1 rounded-full bg-[#0E0E10] px-5 py-3 text-[13px] font-semibold tracking-wide text-[#F4F1EA] transition-transform hover:scale-[1.02]"
               >
                 Get your referral link <ArrowUpRightIcon />
               </Link>
@@ -275,14 +277,16 @@ export default function CreatorSwazLoopPage() {
 
         {/* FAQ */}
         <div className="mt-[56px]">
-          <IndexHead n="03" title="Questions" />
+          <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+            Questions
+          </p>
           <h2
-            className="mt-4 text-[40px] leading-[0.95] tracking-tight text-[#121212] uppercase sm:text-[52px]"
+            className="mt-3 text-[28px] leading-snug font-medium tracking-tight text-[#14110E] sm:text-[34px]"
             style={serif}
           >
             Frequently asked questions
           </h2>
-          <p className="mt-4 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
+          <p className="mt-3 max-w-[46ch] text-[15px] leading-relaxed text-[#5C544A]">
             Everything you need to know about earning with Soise.
           </p>
           {/* Category index */}
@@ -294,7 +298,7 @@ export default function CreatorSwazLoopPage() {
               <a
                 key={category.id}
                 href={`#${category.id}`}
-                className="brut-plate brut-press px-4 py-2 text-[11px] font-bold tracking-[0.12em] text-[#121212] uppercase"
+                className="rounded-full border border-[#DCD6C8] bg-[#FBF9F4] px-4 py-2 text-[13px] font-medium text-[#5C544A] transition-colors hover:border-[#C4AA6E] hover:text-[#14110E]"
               >
                 {category.title}
               </a>
@@ -306,28 +310,30 @@ export default function CreatorSwazLoopPage() {
         </div>
 
         {/* Footer CTA */}
-        <div className="mt-[56px] rounded-[2px] border-2 border-[#121212] bg-[#121212] p-8 text-white">
-          <p className="brut-label text-[#B3101C]">Ready?</p>
+        <div className="mt-[56px] rounded-[16px] bg-[#0E0E10] p-8 text-center text-[#F4F1EA]">
+          <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+            Ready?
+          </p>
           <h3
-            className="mt-4 text-[40px] leading-[0.95] tracking-tight uppercase sm:text-[52px]"
+            className="mt-4 text-[28px] leading-snug font-medium tracking-tight sm:text-[34px]"
             style={serif}
           >
-            Ready to start earning<span className="text-[#B3101C]">?</span>
+            Ready to start earning?
           </h3>
-          <p className="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-white/70">
+          <p className="mx-auto mt-4 max-w-[46ch] text-[15px] leading-relaxed text-[#B7B2A6]">
             Apply to become a creator for cash commission, or grab your referral
             link right now to start banking store credit.
           </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/creators"
-              className="brut-press flex items-center justify-center rounded-[2px] border-2 border-white bg-white px-6 py-3.5 text-[11px] font-bold tracking-[0.14em] text-[#121212] uppercase"
+              className="flex items-center justify-center rounded-full bg-[#C4AA6E] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02]"
             >
               Become a creator
             </Link>
             <Link
               href="/swaz-loop"
-              className="flex items-center justify-center rounded-[2px] border-2 border-white/40 px-6 py-3.5 text-[11px] font-bold tracking-[0.14em] text-white uppercase transition-colors hover:border-white"
+              className="flex items-center justify-center rounded-full border border-[#3A3A3D] px-8 py-3.5 text-[14px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA]"
             >
               Invite &amp; earn credit
             </Link>

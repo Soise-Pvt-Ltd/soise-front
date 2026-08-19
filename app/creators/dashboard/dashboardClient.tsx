@@ -26,21 +26,8 @@ const naira = (n: number) =>
     maximumFractionDigits: 2,
   })}`;
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
-
-/** Index number + rule — the editorial section head, pressed harder. */
-function IndexHead({ n, title }: { n: string; title: string }) {
-  return (
-    <div className="flex items-baseline gap-x-3">
-      <span className="text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
-        {n}
-      </span>
-      <span className="brut-label">{title}</span>
-      <span className="brut-rule mt-auto mb-[6px] flex-1 opacity-20" />
-    </div>
-  );
-}
+/** Playfair Display — the Ivory House display face. */
+const luxe = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 
 export default function CreatorDashboard({
   dashboard,
@@ -53,9 +40,9 @@ export default function CreatorDashboard({
 }) {
   if (!dashboard) {
     return (
-      <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+      <div className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
         <CreatorNav balance={0} />
-        <div className="page-shell px-[16px] py-[80px] text-center text-[16px] text-[#5C544A]">
+        <div className="page-shell px-[16px] py-[80px] text-center text-[16px] leading-relaxed text-[#B7B2A6]">
           We couldn&apos;t load your creator dashboard. Please refresh, or sign
           in again.
         </div>
@@ -130,11 +117,12 @@ export default function CreatorDashboard({
 
   const hasEarningsData = monthlyEarnings.some((amount) => amount > 0);
 
-  // Pressed Ink: the bars are ink, and the CURRENT month is the single crimson
-  // mark on the chart — one accent, spent on the one column that matters.
-  const defaultBarColor = 'rgba(18, 18, 18, 0.25)';
-  const currentMonthBarColor = 'rgba(179, 16, 28, 1)';
-  const emptyBarColor = 'rgba(18, 18, 18, 0.08)';
+  // Ivory House: the bars are a wash of the house gold, and the CURRENT month
+  // is the one column at full strength — one accent, spent on the column that
+  // matters.
+  const defaultBarColor = 'rgba(196, 170, 110, 0.30)';
+  const currentMonthBarColor = 'rgba(196, 170, 110, 1)';
+  const emptyBarColor = 'rgba(244, 241, 234, 0.06)';
 
   const barBackgroundColors = barLabels.map((_, index) => {
     if (!hasEarningsData) return emptyBarColor;
@@ -150,8 +138,8 @@ export default function CreatorDashboard({
         backgroundColor: barBackgroundColors,
         barPercentage: 0.8,
         categoryPercentage: 1.1,
-        // Sharp corners: nothing in this language is rounded.
-        borderRadius: 0,
+        // Softened corners: nothing in this register has a hard edge.
+        borderRadius: 5,
       },
     ],
   };
@@ -171,7 +159,7 @@ export default function CreatorDashboard({
       y: { display: false },
       x: {
         grid: { display: false },
-        ticks: { color: hasEarningsData ? '#121212' : '#5C544A' },
+        ticks: { color: hasEarningsData ? '#B7B2A6' : '#6E6A60' },
       },
     },
   };
@@ -266,29 +254,32 @@ export default function CreatorDashboard({
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+    <div className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
       <CreatorNav balance={balance} />
       <div className="page-shell flex flex-col gap-[20px] px-[16px] py-[28px] md:px-0">
         {/* Payout setup CTA */}
         {needsPayoutSetup && (
           <Link
             href="/creators/dashboard/withdrawal-bank"
-            className="brut-plate brut-press flex items-center justify-between gap-x-4 px-[20px] py-[18px]"
+            className="flex items-center justify-between gap-x-4 rounded-[16px] bg-[#121214] px-[22px] py-[20px] transition-colors hover:bg-[#16161A]"
           >
             <div>
-              <span className="brut-stamp">Set up payouts</span>
-              <p className="mt-[10px] text-[13px] text-[#3F3830]">
+              <span className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+                Set up payouts
+              </span>
+              <p className="mt-[10px] text-[14px] leading-relaxed text-[#9F9A8E]">
                 Add a payout account to withdraw your earnings.
               </p>
             </div>
-            <span className="shrink-0 rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[18px] py-[11px] text-[11px] font-bold tracking-[0.14em] text-white uppercase">
+            <span className="shrink-0 rounded-full bg-[#C4AA6E] px-[24px] py-[11px] text-[14px] font-semibold tracking-wide text-[#0E0E10]">
               Set up
             </span>
           </Link>
         )}
 
-        {/* Creator code — the centerpiece */}
-        <div className="brut-plate brut-shadow p-[20px]">
+        {/* Creator code — the centerpiece. The panel sits at ground level with
+            a hairline so the code plate inside it is the thing that lifts. */}
+        <div className="rounded-[16px] border border-[#1F1F22] p-[22px]">
           <CreatorCode
             code={dashboard.creator_code?.code}
             codeCreatedAt={codeCreatedAt}
@@ -299,52 +290,53 @@ export default function CreatorDashboard({
           />
         </div>
 
-        {/* Tier + progress to next milestone — the one ink plate on the page. */}
-        <div className="rounded-[2px] border-2 border-[#121212] bg-[#121212] p-[20px] text-white">
+        {/* Tier + progress to next milestone. */}
+        <div className="rounded-[16px] border border-[#1F1F22] bg-[#121214] p-[22px]">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="brut-label text-[#B3101C]">Your tier</p>
-              <p className="mt-[8px] flex flex-wrap items-baseline gap-x-[10px]">
+              <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+                Your tier
+              </p>
+              <p className="mt-[10px] flex flex-wrap items-baseline gap-x-[12px]">
                 {/* The tier name is the one piece of status on this page, so it
                     is set in the house display serif rather than body Poppins —
-                    the same treatment the creator saw on onboarding. Instrument
-                    Serif's default weight is the intended one; font-medium here
-                    would pull a second file for no gain. */}
+                    the same treatment the creator saw on onboarding, and the
+                    one place gold is spent on a figure. */}
                 <span
-                  className="text-[34px] leading-[0.95] tracking-tight uppercase"
-                  style={serif}
+                  className="text-[34px] leading-tight font-medium tracking-tight text-[#C4AA6E]"
+                  style={luxe}
                 >
                   {hasTier ? tierName : 'No tier yet'}
                 </span>
-                <span className="text-[11px] font-bold tracking-[0.14em] text-white/60 uppercase">
+                <span className="text-[12px] tracking-[0.14em] text-[#7A766C] uppercase">
                   {fmtPct(currentRate)} commission
                 </span>
               </p>
             </div>
             <Link
               href="/creators/dashboard/tier-upgrade"
-              className="brut-press shrink-0 rounded-[2px] border-2 border-white bg-white px-[16px] py-[10px] text-[11px] font-bold tracking-[0.14em] text-[#121212] uppercase"
+              className="shrink-0 rounded-full border border-[#3A3A3D] px-[20px] py-[10px] text-[13px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA]"
             >
               {hasTier ? 'Tiers' : 'Get a tier'}
             </Link>
           </div>
 
           {hasNextMilestone && (
-            <div className="mt-[20px]">
-              <div className="flex items-center justify-between text-[11px] font-bold tracking-[0.1em] text-white/60 uppercase">
+            <div className="mt-[22px]">
+              <div className="flex items-center justify-between text-[12px] tracking-[0.08em] text-[#7A766C] uppercase">
                 <span>
                   {ordersPlaced.toLocaleString()}{' '}
                   {ordersPlaced === 1 ? 'order' : 'orders'} so far
                 </span>
                 <span>Next: {nextTierName}</span>
               </div>
-              <div className="mt-[10px] h-[10px] overflow-hidden rounded-[2px] border-2 border-white/25 bg-white/10">
+              <div className="mt-[10px] h-[6px] overflow-hidden rounded-full bg-[#F4F1EA]/10">
                 <div
-                  className="h-full bg-[#B3101C] transition-all duration-500"
+                  className="h-full rounded-full bg-[#C4AA6E] transition-all duration-500"
                   style={{ width: `${Math.round(tierProgress * 100)}%` }}
                 />
               </div>
-              <p className="mt-[10px] text-[12px] leading-relaxed text-white/70">
+              <p className="mt-[12px] text-[13px] leading-relaxed text-[#9F9A8E]">
                 {remainingOrders.toLocaleString()} more{' '}
                 {remainingOrders === 1 ? 'order' : 'orders'} to reach{' '}
                 {nextTierName}
@@ -357,7 +349,7 @@ export default function CreatorDashboard({
           )}
 
           {atTopTier && (
-            <p className="mt-[14px] text-[12px] leading-relaxed text-white/70">
+            <p className="mt-[16px] text-[13px] leading-relaxed text-[#9F9A8E]">
               You&apos;re at our top tier — you earn our highest commission
               rate.
             </p>
@@ -366,12 +358,14 @@ export default function CreatorDashboard({
 
         {/* First-time guidance — only before any activity */}
         {!hasActivity && (
-          <div className="brut-plate p-[20px]">
-            <IndexHead n="01" title="Start earning" />
-            <p className="mt-[10px] text-[13px] leading-relaxed text-[#5C544A]">
+          <div className="rounded-[16px] bg-[#121214] p-[22px]">
+            <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+              Start earning
+            </p>
+            <p className="mt-[10px] text-[14px] leading-relaxed text-[#9F9A8E]">
               Here&apos;s how your code turns into commission.
             </p>
-            <ol className="mt-[18px] space-y-[14px]">
+            <ol className="mt-[20px] space-y-[16px]">
               {[
                 'Share your code or link with your audience.',
                 `They get ${fmtPct(discountPct)} off at checkout.`,
@@ -379,12 +373,12 @@ export default function CreatorDashboard({
                   currentRate,
                 )} of every order, paid to your wallet.`,
               ].map((step, i) => (
-                <li key={i} className="flex items-baseline gap-x-[12px]">
-                  {/* The IndexHead idiom, reused: crimson index, no chrome. */}
-                  <span className="shrink-0 text-[12px] font-bold tracking-[0.08em] text-[#B3101C]">
-                    {String(i + 1).padStart(2, '0')}
+                <li key={i} className="flex gap-x-[14px]">
+                  {/* The house numbered step: a gold ring, nothing else. */}
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#C4AA6E] text-[13px] font-semibold text-[#C4AA6E]">
+                    {i + 1}
                   </span>
-                  <span className="text-[14px] leading-relaxed text-[#121212]">
+                  <span className="pt-[5px] text-[14px] leading-relaxed text-[#B7B2A6]">
                     {step}
                   </span>
                 </li>
@@ -396,44 +390,46 @@ export default function CreatorDashboard({
         {/* Performance KPIs */}
         <div className="grid grid-cols-1 gap-[20px] sm:grid-cols-3">
           {stats.map((stat, index) => (
-            <div key={index} className="brut-plate p-[20px]">
-              <div className="mb-[14px] w-fit rounded-[2px] bg-[#121212] p-[10px]">
+            <div key={index} className="rounded-[16px] bg-[#121214] p-[22px]">
+              <div className="mb-[16px] w-fit rounded-full border border-[#3A3A3D] p-[10px]">
                 {stat.icon}
               </div>
-              {/* Ink, not crimson: three crimson figures side by side would
-                  spend the accent on nothing. */}
+              {/* Ivory, not gold: three gold figures side by side would spend
+                  the accent on nothing. */}
               <div
-                className="text-[30px] leading-[0.95] tracking-tight text-[#121212]"
-                style={serif}
+                className="text-[32px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+                style={luxe}
               >
                 {stat.value}
               </div>
-              <div className="mt-[8px] text-[14px] font-bold text-[#121212]">
+              <div className="mt-[8px] text-[15px] font-medium text-[#F4F1EA]">
                 {stat.label}
               </div>
-              <div className="text-[13px] text-[#5C544A]">{stat.hint}</div>
+              <div className="text-[14px] leading-relaxed text-[#9F9A8E]">
+                {stat.hint}
+              </div>
             </div>
           ))}
         </div>
 
         {/* Earnings by month — only once there's something to show */}
         {hasActivity && (
-          <div className="brut-plate p-[20px]">
+          <div className="rounded-[16px] bg-[#121214] p-[22px]">
             <div className="flex items-baseline justify-between gap-4">
               <div
-                className="text-[24px] leading-[0.95] tracking-tight text-[#121212] uppercase"
-                style={serif}
+                className="text-[26px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+                style={luxe}
               >
                 Commission by month
               </div>
               <Link
                 href="/creators/dashboard/request-payout"
-                className="shrink-0 text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase underline underline-offset-2"
+                className="shrink-0 text-[12px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase transition-colors hover:text-[#F4F1EA]"
               >
                 Withdraw
               </Link>
             </div>
-            <p className="mt-[8px] text-[13px] text-[#5C544A]">
+            <p className="mt-[8px] text-[14px] text-[#9F9A8E]">
               {naira(balance)} available to withdraw now.
             </p>
             <div className="scrollbar-hide relative max-w-full overflow-x-auto pt-[20px] md:overflow-x-hidden md:px-[10px]">
@@ -441,9 +437,11 @@ export default function CreatorDashboard({
                 <Bar data={barData} options={barOptions} />
                 {!hasEarningsData && (
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                    <div className="rounded-[2px] border-2 border-[#121212] bg-[#F5F0E8] px-5 py-3 text-center">
-                      <p className="brut-label">No earnings yet</p>
-                      <p className="mt-1 text-[12px] text-[#5C544A]">
+                    <div className="rounded-[16px] border border-[#1F1F22] bg-[#121214] px-6 py-4 text-center">
+                      <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+                        No earnings yet
+                      </p>
+                      <p className="mt-2 text-[13px] text-[#9F9A8E]">
                         Share your code to start earning
                       </p>
                     </div>

@@ -19,30 +19,27 @@ function AccordionGroup({ items, idPrefix }: { items: FaqItem[]; idPrefix: strin
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    /* Plate the container, rule the rows — an accordion of shadowed cards is
-       noise at this length. */
-    <div className="brut-plate">
+    /* Panel the container, hairline the rows — an accordion of individually
+       boxed cards is noise at this length. */
+    <div className="divide-y divide-[#E8E4DA] overflow-hidden rounded-[16px] border border-[#E8E4DA] bg-[#FBF9F4]">
       {items.map((item, i) => {
         const isOpen = openIndex === i;
         const panelId = `${idPrefix}-panel-${i}`;
         const buttonId = `${idPrefix}-button-${i}`;
         return (
-          <div
-            key={i}
-            className="border-b-2 border-[#121212] last:border-b-0"
-          >
+          <div key={i}>
             <button
               type="button"
               id={buttonId}
               onClick={() => setOpenIndex(isOpen ? null : i)}
-              className="flex w-full items-center justify-between gap-x-4 px-5 py-4 text-left transition-colors hover:bg-[#F5F0E8]"
+              className="flex w-full items-center justify-between gap-x-4 px-5 py-4 text-left transition-colors hover:bg-[#F4F1EA]"
               aria-expanded={isOpen}
               aria-controls={panelId}
             >
-              <span className="text-[15px] font-bold text-[#121212]">
+              <span className="text-[15px] font-medium text-[#14110E]">
                 {item.q}
               </span>
-              <span className="shrink-0 text-[#B3101C]">
+              <span className="shrink-0 text-[#C4AA6E]">
                 {isOpen ? <MinusIcon /> : <PlusIcon />}
               </span>
             </button>
@@ -83,7 +80,7 @@ export default function FaqAccordion({ categories }: { categories: FaqCategory[]
         >
           <h3
             id={`${category.id}-heading`}
-            className="brut-label mb-[12px] text-[#B3101C]"
+            className="mb-[12px] text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase"
           >
             {category.title}
           </h3>

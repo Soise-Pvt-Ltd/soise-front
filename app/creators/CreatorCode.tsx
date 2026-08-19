@@ -38,8 +38,13 @@ interface CreatorCodeProps {
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+/** Playfair Display — the Ivory House display face. */
+const luxe = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+
+// The shared icon set carries hard-coded strokes and cannot be edited from
+// this register, so a white-stroked glyph landing on a light pill is flipped
+// here instead.
+const INVERT_ICON = { filter: 'invert(1)' } as const;
 
 export default function CreatorCode({
   code,
@@ -187,11 +192,16 @@ export default function CreatorCode({
   if (!code) {
     return (
       <div>
-        <p className="brut-label text-[#B3101C]">Your creator code</p>
-        <p className="mt-[10px] text-[24px] leading-[1.05] text-[#121212]" style={serif}>
+        <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+          Your creator code
+        </p>
+        <p
+          className="mt-[12px] text-[26px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+          style={luxe}
+        >
           You don&apos;t have an active code yet
         </p>
-        <p className="mt-[8px] text-[13px] leading-relaxed text-[#5C544A]">
+        <p className="mt-[8px] text-[14px] leading-relaxed text-[#9F9A8E]">
           Once your creator code is issued it appears here, along with your
           shareable link. Contact us if you think this is a mistake.
         </p>
@@ -201,19 +211,21 @@ export default function CreatorCode({
 
   return (
     <div>
-      {/* Header: label + stamp + usage */}
+      {/* Header: eyebrow + capsule + usage */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-x-3">
-          <p className="brut-label text-[#B3101C]">Your creator code</p>
-          {/* The hand-inked mark: the tier a code carries, or what it saves. */}
-          <span className="brut-stamp">
+          <p className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+            Your creator code
+          </p>
+          {/* The gold capsule: the tier a code carries, or what it saves. */}
+          <span className="inline-flex items-center rounded-full border border-[#C4AA6E] px-[12px] py-[3px] text-[11px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase">
             {hasTier ? tierName : `${fmtPct(discountPercentage)} off`}
           </span>
         </div>
         {usageCount > 0 && (
-          <span className="text-[12px] font-bold tracking-[0.1em] text-[#5C544A] uppercase">
+          <span className="text-[12px] tracking-[0.08em] text-[#7A766C] uppercase">
             Used{' '}
-            <span className="text-[#121212]">
+            <span className="text-[#F4F1EA]">
               {usageCount.toLocaleString()}
             </span>{' '}
             {usageCount === 1 ? 'time' : 'times'}
@@ -221,23 +233,23 @@ export default function CreatorCode({
         )}
       </div>
 
-      {/* The code — the heaviest thing in the portal: an ink plate, the code
-          itself set oversized in the display serif. */}
-      <div className="mt-[14px] flex items-center justify-between gap-x-[12px] rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[20px] py-[20px]">
+      {/* The code — the centrepiece of the portal: a raised panel with the
+          code itself set oversized in the display serif. */}
+      <div className="mt-[16px] flex items-center justify-between gap-x-[12px] rounded-[16px] bg-[#121214] px-[22px] py-[22px]">
         <span
-          className="truncate text-[34px] leading-[0.95] tracking-tight text-white uppercase sm:text-[46px]"
-          style={serif}
+          className="truncate text-[34px] leading-[1.05] font-medium tracking-tight text-[#F4F1EA] uppercase sm:text-[46px]"
+          style={luxe}
         >
           {code || '—'}
         </span>
         <button
           onClick={() => copy(code)}
-          className="flex shrink-0 cursor-pointer items-center gap-x-1 text-white/60 transition-colors hover:text-white"
+          className="flex shrink-0 cursor-pointer items-center gap-x-1 opacity-70 transition-opacity hover:opacity-100"
           title="Copy creator code"
           type="button"
         >
           {isCopied ? (
-            <span className="text-[11px] font-bold tracking-[0.16em] text-[#B3101C] uppercase">
+            <span className="text-[11px] font-medium tracking-[0.16em] text-[#C4AA6E] uppercase">
               Copied!
             </span>
           ) : (
@@ -247,16 +259,16 @@ export default function CreatorCode({
       </div>
 
       {/* What the code does */}
-      <div className="mt-[20px] space-y-[14px]">
+      <div className="mt-[22px] space-y-[16px]">
         <div className="flex items-start gap-x-[12px]">
-          <div className="mt-[1px] rounded-[2px] bg-[#121212] p-[8px]">
+          <div className="mt-[1px] rounded-full border border-[#3A3A3D] p-[8px]">
             <TagIcon />
           </div>
           <div>
-            <p className="text-[14px] font-bold text-[#121212]">
+            <p className="text-[15px] font-medium text-[#F4F1EA]">
               Customers save {fmtPct(discountPercentage)}
             </p>
-            <p className="text-[13px] leading-relaxed text-[#5C544A]">
+            <p className="text-[14px] leading-relaxed text-[#9F9A8E]">
               Anyone who enters your code at checkout gets{' '}
               {fmtPct(discountPercentage)} off their order.
             </p>
@@ -264,14 +276,14 @@ export default function CreatorCode({
         </div>
 
         <div className="flex items-start gap-x-[12px]">
-          <div className="mt-[1px] rounded-[2px] bg-[#121212] p-[8px]">
+          <div className="mt-[1px] rounded-full border border-[#3A3A3D] p-[8px]">
             <DollarIcon />
           </div>
           <div>
-            <p className="text-[14px] font-bold text-[#121212]">
+            <p className="text-[15px] font-medium text-[#F4F1EA]">
               You earn {fmtPct(commissionRate)} commission
             </p>
-            <p className="text-[13px] leading-relaxed text-[#5C544A]">
+            <p className="text-[14px] leading-relaxed text-[#9F9A8E]">
               Every order placed with your code pays {fmtPct(commissionRate)}{' '}
               into your wallet
               {hasTier ? (
@@ -280,9 +292,9 @@ export default function CreatorCode({
                   at your{' '}
                   {/* Serif here too: the tier is a name, not a data point, and
                       it should read the same wherever a creator meets it.
-                      Nudged up a size because Instrument Serif sits small next
+                      Nudged up a size because the display face sits small next
                       to Poppins at the same px. */}
-                  <span className="text-[16px] text-[#121212]" style={serif}>
+                  <span className="text-[17px] text-[#F4F1EA]" style={luxe}>
                     {tierName}
                   </span>{' '}
                   tier
@@ -296,14 +308,13 @@ export default function CreatorCode({
 
       {/* 24h change-code window */}
       {withinWindow ? (
-        <div className="brut-plate mt-[20px] px-[16px] py-[14px]">
-          <p className="text-[13px] font-bold text-[#121212]">
+        <div className="mt-[22px] rounded-[16px] border border-[#1F1F22] bg-[#121214] px-[18px] py-[16px]">
+          <p className="text-[14px] font-medium text-[#F4F1EA]">
             Not happy with your code?
           </p>
-          <p className="mt-1 text-[12px] leading-relaxed text-[#5C544A]">
+          <p className="mt-1 text-[13px] leading-relaxed text-[#9F9A8E]">
             You can change it within{' '}
-            <span className="font-bold text-[#B3101C]">24 hours</span> of
-            onboarding
+            <span className="text-[#C4AA6E]">24 hours</span> of onboarding
             {hoursLeft > 0
               ? ` — about ${hoursLeft} ${hoursLeft === 1 ? 'hour' : 'hours'} left.`
               : '.'}{' '}
@@ -312,34 +323,37 @@ export default function CreatorCode({
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="mt-[12px] cursor-pointer text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase underline underline-offset-2"
+            className="mt-[12px] cursor-pointer text-[12px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase transition-colors hover:text-[#F4F1EA]"
           >
             Request a new code
           </button>
         </div>
       ) : codeCreatedAt ? (
-        <p className="mt-[16px] text-[11px] font-bold tracking-[0.14em] text-[#5C544A] uppercase">
+        <p className="mt-[18px] text-[12px] tracking-[0.14em] text-[#7A766C] uppercase">
           Your code is now permanent.
         </p>
       ) : null}
 
       {/* Actions */}
-      <div className="mt-[20px] flex flex-col gap-[12px] sm:flex-row sm:items-center">
+      <div className="mt-[22px] flex flex-col gap-[12px] sm:flex-row sm:items-center">
         <button
           onClick={handleShare}
-          className="brut-plate brut-press flex h-[52px] w-full cursor-pointer items-center justify-center gap-x-2 text-[12px] font-bold tracking-[0.12em] uppercase sm:w-fit sm:px-[40px]"
+          className="flex w-full cursor-pointer items-center justify-center gap-x-2 rounded-full bg-[#F4F1EA] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] sm:w-fit"
         >
-          share link <ShareIcon />
+          Share link{' '}
+          <span style={INVERT_ICON}>
+            <ShareIcon />
+          </span>
         </button>
         <button
           onClick={copyLink}
           type="button"
-          className="cursor-pointer text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase underline underline-offset-2 sm:px-[8px]"
+          className="cursor-pointer rounded-full border border-[#3A3A3D] px-8 py-3.5 text-[14px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] sm:w-fit"
         >
           {linkCopied ? 'Link copied!' : 'Copy link'}
         </button>
       </div>
-      <p className="mt-[12px] text-[13px] leading-relaxed text-[#5C544A]">
+      <p className="mt-[14px] text-[14px] leading-relaxed text-[#9F9A8E]">
         Your link applies your creator code automatically at checkout — they
         never have to type it.
       </p>
@@ -347,52 +361,55 @@ export default function CreatorCode({
       {/* Change-code modal */}
       {showModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#121212]/50 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/70 px-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="change-code-title"
           onClick={closeModal}
         >
           <div
-            className="brut-plate brut-shadow w-full max-w-sm p-[24px]"
+            className="w-full max-w-sm rounded-[16px] border border-[#1F1F22] bg-[#121214] p-[24px]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <h2
                 id="change-code-title"
-                className="text-[26px] leading-[0.95] tracking-tight text-[#121212] uppercase"
-                style={serif}
+                className="text-[26px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+                style={luxe}
               >
-                Change your code<span className="text-[#B3101C]">.</span>
+                Change your code
               </h2>
               <button
                 onClick={closeModal}
                 disabled={isSubmitting}
-                className="flex h-[32px] w-[32px] shrink-0 cursor-pointer items-center justify-center rounded-[2px] border-2 border-[#121212] transition-colors hover:bg-[#F5F0E8] disabled:opacity-50"
+                className="flex h-[32px] w-[32px] shrink-0 cursor-pointer items-center justify-center rounded-full border border-[#3A3A3D] transition-colors hover:border-[#C4AA6E] disabled:opacity-50"
                 aria-label="Close dialog"
                 type="button"
               >
-                <CloseIcon />
+                <span style={INVERT_ICON}>
+                  <CloseIcon />
+                </span>
               </button>
             </div>
 
-            <p className="mb-4 text-[13px] leading-relaxed text-[#3F3830]">
+            <p className="mb-4 text-[14px] leading-relaxed text-[#B7B2A6]">
               Every code starts with{' '}
-              <span className="font-bold text-[#121212]">
-                {CREATOR_CODE_PREFIX}
-              </span>{' '}
-              — you pick what comes after it. You can only do this within 24
+              <span className="text-[#F4F1EA]">{CREATOR_CODE_PREFIX}</span> —
+              you pick what comes after it. You can only do this within 24
               hours of onboarding; after that your code is locked.
             </p>
 
-            <label htmlFor="code-suffix" className="brut-label mb-2 block">
+            <label
+              htmlFor="code-suffix"
+              className="mb-2 block text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase"
+            >
               Your ending
             </label>
-            <div className="flex items-stretch rounded-[2px] border-2 border-[#121212] bg-white transition-shadow duration-150 focus-within:shadow-[4px_4px_0_#B3101C]">
+            <div className="flex items-stretch overflow-hidden rounded-[10px] border border-[#2A2A2D] bg-[#121214] transition-colors focus-within:border-[#C4AA6E]">
               {/* Not aria-hidden: it is the first half of the code, and a
                   screen reader user needs to hear it to make sense of the
                   field. Unselectable so a copy of the field is just the tail. */}
-              <span className="flex select-none items-center border-r-2 border-[#121212] bg-[#F5F0E8] px-3 text-[14px] font-bold tracking-widest text-[#5C544A]">
+              <span className="flex select-none items-center border-r border-[#2A2A2D] px-3 text-[14px] tracking-widest text-[#9F9A8E]">
                 {CREATOR_CODE_PREFIX}
               </span>
               <input
@@ -407,17 +424,17 @@ export default function CreatorCode({
                 autoFocus
                 disabled={isSubmitting}
                 aria-describedby="code-suffix-hint"
-                className="w-full border-0 bg-transparent px-3 py-2 text-[14px] tracking-widest text-[#121212] uppercase outline-none focus:ring-0 disabled:opacity-50"
+                className="w-full border-0 bg-transparent px-3 py-3 text-[14px] tracking-widest text-[#F4F1EA] uppercase outline-none placeholder-[#5C584F] focus:ring-0 disabled:opacity-50"
               />
             </div>
-            <p id="code-suffix-hint" className="mt-2 text-[11px] text-[#5C544A]">
+            <p id="code-suffix-hint" className="mt-2 text-[12px] text-[#7A766C]">
               {codeSuffix ? (
                 suffixError ? (
                   suffixError
                 ) : (
                   <>
                     Your code will be{' '}
-                    <span className="font-bold text-[#121212]">
+                    <span className="text-[#F4F1EA]">
                       {buildCreatorCode(codeSuffix)}
                     </span>
                     . Must be unique.
@@ -428,12 +445,12 @@ export default function CreatorCode({
               )}
             </p>
 
-            <div className="mt-5 flex flex-col gap-3">
+            <div className="mt-6 flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => submitChange(buildCreatorCode(codeSuffix))}
                 disabled={isSubmitting || !!suffixError}
-                className="brut-btn brut-press"
+                className="w-full cursor-pointer rounded-full bg-[#F4F1EA] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? 'Saving…' : 'Use this code'}
               </button>
@@ -441,7 +458,7 @@ export default function CreatorCode({
                 type="button"
                 onClick={() => submitChange(undefined)}
                 disabled={isSubmitting}
-                className="brut-btn-paper brut-press"
+                className="w-full cursor-pointer rounded-full border border-[#3A3A3D] px-8 py-3.5 text-[14px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? 'Please wait…' : 'Randomize a new code'}
               </button>

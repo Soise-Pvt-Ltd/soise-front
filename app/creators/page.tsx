@@ -16,8 +16,8 @@ export const metadata: Metadata = pageMetadata({
     'Your own code, cash commission on every sale, and first access to every drop. Apply to the Swaz Creator Program.',
 });
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+/** Playfair Display — the Ivory House display face. */
+const serif = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
 
 function StatusScreen({
   title,
@@ -29,57 +29,48 @@ function StatusScreen({
   tone: 'pending' | 'rejected';
 }) {
   return (
-    <main className="min-h-screen bg-[#F5F0E8] text-[#121212]">
-      {/* Masthead bar */}
-      <div className="mx-auto flex max-w-[880px] items-center justify-between px-5 pt-7">
-        <Link
-          href="/"
-          aria-label="Back to shop"
-          className="brut-plate brut-press flex h-[48px] w-[48px] items-center justify-center bg-white"
-        >
+    <main className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
+      {/* Top bar */}
+      <div className="mx-auto flex max-w-[980px] items-center justify-between px-6 pt-8">
+        <Link href="/" aria-label="Back to shop">
           <Image
             src="/main-logo.png"
             alt="Soise"
-            width={34}
-            height={34}
-            className="h-[30px] w-[30px] object-contain"
+            width={44}
+            height={44}
+            className="h-[40px] w-[40px] object-contain"
           />
         </Link>
         <Link
           href="/"
-          className="brut-plate brut-press px-4 py-2.5 text-[11px] font-bold tracking-[0.14em] uppercase"
+          className="rounded-full border border-[#3A3A3D] px-4 py-2 text-[12px] font-medium tracking-wide text-[#D8D3C7] uppercase transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA]"
         >
           Back to shop
         </Link>
       </div>
 
-      <div className="mx-auto max-w-[880px] px-5 pt-20 pb-24">
-        {/* Under review is a hand-inked stamp; not approved is a plated,
-            settled mark — state by ink weight and the one accent. */}
-        {tone === 'pending' ? (
-          <span className="brut-rise brut-stamp">Under review</span>
-        ) : (
-          <span className="brut-rise inline-flex rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[10px] py-[4px] text-[10px] font-bold tracking-[0.18em] text-white uppercase">
-            Not approved
-          </span>
-        )}
+      <div className="mx-auto flex max-w-[560px] flex-col items-center px-6 py-28 text-center">
+        {/* Under review is the gold, attention state; not approved is the one
+            restrained negative — carried by type alone, never a fill. */}
+        <p
+          className={`text-[12px] font-medium tracking-[0.32em] uppercase ${
+            tone === 'pending' ? 'text-[#C4AA6E]' : 'text-[#C0362C]'
+          }`}
+        >
+          {tone === 'pending' ? 'Under review' : 'Not approved'}
+        </p>
         <h1
-          className="brut-rise mt-6 text-[56px] leading-[0.95] tracking-tight uppercase sm:text-[80px]"
-          style={{ ...serif, animationDelay: '0.08s' }}
+          className="mt-4 text-[32px] leading-[1.1] font-medium tracking-tight sm:text-[42px]"
+          style={serif}
         >
           {title}
-          <span className="text-[#B3101C]">.</span>
         </h1>
-        <p
-          className="brut-rise mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]"
-          style={{ animationDelay: '0.16s' }}
-        >
+        <p className="mt-5 max-w-[420px] text-[15px] leading-relaxed text-[#9F9A8E]">
           {body}
         </p>
         <Link
           href="/"
-          className="brut-btn brut-press brut-rise mt-10 sm:w-fit sm:px-[48px]"
-          style={{ animationDelay: '0.24s' }}
+          className="mt-9 w-full rounded-full bg-[#F4F1EA] px-8 py-3.5 text-[14px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] sm:w-auto"
         >
           Back to Home
         </Link>
@@ -175,7 +166,7 @@ export default async function creatorsPage({
   return (
     <>
       {reason === 'not-creator' && (
-        <div className="border-y-2 border-[#121212] bg-[#F5F0E8] px-6 py-3 text-center text-[12px] font-bold tracking-[0.08em] text-[#121212]">
+        <div className="border-y border-[#1C1C1F] bg-[#121214] px-6 py-3 text-center text-[12px] leading-relaxed text-[#B7B2A6]">
           You need an approved creator account to access the Creator Portal —
           apply below to get started.
         </div>

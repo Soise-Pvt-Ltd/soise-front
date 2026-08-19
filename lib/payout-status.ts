@@ -17,10 +17,11 @@
  * Anything unrecognised now renders neutral rather than amber, so a future
  * status added backend-first degrades to "unknown", not to a false "pending".
  *
- * The badge styling is Pressed Ink: state is carried by ink weight and the one
- * crimson accent, not by a traffic-light hue palette. PAID is the ink-filled
- * plate (the settled state), FAILED is the crimson one (the only thing that
- * needs a creator's attention), everything else is plain paper.
+ * The badge styling is Ivory House: these badges only ever render inside the
+ * creator portal, on its dark ground, so state is carried by the one gold
+ * accent and by tone — not by a traffic-light hue palette. PAID is gold (the
+ * settled state), anything still in flight is a muted ivory wash, and the two
+ * states that ended badly carry the restrained red as type only.
  */
 
 export type PayoutStatus =
@@ -45,31 +46,31 @@ const VIEWS: Record<PayoutStatus, PayoutStatusView> = {
   requested: {
     label: 'Requested',
     meaning: 'Received. Waiting for our team to send it.',
-    className: 'border-2 border-[#121212] bg-white text-[#121212]',
+    className: 'bg-[#F4F1EA]/8 text-[#9F9A8E]',
     inFlight: true,
   },
   processing: {
     label: 'Processing',
     meaning: 'The transfer is on its way to your bank.',
-    className: 'border-2 border-[#121212] bg-white text-[#121212]',
+    className: 'bg-[#F4F1EA]/8 text-[#9F9A8E]',
     inFlight: true,
   },
   paid: {
     label: 'Paid',
     meaning: 'Sent to your bank account.',
-    className: 'border-2 border-[#121212] bg-[#121212] text-white',
+    className: 'bg-[#C4AA6E]/12 text-[#C4AA6E]',
     inFlight: false,
   },
   failed: {
     label: 'Failed',
     meaning: "The transfer didn't go through. The amount is back in your balance.",
-    className: 'border-2 border-[#B3101C] bg-white text-[#B3101C]',
+    className: 'bg-[#C0362C]/12 text-[#C0362C]',
     inFlight: false,
   },
   cancelled: {
     label: 'Cancelled',
     meaning: 'This request was cancelled. The amount is back in your balance.',
-    className: 'border-2 border-[#121212] bg-white text-[#5C544A]',
+    className: 'bg-[#C0362C]/12 text-[#C0362C]',
     inFlight: false,
   },
 };
@@ -77,7 +78,7 @@ const VIEWS: Record<PayoutStatus, PayoutStatusView> = {
 const UNKNOWN: PayoutStatusView = {
   label: 'Unknown',
   meaning: 'We could not read the state of this payout. Contact support.',
-  className: 'border-2 border-[#121212] bg-white text-[#5C544A]',
+  className: 'bg-[#F4F1EA]/8 text-[#9F9A8E]',
   inFlight: false,
 };
 

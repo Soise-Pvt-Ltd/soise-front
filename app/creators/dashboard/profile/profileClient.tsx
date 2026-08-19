@@ -15,8 +15,14 @@ import { useRef, useState } from 'react';
 import { showToast } from '@/lib/toast-utils';
 import { updateProfile } from './actions';
 
-/** Instrument Serif — the Pressed Ink display face. */
-const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
+/** Playfair Display — the Ivory House display face. */
+const luxe = { fontFamily: 'var(--font-luxe, Georgia, serif)' } as const;
+
+// components/icons.tsx is shared with the storefront and off-limits here, so
+// its hard-coded dark strokes are flipped at the call site to survive this
+// ground; the one green tick is desaturated rather than dropped.
+const INVERT_ICON = { filter: 'invert(1)' } as const;
+const NEUTRALISE_ICON = { filter: 'grayscale(1) brightness(0.25)' } as const;
 
 export default function ProfileClient({ dashboard }: any) {
   const router = useRouter();
@@ -185,18 +191,22 @@ export default function ProfileClient({ dashboard }: any) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F0E8] text-[#121212]">
+    <div className="min-h-screen bg-[#0E0E10] text-[#F4F1EA]">
       <CreatorNav balance={currentBalance} />
       <div className="page-shell flex flex-col gap-[20px] px-[16px] pt-[28px] pb-[121px] md:px-0">
         <div
-          className="flex w-fit items-center gap-x-2 text-[#121212] hover:cursor-pointer"
+          className="flex w-fit items-center gap-x-2 text-[#B7B2A6] transition-colors hover:cursor-pointer hover:text-[#F4F1EA]"
           onClick={() => router.back()}
         >
-          <ArrowLeftIcon />{' '}
-          <span className="brut-label">My profile</span>
+          <span style={INVERT_ICON}>
+            <ArrowLeftIcon />
+          </span>{' '}
+          <span className="text-[12px] font-medium tracking-[0.28em] text-[#C4AA6E] uppercase">
+            My profile
+          </span>
         </div>
-        <div className="brut-plate space-y-[26px] p-[20px]">
-          <div className="relative mx-auto mb-[36px] size-[64px] overflow-hidden rounded-[2px] border-2 border-[#121212] md:mx-0">
+        <div className="space-y-[26px] rounded-[16px] bg-[#121214] p-[22px]">
+          <div className="relative mx-auto mb-[36px] size-[64px] overflow-hidden rounded-full border border-[#3A3A3D] md:mx-0">
             <img
               src={avatarSrc}
               alt="Profile picture"
@@ -209,7 +219,7 @@ export default function ProfileClient({ dashboard }: any) {
               className="hidden"
               onChange={handleAvatarSelected}
             />
-            <div className="absolute bottom-0 flex h-1/2 w-full items-center justify-center border-t-2 border-[#121212] bg-[#F5F0E8]/95">
+            <div className="absolute bottom-0 flex h-1/2 w-full items-center justify-center bg-[#F4F1EA]/90">
               <button
                 type="button"
                 title="Change profile picture"
@@ -219,7 +229,7 @@ export default function ProfileClient({ dashboard }: any) {
                 className="flex h-full w-full cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {uploadingAvatar ? (
-                  <span className="text-[10px] font-bold text-[#121212]">
+                  <span className="text-[10px] font-medium text-[#0E0E10]">
                     …
                   </span>
                 ) : (
@@ -229,20 +239,22 @@ export default function ProfileClient({ dashboard }: any) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <div className="brut-label text-[#5C544A]">Creator Code</div>
-            <div className="flex items-center gap-x-[10px] text-[#121212]">
-              <div className="text-[15px] font-bold tracking-widest uppercase">
+            <div className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+              Creator Code
+            </div>
+            <div className="flex items-center gap-x-[10px]">
+              <div className="text-[15px] font-medium tracking-widest text-[#F4F1EA] uppercase">
                 {creatorCode}
               </div>
               <button
                 type="button"
-                className="flex cursor-pointer items-center gap-x-1"
+                className="flex cursor-pointer items-center gap-x-1 opacity-70 transition-opacity hover:opacity-100"
                 onClick={handleCopyCreatorCode}
                 title="Copy creator code"
                 aria-label="Copy creator code"
               >
                 {copiedCreatorCode ? (
-                  <span className="text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase">
+                  <span className="text-[11px] font-medium tracking-[0.14em] text-[#C4AA6E] uppercase">
                     Copied!
                   </span>
                 ) : (
@@ -252,11 +264,13 @@ export default function ProfileClient({ dashboard }: any) {
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <div className="brut-label text-[#5C544A]">Account Tier</div>
-            <div className="flex items-center gap-x-[8px] text-[#5C544A]">
+            <div className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+              Account Tier
+            </div>
+            <div className="flex items-center gap-x-[8px]">
               {/* Same display-serif treatment as the dashboard card, so the
                   tier reads as the same thing in both places. */}
-              <div className="text-[20px] text-[#121212]" style={serif}>
+              <div className="text-[21px] font-medium text-[#C4AA6E]" style={luxe}>
                 {tier?.name || 'No Tier'}
               </div>
               <div>
@@ -266,11 +280,11 @@ export default function ProfileClient({ dashboard }: any) {
           </div>
         </div>
 
-        <div className="brut-plate space-y-[24px] p-[20px]">
+        <div className="space-y-[24px] rounded-[16px] bg-[#121214] p-[22px]">
           <div className="flex items-center justify-between gap-3">
             <div
-              className="text-[24px] leading-[0.95] tracking-tight text-[#121212] uppercase"
-              style={serif}
+              className="text-[26px] leading-tight font-medium tracking-tight text-[#F4F1EA]"
+              style={luxe}
             >
               Personal details
             </div>
@@ -278,9 +292,9 @@ export default function ProfileClient({ dashboard }: any) {
               <button
                 type="button"
                 onClick={startEditing}
-                className="brut-plate brut-press flex shrink-0 cursor-pointer items-center gap-x-1.5 px-[12px] py-[8px] text-[11px] font-bold tracking-[0.12em] text-[#121212] uppercase"
+                className="flex shrink-0 cursor-pointer items-center gap-x-1.5 rounded-full border border-[#3A3A3D] px-[16px] py-[8px] text-[13px] font-medium text-[#D8D3C7] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA]"
               >
-                <AdminEditIcon /> Edit profile
+                <AdminEditIcon color="#D8D3C7" /> Edit profile
               </button>
             ) : (
               <div className="flex shrink-0 items-center gap-x-2">
@@ -288,17 +302,22 @@ export default function ProfileClient({ dashboard }: any) {
                   type="button"
                   onClick={cancelEditing}
                   disabled={saving}
-                  className="brut-plate brut-press flex cursor-pointer items-center gap-x-1.5 px-[12px] py-[8px] text-[11px] font-bold tracking-[0.12em] text-[#5C544A] uppercase disabled:opacity-50"
+                  className="flex cursor-pointer items-center gap-x-1.5 rounded-full border border-[#3A3A3D] px-[16px] py-[8px] text-[13px] font-medium text-[#9F9A8E] transition-colors hover:border-[#C4AA6E] hover:text-[#F4F1EA] disabled:opacity-40"
                 >
-                  <CloseIcon /> Cancel
+                  <span style={INVERT_ICON}>
+                    <CloseIcon />
+                  </span>{' '}
+                  Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="brut-press flex cursor-pointer items-center gap-x-1.5 rounded-[2px] border-2 border-[#121212] bg-[#121212] px-[14px] py-[8px] text-[11px] font-bold tracking-[0.12em] text-white uppercase disabled:opacity-50"
+                  className="flex cursor-pointer items-center gap-x-1.5 rounded-full bg-[#F4F1EA] px-[20px] py-[8px] text-[13px] font-semibold tracking-wide text-[#0E0E10] transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <AdminSuccessCheckIcon />{' '}
+                  <span style={NEUTRALISE_ICON}>
+                    <AdminSuccessCheckIcon />
+                  </span>{' '}
                   {saving ? 'Saving…' : 'Save'}
                 </button>
               </div>
@@ -308,7 +327,9 @@ export default function ProfileClient({ dashboard }: any) {
           {isEditing ? (
             <div className="space-y-[16px]">
               <label className="block">
-                <span className="brut-label mb-2 block">First name</span>
+                <span className="mb-2 block text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+                  First name
+                </span>
                 <input
                   type="text"
                   value={form.first}
@@ -316,11 +337,13 @@ export default function ProfileClient({ dashboard }: any) {
                     setForm((f) => ({ ...f, first: e.target.value }))
                   }
                   placeholder="First name"
-                  className="brut-input"
+                  className="w-full appearance-none rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] outline-none transition-colors placeholder-[#5C584F] focus:border-[#C4AA6E] focus:ring-0"
                 />
               </label>
               <label className="block">
-                <span className="brut-label mb-2 block">Last name</span>
+                <span className="mb-2 block text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+                  Last name
+                </span>
                 <input
                   type="text"
                   value={form.last}
@@ -328,11 +351,13 @@ export default function ProfileClient({ dashboard }: any) {
                     setForm((f) => ({ ...f, last: e.target.value }))
                   }
                   placeholder="Last name"
-                  className="brut-input"
+                  className="w-full appearance-none rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] outline-none transition-colors placeholder-[#5C584F] focus:border-[#C4AA6E] focus:ring-0"
                 />
               </label>
               <label className="block">
-                <span className="brut-label mb-2 block">Mobile number</span>
+                <span className="mb-2 block text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+                  Mobile number
+                </span>
                 <input
                   type="tel"
                   value={form.phone}
@@ -340,22 +365,22 @@ export default function ProfileClient({ dashboard }: any) {
                     setForm((f) => ({ ...f, phone: e.target.value }))
                   }
                   placeholder="Mobile number"
-                  className="brut-input"
+                  className="w-full appearance-none rounded-[10px] border border-[#2A2A2D] bg-[#121214] px-4 py-3 text-[14px] text-[#F4F1EA] outline-none transition-colors placeholder-[#5C584F] focus:border-[#C4AA6E] focus:ring-0"
                 />
               </label>
             </div>
           ) : (
-            /* Plate the container, rule the rows. */
-            <div>
+            /* Panel the container, divide the rows. */
+            <div className="divide-y divide-[#1C1C1F]">
               {profileDetails.map((item) => (
                 <div
                   key={item.label}
-                  className="brut-rule flex items-center justify-between py-[16px] first:border-t-0 first:pt-0"
+                  className="flex items-center justify-between py-[16px] first:pt-0"
                 >
-                  <div className="brut-label w-[40%] text-[#5C544A]">
+                  <div className="w-[40%] text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
                     {item.label}
                   </div>
-                  <div className="flex w-[60%] items-center justify-end gap-x-[8px] text-[#121212]">
+                  <div className="flex w-[60%] items-center justify-end gap-x-[8px] text-[15px] text-[#F4F1EA]">
                     <div className={item.truncate ? 'truncate' : ''}>
                       {item.value}
                     </div>
@@ -366,15 +391,17 @@ export default function ProfileClient({ dashboard }: any) {
           )}
         </div>
 
-        <div className="brut-plate p-[20px]">
+        <div className="rounded-[16px] bg-[#121214] p-[22px]">
           <div className="flex items-center justify-between">
-            <div className="brut-label text-[#5C544A]">Withdrawal Bank</div>
-            <div className="flex items-center gap-x-[8px] text-[#121212]">
+            <div className="text-[12px] font-medium tracking-[0.14em] text-[#9F9A8E] uppercase">
+              Withdrawal Bank
+            </div>
+            <div className="flex items-center gap-x-[8px]">
               <div className="text-right">
-                <div className="text-[14px] font-bold">
+                <div className="text-[15px] font-medium text-[#F4F1EA]">
                   {withdrawalBank?.bank_name || 'Not set'}
                 </div>
-                <div className="text-[12px] text-[#5C544A] tabular-nums">
+                <div className="text-[13px] text-[#9F9A8E] tabular-nums">
                   {withdrawalBank?.account_number || 'N/A'}
                 </div>
               </div>
