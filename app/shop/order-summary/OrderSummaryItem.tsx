@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { EnrichedCartItem } from '@/components/home/nav/types';
+import { effectiveUnitPrice } from '@/lib/product-price';
 import { mediaThumb } from '@/lib/images';
 import { useCurrency } from '@/lib/currency-context';
 
@@ -20,7 +21,9 @@ export function OrderSummaryItem({
   const name = item.variantDetails?.product_name ?? 'Product';
   const color = item.variantDetails?.color ?? 'N/A';
   const size = item.variantDetails?.size ?? 'N/A';
-  const price = item.variantDetails?.price ?? 0;
+  const listPrice = item.variantDetails?.price ?? 0;
+  const price = effectiveUnitPrice(item.variantDetails);
+  const onSale = price < listPrice;
   const image =
     mediaThumb(item.variantDetails?.display_media?.[0]) ??
     mediaThumb(item.variantDetails?.media?.[0]) ??
@@ -68,7 +71,14 @@ export function OrderSummaryItem({
               className="text-[16px]"
               style={{ fontFamily: 'var(--font-display, Georgia, serif)' }}
             >
-              {formatPrice(price)}
+              {onSale && (
+                <span className="mr-[6px] text-[13px] text-[#8E8E93] line-through">
+                  {formatPrice(listPrice)}
+                </span>
+              )}
+              <span className={onSale ? 'text-[#B3101C]' : undefined}>
+                {formatPrice(price)}
+              </span>
             </div>
             <motion.button
               type="button"

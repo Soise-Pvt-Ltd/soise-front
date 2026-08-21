@@ -23,6 +23,9 @@ import { trackViewContent } from '@/lib/tracking-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
+import SaleCountdown from '@/components/SaleCountdown';
+import { useNow } from '@/lib/use-now';
+import type { ProductSale } from '@/lib/product-price';
 import {
   type ColorFinish,
   finishSwatchStyle,
@@ -49,6 +52,10 @@ interface SampleVariant {
   finish?: ColorFinish | null;
   size: string;
   price: number;
+  /** Flash sale price for THIS variant, or null. Computed by the backend with
+      the same code that charges at checkout — never recomputed here. */
+  sale_price?: number | null;
+  sale_ends_at?: string | null;
   stock?: number;
   media: Media[] | null;
   display_media?: Media[];
@@ -73,6 +80,7 @@ export interface Product {
   description: string;
   base_price: number;
   sample_variants?: SampleVariant[];
+  sale?: ProductSale | null;
 }
 
 export default function ProductPageClient({
@@ -132,7 +140,14 @@ export default function ProductPageClient({
   // a re-render of the same product does not double-count.
   const productId = product?.id;
   const productName = product?.name;
-  const productPrice = product?.base_price;
+  // Report the price a shopper can actually pay. Sending list price during a
+  // sale overstates every ViewContent value Meta optimises and reports ROAS
+  // against, which is the opposite of useful when the sale exists precisely to
+  // test whether price is the barrier.
+  const productPrice =
+    product?.sale?.coverage === 'all' && Number(product.sale.sale_price) > 0
+      ? Number(product.sale.sale_price)
+      : product?.base_price;
   useEffect(() => {
     if (!productId) return;
     trackViewContent({
@@ -256,10 +271,39 @@ export default function ProductPageClient({
     ).join(', ');
   }, [mainImage]);
 
-  const currentPrice = useMemo(() => {
+  // List price of whatever is selected — what the shopper pays when no sale
+  // covers this variant.
+  const listPrice = useMemo(() => {
     if (selectedVariant && selectedVariant.price > 0) return selectedVariant.price;
     return product?.base_price ?? 0;
   }, [selectedVariant, product?.base_price]);
+
+  // Sale pricing is resolved PER VARIANT, not per product. A sale may cover
+  // only some sizes (clearing the remaining XLs), so switching size can move
+  // the price in or out of the discount — which is exactly why the catalog
+  // card refuses to badge a partial sale and defers to this page.
+  // This page is ISR'd at 60s, so a cached render can outlive the sale it
+  // shows. Checkout enforces the window server-side, so a stale sale price
+  // would quote less than we charge — drop it the instant the clock passes.
+  const now = useNow();
+
+  const saleEndsAt = selectedVariant?.sale_ends_at ?? product?.sale?.ends_at ?? null;
+
+  const saleExpired =
+    now !== null && saleEndsAt ? new Date(saleEndsAt).getTime() <= now : false;
+
+  const salePrice = useMemo(() => {
+    if (saleExpired) return null;
+    const p = selectedVariant?.sale_price;
+    return typeof p === 'number' && p > 0 && p < listPrice ? p : null;
+  }, [selectedVariant?.sale_price, listPrice, saleExpired]);
+
+  const currentPrice = salePrice ?? listPrice;
+
+  const salePercent = useMemo(() => {
+    if (!salePrice || !listPrice) return null;
+    return Math.round(((listPrice - salePrice) / listPrice) * 100);
+  }, [salePrice, listPrice]);
 
   const isOutOfStock = isVariantSoldOut(selectedVariant);
 
@@ -441,16 +485,31 @@ export default function ProductPageClient({
                   {product.name}
                 </h1>
                 <AnimatePresence mode="wait">
-                  <motion.p
+                  <motion.div
                     key={currentPrice}
-                    className="font-display mt-2 text-[22px] text-[#121212]"
+                    className="mt-2"
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 8 }}
                     transition={{ duration: 0.25 }}
                   >
-                    {formatPrice(currentPrice)}
-                  </motion.p>
+                    <p className="font-display text-[22px] text-[#121212]">
+                      {salePrice !== null && (
+                        <span className="mr-[8px] text-[#8E8E93] line-through">
+                          {formatPrice(listPrice)}
+                        </span>
+                      )}
+                      <span className={salePrice !== null ? 'text-[#B3101C]' : undefined}>
+                        {formatPrice(currentPrice)}
+                      </span>
+                    </p>
+                    {salePrice !== null && (
+                      <p className="mt-1 flex flex-wrap items-center gap-x-[8px] text-[11px] font-bold tracking-[0.14em] text-[#B3101C] uppercase">
+                        <span>−{salePercent}% off</span>
+                        <SaleCountdown endsAt={saleEndsAt} />
+                      </p>
+                    )}
+                  </motion.div>
                 </AnimatePresence>
               </motion.div>
 
@@ -709,7 +768,14 @@ export default function ProductPageClient({
                   {product.name}
                 </p>
                 <p className="font-display text-[15px] text-[#121212]">
-                  {formatPrice(currentPrice)}
+                  {salePrice !== null && (
+                    <span className="mr-[6px] text-[#8E8E93] line-through">
+                      {formatPrice(listPrice)}
+                    </span>
+                  )}
+                  <span className={salePrice !== null ? 'text-[#B3101C]' : undefined}>
+                    {formatPrice(currentPrice)}
+                  </span>
                   <span className="font-sans ml-2 text-[10px] tracking-[0.08em] text-[#B3101C] uppercase">
                     Free delivery
                   </span>

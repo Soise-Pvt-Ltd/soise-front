@@ -1,6 +1,11 @@
 export interface ProductVariant {
   id: string;
   price: number;
+  /** Live flash sale price for this variant, or null. Set by the backend with
+      the same code that charges at checkout — never recomputed client-side. */
+  sale_price?: number | null;
+  original_price?: number | null;
+  sale_ends_at?: string | null;
   color: string;
   size: string;
   product_name?: string;

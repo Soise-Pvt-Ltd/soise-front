@@ -36,6 +36,9 @@ interface Variant {
   color?: string;
   size?: string;
   price?: number;
+  /** Live flash sale price, computed by the backend. */
+  sale_price?: number | null;
+  sale_ends_at?: string | null;
   stock?: number;
   media?: MediaEntry[];
   display_media?: MediaEntry[];
@@ -72,6 +75,18 @@ function imageUrls(variant: Variant): string[] {
     .filter(Boolean);
 }
 
+/** Google's sale_price_effective_date: "start/end" in ISO 8601.
+ *
+ * Only the end is known here — a sale visible in the feed is already running —
+ * so the window opens now. Omitting the element entirely would make the sale
+ * price permanent in Google's eyes and leave it live after the flash ends. */
+function saleWindow(endsAt?: string | null): string {
+  if (!endsAt) return '';
+  const end = new Date(endsAt);
+  if (Number.isNaN(end.getTime())) return '';
+  return `${new Date().toISOString()}/${end.toISOString()}`;
+}
+
 function itemXml(product: Product, variant: Variant): string {
   const productUrl = `${SITE_URL}/shop/product-listing/${product.slug}`;
   const images = imageUrls(variant);
@@ -83,6 +98,10 @@ function itemXml(product: Product, variant: Variant): string {
     .filter(Boolean)
     .join(' — ');
   const price = Number(variant.price ?? product.base_price ?? 0);
+  // sale_price must be strictly below price or Google rejects the item.
+  const sale = Number(variant.sale_price ?? 0);
+  const onSale = sale > 0 && sale < price;
+  const window = onSale ? saleWindow(variant.sale_ends_at) : '';
   const description = (product.description || DEFAULT_DESCRIPTION)
     .replace(/\s+/g, ' ')
     .trim()
@@ -102,7 +121,7 @@ function itemXml(product: Product, variant: Variant): string {
       <g:image_link>${esc(images[0])}</g:image_link>
 ${additionalImages ? additionalImages + '\n' : ''}      <g:availability>${(variant.stock ?? 0) > 0 ? 'in_stock' : 'out_of_stock'}</g:availability>
       <g:price>${price.toFixed(2)} NGN</g:price>
-      <g:brand>${esc(BRAND)}</g:brand>
+${onSale ? `      <g:sale_price>${sale.toFixed(2)} NGN</g:sale_price>\n` : ''}${window ? `      <g:sale_price_effective_date>${esc(window)}</g:sale_price_effective_date>\n` : ''}      <g:brand>${esc(BRAND)}</g:brand>
       <g:condition>new</g:condition>
       <g:identifier_exists>no</g:identifier_exists>
       <g:google_product_category>${GOOGLE_PRODUCT_CATEGORY}</g:google_product_category>

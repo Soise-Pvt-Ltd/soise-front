@@ -7,7 +7,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
-import { getDisplayPrice } from '@/lib/product-price';
+import { getDisplayPrice, type ProductSale } from '@/lib/product-price';
+import { useNow } from '@/lib/use-now';
 
 interface Media {
   url: string;
@@ -23,6 +24,7 @@ interface Media {
 interface SampleVariant {
   media: Media[] | null;
   price?: number | null;
+  sale_price?: number | null;
 }
 
 interface Collection {
@@ -41,6 +43,7 @@ interface Product {
   title?: string; // For alt text
   created_at?: string;
   collection: Collection | null;
+  sale?: ProductSale | null;
 }
 interface ProductListingClientProps {
   products: Product[];
@@ -52,6 +55,9 @@ export default function ProductListingClient({
   initialCollection,
 }: ProductListingClientProps) {
   const { formatPrice } = useCurrency();
+  // Drops a sale the moment its window closes, even on an ISR page cached
+  // while the sale was still running.
+  const now = useNow();
   // Defensive: the API shape isn't guaranteed, so normalize to a safe array
   // before any .length / .map / .filter access downstream.
   const safeProducts = Array.isArray(products) ? products : [];
@@ -194,6 +200,26 @@ export default function ProductListingClient({
                         damping: 20,
                       }}
                     >
+                      {/* Sale flag. Top-RIGHT deliberately: "New" owns the
+                          top-left corner and a piece can be both. Only shown
+                          when the backend reports coverage "all" —
+                          getDisplayPrice suppresses partial sales, which
+                          discount some sizes and would otherwise badge a price
+                          the shopper's size doesn't have. */}
+                      {(() => {
+                        const { onSale, discountPct } = getDisplayPrice(product, now);
+                        return onSale && discountPct ? (
+                          <motion.div
+                            className="absolute top-[10px] right-[10px] z-10 bg-[#B3101C] px-[6px] py-[2px] text-[11px] font-bold tracking-[0.14em] text-white uppercase"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 + index * 0.06 }}
+                          >
+                            −{discountPct}%
+                          </motion.div>
+                        ) : null;
+                      })()}
+
                       {/* Badge */}
                       {product.isNew && (
                         <motion.div
@@ -244,7 +270,8 @@ export default function ProductListingClient({
                     <p className="truncate uppercase">{product.name}</p>
                     <div className="font-display mt-1 text-[16px]">
                       {(() => {
-                        const { amount, isFrom } = getDisplayPrice(product);
+                        const { amount, isFrom, originalAmount } =
+                          getDisplayPrice(product, now);
                         return (
                           <>
                             {isFrom && (
@@ -252,7 +279,19 @@ export default function ProductListingClient({
                                 from
                               </span>
                             )}
-                            {formatPrice(amount)}
+                            {/* Struck list price first, then what they pay.
+                                The old price is the argument for the new one,
+                                so it has to be legible — not hidden. */}
+                            {originalAmount !== null && (
+                              <span className="mr-[6px] font-normal text-[#8E8E93] line-through">
+                                {formatPrice(originalAmount)}
+                              </span>
+                            )}
+                            <span
+                              className={originalAmount !== null ? 'text-[#B3101C]' : undefined}
+                            >
+                              {formatPrice(amount)}
+                            </span>
                           </>
                         );
                       })()}

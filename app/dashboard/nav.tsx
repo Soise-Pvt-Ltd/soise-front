@@ -36,6 +36,22 @@ const TagIcon = (
   </svg>
 );
 
+const BoltIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <path
+      d="M8.9 1.2 3.4 8.6a.5.5 0 0 0 .4.8h3l-1.1 5.2a.3.3 0 0 0 .53.25l5.6-7.45a.5.5 0 0 0-.4-.8h-3l1.1-5.15a.3.3 0 0 0-.53-.25Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 /**
  * Eleven flat links in one undifferentiated column gave no sense of what this
  * dashboard is for. Grouped under gold eyebrows, the shape of the business
@@ -51,6 +67,7 @@ const SECTIONS: {
       { path: '/dashboard', icon: <AdminOverviewIcon />, label: 'Overview' },
       { path: '/dashboard/products', icon: <AdminProductsIcon />, label: 'Products' },
       { path: '/dashboard/orders', icon: <AdminOrdersIcon />, label: 'Orders' },
+      { path: '/dashboard/flash-sales', icon: BoltIcon, label: 'Flash Sales' },
       { path: '/dashboard/home-content', icon: <AdminSettingsIcon />, label: 'Home Page' },
     ],
   },

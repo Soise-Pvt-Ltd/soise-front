@@ -28,6 +28,7 @@ import {
 } from './pending-order';
 import { DEFAULT_COUNTRY, isDomestic } from '@/lib/countries';
 import { OrderSummaryItem } from './OrderSummaryItem';
+import { effectiveUnitPrice } from '@/lib/product-price';
 import { PendingOrderBanner } from './PendingOrderBanner';
 import { OrderSummaryTotals } from './OrderSummaryTotals';
 import CheckoutStepPayment from './CheckoutStepPayment';
@@ -157,8 +158,10 @@ export default function OrderSummaryClient({
   const [apiSubtotal, setApiSubtotal] = useState<number | null>(null);
   const [showSavingsPulse, setShowSavingsPulse] = useState(false);
 
+  // Sale prices, not list prices: the backend charges the discounted unit
+  // price, so a bag summing list prices would quote a total nobody is billed.
   const calculatedSubtotal = cart.reduce(
-    (acc, item) => acc + (item.variantDetails?.price ?? 0) * item.quantity,
+    (acc, item) => acc + effectiveUnitPrice(item.variantDetails) * item.quantity,
     0,
   );
 
