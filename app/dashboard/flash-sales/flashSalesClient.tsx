@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from 'react';
 import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { PageHeader, Panel, SectionTitle, Badge, EmptyState, TableShell } from '../ui';
+import { previewSalePrice, ngn } from './preview-price';
 import {
   createFlashSale,
   cancelFlashSale,
@@ -12,20 +13,6 @@ import {
   type FlashSale,
 } from './actions';
 
-const ngn = (n: number) =>
-  `₦${(Number(n) || 0).toLocaleString('en-NG', { maximumFractionDigits: 0 })}`;
-
-/**
- * Mirrors app/domain/flash_sales.py `sale_price` so the operator sees the exact
- * figure the shopper will be charged, including the naira flooring rule.
- * Kept deliberately small and in one place — if the backend rule ever changes,
- * this is the single line that has to follow it.
- */
-function previewSalePrice(base: number, pct: number): number {
-  if (!base || !pct || pct <= 0) return base || 0;
-  const raw = (base * (100 - pct)) / 100;
-  return raw >= 1000 ? Math.floor(raw / 100) * 100 : Math.round(raw * 100) / 100;
-}
 
 /** `datetime-local` value for "now + hours", in the operator's own timezone. */
 function localInput(offsetHours: number): string {

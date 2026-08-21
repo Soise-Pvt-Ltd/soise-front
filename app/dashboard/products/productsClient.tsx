@@ -4,6 +4,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import GridContainer from '../gridContainer';
+import ProductSalePanel, {
+  type ProductSaleSummary,
+} from './ProductSalePanel';
 import { PageHeader } from '../ui';
 import RowActionMenu from '@/components/admin/RowActionMenu';
 import { useDropzone } from 'react-dropzone';
@@ -595,6 +598,9 @@ export default function ProductsPage({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // The live flash sale covering the product being edited, straight off the
+  // admin payload (every product the API returns carries `sale`).
+  const [editingSale, setEditingSale] = useState<ProductSaleSummary | null>(null);
   const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(
     null,
   );
@@ -767,6 +773,35 @@ export default function ProductsPage({
     // pagination.limit intentionally excluded to avoid refetch loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPeriod, searchQuery, activeTab, sortBy]);
+
+  // Re-read this product after a sale starts or ends. The panel renders from
+  // the server's `sale` summary rather than guessing locally, so that the
+  // coverage and campaign-breadth flags it relies on always come from the same
+  // place that decides them.
+  const refreshEditingSale = async () => {
+    if (!fetchServerData || !editingId) return;
+    try {
+      const result = await fetchServerData(
+        pagination.limit,
+        pagination.offset ?? 0,
+        searchQuery,
+        selectedPeriod,
+        activeTab,
+        sortBy,
+      );
+      if (result?.success) {
+        rawDataRef.current = result.products?.data || [];
+        setProducts(mapProducts(result.products?.data));
+        const fresh = rawDataRef.current.find(
+          (x: { id?: string; sale?: ProductSaleSummary | null }) => x?.id === editingId,
+        );
+        setEditingSale(fresh?.sale ?? null);
+      }
+    } catch {
+      // The action already reported success or failure; a failed refresh just
+      // means the panel is briefly stale, not that the sale didn't change.
+    }
+  };
 
   const handlePageChange = async (newOffset: number) => {
     if (!fetchServerData) return;
@@ -1015,6 +1050,7 @@ export default function ProductsPage({
 
   const resetForm = () => {
     setEditingId(null);
+    setEditingSale(null);
     setEditingProductMeta(null);
     setFieldErrors({});
     isDirtyRef.current = false;
@@ -1054,6 +1090,7 @@ export default function ProductsPage({
     setFieldErrors({});
     isDirtyRef.current = false;
     setEditingId(id);
+    setEditingSale(product.sale ?? null);
     setEditingProductMeta({
       name: product.name || 'Untitled product',
       image: product.primary_image || product.sample_variants?.[0]?.media?.[0]?.url || '',
@@ -2092,6 +2129,17 @@ export default function ProductsPage({
                         )}
                       </div>
                     </div>
+
+                    {/* Put this product on sale without leaving the editor.
+                        Creates a sale covering this product only; wider
+                        campaigns stay on /dashboard/flash-sales. */}
+                    <ProductSalePanel
+                      productId={editingId}
+                      productName={productName}
+                      basePrice={Number(basePrice) || 0}
+                      sale={editingSale}
+                      onChanged={refreshEditingSale}
+                    />
 
                     {/* Description */}
                     <div>

@@ -70,7 +70,12 @@ export async function createFlashSale(input: {
   starts_at: string;
   ends_at: string;
   discount_pct: number;
-  variant_ids: string[];
+  // Either is accepted, or both — the backend takes the union and expands each
+  // product to its variants at write time. Sending product_ids is preferable
+  // when the intent is "this whole garment": it cannot miss a variant the
+  // client's copy of the product didn't know about.
+  variant_ids?: string[];
+  product_ids?: string[];
 }) {
   const headers = await authHeaders();
   if (!headers) return { success: false, message: 'Not signed in' };
