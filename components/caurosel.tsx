@@ -8,12 +8,13 @@ import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { useCurrency } from '@/lib/currency-context';
-import { getDisplayPrice } from '@/lib/product-price';
+import { ProductPrice, SaleBadge } from '@/components/ProductPrice';
+import { useNow } from '@/lib/use-now';
 import { contentImage } from '@/lib/images';
 
 export default function SwiperCarouselClient({ items: products }: any) {
-  const { formatPrice } = useCurrency();
+  // Drops a sale the moment its window closes, even on a cached render.
+  const now = useNow();
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
 
@@ -82,6 +83,11 @@ export default function SwiperCarouselClient({ items: products }: any) {
                         New
                       </span>
                     )}
+                    <SaleBadge
+                      product={item}
+                      now={now}
+                      className="absolute top-3 right-3 z-10"
+                    />
                     {(() => {
                       const rawMedia =
                         (item.sample_variants?.[0]?.media?.length &&
@@ -183,21 +189,11 @@ export default function SwiperCarouselClient({ items: products }: any) {
                 </div>
                 {/* Money speaks serif — the same voice as the bag subtotal
                     and the checkout total, from first glance to PAY. */}
-                <div className="font-display mt-1 text-[15px] text-[#121212]">
-                  {(() => {
-                    const { amount, isFrom } = getDisplayPrice(item);
-                    return (
-                      <>
-                        {isFrom && (
-                          <span className="font-sans mr-1 text-[11px] font-normal text-[#8E8E93]">
-                            from
-                          </span>
-                        )}
-                        {formatPrice(amount)}
-                      </>
-                    );
-                  })()}
-                </div>
+                <ProductPrice
+                  product={item}
+                  now={now}
+                  className="font-display mt-1 block text-[15px] text-[#121212]"
+                />
               </motion.div>
             </motion.div>
           </SwiperSlide>

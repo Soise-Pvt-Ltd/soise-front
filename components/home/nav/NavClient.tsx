@@ -27,7 +27,7 @@ import { onCartChanged } from '@/lib/cart-events';
 import CurrencyToggle from './CurrencyToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
-import { getDisplayPrice } from '@/lib/product-price';
+import { ProductPrice } from '@/components/ProductPrice';
 import { showToast } from '@/lib/toast-utils';
 import SwiperCarouselClient from '@/components/caurosel';
 import {
@@ -695,12 +695,10 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                                 <p className="truncate text-[14px] font-medium text-[#121212]">
                                   {product.name}
                                 </p>
-                                <p className="mt-0.5 text-[13px] text-[#8E8E93]">
-                                  {(() => {
-                                    const { amount, isFrom } = getDisplayPrice(product);
-                                    return `${isFrom ? 'from ' : ''}${formatPrice(amount)}`;
-                                  })()}
-                                </p>
+                                <ProductPrice
+                                  product={product}
+                                  className="mt-0.5 block text-[13px] text-[#8E8E93]"
+                                />
                               </div>
                               <span
                                 aria-hidden

@@ -6,8 +6,8 @@ import { FilterIcon } from '@/components/icons';
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { useCurrency } from '@/lib/currency-context';
 import { getDisplayPrice, type ProductSale } from '@/lib/product-price';
+import { ProductPrice } from '@/components/ProductPrice';
 import { useNow } from '@/lib/use-now';
 
 interface Media {
@@ -54,7 +54,6 @@ export default function ProductListingClient({
   products,
   initialCollection,
 }: ProductListingClientProps) {
-  const { formatPrice } = useCurrency();
   // Drops a sale the moment its window closes, even on an ISR page cached
   // while the sale was still running.
   const now = useNow();
@@ -269,32 +268,7 @@ export default function ProductListingClient({
                   <div className="mt-[10px] px-[7.5px] text-[14px] md:text-base">
                     <p className="truncate uppercase">{product.name}</p>
                     <div className="font-display mt-1 text-[16px]">
-                      {(() => {
-                        const { amount, isFrom, originalAmount } =
-                          getDisplayPrice(product, now);
-                        return (
-                          <>
-                            {isFrom && (
-                              <span className="font-sans mr-1 text-[11px] font-normal text-[#8E8E93]">
-                                from
-                              </span>
-                            )}
-                            {/* Struck list price first, then what they pay.
-                                The old price is the argument for the new one,
-                                so it has to be legible — not hidden. */}
-                            {originalAmount !== null && (
-                              <span className="mr-[6px] font-normal text-[#8E8E93] line-through">
-                                {formatPrice(originalAmount)}
-                              </span>
-                            )}
-                            <span
-                              className={originalAmount !== null ? 'text-[#B3101C]' : undefined}
-                            >
-                              {formatPrice(amount)}
-                            </span>
-                          </>
-                        );
-                      })()}
+                      <ProductPrice product={product} now={now} />
                     </div>
                   </div>
                 </motion.div>
