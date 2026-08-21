@@ -152,12 +152,12 @@ export default function ProductSalePanel({
           <p className="mt-1 text-[13px] text-[#5C544A]">
             Ends {endsIn(sale!.ends_at)}
             {sale!.coverage === 'partial' && (
-              // The catalog card shows the cheapest variant price, so it
-              // refuses to badge a sale that doesn't cover every buyable size.
+              // Still badged on the shop. The card prints "from" the cheapest
+              // size so the badge and the price agree.
               <>
                 {' · '}
                 <span className="text-[#8A5A1E]">
-                  some sizes only — no badge on the shop page
+                  some sizes only — shop shows &ldquo;from&rdquo; the cheapest
                 </span>
               </>
             )}

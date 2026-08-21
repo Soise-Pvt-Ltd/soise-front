@@ -8,14 +8,16 @@
 // variant mismatch alone isn't a range, and labeling a single fixed price as
 // "from X" implies options the shopper won't find on the product page.
 //
-// Flash sales ride on the same rule, with one extra condition. A sale can
-// cover a single size, and the card shows the MINIMUM price — so badging a
-// partial sale would advertise a discount that exists on one size, possibly a
-// sold-out one, and the price climbs when the shopper picks their actual size.
-// The backend already decides this and sends `sale.coverage`: only "all"
-// (every purchasable variant discounted) changes the card. A "partial" sale is
-// real and still discounts at checkout — it just prices itself on the product
-// page, per size, where the shopper can see which sizes it applies to.
+// Every live sale is badged, including one covering a single size — a
+// discount nobody can see is money spent for nothing. What keeps that honest
+// is the price beside it: the backend computes `card_price` across the whole
+// purchasable census (each size at its sale price if it has one, its list
+// price if not) and flags `card_is_from` when the sizes disagree. So a sale on
+// one size reads "from ₦67,500" with a −25% badge, which is exactly true —
+// ₦67,500 is reachable, just not in every size — and the shopper sees
+// per-size prices on the product page. `card_original_price` is null when the
+// cheapest size is not itself discounted, so nothing is struck through that
+// was never reduced.
 
 export interface ProductSale {
   id?: string;
@@ -29,6 +31,13 @@ export interface ProductSale {
   ends_at?: string | null;
   sale_price?: number | null;
   original_price?: number | null;
+  /** What the catalog card should print, computed across every purchasable
+   *  variant (sale price where there is one, list price otherwise). */
+  card_price?: number | null;
+  /** Struck-through price — null when the cheapest size is not itself
+   *  discounted, so we never strike a number nobody reduced. */
+  card_original_price?: number | null;
+  card_is_from?: boolean | null;
   variants_on_sale?: number | null;
   variants_total?: number | null;
 }
@@ -83,29 +92,36 @@ export function getDisplayPrice(
       ? new Date(sale.ends_at).getTime() <= now
       : false;
 
-  const saleApplies =
-    !!sale &&
-    !expired &&
-    sale.coverage === 'all' &&
-    Number.isFinite(Number(sale.sale_price)) &&
-    Number(sale.sale_price) > 0;
+  // `card_price` is preferred, but tolerate a backend that predates it: the
+  // storefront and the API deploy independently, so there is always a window
+  // where one is older than the other.
+  const cardPrice = Number(sale?.card_price ?? sale?.sale_price);
+  const saleApplies = !!sale && !expired && Number.isFinite(cardPrice) && cardPrice > 0;
 
   if (saleApplies) {
-    const salePrices = variants
-      .map((v) => Number(v?.sale_price))
-      .filter((p) => Number.isFinite(p) && p > 0);
+    const hasCardFields = sale!.card_price != null;
+    const amount = cardPrice;
 
-    const amount = salePrices.length ? Math.min(...salePrices) : Number(sale!.sale_price);
-    const original = Number(sale!.original_price) || base || null;
+    const original = hasCardFields
+      ? Number(sale!.card_original_price) || null
+      : Number(sale!.original_price) || base || null;
+
+    // The badge advertises the best discount available on the product. On a
+    // partial sale that is deliberately not the discount on every size — the
+    // "from" price beside it is what keeps the pair honest.
+    const pct = Number(sale!.max_discount_pct ?? sale!.discount_pct);
 
     return {
       amount,
-      // "from" tracks the sale prices now, since those are what's displayed.
-      isFrom: spread(salePrices),
+      isFrom: hasCardFields
+        ? !!sale!.card_is_from
+        : spread(
+            variants
+              .map((v) => Number(v?.sale_price))
+              .filter((p) => Number.isFinite(p) && p > 0),
+          ),
       originalAmount: original && original > amount ? original : null,
-      discountPct: Number.isFinite(Number(sale!.discount_pct))
-        ? Math.round(Number(sale!.discount_pct))
-        : null,
+      discountPct: Number.isFinite(pct) ? Math.round(pct) : null,
       onSale: true,
       saleEndsAt: sale!.ends_at ?? null,
     };

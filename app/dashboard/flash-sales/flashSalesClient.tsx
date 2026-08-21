@@ -343,11 +343,11 @@ export default function FlashSalesClient({
                   ? ` and ${coverage.partialNames.length - 3} more`
                   : ''}{' '}
                 {coverage.partialNames.length === 1 ? 'has' : 'have'} only some
-                sizes on sale, so {coverage.partialNames.length === 1 ? 'it' : 'they'}{' '}
-                won&apos;t show a sale badge or a struck-through price on the shop
-                page. The card shows the cheapest size, so badging a partial sale
-                would advertise a price most shoppers can&apos;t get. The discount
-                still applies at checkout, and the product page shows it per size.
+                sizes on sale. {coverage.partialNames.length === 1 ? 'It' : 'They'}{' '}
+                will still be badged on the shop, but the card prints
+                &ldquo;from&rdquo; the cheapest size rather than a single price —
+                the card only has room for one number, and the sizes now
+                disagree. Shoppers see the per-size prices on the product page.
               </p>
             )}
 
