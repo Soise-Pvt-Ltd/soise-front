@@ -24,8 +24,12 @@ function AuthSuccessContent() {
     const handleGoogleCallback = async () => {
       const accessToken = searchParams.get('access_token');
       const userId = searchParams.get('user_id');
+      // Single-use handoff code. Preferred over the raw token in the URL: it
+      // carries the refresh token across too (without which a Google session
+      // died after 24h instead of 30 days) and expires in 60 seconds.
+      const code = searchParams.get('code');
 
-      if (!accessToken) {
+      if (!accessToken && !code) {
         showToast.error('Authentication failed - no access token received');
         setTimeout(() => router.push('/auth/login'), 2000);
         return;
@@ -39,7 +43,7 @@ function AuthSuccessContent() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ accessToken, userId }),
+          body: JSON.stringify({ accessToken, userId, code }),
         });
 
         const result = await response.json();
