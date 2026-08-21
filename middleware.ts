@@ -23,23 +23,49 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://api.soise.ng';
 const EXPIRY_LEEWAY_MS = 30_000;
 
 /**
- * Read the `exp` claim (ms epoch) from a JWT without verifying its signature.
- * Verification still happens on the backend for every request — here we only
- * need expiry to decide whether to proactively refresh. Returns null if the
- * token can't be parsed, in which case we treat it as "present" (fail open)
- * so a parsing quirk never logs out a valid user.
+ * Decode a JWT payload WITHOUT verifying its signature.
+ *
+ * Safe here because nothing security-critical rests on it: the backend
+ * verifies the signature on every API call, and the authoritative role check
+ * lives in the route-segment layouts (lib/require-role.ts), which ask the
+ * backend. Middleware only needs enough to decide "refresh now?" and "is it
+ * worth rendering the admin shell?".
  */
-function getTokenExpiryMs(token: string): number | null {
+function readTokenClaims(token: string | undefined): Record<string, unknown> | null {
+  if (!token) return null;
   try {
     const part = token.split('.')[1];
     if (!part) return null;
     let b64 = part.replace(/-/g, '+').replace(/_/g, '/');
     b64 += '='.repeat((4 - (b64.length % 4)) % 4);
     const payload = JSON.parse(atob(b64));
-    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+    return typeof payload === 'object' && payload !== null ? payload : null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Read the `exp` claim (ms epoch) from a JWT. Returns null if the token can't
+ * be parsed, in which case we treat it as "present" (fail open) so a parsing
+ * quirk never logs out a valid user.
+ */
+function getTokenExpiryMs(token: string): number | null {
+  const exp = readTokenClaims(token)?.exp;
+  return typeof exp === 'number' ? exp * 1000 : null;
+}
+
+/** Pull one cookie's value out of raw Set-Cookie header strings. */
+function valueFromSetCookies(rawCookies: string[] | null, name: string): string | undefined {
+  if (!rawCookies) return undefined;
+  for (const raw of rawCookies) {
+    const nameValue = raw.split(';', 1)[0].trim();
+    const eq = nameValue.indexOf('=');
+    if (eq !== -1 && nameValue.slice(0, eq).trim() === name) {
+      return nameValue.slice(eq + 1).trim();
+    }
+  }
+  return undefined;
 }
 
 function isAccessTokenUsable(token: string | undefined): boolean {
@@ -122,7 +148,6 @@ export async function middleware(req: NextRequest) {
 
   const accessToken = req.cookies.get('access_token')?.value;
   const refreshToken = req.cookies.get('refresh_token')?.value;
-  const isAdmin = req.cookies.get('isAdmin')?.value === 'true';
 
   // Determine whether the session is currently valid; if the access token is
   // expired but a refresh token exists, transparently refresh it so the user
@@ -140,16 +165,50 @@ export async function middleware(req: NextRequest) {
     return res;
   };
 
-  // Rule 1: Protect admin routes
+  // Rule 1: Protect admin routes.
+  //
+  // The role is read from the access token, which CARRIES it as a claim. It
+  // used to be read from a separate `isAdmin` cookie, and that cookie was the
+  // bug: it was written only at login with a 24h lifetime and never re-issued,
+  // while the session itself refreshes for 30 days. From day two onward an
+  // admin had a perfectly valid session, a dead cookie, and /dashboard
+  // silently bounced them to the home page. The OTP sign-in path never set it
+  // at all, so an admin who signed in by email code could never get in.
+  //
+  // Deriving it from the token removes the staleness by construction: the
+  // claim travels with the credential and is re-minted on every refresh (the
+  // backend re-reads the role from the database when it does, so a demotion
+  // propagates within one access-token lifetime).
   if (path.startsWith('/dashboard')) {
     if (!hasSession) {
-      return redirectToLogin(req, new URL('/', req.url));
+      // Send them somewhere they can actually fix it. This used to redirect to
+      // `/`, so a logged-out visitor was bounced to the home page with no
+      // explanation and no way to continue to where they were going.
+      const loginUrl = new URL('/auth/login', req.url);
+      loginUrl.searchParams.set('callbackUrl', req.nextUrl.pathname + req.nextUrl.search);
+      return redirectToLogin(req, loginUrl);
     }
-    // Check admin status from cookie (backend re-verifies role on every call)
-    if (isAdmin) {
+
+    // After a refresh the fresh token is in the Set-Cookie headers we're about
+    // to apply, not in req.cookies — read the newer one when it exists, or the
+    // role would be one refresh out of date at exactly the wrong moment.
+    const activeToken =
+      valueFromSetCookies(refreshedCookies, 'access_token') ?? accessToken;
+    const role = readTokenClaims(activeToken)?.role;
+
+    if (role === 'admin') {
       return proceed();
     }
-    return NextResponse.redirect(new URL('/', req.url));
+    if (typeof role === 'string' && role.length > 0) {
+      // A known, non-admin role: refuse here rather than rendering the shell.
+      return NextResponse.redirect(new URL('/?reason=admin-only', req.url));
+    }
+    // Role unreadable (an old token shape, a parsing quirk). Fail open TO THE
+    // AUTHORITATIVE CHECK rather than closed: app/dashboard/layout.tsx calls
+    // requireRole(['admin']), which asks the backend and redirects with the
+    // same ?reason=admin-only. Treating "unknown" as "deny" is precisely how
+    // the cookie version locked admins out in silence.
+    return proceed();
   }
 
   // Rule 2: Protect user-specific routes like checkout.

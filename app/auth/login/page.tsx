@@ -22,6 +22,36 @@ import { showToast, validateField } from '@/lib/toast-utils';
 
 const serif = { fontFamily: 'var(--font-display, Georgia, serif)' } as const;
 
+/**
+ * Where the guard wanted us to end up.
+ *
+ * `requireRole` and the middleware both attach ?callbackUrl= when they bounce
+ * someone here, and it was being discarded: `login()` has always accepted the
+ * argument and honoured it (`redirect(callbackUrl || '/')`), but the page
+ * called login(email, password) and then hardcoded router.push('/'). Every
+ * guarded deep link — most visibly /dashboard — therefore dumped you on the
+ * home page after a correct sign-in, which reads as "the dashboard redirects
+ * to home".
+ *
+ * Read from `window.location` at submit time rather than with
+ * useSearchParams(): this route is statically prerendered (`○ /auth/login`),
+ * and that hook would force it behind a Suspense boundary or out of static
+ * rendering entirely — a real cost to the first paint of a page shoppers get
+ * bounced to, for a value nothing needs until the form is submitted.
+ *
+ * Only same-origin paths are honoured. Accepting an absolute URL would make
+ * this an open redirect: ?callbackUrl=https://evil.example would land a
+ * freshly authenticated user, cookies and all, on someone else's site.
+ */
+function readCallbackUrl(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = new URLSearchParams(window.location.search).get('callbackUrl');
+  if (!raw) return null;
+  // A leading "//" is protocol-relative and leaves the origin.
+  return raw.startsWith('/') && !raw.startsWith('//') ? raw : null;
+}
+
+
 function Divider() {
   return (
     <div className="flex w-full items-center gap-x-3">
@@ -62,14 +92,15 @@ export default function LoginPage() {
     setIsLoading(true);
     const toastId = showToast.loading('Signing in...');
 
-    const result = await login(email, password);
+    const callbackUrl = readCallbackUrl();
+    const result = await login(email, password, callbackUrl);
 
     showToast.dismiss(toastId);
 
     if (result.success) {
       showToast.success('Welcome back!');
       setTimeout(() => {
-        router.push('/');
+        router.push(callbackUrl ?? '/');
         router.refresh();
       }, 500);
     } else {

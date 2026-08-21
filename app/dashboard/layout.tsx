@@ -10,9 +10,14 @@ export const metadata: Metadata = NOINDEX;
 
 export const dynamic = 'force-dynamic';
 
-// Gate the entire Admin dashboard (/dashboard/*): admins only. This is the
-// authoritative server-side check (the `isAdmin` cookie is only a UX hint;
-// the backend role is the source of truth).
+// Gate the entire Admin dashboard (/dashboard/*): admins only.
+//
+// This is the AUTHORITATIVE check: it asks the backend for the signed-in
+// user's role on every request. middleware.ts also gates /dashboard, but only
+// as a fast pre-filter reading the role claim off the access token — a claim
+// that can be up to one access-token lifetime out of date. When it can't read
+// a role it deliberately lets the request through to this layout rather than
+// guessing, so an unreadable token costs a server round-trip, not a lockout.
 export default async function AdminDashboardLayout({
   children,
 }: {

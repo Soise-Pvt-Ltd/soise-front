@@ -97,24 +97,12 @@ export async function verifyRecoveryOtp(email: string, code: string) {
     }
 
     if (accessToken) {
-      const profileResponse = await fetch(`${BASE_URL}/profiles`, {
-        method: 'GET',
-        headers: {
-          Cookie: `access_token=${accessToken}`,
-          Accept: 'application/json',
-        },
-      });
-
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        const isAdmin = profileData?.data?.role === 'admin';
-        cookieStore.set('isAdmin', isAdmin.toString(), {
-          httpOnly: true,
-          secure: isSecure,
-          path: '/',
-          maxAge: 60 * 60 * 24,
-        });
-      }
+    // No `isAdmin` cookie is written any more, and no profile fetch is needed
+    // to build one. Admin-ness is read from the access token's `role` claim in
+    // middleware.ts. Caching it in a second cookie with its own 24h lifetime,
+    // while the session refreshed for 30 days, is what silently locked admins
+    // out of /dashboard from day two onward — and the OTP sign-in path never
+    // wrote it at all, so an admin who signed in by email code never got in.
     }
 
     return { success: true };

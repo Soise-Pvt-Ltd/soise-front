@@ -16,16 +16,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch user profile to get role/admin status
-    const profileResponse = await axios.get(`${BASE_URL}/profiles`, {
+    // Prove the token is real before minting cookies from it: this endpoint
+    // takes the access token from a query parameter, so without this anyone
+    // could POST an arbitrary string and have it stored. axios throws on a
+    // non-2xx, which the catch below turns into a 500. The response body is
+    // deliberately unused — role is carried by the token itself.
+    await axios.get(`${BASE_URL}/profiles`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
       },
     });
-
-    const user = profileResponse.data?.data;
-    const isAdmin = user?.role === 'admin';
 
     const cookieStore = await cookies();
 
@@ -38,14 +39,7 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
     });
 
-    // Store admin status in a cookie
-    cookieStore.set('isAdmin', isAdmin.toString(), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      path: '/',
-      maxAge: 60 * 60 * 24, // 1 day
-      sameSite: 'lax',
-    });
+    // No `isAdmin` cookie: middleware reads the role from the token claim.
 
     // Optionally store user ID
     if (userId) {
