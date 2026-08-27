@@ -23,10 +23,16 @@ export const revalidate = 60;
 // og:locale from the single most-shared URL on the site — which is why
 // WhatsApp, Facebook, LinkedIn and iMessage rendered a bare text link with no
 // image. `pageMetadata` always emits the complete set.
+// The <title> is the strongest on-page signal for the queries this site needs
+// to win ("Nigerian streetwear brand" and its variants). The previous title —
+// "Creator-Led Streetwear, Worn by the Culture" — carried the brand voice but
+// not one word Google could match against those searches. Brand voice lives on
+// in the OG title below, which is what humans see when a link is shared.
 export const metadata: Metadata = pageMetadata({
-  title: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
+  title: `${SITE_NAME} — Nigerian Streetwear Brand | Wear the Culture`,
   description:
-    'Fashion moves on what you see the culture wearing. SOISE is creator-led streetwear — hoodies, tees, beanies and denim in considered, limited capsule drops, worn first by Nigeria\'s creatives. Say less, look more.',
+    'SOISE is a Nigerian streetwear brand — creator-led hoodies, tees, beanies and denim in considered, limited capsule drops, worn first by Nigeria\'s creatives. Shop streetwear online, shipped across Nigeria and worldwide.',
+  ogTitle: `${SITE_NAME} — Creator-Led Streetwear, Worn by the Culture`,
   path: '/',
   ogDescription:
     'Creator-led streetwear, worn first by the creatives shaping the culture. Considered capsule drops, deliberately limited — a stage for Nigeria\'s stylists, artists and designers. Say less, look more.',

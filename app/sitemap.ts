@@ -39,6 +39,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
+      // Editorial page targeting the "Nigerian streetwear (brand)" query
+      // family — the money keyword's results are editorial, not storefronts.
+      url: `${SITE_URL}/nigerian-streetwear`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
       // Public, logged-out explainer (whitelisted in middleware PUBLIC_PATHS).
       // The signed-in /swaz-loop dashboard is deliberately NOT listed.
       url: `${SITE_URL}/creators/swaz-loop`,

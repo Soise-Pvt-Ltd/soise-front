@@ -7,9 +7,9 @@ import StatueWatermark from '@/components/brand/StatueWatermark';
 import { pageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = pageMetadata({
-  title: 'About',
+  title: 'About — A Nigerian Streetwear Brand',
   description:
-    'SOISE is creator-led streetwear built on a simple truth — people wear what they see the culture wearing. Considered capsule drops, quiet luxury, and a stage for the creatives shaping what comes next. Say less, look more.',
+    'SOISE is a Nigerian streetwear brand built on a simple truth — people wear what they see the culture wearing. Considered capsule drops, quiet luxury, and a stage for the creatives shaping what comes next. Say less, look more.',
   path: '/about',
   ogTitle: 'About SOISE — Worn by the Culture',
   ogDescription:

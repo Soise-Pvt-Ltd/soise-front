@@ -17,10 +17,10 @@ export async function generateMetadata(props: {
 
   const title = collectionName
     ? `Shop ${collectionName} — ${SITE_NAME} Collections`
-    : `Shop All Collections — ${SITE_NAME}`;
+    : `Shop Streetwear Online in Nigeria — ${SITE_NAME} Collections`;
   const description = collectionName
     ? `Browse the ${collectionName} collection from ${SITE_NAME}. Limited capsule drops and creator-led streetwear collabs, shipped across Nigeria.`
-    : `Browse every SOISE collection. Limited capsule drops and creator-led collabs — premium streetwear shipped across Nigeria.`;
+    : `Buy Nigerian streetwear online from SOISE. Limited capsule drops and creator-led collabs — premium hoodies, tees, beanies and denim, shipped across Nigeria and worldwide.`;
   const canonical = collectionName
     ? `/shop/product-listing?collection=${encodeURIComponent(collectionName)}`
     : '/shop/product-listing';

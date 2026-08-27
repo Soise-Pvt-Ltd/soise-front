@@ -165,7 +165,7 @@ export const NOINDEX: Metadata = {
 };
 
 export const DEFAULT_DESCRIPTION =
-  'Creator-led streetwear in considered, limited capsule drops — worn first by the creatives shaping the culture. Quiet luxury, deliberately scarce; a stage for Nigeria\'s stylists, artists and designers. Say less, look more.';
+  'SOISE is a Nigerian streetwear brand — creator-led fashion in considered, limited capsule drops, worn first by the creatives shaping the culture. Quiet luxury, deliberately scarce; a stage for Nigeria\'s stylists, artists and designers. Say less, look more.';
 
 export const KEYWORDS = [
   'SOISE',

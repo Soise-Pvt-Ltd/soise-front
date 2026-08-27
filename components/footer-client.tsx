@@ -234,6 +234,11 @@ export default function FooterClient() {
             <Link href="/about" className="transition-colors hover:text-[#121212]">
               About
             </Link>
+            {/* Sitewide link so the editorial page targeting the "Nigerian
+                streetwear" query family is crawled from every page. */}
+            <Link href="/nigerian-streetwear" className="transition-colors hover:text-[#121212]">
+              Nigerian Streetwear
+            </Link>
             <Link href="/creators" className="transition-colors hover:text-[#121212]">
               Creators
             </Link>
