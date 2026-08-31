@@ -46,6 +46,9 @@ export default function ApplicationsClient({
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  // The table truncates bios to one line; this holds the application whose
+  // full bio is open in the reading modal.
+  const [bioApp, setBioApp] = useState<Application | null>(null);
   // This screen had no paging at all: it took the backend's default 50 and the
   // table simply stopped, so older applications were unreachable.
   const [pagination, setPagination] = useState<PaginationMeta>({
@@ -214,8 +217,18 @@ export default function ApplicationsClient({
                       '—'
                     )}
                   </td>
-                  <td className="td max-w-[260px] truncate text-[#5C544A]">
-                    {app.bio || '—'}
+                  <td className="td max-w-[260px] text-[#5C544A]">
+                    {app.bio ? (
+                      <button
+                        onClick={() => setBioApp(app)}
+                        title="Read full bio"
+                        className="block w-full cursor-pointer truncate text-left hover:text-[#14110E]"
+                      >
+                        {app.bio}
+                      </button>
+                    ) : (
+                      '—'
+                    )}
                   </td>
                   <td className="td">
                     <StatusBadge status={app.status} />
@@ -265,6 +278,51 @@ export default function ApplicationsClient({
         disabled={loading}
         noun="applications"
       />
+
+      {bioApp && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setBioApp(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-lg rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="suite-display text-[20px] text-[#14110E]">
+                @{bioApp.applicant_username || 'Applicant'}
+              </h2>
+              <button
+                onClick={() => setBioApp(null)}
+                aria-label="Close"
+                className="text-[#5C544A] hover:text-[#14110E]"
+              >
+                ✕
+              </button>
+            </div>
+            {bioApp.applicant_email && (
+              <p className="mb-3 text-[12px] text-[#8C8377]">
+                {bioApp.applicant_email}
+              </p>
+            )}
+            <p className="max-h-[50vh] overflow-y-auto text-[14px] leading-relaxed whitespace-pre-wrap text-[#5C544A]">
+              {bioApp.bio}
+            </p>
+            {bioApp.portfolio_url && (
+              <a
+                href={bioApp.portfolio_url}
+                target="_blank"
+                rel="noreferrer"
+                className="luxe-underline mt-4 inline-block text-[13px] text-[#9C6F2E]"
+              >
+                {bioApp.portfolio_url}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
     </GridContainer>
   );
 }

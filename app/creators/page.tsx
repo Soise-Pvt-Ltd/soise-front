@@ -90,31 +90,38 @@ export default async function creatorsPage({
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   const authHeaders = { Cookie: `access_token=${accessToken ?? ''}` };
 
-  // If the user is ALREADY a creator, never show the apply form. An onboarded
-  // creator (has a code) goes to their dashboard; an approved-but-not-yet-onboarded
-  // creator goes to onboarding. (redirect() must be called outside try/catch — it
-  // throws NEXT_REDIRECT internally, which a catch would otherwise swallow.)
+  // If the user is ALREADY a creator, never show the apply form. Role is the
+  // authority here — the dashboard layout gates on role, so deciding entry on
+  // anything looser (e.g. rows in creator_codes) loops a revoked creator, whose
+  // deactivated codes survive, between the two pages forever. An onboarded
+  // creator (has an active code) goes to their dashboard; an approved-but-not-
+  // yet-onboarded creator goes to onboarding. (redirect() must be called
+  // outside try/catch — it throws NEXT_REDIRECT, which a catch would swallow.)
   let creatorRedirect: string | null = null;
+  let role: string | null = null;
   try {
-    const codesRes = await fetch(`${baseUrl}/creators/codes`, {
+    const profileRes = await fetch(`${baseUrl}/profiles`, {
       headers: authHeaders,
       cache: 'no-store',
     });
-    if (codesRes.ok) {
-      const codes = await codesRes.json();
-      const hasCode = Array.isArray(codes?.data)
-        ? codes.data.length > 0
-        : !!codes?.data;
-      if (hasCode) creatorRedirect = '/creators/dashboard';
-    }
-    if (!creatorRedirect) {
-      const profileRes = await fetch(`${baseUrl}/profiles`, {
-        headers: authHeaders,
-        cache: 'no-store',
-      });
-      if (profileRes.ok) {
-        const profile = await profileRes.json();
-        if (profile?.data?.role === 'creator') creatorRedirect = '/creators/onboarding';
+    if (profileRes.ok) {
+      const profile = await profileRes.json();
+      role = profile?.data?.role ?? null;
+      if (role === 'creator' || role === 'admin') {
+        const codesRes = await fetch(`${baseUrl}/creators/codes`, {
+          headers: authHeaders,
+          cache: 'no-store',
+        });
+        let hasActiveCode = false;
+        if (codesRes.ok) {
+          const codes = await codesRes.json();
+          hasActiveCode =
+            Array.isArray(codes?.data) &&
+            codes.data.some((c: { active?: boolean }) => c?.active);
+        }
+        if (hasActiveCode) creatorRedirect = '/creators/dashboard';
+        else if (role === 'creator') creatorRedirect = '/creators/onboarding';
+        // An admin without an active code just sees the page.
       }
     }
   } catch {
@@ -137,8 +144,13 @@ export default async function creatorsPage({
     // Treat as "no application" and show the apply form.
   }
 
-  // Approved → continue to onboarding (bank details + code generation).
-  if (status === 'approved') redirect('/creators/onboarding');
+  // Approved → continue to onboarding (bank details + code generation). Only
+  // when the role agrees, though: onboarding is role-gated, so sending an
+  // approved application whose holder was since demoted (a pre-transactional
+  // revoke left exactly that state) would loop them between the two pages.
+  if (status === 'approved' && (role === 'creator' || role === 'admin')) {
+    redirect('/creators/onboarding');
+  }
 
   // Pending admin review — do NOT allow onboarding until approved.
   if (status === 'submitted' || status === 'review') {
