@@ -48,7 +48,42 @@ function currencyForCountry(country: string): Currency {
   if (country === 'GB') return 'GBP';
   if (country === 'CA') return 'CAD';
   if (EURO_COUNTRIES.has(country)) return 'EUR';
-  return 'USD'; // the card rail's native currency — the safe world default
+  // Naira is the house currency, so an unreadable country is not a reason to
+  // leave it. This used to return USD, which meant every visitor whose IP the
+  // edge couldn't place — a stripped header, a privacy proxy — was shown a
+  // foreign price on a Nigerian brand's home page.
+  return country ? 'USD' : 'NGN';
+}
+
+/**
+ * Does the DEVICE say Nigeria?
+ *
+ * IP geolocation is a guess, and for Nigerian mobile it is a bad one: MTN /
+ * Airtel / Glo hand out address space that the geo databases place in the
+ * United Kingdom, so a shopper in Lagos on mobile data arrives looking British
+ * and the site greeted them in pounds. The phone itself knows better — its
+ * clock is set to Africa/Lagos and its locale list carries en-NG — and those
+ * two signals cost nothing and travel with the browser rather than the packet
+ * route.
+ *
+ * So the device gets the veto: if it says Nigeria, no IP lookup can move the
+ * price off naira.
+ */
+function deviceSaysNigeria(): boolean {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    if (tz === 'Africa/Lagos') return true;
+  } catch {
+    /* Intl is universally available, but never let it break the page */
+  }
+  try {
+    const langs = navigator.languages?.length
+      ? navigator.languages
+      : [navigator.language];
+    return langs.some((l) => /-NG$/i.test(l || ''));
+  } catch {
+    return false;
+  }
 }
 
 interface CurrencyContextType {
@@ -75,6 +110,9 @@ const CurrencyContext = createContext<CurrencyContextType>({
 });
 
 const PREF_KEY = 'soise_currency';
+// Marks that the stuck-on-pounds repair below has already run for this browser,
+// so a Nigerian who genuinely wants to browse in pounds keeps that choice.
+const REPAIR_KEY = 'soise_currency_repair_v1';
 const RATE_CACHE_KEY = 'soise_fx_cache_v3';
 const RATE_TTL_MS = 60 * 60 * 1000; // 1 hour — matches the backend's cache
 
@@ -122,20 +160,44 @@ export function CurrencyProvider({
   const [rates, setRates] = useState<Rates>(FALLBACK_RATES);
   const [isRateLoading, setIsRateLoading] = useState(false);
 
-  // Restore the saved currency, or geo-detect on a first visit. A saved
-  // preference (cookie, then legacy localStorage) always wins; only a
-  // visitor with no preference at all gets the geo default, so a manual
-  // choice is never overridden by an IP lookup.
+  // Restore the saved currency, or detect one on a first visit.
+  //
+  // Only a CHOICE is stored. A detected currency is applied to state and
+  // nothing else, so a wrong guess lasts one page load instead of a year —
+  // that persistence is what turned a single bad IP lookup into "I always see
+  // pounds", since the stored value then satisfied the saved-preference branch
+  // on every later visit and the guess was never re-examined.
   useEffect(() => {
     const fromCookie = document.cookie
       .split('; ')
       .find((row) => row.startsWith(`${PREF_KEY}=`))
       ?.split('=')[1];
-    const saved = (
+    let saved = (
       CURRENCIES.includes(fromCookie as Currency)
         ? fromCookie
         : localStorage.getItem(PREF_KEY)
     ) as Currency | null;
+
+    // Repair, once per browser: visitors already carrying a foreign currency
+    // from the old auto-persisting behaviour. Their stored value is
+    // indistinguishable from a deliberate one, so only clear it where the
+    // device contradicts it — a phone on Lagos time showing pounds is the bug,
+    // not a preference.
+    try {
+      if (
+        saved &&
+        saved !== 'NGN' &&
+        !localStorage.getItem(REPAIR_KEY) &&
+        deviceSaysNigeria()
+      ) {
+        localStorage.removeItem(PREF_KEY);
+        document.cookie = `${PREF_KEY}=; path=/; max-age=0; samesite=lax`;
+        saved = null;
+      }
+      localStorage.setItem(REPAIR_KEY, '1');
+    } catch {
+      /* storage can throw in private modes; the repair is best-effort */
+    }
 
     if (saved && CURRENCIES.includes(saved)) {
       if (saved !== currency) {
@@ -146,19 +208,20 @@ export function CurrencyProvider({
       return;
     }
 
-    // First visit: let the country pick. Best-effort — a failed lookup
-    // just leaves naira, exactly the pre-global behaviour.
+    // The device's own signals outrank the network's. A Nigerian shopper is
+    // the default case for this store, and settling it here also spares them
+    // the /api/geo round trip.
+    if (deviceSaysNigeria()) return;
+
+    // Otherwise let the country pick. Best-effort — a failed lookup just
+    // leaves naira, exactly the pre-global behaviour.
     (async () => {
       try {
         const res = await fetch('/api/geo');
         if (!res.ok) return;
         const { country } = await res.json();
         const detected = currencyForCountry(String(country || ''));
-        if (detected !== 'NGN') {
-          setCurrencyState(detected);
-          localStorage.setItem(PREF_KEY, detected);
-          document.cookie = `${PREF_KEY}=${detected}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
-        }
+        if (detected !== 'NGN') setCurrencyState(detected);
       } catch {
         /* geo is a nicety, never a blocker */
       }
