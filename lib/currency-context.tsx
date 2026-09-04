@@ -202,7 +202,7 @@ export function CurrencyProvider({
     if (saved && CURRENCIES.includes(saved)) {
       if (saved !== currency) {
         setCurrencyState(saved);
-        localStorage.setItem(PREF_KEY, saved);
+        try { localStorage.setItem(PREF_KEY, saved); } catch { /* WebView / private mode */ }
         document.cookie = `${PREF_KEY}=${saved}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
       }
       return;
@@ -268,10 +268,12 @@ export function CurrencyProvider({
           };
           const r = buildRates(usdPerNgn, crosses);
           setRates(r);
-          localStorage.setItem(
-            RATE_CACHE_KEY,
-            JSON.stringify({ rates: r, ts: Date.now() }),
-          );
+          try {
+            localStorage.setItem(
+              RATE_CACHE_KEY,
+              JSON.stringify({ rates: r, ts: Date.now() }),
+            );
+          } catch { /* WebView / private mode — rates still work, just won't cache */ }
         }
       } catch {
         // silently use fallback
@@ -285,7 +287,7 @@ export function CurrencyProvider({
 
   const setCurrency = useCallback((c: Currency) => {
     setCurrencyState(c);
-    localStorage.setItem(PREF_KEY, c);
+    try { localStorage.setItem(PREF_KEY, c); } catch { /* WebView / private mode */ }
     document.cookie = `${PREF_KEY}=${c}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
   }, []);
 

@@ -55,7 +55,8 @@ function OtpFormComponent() {
 
   useEffect(() => {
     if (!email) {
-      const storedEmail = sessionStorage.getItem('email');
+      let storedEmail: string | null = null;
+      try { storedEmail = sessionStorage.getItem('email'); } catch { /* WebView / restricted */ }
       if (storedEmail) {
         setEmail(storedEmail);
       } else {

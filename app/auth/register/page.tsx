@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 import { register } from './actions';
 import { googleAuth } from '../google/actions';
 import { showToast, validateField } from '@/lib/toast-utils';
+import { useInAppBrowser } from '@/lib/webview';
 
 /**
  * PRESSED INK — see app/contact/page.tsx for the canonical treatment and the
@@ -35,6 +36,7 @@ export default function SignupPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const inAppBrowser = useInAppBrowser();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,23 +149,27 @@ export default function SignupPage() {
         </header>
 
         <form onSubmit={handleSignup} className="mt-10">
-          <div className="brut-rise" style={{ animationDelay: '0.08s' }}>
-            <button
-              type="button"
-              className="brut-btn-paper brut-press gap-x-[8px]"
-              onClick={handleGoogleSignup}
-            >
-              <img src="/google.png" alt="google" className="size-[16px]" />
-              Continue with Google
-            </button>
-          </div>
+          {!inAppBrowser && (
+            <>
+              <div className="brut-rise" style={{ animationDelay: '0.08s' }}>
+                <button
+                  type="button"
+                  className="brut-btn-paper brut-press gap-x-[8px]"
+                  onClick={handleGoogleSignup}
+                >
+                  <img src="/google.png" alt="google" className="size-[16px]" />
+                  Continue with Google
+                </button>
+              </div>
 
-          <div
-            className="brut-rise py-[24px]"
-            style={{ animationDelay: '0.16s' }}
-          >
-            <Divider />
-          </div>
+              <div
+                className="brut-rise py-[24px]"
+                style={{ animationDelay: '0.16s' }}
+              >
+                <Divider />
+              </div>
+            </>
+          )}
 
           <div className="space-y-[16px]">
             <div className="brut-rise" style={{ animationDelay: '0.24s' }}>
