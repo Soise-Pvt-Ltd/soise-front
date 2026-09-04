@@ -73,26 +73,102 @@ export function trackViewContent(product: {
     contents: [
       {
         content_id: product.id,
-        // A product id, which groups its variants — AddToCart and Purchase
-        // report the variant itself. Must match the taxonomy the server events
-        // use or the funnel won't join.
         content_type: 'product_group',
         content_name: product.name,
       },
     ],
-    // Matches the backend's ViewContent payload (app/routes/products.py) so the
-    // two sources stay comparable in TikTok's reporting.
     content_name: product.name,
     currency: 'NGN',
     value: Number(product.base_price) || 0,
   });
-  // Same taxonomy as the Meta server events (app/integrations/meta_events.py):
-  // product id here, variant ids on AddToCart/Purchase.
   metaTrack('ViewContent', {
     content_ids: [product.id],
     content_type: 'product_group',
     content_name: product.name,
     currency: 'NGN',
     value: Number(product.base_price) || 0,
+  });
+}
+
+export function trackAddToCart(item: {
+  productId: string;
+  variantId: string;
+  name: string;
+  price: number;
+  quantity: number;
+}): void {
+  track('AddToCart', {
+    contents: [
+      {
+        content_id: item.variantId,
+        content_type: 'product',
+        content_name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      },
+    ],
+    content_name: item.name,
+    currency: 'NGN',
+    value: item.price * item.quantity,
+  });
+  metaTrack('AddToCart', {
+    content_ids: [item.variantId],
+    content_type: 'product',
+    content_name: item.name,
+    currency: 'NGN',
+    value: item.price * item.quantity,
+    contents: [{ id: item.variantId, quantity: item.quantity }],
+  });
+}
+
+export function trackInitiateCheckout(items: {
+  variantId: string;
+  name: string;
+  price: number;
+  quantity: number;
+}[]): void {
+  const value = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  track('InitiateCheckout', {
+    contents: items.map((i) => ({
+      content_id: i.variantId,
+      content_type: 'product',
+      content_name: i.name,
+      quantity: i.quantity,
+      price: i.price,
+    })),
+    currency: 'NGN',
+    value,
+  });
+  metaTrack('InitiateCheckout', {
+    content_ids: items.map((i) => i.variantId),
+    content_type: 'product',
+    currency: 'NGN',
+    value,
+    num_items: items.length,
+  });
+}
+
+export function trackPurchase(order: {
+  orderId: string;
+  value: number;
+  items: { variantId: string; name: string; price: number; quantity: number }[];
+}): void {
+  track('CompletePayment', {
+    contents: order.items.map((i) => ({
+      content_id: i.variantId,
+      content_type: 'product',
+      content_name: i.name,
+      quantity: i.quantity,
+      price: i.price,
+    })),
+    currency: 'NGN',
+    value: order.value,
+  });
+  metaTrack('Purchase', {
+    content_ids: order.items.map((i) => i.variantId),
+    content_type: 'product',
+    currency: 'NGN',
+    value: order.value,
+    num_items: order.items.length,
   });
 }

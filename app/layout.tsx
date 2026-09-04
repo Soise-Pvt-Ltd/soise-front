@@ -16,6 +16,7 @@ import {
   buildOpenGraph,
   buildTwitter,
 } from '@/lib/seo';
+import { siteConfig } from '@/lib/site-config';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -118,6 +119,7 @@ export const viewport: Viewport = {
   colorScheme: 'light',
   width: 'device-width',
   initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -153,6 +155,9 @@ export default async function RootLayout({
         */}
         <link rel="preconnect" href="https://img.soise.ng" />
         <link rel="preconnect" href="https://api.soise.ng" />
+        <link rel="me" href={siteConfig.social.instagram} />
+        <link rel="me" href={siteConfig.social.tiktok} />
+        <link rel="me" href={siteConfig.social.x} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }}

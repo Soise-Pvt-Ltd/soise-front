@@ -74,9 +74,10 @@ export function buildOpenGraph(opts: {
   description: string;
   path: string;
   images?: { url: string; alt?: string }[];
-  type?: 'website' | 'article';
+  type?: 'website' | 'article' | 'product';
+  product?: { price: number; currency?: string };
 }): Metadata['openGraph'] {
-  return {
+  const og: Record<string, unknown> = {
     type: opts.type ?? 'website',
     siteName: SITE_NAME,
     locale: SITE_LOCALE,
@@ -86,9 +87,6 @@ export function buildOpenGraph(opts: {
     images: opts.images?.length
       ? opts.images.map((img) => {
           const url = shareCard(img.url);
-          // Only declare dimensions we actually know. Cloudflare-transformed
-          // URLs are exactly 1200×630; for anything else, asserting those
-          // numbers would make scrapers lay the card out wrong.
           const isCard = url !== img.url;
           return {
             url,
@@ -98,6 +96,11 @@ export function buildOpenGraph(opts: {
         })
       : [OG_IMAGE],
   };
+  if (opts.product) {
+    og['product:price:amount'] = String(opts.product.price);
+    og['product:price:currency'] = opts.product.currency ?? 'NGN';
+  }
+  return og as Metadata['openGraph'];
 }
 
 /** Build a complete Twitter/X card block. Same replacement hazard as above. */
@@ -127,7 +130,8 @@ export function pageMetadata(opts: {
   ogTitle?: string;
   ogDescription?: string;
   images?: { url: string; alt?: string }[];
-  type?: 'website' | 'article';
+  type?: 'website' | 'article' | 'product';
+  product?: { price: number; currency?: string };
 }): Metadata {
   const ogTitle = opts.ogTitle ?? opts.title;
   const ogDescription = opts.ogDescription ?? opts.description;
@@ -141,6 +145,7 @@ export function pageMetadata(opts: {
       path: opts.path,
       images: opts.images,
       type: opts.type,
+      product: opts.product,
     }),
     twitter: buildTwitter({
       title: ogTitle,
@@ -203,9 +208,10 @@ export function productJsonLd(product: {
   description?: string;
   slug: string;
   base_price: number;
-  sample_variants?: { media?: { url: string }[] }[];
+  sample_variants?: { media?: { url: string }[]; stock?: number }[];
   primary_image?: string | null;
   collection?: { name?: string } | null;
+  sale?: { sale_price?: number; ends_at?: string | null; coverage?: string } | null;
 }) {
   const image =
     product.primary_image ??
@@ -213,6 +219,35 @@ export function productJsonLd(product: {
     `${SITE_URL}/hero.jpg`;
 
   const collectionName = product.collection?.name;
+
+  const hasStock = product.sample_variants?.some(
+    (v) => typeof v.stock !== 'number' || v.stock > 0,
+  );
+  const availability = hasStock !== false
+    ? 'https://schema.org/InStock'
+    : 'https://schema.org/OutOfStock';
+
+  const offer: Record<string, unknown> = {
+    '@type': 'Offer',
+    priceCurrency: 'NGN',
+    price: product.base_price,
+    availability,
+    itemCondition: 'https://schema.org/NewCondition',
+    url: `${SITE_URL}/shop/product-listing/${product.slug}`,
+    seller: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+    },
+  };
+
+  if (
+    product.sale?.coverage === 'all' &&
+    product.sale.sale_price &&
+    product.sale.sale_price < product.base_price
+  ) {
+    offer.price = product.sale.sale_price;
+    offer.priceValidUntil = product.sale.ends_at ?? undefined;
+  }
 
   return {
     '@context': 'https://schema.org',
@@ -228,17 +263,7 @@ export function productJsonLd(product: {
       name: SITE_NAME,
     },
     category: collectionName,
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'NGN',
-      price: product.base_price,
-      availability: 'https://schema.org/InStock',
-      url: `${SITE_URL}/shop/product-listing/${product.slug}`,
-      seller: {
-        '@type': 'Organization',
-        name: SITE_NAME,
-      },
-    },
+    offers: offer,
   };
 }
 

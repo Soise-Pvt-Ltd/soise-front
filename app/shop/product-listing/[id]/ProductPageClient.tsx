@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Footer from '@/components/footer';
-import { MinusIcon, PlusIcon, LikeIcon, LikeIconSolid } from '@/components/icons';
+import { MinusIcon, PlusIcon, LikeIcon, LikeIconSolid, ShareIconOutline } from '@/components/icons';
 import SwiperCarouselClient from '@/components/caurosel';
 import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
@@ -19,7 +19,7 @@ const MAIN_IMAGE_WIDTHS = [400, 640, 828, 1200] as const;
 import { addToBag as addToBagAction } from './actions';
 import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/actions';
 import { notifyCartChanged } from '@/lib/cart-events';
-import { trackViewContent } from '@/lib/tracking-client';
+import { trackViewContent, trackAddToCart } from '@/lib/tracking-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
@@ -342,6 +342,24 @@ export default function ProductPageClient({
    * product page, so reaching checkout meant noticing the badge, finding the
    * bag icon, opening it, and only then tapping through.
    */
+  const handleShare = async () => {
+    const base = new URL(window.location.href);
+    base.searchParams.set('utm_source', 'share');
+    base.searchParams.set('utm_medium', 'social');
+    const url = base.toString();
+    const title = product?.name ?? 'SOISE';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        showToast.success('Link copied');
+      }
+    } catch {
+      /* user cancelled the share sheet — not an error */
+    }
+  };
+
   const addToBag = async (then: 'bag' | 'checkout' = 'bag') => {
     if (!selectedVariant) {
       showToast.error('Please select a variant before adding to bag.');
@@ -356,6 +374,15 @@ export default function ProductPageClient({
     const result = await addToBagAction(selectedVariant.id, quantity);
     showToast.dismiss(toastId);
     if (result.success) {
+      if (product) {
+        trackAddToCart({
+          productId: product.id,
+          variantId: selectedVariant.id,
+          name: product.name,
+          price: product.base_price,
+          quantity,
+        });
+      }
       if (then === 'checkout') {
         // Nav still needs to know, even though we're navigating away.
         notifyCartChanged();
@@ -691,7 +718,7 @@ export default function ProductPageClient({
                 type="button"
                 onClick={handleAddToWishlist}
                 disabled={wishlistPending || saved}
-                className="mb-[56px] flex w-full items-center justify-center gap-x-2 text-[13px] font-medium uppercase text-[#121212] disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-x-2 text-[13px] font-medium uppercase text-[#121212] disabled:opacity-60"
                 whileHover={saved ? {} : { scale: 1.02 }}
                 whileTap={saved ? {} : { scale: 0.97 }}
               >
@@ -701,6 +728,17 @@ export default function ProductPageClient({
                   : wishlistPending
                     ? 'Saving...'
                     : 'Save to wishlist'}
+              </motion.button>
+
+              <motion.button
+                type="button"
+                onClick={handleShare}
+                className="mb-[56px] flex w-full items-center justify-center gap-x-2 text-[13px] font-medium uppercase text-[#121212]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <ShareIconOutline />
+                Share
               </motion.button>
             </motion.div>
           </div>

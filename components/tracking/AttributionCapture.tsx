@@ -26,13 +26,23 @@ export default function AttributionCapture() {
         'utm_content',
         'fbclid',
         'ttclid',
+        'gclid',
+        'twclid',
+        'sclid',
       ]) {
         const value = params.get(key);
         if (value) touch[key] = value.slice(0, 256);
       }
       // Only an actual ad landing overwrites the stored touch — organic page
       // views between the click and the checkout must not erase it.
-      if (!touch.utm_source && !touch.fbclid && !touch.ttclid) return;
+      if (
+        !touch.utm_source &&
+        !touch.fbclid &&
+        !touch.ttclid &&
+        !touch.gclid &&
+        !touch.twclid &&
+        !touch.sclid
+      ) return;
       touch.landed_at = new Date().toISOString();
 
       const onSoise = window.location.hostname.endsWith('soise.ng');

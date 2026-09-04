@@ -5,6 +5,12 @@ import GridContainer from '../gridContainer';
 import { showToast } from '../toast';
 import { fetchApplications, reviewApplication, allowReapplication } from './actions';
 import PaginationBar from '../PaginationBar';
+
+function ensureAbsoluteUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `https://${url}`;
+}
+
 import {
   PageHeader,
   FilterPills,
@@ -206,7 +212,7 @@ export default function ApplicationsClient({
                   <td className="td max-w-[180px] truncate">
                     {app.portfolio_url ? (
                       <a
-                        href={app.portfolio_url}
+                        href={ensureAbsoluteUrl(app.portfolio_url)}
                         target="_blank"
                         rel="noreferrer"
                         className="luxe-underline text-[#9C6F2E]"
@@ -312,7 +318,7 @@ export default function ApplicationsClient({
             </p>
             {bioApp.portfolio_url && (
               <a
-                href={bioApp.portfolio_url}
+                href={ensureAbsoluteUrl(bioApp.portfolio_url)}
                 target="_blank"
                 rel="noreferrer"
                 className="luxe-underline mt-4 inline-block text-[13px] text-[#9C6F2E]"
