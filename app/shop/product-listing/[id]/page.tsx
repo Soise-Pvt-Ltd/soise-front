@@ -79,20 +79,12 @@ export async function generateMetadata(props: {
   // `images: []` is NOT the same as omitting it — an empty array emits no
   // og:image and blocks the fallback, so a product without a photo used to
   // share as a bare link. Passing undefined lets the brand card take over.
-  const meta = pageMetadata({
+  return pageMetadata({
     title,
     description,
     path: `/shop/product-listing/${slug}`,
     images: image ? [{ url: image, alt: product.name }] : undefined,
   });
-
-  return {
-    ...meta,
-    openGraph: {
-      ...(meta.openGraph as object),
-      type: 'product',
-    } as Metadata['openGraph'],
-  };
 }
 
 export default async function ProductPage(props: {
@@ -143,6 +135,7 @@ export default async function ProductPage(props: {
 
   return (
     <>
+      <meta property="og:type" content="product" />
       <meta property="product:price:amount" content={String(product.sale?.coverage === 'all' && product.sale.sale_price ? product.sale.sale_price : product.base_price)} />
       <meta property="product:price:currency" content="NGN" />
       <meta property="product:availability" content={product.sample_variants?.every((v: { stock?: number }) => typeof v.stock === 'number' && v.stock <= 0) ? 'oos' : 'instock'} />
