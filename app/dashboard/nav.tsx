@@ -69,6 +69,7 @@ const SECTIONS: {
       { path: '/dashboard/orders', icon: <AdminOrdersIcon />, label: 'Orders' },
       { path: '/dashboard/flash-sales', icon: BoltIcon, label: 'Flash Sales' },
       { path: '/dashboard/home-content', icon: <AdminSettingsIcon />, label: 'Home Page' },
+      { path: '/dashboard/restock', icon: <AdminProductsIcon />, label: 'Restock' },
     ],
   },
   {
