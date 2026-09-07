@@ -11,6 +11,24 @@ import { getRestockSettings, saveRestockSettings, type RestockSettings } from '.
  * order emails tell the shopper the piece is secured in the next restock,
  * "which happens in exactly N days". This page is where N comes from.
  */
+/** Past ten days the emails stop counting and say "10 days or less" (store decision, 2026-09-07). */
+const PROMISE_CAP = 10;
+
+function promiseText(days: number): string {
+  if (days > PROMISE_CAP) return `${PROMISE_CAP} days or less`;
+  return `exactly ${days} ${days === 1 ? 'day' : 'days'}`;
+}
+
+function longDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
 export default function RestockClient() {
   const [settings, setSettings] = useState<RestockSettings | null>(null);
   const [date, setDate] = useState('');
@@ -51,7 +69,7 @@ export default function RestockClient() {
     setSaving(false);
     if (res.success) {
       apply(res.settings);
-      showToast('success', `Saved. Backorder emails now read "in exactly ${res.settings.countdownDays} days".`);
+      showToast('success', `Saved. Backorder emails now read "in ${promiseText(res.settings.countdownDays)}".`);
     } else {
       showToast('error', res.error);
     }
@@ -144,28 +162,28 @@ export default function RestockClient() {
 
         <div className="space-y-4">
           <StatTile
-            label="Emails read today"
+            label="Next restock"
             value={`${settings.countdownDays} ${settings.countdownDays === 1 ? 'day' : 'days'}`}
             meta={
               <span className="text-[12px] leading-relaxed text-[#5C544A]">
-                {settings.source === 'admin'
-                  ? 'From the date and cycle saved here.'
-                  : 'Server default — nothing saved here yet.'}
+                {settings.nextRestockDate
+                  ? `Until ${longDate(settings.nextRestockDate)}.`
+                  : settings.source === 'admin'
+                    ? 'One cycle from today; no date set.'
+                    : 'Server default — nothing saved here yet.'}
               </span>
             }
           />
           <Panel eyebrow="What the shopper sees">
             <p className="text-[13px] leading-relaxed text-[#5C544A]">
               “Unfortunately, the piece you selected is currently unavailable — but don’t worry.
-              We’ve secured your piece in the next restock, which happens in exactly{' '}
-              <strong className="text-[#14110E]">
-                {settings.countdownDays} {settings.countdownDays === 1 ? 'day' : 'days'}
-              </strong>
-              .”
+              We’ve secured your piece in the next restock, which happens in{' '}
+              <strong className="text-[#14110E]">{promiseText(settings.countdownDays)}</strong>.”
             </p>
             <p className="mt-3 text-[12px] leading-relaxed text-[#5C544A]">
               Shown on the order confirmation and the payment receipt, only for pieces whose stock
-              could not cover the order. The number is recalculated on the day each email is sent.
+              could not cover the order. Recalculated on the day each email is sent. Past{' '}
+              {PROMISE_CAP} days the email says “{PROMISE_CAP} days or less” rather than the count.
             </p>
           </Panel>
         </div>
