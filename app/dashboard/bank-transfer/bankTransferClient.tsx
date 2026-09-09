@@ -7,6 +7,8 @@ import { showToast } from '../toast';
 import {
   getBankTransferSettings,
   saveBankTransferSettings,
+  getBanks,
+  type BankOption,
   type BankTransferSettings,
 } from './actions';
 
@@ -24,6 +26,11 @@ export default function BankTransferClient() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // The provider's bank list. Chosen, not typed, so the name a shopper adds
+  // as a beneficiary is the bank's own spelling. A saved name that isn't in
+  // the list (older save, list fetch failed) is kept as an extra option so
+  // the form never silently blanks it.
+  const [banks, setBanks] = useState<BankOption[]>([]);
 
   const apply = (s: BankTransferSettings) => {
     setSettings(s);
@@ -35,9 +42,10 @@ export default function BankTransferClient() {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const res = await getBankTransferSettings();
+      const [res, list] = await Promise.all([getBankTransferSettings(), getBanks()]);
       if (res.success) apply(res.settings);
       else setLoadError(res.error);
+      setBanks(list);
       setLoading(false);
     })();
   }, []);
@@ -117,13 +125,26 @@ export default function BankTransferClient() {
           <div className="grid gap-5">
             <label className="block">
               <span className="suite-eyebrow">Bank</span>
-              <input
-                type="text"
+              <select
                 className="suite-input mt-1.5 w-full"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                placeholder="e.g. Kuda, GTBank, Moniepoint"
-              />
+              >
+                <option value="">Select a bank</option>
+                {bankName && !banks.some((b) => b.name === bankName) && (
+                  <option value={bankName}>{bankName}</option>
+                )}
+                {banks.map((b) => (
+                  <option key={b.code} value={b.name}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+              {banks.length === 0 && (
+                <span className="mt-2 block text-[12px] leading-relaxed text-[#B3261E]">
+                  The bank list could not be loaded. Reload the page; the list comes from the payment provider.
+                </span>
+              )}
             </label>
             <label className="block">
               <span className="suite-eyebrow">Account number</span>

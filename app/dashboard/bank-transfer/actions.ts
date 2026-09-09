@@ -72,3 +72,26 @@ export async function saveBankTransferSettings(
     return { success: false, error: 'Failed to save bank transfer settings' };
   }
 }
+
+export interface BankOption {
+  name: string;
+  code: string;
+}
+
+/** The provider's bank list, so the bank is chosen rather than typed. */
+export async function getBanks(): Promise<BankOption[]> {
+  const h = await authHeader();
+  if (!h) return [];
+  try {
+    const res = await fetch(`${BASE_URL}/payments/banks`, { headers: h, cache: 'no-store' });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const list = Array.isArray(json?.data) ? json.data : [];
+    return list
+      .filter((b: { name?: unknown; code?: unknown }) => typeof b?.name === 'string' && typeof b?.code === 'string')
+      .map((b: { name: string; code: string }) => ({ name: b.name, code: b.code }))
+      .sort((a: BankOption, b: BankOption) => a.name.localeCompare(b.name));
+  } catch {
+    return [];
+  }
+}
