@@ -9,7 +9,7 @@ import {
   AdminMoreVerticalIcon,
   AdminSoundLevelsIcon,
 } from '@/components/icons';
-import { updateOrderStatus, deleteOrder, ShipmentDetails } from './actions';
+import { updateOrderStatus, deleteOrder, confirmTransfer, ShipmentDetails } from './actions';
 import { showToast } from '../toast';
 import { totalRows } from '@/lib/pagination';
 import { formatDate, todayIso } from '@/lib/admin-datetime';
@@ -96,6 +96,11 @@ export default function OrdersPage({
     null,
   );
   const [deliveredDate, setDeliveredDate] = useState(todayIso());
+  // Bank transfer confirmation. A pending_payment order can be settled by a
+  // transfer the shopper made out of band; the modal asks what landed so an
+  // amount that doesn't match the order is refused, not rounded.
+  const [transferModalOrder, setTransferModalOrder] = useState<Order | null>(null);
+  const [transferAmount, setTransferAmount] = useState('');
 
   // Status colours moved to the suite-wide STATUS_TONE map in ../ui, so an
   // order reads the same here as on the overview and in a payout row.
@@ -283,6 +288,32 @@ export default function OrdersPage({
     setDeliveredDate(todayIso());
   };
 
+  const handleConfirmTransfer = async () => {
+    if (!transferModalOrder) return;
+    const amount = Number(transferAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast('error', 'Enter the amount that landed.');
+      return;
+    }
+    setIsUpdating(true);
+    try {
+      const result = await confirmTransfer(transferModalOrder.id, amount);
+      if (result.success) {
+        const id = transferModalOrder.id;
+        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: result.status } : o)));
+        showToast(
+          'success',
+          result.alreadyProcessed ? 'That order was already paid.' : 'Transfer confirmed — receipt sent, stock updated.',
+        );
+        setTransferModalOrder(null);
+      } else {
+        showToast('error', result.error);
+      }
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const handleMarkStatusClick = (order: Order, status: string) => {
     if (status === 'shipped') {
       setShippingModalOrder(order);
@@ -394,6 +425,20 @@ export default function OrdersPage({
                         anchorEl={menuAnchorEl}
                         widthClass="w-40"
                       >
+                        {order.status === 'pending_payment' && (
+                          <button
+                            className="block w-full cursor-pointer px-4 py-2 text-left text-sm font-semibold text-[#3F3830] hover:bg-[#EFEAE0] disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={() => {
+                              setActiveActionMenuId(null);
+                              setMenuAnchorEl(null);
+                              setTransferAmount(String(order.total ?? ''));
+                              setTransferModalOrder(order);
+                            }}
+                            disabled={isUpdating}
+                          >
+                            Confirm bank transfer
+                          </button>
+                        )}
                         {(validTransitions[order.status] || []).length > 0 ? (
                           (validTransitions[order.status] || []).map((status) => (
                             <button
@@ -779,6 +824,63 @@ export default function OrdersPage({
                 disabled={isUpdating}
               >
                 {isUpdating ? 'Marking as shipped…' : 'Mark as shipped'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {transferModalOrder && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="confirm-transfer-title"
+          className="fixed inset-0 z-50 grid place-items-center bg-[#0E0E10]/55 px-4"
+          onClick={() => !isUpdating && setTransferModalOrder(null)}
+        >
+          <div
+            className="w-full max-w-[440px] rounded-[14px] bg-[#FBF9F4] p-[24px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="confirm-transfer-title" className="suite-display text-[19px] text-[#14110E]">
+              Confirm bank transfer
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-[#5C544A]">
+              Order #{transferModalOrder.order_number ?? shortRef(transferModalOrder)} — only once the
+              money is in the account. This marks it paid, sends the receipt, updates stock and
+              moves it to processing, exactly as a card payment would.
+            </p>
+            <label className="mt-4 block">
+              <span className="suite-eyebrow">Amount received (₦)</span>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="0.01"
+                className="suite-input mt-1.5 w-full"
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+              />
+              <span className="mt-2 block text-[12px] leading-relaxed text-[#5C544A]">
+                Must equal the order total. A different figure is refused, not rounded.
+              </span>
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="suite-btn-ghost"
+                onClick={() => setTransferModalOrder(null)}
+                disabled={isUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="suite-btn-primary"
+                onClick={handleConfirmTransfer}
+                disabled={isUpdating || !transferAmount}
+              >
+                {isUpdating ? 'Confirming…' : 'Confirm transfer'}
               </button>
             </div>
           </div>

@@ -28,6 +28,7 @@ import CurrencyToggle from './CurrencyToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
 import { ProductPrice } from '@/components/ProductPrice';
+import { captureCartEmailAction } from '@/app/shop/order-summary/actions';
 import { showToast } from '@/lib/toast-utils';
 import SwiperCarouselClient from '@/components/caurosel';
 import {
@@ -125,6 +126,22 @@ export default function NavClient({ collections = [] }: NavClientProps) {
   // "Complete the look" recommendations for the bag panel, seeded from the first
   // cart item's product. Empty array => the row hides itself (no layout shift).
   const [bagRecs, setBagRecs] = useState<RecProduct[]>([]);
+  // Bag-stage email capture. Until now the only place an email was asked for
+  // was checkout step 1, so a bag abandoned before that was anonymous and the
+  // recovery emails (which work) never fired for it. One optional field here
+  // stamps the cart; signed-in shoppers never see it.
+  const [bagEmail, setBagEmail] = useState('');
+  const [bagEmailSaved, setBagEmailSaved] = useState(false);
+  const bagEmailTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveBagEmail = (value: string) => {
+    setBagEmail(value);
+    if (bagEmailTimer.current) clearTimeout(bagEmailTimer.current);
+    const clean = value.trim();
+    if (!clean.includes('@') || !clean.includes('.')) return;
+    bagEmailTimer.current = setTimeout(() => {
+      void captureCartEmailAction(clean).then(() => setBagEmailSaved(true));
+    }, 600);
+  };
 
   // The product id that seeds bag recommendations: the first cart item's product.
   const firstCartProductId = cart[0]?.variantDetails?.product;
@@ -822,6 +839,26 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                     <p className="mt-[10px] text-center text-[10px] tracking-[0.12em] text-[#8E8E93] uppercase">
                       7-day exchange&ensp;·&ensp;CAC-registered business
                     </p>
+                    {!isLoggedIn && cart.length > 0 && (
+                      <div className="mt-[12px]">
+                        <label htmlFor="bag-email" className="sr-only">
+                          Email to save your bag
+                        </label>
+                        <input
+                          id="bag-email"
+                          type="email"
+                          inputMode="email"
+                          autoComplete="email"
+                          placeholder="Email — we'll save your bag"
+                          value={bagEmail}
+                          onChange={(e) => saveBagEmail(e.target.value)}
+                          className="h-[42px] w-full rounded-[2px] border-2 border-[#121212]/25 bg-white px-[12px] text-[13px] text-[#121212] placeholder:text-[#AEAEB2] focus:border-[#121212] focus:ring-0 focus:outline-none"
+                        />
+                        <p className="mt-[6px] text-center text-[10px] tracking-[0.1em] text-[#8E8E93] uppercase">
+                          {bagEmailSaved ? 'Saved — your bag is safe' : 'Optional · one email, no spam'}
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
 
                   {/* Complete the look — recommendations seeded from the first

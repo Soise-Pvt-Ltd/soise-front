@@ -555,3 +555,94 @@ export async function updateOrderShippingAction(
     return { success: false, error: 'Could not update shipping address. Please try again.' };
   }
 }
+
+/* ── Bank transfer rail ───────────────────────────────────────────────── */
+
+export interface TransferDetails {
+  orderId: string;
+  orderNumber: number | null;
+  reference: string;
+  amount: number;
+  bank: { bank_name: string; account_number: string; account_name: string };
+  whatsappUrl: string;
+  addressPending: boolean;
+}
+
+type TransferResult =
+  | { success: true; transfer: TransferDetails }
+  | { success: true; paid: true }
+  | { success: false; error: string };
+
+/**
+ * Is the transfer rail switched on? The admin sets the account from the
+ * dashboard; until all three fields are filled the backend answers false and
+ * the checkout shows the card button alone.
+ */
+export async function transferAvailabilityAction(): Promise<boolean> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) return false;
+  try {
+    const res = await fetch(`${baseUrl}/payments/transfer/availability`, {
+      cache: 'no-store',
+    });
+    const json = await res.json().catch(() => null);
+    return Boolean(json?.data?.enabled);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Open (or re-read) the bank-transfer attempt for an order the shopper just
+ * created. Idempotent server-side: the same order always yields the same
+ * transfer reference. The order stays pending_payment, so the card page and
+ * the recovery emails keep working if they change their mind.
+ */
+export async function startTransferAction(orderId: string): Promise<TransferResult> {
+  if (!orderId) return { success: false, error: 'Missing order reference' };
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!baseUrl) return { success: false, error: 'API base URL is not configured' };
+
+  try {
+    const response = await fetch(`${baseUrl}/payments/transfer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Cookie: `access_token=${accessToken}` } : {}),
+      },
+      body: JSON.stringify({ reference: orderId }),
+    });
+    const json = await response.json().catch(() => null);
+    if (!response.ok) {
+      return {
+        success: false,
+        error: json?.message || `Could not set up a bank transfer (status ${response.status})`,
+      };
+    }
+    const d = json?.data ?? {};
+    if (d.status === 'paid') return { success: true, paid: true };
+    return {
+      success: true,
+      transfer: {
+        orderId,
+        orderNumber: typeof d.order_number === 'number' ? d.order_number : null,
+        reference: String(d.reference ?? ''),
+        amount: Number(d.amount ?? 0),
+        bank: {
+          bank_name: String(d.bank?.bank_name ?? ''),
+          account_number: String(d.bank?.account_number ?? ''),
+          account_name: String(d.bank?.account_name ?? ''),
+        },
+        whatsappUrl: String(d.whatsapp_url ?? ''),
+        addressPending: Boolean(d.address_pending),
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Could not set up a bank transfer',
+    };
+  }
+}

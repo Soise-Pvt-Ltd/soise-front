@@ -16,6 +16,8 @@ interface CreatorCode {
   id: string;
   code: string;
   active: boolean;
+  /** A store promotion on the creator-code rails (e.g. MOTION10): discount only, never commission. */
+  house?: boolean;
   current_rate: number;
   usage_count: number;
   total_sales: number;
@@ -212,12 +214,16 @@ export default function CreatorCodesClient({
                     </button>
                   </td>
                   <td className="td">
-                    <Badge tone={c.tier_name ? 'warn' : 'neutral'}>
-                      {c.tier_name || 'No tier'}
-                    </Badge>
+                    {c.house ? (
+                      <Badge tone="info">House code</Badge>
+                    ) : (
+                      <Badge tone={c.tier_name ? 'warn' : 'neutral'}>
+                        {c.tier_name || 'No tier'}
+                      </Badge>
+                    )}
                   </td>
                   <td className="td suite-display text-[16px] text-[#14110E]">
-                    {c.current_rate}%
+                    {c.house ? <span className="text-[13px] text-[#8C8377]">no commission</span> : `${c.current_rate}%`}
                   </td>
                   <td className="td">{c.usage_count ?? 0}</td>
                   <td className="td">{ngn(c.total_sales)}</td>

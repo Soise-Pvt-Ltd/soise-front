@@ -15,7 +15,15 @@ export const PENDING_ORDER_KEY = 'soise_pending_order';
 // helpful (price changes, stock, backend expiry).
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-type StoredPendingOrder = { id: string; at: number; secret?: string };
+type StoredPendingOrder = {
+  id: string;
+  at: number;
+  secret?: string;
+  /** 'transfer' when the shopper chose the bank rail; the banner then waits instead of reopening the card page. */
+  method?: 'card' | 'transfer';
+  /** The narration reference for a transfer order, so the banner can repeat it. */
+  reference?: string;
+};
 
 export function writePendingOrder(orderId: string, secret?: string) {
   if (!orderId || typeof window === 'undefined') return;
@@ -24,6 +32,36 @@ export function writePendingOrder(orderId: string, secret?: string) {
     localStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(payload));
   } catch {
     /* private mode / quota — recovery is best-effort */
+  }
+}
+
+/** Stamp the marker as a bank-transfer order (keeps id/secret/age intact). */
+export function markPendingOrderTransfer(reference: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(PENDING_ORDER_KEY) ?? '';
+    if (!raw.startsWith('{')) return;
+    const parsed = JSON.parse(raw) as StoredPendingOrder;
+    localStorage.setItem(
+      PENDING_ORDER_KEY,
+      JSON.stringify({ ...parsed, method: 'transfer', reference }),
+    );
+  } catch {
+    /* best-effort */
+  }
+}
+
+/** How the pending order was meant to be paid, if the marker knows. */
+export function readPendingOrderMethod(): { method: 'card' | 'transfer'; reference?: string } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(PENDING_ORDER_KEY) ?? '';
+    if (!raw.startsWith('{')) return null;
+    const parsed = JSON.parse(raw) as StoredPendingOrder;
+    if (!parsed?.id) return null;
+    return { method: parsed.method ?? 'card', reference: parsed.reference };
+  } catch {
+    return null;
   }
 }
 

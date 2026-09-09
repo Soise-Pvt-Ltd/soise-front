@@ -23,6 +23,7 @@ import { trackViewContent, trackAddToCart } from '@/lib/tracking-client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FadeIn } from '@/components/motion';
 import { useCurrency } from '@/lib/currency-context';
+import { whatsappUrl } from '@/lib/site-config';
 import SaleCountdown from '@/components/SaleCountdown';
 import { useNow } from '@/lib/use-now';
 import type { ProductSale } from '@/lib/product-price';
@@ -709,9 +710,23 @@ export default function ProductPageClient({
                   ad makes: a shopper weighing ₦90-150k is silently adding an
                   imagined delivery fee on this exact screen, and "ships across
                   Nigeria" never told them the answer is zero. */}
-              <p className="mt-3 mb-[32px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
+              <p className="mt-3 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
                 Free delivery, worldwide&ensp;·&ensp;7-day
                 exchange&ensp;·&ensp;Secure checkout
+              </p>
+              {/* A human before the money. Sizing, fabric, delivery to
+                  their city — a ₦90–150k decision gets asked out loud, and
+                  the answer arriving from a person is the trust a stranger
+                  has no other way to get from a store with no history. */}
+              <p className="mt-[10px] mb-[32px] text-center text-[11px] tracking-[0.12em] uppercase">
+                <a
+                  href={whatsappUrl(`Hi Soise, asking about the ${product.name}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#B3101C] underline-offset-4 hover:underline"
+                >
+                  Ask on WhatsApp →
+                </a>
               </p>
 
               <motion.button

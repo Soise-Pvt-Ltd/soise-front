@@ -1,7 +1,7 @@
 import Footer from '@/components/footer';
 import Nav from '@/components/home/nav/Nav';
 import Link from 'next/link';
-import { siteConfig } from '@/lib/site-config';
+import { siteConfig, whatsappUrl } from '@/lib/site-config';
 import ReferralPromoCard from '@/components/ReferralPromoCard';
 import RecommendationCarousel from '@/components/RecommendationCarousel';
 import StatueWatermark from '@/components/brand/StatueWatermark';
@@ -37,9 +37,13 @@ export default async function ThankYouPage({
     checkout_id?: string;
     trxref?: string;
     product?: string;
+    // Bank-transfer orders land here unpaid by design: the money arrives out
+    // of band and an admin confirms it. Nothing to verify; the page waits.
+    transfer?: string;
   }>;
 }) {
   const params = await searchParams;
+  const awaitingTransfer = params.transfer === '1';
   const orderRef = params.reference || params.checkout_id || params.trxref;
 
   // Confirm the payment on the Bachs callback. This is the reliable client
@@ -54,7 +58,7 @@ export default async function ThankYouPage({
   // while this page only holds a payment reference, and since references became
   // per-attempt the two are no longer the same string.
   let addressPendingOrderId: string | null = null;
-  if (orderRef) {
+  if (orderRef && !awaitingTransfer) {
     try {
       // Forward TikTok attribution cookies (_ttp / ttclid) so the Purchase
       // event this verify call fires server-side is attributed to the ad that
@@ -89,7 +93,7 @@ export default async function ThankYouPage({
   }
   // Fully-covered (store-credit) orders redirect here with no reference; they
   // are already paid, so treat the absence of a reference as confirmed.
-  const showConfirmed = paymentConfirmed || !orderRef;
+  const showConfirmed = !awaitingTransfer && (paymentConfirmed || !orderRef);
 
   // "You may also like": if a purchased product id is available in the URL
   // context, recommend against it; otherwise fall back to a generic featured row.
@@ -121,13 +125,21 @@ export default async function ThankYouPage({
             />
             <header className="brut-rise relative">
               <p className="brut-label text-[#B3101C]">
-                {showConfirmed ? 'Order confirmed' : 'Confirming payment'}
+                {awaitingTransfer
+                  ? 'Order held'
+                  : showConfirmed
+                    ? 'Order confirmed'
+                    : 'Confirming payment'}
               </p>
               <h1
                 className="mt-4 text-[48px] leading-[0.95] tracking-tight uppercase sm:text-[72px]"
                 style={serif}
               >
-                {showConfirmed ? (
+                {awaitingTransfer ? (
+                  <>
+                    Held for you<span className="text-[#B3101C]">.</span>
+                  </>
+                ) : showConfirmed ? (
                   <>
                     Thank you. It’s in motion<span className="text-[#B3101C]">.</span>
                   </>
@@ -138,9 +150,11 @@ export default async function ThankYouPage({
                 )}
               </h1>
               <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-[#3F3830]">
-                {showConfirmed
-                  ? 'Your order is confirmed, and a receipt is on its way to your inbox.'
-                  : 'We’re confirming your payment — this can take a moment. You don’t need to do anything.'}
+                {awaitingTransfer
+                  ? 'Your piece is held for 24 hours. Transfer the amount with the reference below in the narration, send us the screenshot on WhatsApp, and we confirm the same day. The account details are in your inbox.'
+                  : showConfirmed
+                    ? 'Your order is confirmed, and a receipt is on its way to your inbox.'
+                    : 'We’re confirming your payment — this can take a moment. You don’t need to do anything.'}
               </p>
             </header>
 
@@ -173,7 +187,7 @@ export default async function ThankYouPage({
                   <dd
                     className={`text-[13px] font-bold tracking-[0.1em] uppercase ${showConfirmed ? 'text-[#121212]' : 'text-[#B3101C]'}`}
                   >
-                    {showConfirmed ? 'Confirmed' : 'Processing'}
+                    {awaitingTransfer ? 'Awaiting transfer' : showConfirmed ? 'Confirmed' : 'Processing'}
                   </dd>
                 </div>
                 <div className="flex items-baseline justify-between gap-x-6 py-4">
@@ -193,12 +207,23 @@ export default async function ThankYouPage({
               className="brut-rise mt-10 flex flex-col gap-3 sm:flex-row"
               style={{ animationDelay: '0.24s' }}
             >
-              <Link
-                href="/shop/product-listing"
-                className="brut-btn brut-press"
-              >
-                Continue shopping
-              </Link>
+              {awaitingTransfer ? (
+                <a
+                  href={whatsappUrl(`Transfer proof for ${orderRef ?? 'my order'}`)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="brut-btn brut-press"
+                >
+                  Send the screenshot on WhatsApp
+                </a>
+              ) : (
+                <Link
+                  href="/shop/product-listing"
+                  className="brut-btn brut-press"
+                >
+                  Continue shopping
+                </Link>
+              )}
               <Link
                 href="/shop/order-history"
                 className="brut-btn-paper brut-press"

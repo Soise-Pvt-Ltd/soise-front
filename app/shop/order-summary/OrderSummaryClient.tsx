@@ -13,7 +13,12 @@ import {
   applyDiscountCodeAction,
   resumePaymentAction,
   updateOrderShippingAction,
+  startTransferAction,
+  transferAvailabilityAction,
+  type TransferDetails,
 } from './actions';
+import { TransferInstructions } from './TransferInstructions';
+import { siteConfig, whatsappUrl } from '@/lib/site-config';
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
@@ -23,6 +28,8 @@ import { openInlineCheckout } from '@/lib/bachs-overlay';
 import {
   readPendingOrder,
   readPendingOrderSecret,
+  readPendingOrderMethod,
+  markPendingOrderTransfer,
   writePendingOrder,
   clearPendingOrder,
 } from './pending-order';
@@ -121,6 +128,17 @@ export default function OrderSummaryClient({
   // address step "this order is paid — finish, don't reopen payment", and it
   // carries the confirmation URL (with the payment reference) to land on.
   const [paidThankYouUrl, setPaidThankYouUrl] = useState<string | null>(null);
+  // Bank transfer: the second door. `transferEnabled` mirrors the admin's
+  // switch (all three account fields set); `transfer` holds the open attempt
+  // for the order just created, and its presence swaps the pay step for the
+  // account details. The order stays pending_payment throughout, so the card
+  // rail and the recovery emails keep working if they change their mind.
+  const [transferEnabled, setTransferEnabled] = useState(false);
+  const [transfer, setTransfer] = useState<TransferDetails | null>(null);
+  // What the stored pending order was meant to be paid by. Derived, not
+  // state: pendingOrderId only becomes non-null after mount, so this reads
+  // localStorage on the client alone and never during the server render.
+  const pendingMethod = pendingOrderId ? readPendingOrderMethod() : null;
 
   // Address selection: default to a saved address when one exists so
   // returning customers don't have to retype anything. 'new' reveals the
@@ -501,6 +519,12 @@ export default function OrderSummaryClient({
 
       if (result.success) {
         showToast.success('Delivery details saved');
+        // A bank-transfer order: the money is on its way out of band, so
+        // there is nothing to reopen. Land on the held-order page.
+        if (transfer) {
+          window.location.href = transferThankYouUrl();
+          return;
+        }
         // The order is already PAID by the time this form is shown, so there is
         // no payment left to resume — go straight to the confirmation. (This
         // used to call resumePaymentAction, which was correct only while the
@@ -544,12 +568,122 @@ export default function OrderSummaryClient({
     if (stored) setPendingOrderId(stored);
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    transferAvailabilityAction().then((on) => {
+      if (!cancelled) setTransferEnabled(on);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Step 1, transfer door. Same order creation as the card path (the email
+  // field above is what both need), then instead of opening the Bachs
+  // overlay, open a transfer attempt and show the account details in place.
+  async function handleTransferSubmit(formData: FormData) {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setPending(true);
+    setError(null);
+
+    if (discountData?.code) formData.set('creator_code', discountData.code);
+    formData.set('currency', chargeCurrency);
+    if (useStoreCredit && hasStoreCredit) formData.set('use_store_credit', 'true');
+    for (const k of ['address', 'city', 'state', 'country', 'zipCode', 'phone', 'line2', 'selected_address_id']) {
+      formData.delete(k);
+    }
+
+    const toastId = showToast.loading('Holding your order…');
+    try {
+      const result = await checkoutAction(formData);
+      showToast.dismiss(toastId);
+      if (result?.orderId) {
+        try {
+          writePendingOrder(result.orderId, result.orderSecret);
+          setOrderId(result.orderId);
+        } catch {
+          /* storage unavailable — the emailed details still carry them */
+        }
+      }
+      if (result?.addressPending) setAwaitingAddress(true);
+
+      // Store credit covered it: nothing to transfer.
+      if (result?.success && result.redirectUrl === '/thank-you') {
+        await goToPayment(result);
+        return;
+      }
+      if (!result?.orderId) {
+        const msg = result?.error || 'Checkout failed';
+        showToast.error(msg);
+        setError(msg);
+        return;
+      }
+
+      const opened = await startTransferAction(result.orderId);
+      if (!opened.success) {
+        // The order exists; only the transfer door failed. Fall back to the
+        // card rail via the resume banner rather than dead-ending.
+        setPendingOrderId(result.orderId);
+        showToast.error(opened.error);
+        setError(opened.error);
+        return;
+      }
+      if ('paid' in opened) {
+        window.location.href = '/thank-you';
+        return;
+      }
+      setTransfer(opened.transfer);
+      markPendingOrderTransfer(opened.transfer.reference);
+      showToast.success('Order held. Account details are below and in your inbox.');
+    } catch (err) {
+      showToast.dismiss(toastId);
+      showToast.error('An error occurred during checkout. Please try again.');
+      setError('An unexpected error occurred');
+      console.error('Transfer checkout error:', err);
+    } finally {
+      setPending(false);
+      submittingRef.current = false;
+    }
+  }
+
+  // A transfer shopper who still owes an address goes to Step 2 without a
+  // payment gate: the money arrives out of band, so the address must be
+  // collected now or chased by email. handleAddressSubmit sees `transfer`
+  // and finishes on the thank-you page instead of reopening payment.
+  function transferThankYouUrl() {
+    return `/thank-you?transfer=1&reference=${encodeURIComponent(transfer?.reference ?? '')}`;
+  }
+
+  function handleTransferContinue() {
+    if (transfer?.addressPending && orderId) {
+      setCheckoutStep('address');
+      return;
+    }
+    // The pending marker stays: it is what makes the order-summary page say
+    // "awaiting your transfer" if they come back before the money lands.
+    window.location.href = transferThankYouUrl();
+  }
+
+  async function handleTransferPayByCard() {
+    if (!transfer) return;
+    const id = transfer.orderId;
+    setTransfer(null);
+    setPendingOrderId(id);
+    await handleResumeFor(id);
+  }
+
   async function handleResume() {
-    if (!pendingOrderId || resuming) return;
+    if (!pendingOrderId) return;
+    await handleResumeFor(pendingOrderId);
+  }
+
+  async function handleResumeFor(id: string) {
+    if (resuming) return;
     setResuming(true);
     const toastId = showToast.loading('Reopening secure checkout…');
     try {
-      const resumed = await resumePaymentAction(pendingOrderId);
+      const resumed = await resumePaymentAction(id);
       showToast.dismiss(toastId);
       if (resumed?.success && resumed.redirectUrl) {
         // If it already settled, resume returns /thank-you — clear the marker.
@@ -687,7 +821,7 @@ export default function OrderSummaryClient({
   async function handleApplyDiscount(e: React.FormEvent) {
     e.preventDefault();
 
-    const codeError = validateField(discountCode, 'Creator code', {
+    const codeError = validateField(discountCode, 'Code', {
       required: true,
       minLength: 3,
     });
@@ -732,12 +866,20 @@ export default function OrderSummaryClient({
   return (
     <>
       <Toaster position="top-center" richColors />
-      {pendingOrderId && (
+      {pendingOrderId && !transfer && (
         <PendingOrderBanner
           resuming={resuming}
           cancelling={cancelling}
           onResume={handleResume}
           onCancel={handleCancelPending}
+          transfer={
+            pendingMethod?.method === 'transfer'
+              ? {
+                  reference: pendingMethod.reference,
+                  whatsappUrl: whatsappUrl(`Transfer proof for ${pendingMethod.reference ?? 'my order'}`),
+                }
+              : undefined
+          }
         />
       )}
       <div className="page-shell">
@@ -908,7 +1050,7 @@ export default function OrderSummaryClient({
                   <input
                     type="text"
                     className="outlined w-full uppercase focus:border-gray-500 focus:ring-[#AEAEB2] md:w-fit"
-                    placeholder="Creator code"
+                    placeholder="Code"
                     value={discountCode}
                     onChange={(e) =>
                       setDiscountCode(e.target.value.toUpperCase())
@@ -937,7 +1079,7 @@ export default function OrderSummaryClient({
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  Have a creator code?
+                  Have a code?
                 </motion.button>
               )
             ) : (
@@ -1101,7 +1243,14 @@ export default function OrderSummaryClient({
         <div className="my-[28px] border-t-2 border-[#121212]"></div>
         {cart.length > 0 && (
           <div className="px-[20px]">
-            {checkoutStep === 'payment' ? (
+            {checkoutStep === 'payment' && transfer ? (
+              <TransferInstructions
+                transfer={transfer}
+                formatPrice={formatPrice}
+                onContinue={handleTransferContinue}
+                onPayByCard={handleTransferPayByCard}
+              />
+            ) : checkoutStep === 'payment' ? (
               <CheckoutStepPayment
                 isLoggedIn={isLoggedIn}
                 pending={pending}
@@ -1109,6 +1258,8 @@ export default function OrderSummaryClient({
                 cartEmpty={cart.length === 0}
                 payLabel={`Pay ${formatPrice(totalAfterCredit)}`}
                 onSubmit={handleSubmit}
+                transferEnabled={transferEnabled && chargeCurrency === 'NGN'}
+                onTransfer={handleTransferSubmit}
               />
             ) : (
               <CheckoutStepAddress
@@ -1175,14 +1326,14 @@ export default function OrderSummaryClient({
                   <p className="mt-[3px] text-[12px] leading-relaxed text-[#5C544A]">
                     Questions before you pay?{' '}
                     <a
-                      href="https://wa.me/2348135757947"
+                      href={whatsappUrl('Hi Soise, a question before I pay')}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold text-[#B3101C] underline-offset-2 hover:underline"
                     >
                       WhatsApp us
                     </a>{' '}
-                    — Mon–Sat, 9:00–18:00 WAT.
+                    — {siteConfig.hours.replace(' · ', ', ')}.
                   </p>
                 </div>
               </div>

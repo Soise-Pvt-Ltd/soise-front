@@ -184,3 +184,40 @@ export async function deleteOrder(orderId: string) {
     return { success: false, error: 'Could not delete the order. Please try again.' };
   }
 }
+
+
+/**
+ * Confirm a bank-transfer order once the money has landed. Runs the same
+ * server-side tail as a card webhook (stock, receipt, processing), so the
+ * order is indistinguishable downstream from one paid by card.
+ */
+export async function confirmTransfer(orderId: string, amountReceived?: number) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  try {
+    const response = await fetch(`${BASE_URL}/admin/orders/${orderId}/confirm-transfer`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: `access_token=${accessToken}`,
+      },
+      body: JSON.stringify(
+        typeof amountReceived === 'number' ? { amount_received: amountReceived } : {},
+      ),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false as const, error: json?.message || 'Could not confirm this transfer.' };
+    }
+    revalidatePath('/dashboard/orders');
+    return {
+      success: true as const,
+      status: (json?.data?.status as string) || 'processing',
+      alreadyProcessed: Boolean(json?.data?.already_processed),
+    };
+  } catch (error) {
+    console.error('Error confirming transfer:', error);
+    return { success: false as const, error: 'Could not confirm this transfer.' };
+  }
+}

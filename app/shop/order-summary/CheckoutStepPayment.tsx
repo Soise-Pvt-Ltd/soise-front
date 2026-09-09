@@ -11,6 +11,9 @@ interface CheckoutStepPaymentProps {
   /** Rendered on the button so the shopper sees the exact charge before paying. */
   payLabel: string;
   onSubmit: (formData: FormData) => void;
+  /** Second door: the admin-set bank account. Hidden until the rail is switched on. */
+  transferEnabled?: boolean;
+  onTransfer?: (formData: FormData) => void;
 }
 
 /**
@@ -30,7 +33,12 @@ export default function CheckoutStepPayment({
   cartEmpty,
   payLabel,
   onSubmit,
+  transferEnabled = false,
+  onTransfer,
 }: CheckoutStepPaymentProps) {
+  // One <form>, two submit buttons. formAction on the second routes the same
+  // fields (the email above all) to the transfer handler, so the shopper
+  // never types anything twice and validation runs identically.
   return (
     <form action={onSubmit} className="mb-[36px]">
       <div>
@@ -94,8 +102,32 @@ export default function CheckoutStepPayment({
 
         {/* Reassurance at the exact moment of doubt: the button. */}
         <p className="mt-4 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-          Secure payment via Bachs
+          Secure card payment via Bachs
         </p>
+
+        {transferEnabled && onTransfer && (
+          <>
+            <div className="my-[18px] flex items-center gap-x-3 text-[10px] tracking-[0.16em] text-[#8E8E93] uppercase">
+              <span className="flex-1 border-t-2 border-[#121212] opacity-15" />
+              or
+              <span className="flex-1 border-t-2 border-[#121212] opacity-15" />
+            </div>
+            {/* The door most Nigerian commerce actually walks through. Same
+                order, same fields; the account details appear in place and
+                land in their inbox. */}
+            <button
+              type="submit"
+              formAction={onTransfer}
+              className="brut-btn-paper brut-press w-full"
+              disabled={pending || cartEmpty}
+            >
+              Pay by bank transfer
+            </button>
+            <p className="mt-3 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
+              Account details shown next · confirmed same day
+            </p>
+          </>
+        )}
       </div>
     </form>
   );

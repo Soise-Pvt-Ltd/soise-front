@@ -7,6 +7,8 @@ interface PendingOrderBannerProps {
   cancelling: boolean;
   onResume: () => void;
   onCancel: () => void;
+  /** Set for a bank-transfer order: the banner waits for the money rather than reopening the card page. */
+  transfer?: { reference?: string; whatsappUrl: string };
 }
 
 /**
@@ -20,7 +22,46 @@ export function PendingOrderBanner({
   cancelling,
   onResume,
   onCancel,
+  transfer,
 }: PendingOrderBannerProps) {
+  if (transfer) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="page-shell flex flex-col gap-y-4 border-b-2 border-[#121212] bg-[#F5F0E8] px-[20px] py-[16px] normal-case md:flex-row md:items-center md:gap-x-6"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-bold tracking-[0.1em] text-[#121212] uppercase">
+            Awaiting your transfer{transfer.reference ? ` · ${transfer.reference}` : ''}
+          </p>
+          <p className="mt-[2px] text-[12px] leading-relaxed text-[#5C544A]">
+            Your order is held. Once the transfer lands, send us the screenshot and we confirm the
+            same day. The account details are in your inbox.
+          </p>
+        </div>
+        <div className="flex w-full shrink-0 overflow-hidden rounded-[2px] border-2 border-[#121212] md:w-[420px]">
+          <button
+            type="button"
+            onClick={onResume}
+            disabled={resuming || cancelling}
+            className="w-2/5 cursor-pointer border-r-2 border-[#121212] bg-white px-[8px] py-[13px] text-[11px] font-bold tracking-wide text-[#121212] uppercase transition-colors duration-200 hover:bg-[#121212]/5 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {resuming ? 'Opening…' : 'Pay by card instead'}
+          </button>
+          <a
+            href={transfer.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-3/5 items-center justify-center bg-[#121212] px-[16px] py-[13px] text-center text-[12px] font-bold tracking-wide text-white uppercase transition-colors duration-200 hover:bg-[#2a2a2a]"
+          >
+            Send proof on WhatsApp
+          </a>
+        </div>
+      </motion.div>
+    );
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}

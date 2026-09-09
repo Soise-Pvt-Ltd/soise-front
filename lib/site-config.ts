@@ -14,6 +14,14 @@ export const siteConfig = {
   // real entity and can't be overridden by a stale host env var.
   registrationNumber: '8413888',
   estimatedDelivery: process.env.NEXT_PUBLIC_ESTIMATED_DELIVERY ?? '3-5 business days',
+  // One human on the other end. The local number is what a Nigerian shopper
+  // dials; the international form is what wa.me needs. Hardcoded so the three
+  // places that used to carry their own copy of it can never disagree.
+  phone: '0813 575 7947',
+  phoneHref: 'tel:08135757947',
+  whatsapp: '2348135757947',
+  // Mon–Sat, 9:00–18:00 WAT — the hours the number is actually answered.
+  hours: 'Mon–Sat · 9:00–18:00 WAT',
   social: {
     instagram: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/soise.ng',
     tiktok: process.env.NEXT_PUBLIC_TIKTOK_URL ?? 'https://www.tiktok.com/@soise.ng',
@@ -23,3 +31,9 @@ export const siteConfig = {
       'https://www.instagram.com/channel/AbYt4--G-jL1eyFC/',
   },
 } as const;
+
+/** A WhatsApp deep link to the store, optionally with a prefilled message. */
+export function whatsappUrl(text?: string): string {
+  const base = `https://wa.me/${siteConfig.whatsapp}`;
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
+}

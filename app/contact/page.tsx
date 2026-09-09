@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { siteConfig } from '@/lib/site-config';
+import { siteConfig, whatsappUrl } from '@/lib/site-config';
 import { pageMetadata } from '@/lib/seo';
 import { InstagramIcon, TiktokIcon, XIcon } from '@/components/icons';
 
@@ -108,15 +108,23 @@ export default function ContactPage() {
         <section className="brut-rise mt-12" style={{ animationDelay: '0.16s' }}>
           <IndexHead n="02" title="Call or WhatsApp" />
           <a
-            href="tel:08135757947"
+            href={whatsappUrl('Hi Soise, I have a question')}
+            target="_blank"
+            rel="noopener noreferrer"
             className="brut-plate brut-press mt-5 flex flex-col gap-1 px-6 py-6 sm:flex-row sm:items-baseline sm:justify-between"
           >
             <span className="text-[20px] sm:text-[26px]" style={serif}>
-              0813 575 7947
+              WhatsApp {siteConfig.phone}
             </span>
             <span className="text-[11px] font-bold tracking-[0.16em] text-[#5C544A] uppercase">
-              Mon–Sat · 9:00–18:00 WAT
+              {siteConfig.hours}
             </span>
+          </a>
+          <a
+            href={siteConfig.phoneHref}
+            className="mt-3 block text-[12px] font-bold tracking-[0.16em] text-[#5C544A] uppercase underline-offset-4 hover:underline"
+          >
+            Or call {siteConfig.phone} →
           </a>
         </section>
 
