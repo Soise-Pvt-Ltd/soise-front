@@ -69,6 +69,7 @@ const SECTIONS: {
       { path: '/dashboard/orders', icon: <AdminOrdersIcon />, label: 'Orders' },
       { path: '/dashboard/flash-sales', icon: BoltIcon, label: 'Flash Sales' },
       { path: '/dashboard/home-content', icon: <AdminSettingsIcon />, label: 'Home Page' },
+      { path: '/dashboard/demand', icon: <AdminOverviewIcon />, label: 'What to Restock' },
       { path: '/dashboard/restock', icon: <AdminProductsIcon />, label: 'Restock' },
       { path: '/dashboard/bank-transfer', icon: <AdminPayoutIcon />, label: 'Bank Transfer' },
     ],
