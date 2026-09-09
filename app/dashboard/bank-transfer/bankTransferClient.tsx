@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import GridContainer from '../gridContainer';
 import { PageHeader, Panel, StatTile } from '../ui';
 import { showToast } from '../toast';
@@ -11,6 +11,7 @@ import {
   type BankOption,
   type BankTransferSettings,
 } from './actions';
+import { resolveAccount } from '@/app/creators/dashboard/request-payout/actions';
 
 /**
  * The account the checkout's "Pay by bank transfer" button shows. Bachs is
@@ -31,6 +32,38 @@ export default function BankTransferClient() {
   // the list (older save, list fetch failed) is kept as an extra option so
   // the form never silently blanks it.
   const [banks, setBanks] = useState<BankOption[]>([]);
+  // Name resolution. Once a bank is chosen and ten digits are in, the bank
+  // is asked who owns the account and the name is filled from its answer —
+  // the same lookup the creator payout form uses. Typed only as a fallback
+  // when the lookup fails, and flagged as such.
+  const [resolving, setResolving] = useState(false);
+  const [resolved, setResolved] = useState<'idle' | 'ok' | 'failed'>('idle');
+  const [manualName, setManualName] = useState(false);
+  const resolveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bankCode = banks.find((b) => b.name === bankName)?.code ?? '';
+
+  useEffect(() => {
+    if (resolveTimer.current) clearTimeout(resolveTimer.current);
+    if (!bankCode || !/^\d{10}$/.test(accountNumber)) return;
+    // Don't re-resolve the saved pair on load; only a changed pair.
+    if (settings && bankName === settings.bankName && accountNumber === settings.accountNumber) return;
+    resolveTimer.current = setTimeout(async () => {
+      setResolving(true);
+      setResolved('idle');
+      const res = await resolveAccount(accountNumber, bankCode);
+      setResolving(false);
+      if (res.success && res.data?.account_name) {
+        setAccountName(res.data.account_name);
+        setManualName(false);
+        setResolved('ok');
+      } else {
+        setResolved('failed');
+      }
+    }, 500);
+    return () => {
+      if (resolveTimer.current) clearTimeout(resolveTimer.current);
+    };
+  }, [bankCode, accountNumber, bankName, settings]);
 
   const apply = (s: BankTransferSettings) => {
     setSettings(s);
@@ -163,13 +196,32 @@ export default function BankTransferClient() {
               <input
                 type="text"
                 className="suite-input mt-1.5 w-full"
-                value={accountName}
+                value={resolving ? 'Checking with the bank…' : accountName}
                 onChange={(e) => setAccountName(e.target.value)}
-                placeholder="Exactly as the bank shows it"
+                readOnly={!manualName && resolved !== 'failed'}
+                placeholder={bankCode && accountNumber.length === 10 ? '' : 'Filled in by the bank once the number is complete'}
               />
               <span className="mt-2 block text-[12px] leading-relaxed text-[#5C544A]">
-                Shoppers see this name when they add the beneficiary. It should match the registered
-                business name so nothing looks off at the moment of trust.
+                {resolved === 'ok' && 'Confirmed by the bank. '}
+                {resolved === 'failed' && (
+                  <span className="text-[#B3261E]">
+                    The bank could not confirm that account. Check the number, or type the name exactly as the bank shows it.{' '}
+                  </span>
+                )}
+                Shoppers see this name when they add the beneficiary; a mismatch is the moment they
+                stop trusting the page.
+                {!manualName && resolved !== 'failed' && (
+                  <>
+                    {' '}
+                    <button
+                      type="button"
+                      className="underline underline-offset-2"
+                      onClick={() => setManualName(true)}
+                    >
+                      Type it instead
+                    </button>
+                  </>
+                )}
               </span>
             </label>
           </div>
