@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Field } from './Field';
 import { captureCartEmailAction } from './actions';
 
@@ -36,11 +37,14 @@ export default function CheckoutStepPayment({
   transferEnabled = false,
   onTransfer,
 }: CheckoutStepPaymentProps) {
-  // One <form>, two submit buttons. formAction on the second routes the same
-  // fields (the email above all) to the transfer handler, so the shopper
-  // never types anything twice and validation runs identically.
+  // One button. The rail is a two-way choice above it, not a second button
+  // below it: two full-height buttons with a caption each read as a menu
+  // on a ₦150k screen. The form action follows the choice, so the same
+  // email field feeds both paths.
+  const [method, setMethod] = useState<'card' | 'transfer'>('card');
+  const useTransfer = transferEnabled && !!onTransfer && method === 'transfer';
   return (
-    <form action={onSubmit} className="mb-[36px]">
+    <form action={useTransfer ? onTransfer : onSubmit} className="mb-[36px]">
       <div>
         {/* Step marker: a stamped index, not a status card. */}
         <div className="flex items-baseline gap-x-3">
@@ -86,48 +90,52 @@ export default function CheckoutStepPayment({
               />
             </Field>
           )}
-          <p className="mt-[12px] text-[12px] leading-relaxed text-[#8E8E93] normal-case">
-            We’ll ask for your name and delivery address right after — nothing
-            else before you pay.
-          </p>
         </div>
+
+        {transferEnabled && onTransfer && (
+          <div
+            role="radiogroup"
+            aria-label="How would you like to pay?"
+            className="mb-[14px] flex overflow-hidden rounded-[2px] border-2 border-[#121212]"
+          >
+            {(
+              [
+                ['card', 'Card'],
+                ['transfer', 'Bank transfer'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={method === value}
+                onClick={() => setMethod(value)}
+                className={`flex-1 py-[12px] text-[11px] font-bold tracking-[0.12em] uppercase transition-colors ${
+                  method === value
+                    ? 'bg-[#121212] text-white'
+                    : 'bg-white text-[#121212] hover:bg-[#121212]/5'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <button
           type="submit"
           className="brut-btn brut-press"
           disabled={pending || cartEmpty}
         >
-          {pending ? 'Processing…' : payLabel}
+          {pending ? 'Processing…' : useTransfer ? 'Get transfer details' : payLabel}
         </button>
 
-        {/* Reassurance at the exact moment of doubt: the button. */}
+        {/* One line of reassurance, chosen by the rail. */}
         <p className="mt-4 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-          Secure card payment via Bachs
+          {useTransfer
+            ? 'Account details next · confirmed the same day'
+            : 'Secure card payment · address asked after'}
         </p>
-
-        {transferEnabled && onTransfer && (
-          <>
-            <div className="my-[18px] flex items-center gap-x-3 text-[10px] tracking-[0.16em] text-[#8E8E93] uppercase">
-              <span className="flex-1 border-t-2 border-[#121212] opacity-15" />
-              or
-              <span className="flex-1 border-t-2 border-[#121212] opacity-15" />
-            </div>
-            {/* The door most Nigerian commerce actually walks through. Same
-                order, same fields; the account details appear in place and
-                land in their inbox. */}
-            <button
-              type="submit"
-              formAction={onTransfer}
-              className="brut-btn-paper brut-press w-full"
-              disabled={pending || cartEmpty}
-            >
-              Pay by bank transfer
-            </button>
-            <p className="mt-3 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-              Account details shown next · confirmed same day
-            </p>
-          </>
-        )}
       </div>
     </form>
   );

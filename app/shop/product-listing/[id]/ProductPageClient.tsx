@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Footer from '@/components/footer';
-import { MinusIcon, PlusIcon, LikeIcon, LikeIconSolid, ShareIconOutline } from '@/components/icons';
+import { LikeIcon, LikeIconSolid, ShareIconOutline } from '@/components/icons';
 import SwiperCarouselClient from '@/components/caurosel';
 import { Toaster } from 'sonner';
 import { showToast } from '@/lib/toast-utils';
@@ -96,7 +96,8 @@ export default function ProductPageClient({
   const { formatPrice } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
-  const [quantity, setQuantity] = useState(1);
+  // Always one: the stepper is gone, the bag is where quantity changes.
+  const quantity = 1;
   // Seeded from variants[0] on the FIRST render, not in an effect.
   //
   // These used to start null and get filled by the "Initialize selection"
@@ -192,11 +193,20 @@ export default function ProductPageClient({
       ? variants.filter((v) => v.color === selectedColor)
       : variants;
     const seen = new Set<string>();
-    return source.filter((v) => {
-      if (seen.has(v.size)) return false;
-      seen.add(v.size);
-      return true;
-    });
+    const order = ['xxs', 'xs', 's', 'm', 'l', 'xl', '2xl', 'xxl', '3xl', 'xxxl', '4xl'];
+    const rank = (size: string) => {
+      const i = order.indexOf(size.toLowerCase());
+      return i === -1 ? order.length : i;
+    };
+    return source
+      .filter((v) => {
+        if (seen.has(v.size)) return false;
+        seen.add(v.size);
+        return true;
+      })
+      // The API returns variants in insertion order (L S XL 2XL M); a size
+      // row reads left-to-right as a scale or it reads as a puzzle.
+      .sort((a, b) => rank(a.size) - rank(b.size));
   }, [selectedColor, variants]);
 
   // Sync variant when color or size changes
@@ -308,13 +318,6 @@ export default function ProductPageClient({
 
   const isOutOfStock = isVariantSoldOut(selectedVariant);
 
-  // Upper bound for the quantity stepper: the selected variant's stock when the
-  // backend reports a positive number, otherwise an unknown fallback so users
-  // can't increment without limit and overshoot available inventory.
-  const maxQty =
-    typeof selectedVariant?.stock === 'number' && selectedVariant.stock > 0
-      ? selectedVariant.stock
-      : undefined;
 
   const handleAddToWishlist = async () => {
     if (!product?.id || wishlistPending || saved) return;
@@ -509,9 +512,35 @@ export default function ProductPageClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
               >
-                <h1 className="font-display text-[28px] leading-[1.1] text-[#121212] uppercase md:text-[32px]">
-                  {product.name}
-                </h1>
+                <div className="flex items-start justify-between gap-x-4">
+                  <h1 className="font-display text-[28px] leading-[1.1] text-[#121212] uppercase md:text-[32px]">
+                    {product.name}
+                  </h1>
+                  {/* Save and share, demoted from two full-width buttons to
+                      two icons beside the name — present for whoever wants
+                      them, invisible to whoever is deciding. */}
+                  <div className="mt-1 flex shrink-0 items-center gap-x-3">
+                    <button
+                      type="button"
+                      onClick={handleAddToWishlist}
+                      disabled={wishlistPending || saved}
+                      aria-label={saved ? 'Saved to wishlist' : 'Save to wishlist'}
+                      title={saved ? 'Saved to wishlist' : 'Save to wishlist'}
+                      className="p-1 text-[#121212] disabled:opacity-60"
+                    >
+                      {saved ? <LikeIconSolid /> : <LikeIcon />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleShare}
+                      aria-label="Share"
+                      title="Share"
+                      className="p-1 text-[#121212]"
+                    >
+                      <ShareIconOutline />
+                    </button>
+                  </div>
+                </div>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentPrice}
@@ -593,7 +622,16 @@ export default function ProductPageClient({
                 {/* Size Selector */}
                 {availableSizes.length > 0 && (
                   <div>
-                    <div className="mb-2 text-[11px] text-[#AEAEB2] uppercase">Size</div>
+                    <div className="mb-2 text-[11px] text-[#AEAEB2] uppercase">
+                      Size
+                      {typeof selectedVariant?.stock === 'number' &&
+                        selectedVariant.stock > 0 &&
+                        selectedVariant.stock <= 5 && (
+                          <span className="ml-3 font-bold tracking-[0.15em] text-[#B3101C]">
+                            Only {selectedVariant.stock} left
+                          </span>
+                        )}
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {availableSizes.map((v) => {
                         const isSelected = selectedSize === v.size;
@@ -623,59 +661,21 @@ export default function ProductPageClient({
                   </div>
                 )}
 
-                {/* Quantity */}
-                <div>
-                  <div className="mb-2 text-[11px] text-[#AEAEB2] uppercase">Quantity</div>
-                  <div className="flex h-[36px] w-[96px] items-center justify-between rounded-[4px] border border-[#AEAEB2] px-2">
-                    <motion.button
-                      aria-label="Decrease quantity"
-                      onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                      className="p-1"
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.85 }}
-                    >
-                      <MinusIcon />
-                    </motion.button>
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={quantity}
-                        className="text-sm"
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        {quantity}
-                      </motion.span>
-                    </AnimatePresence>
-                    <motion.button
-                      aria-label="Increase quantity"
-                      onClick={() =>
-                        setQuantity((q) => Math.min(q + 1, maxQty ?? 999))
-                      }
-                      className="p-1"
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.85 }}
-                    >
-                      <PlusIcon />
-                    </motion.button>
-                  </div>
-                </div>
-
-                {/* Quiet scarcity — only when it's genuinely true. */}
-                {typeof selectedVariant?.stock === 'number' &&
-                  selectedVariant.stock > 0 &&
-                  selectedVariant.stock <= 5 && (
-                    <p className="text-[11px] font-bold tracking-[0.15em] text-[#B3101C] uppercase">
-                      Only {selectedVariant.stock} left
-                    </p>
-                  )}
+                {/* Quantity stepper removed: a ₦90–150k piece is bought one
+                    at a time, and the bag still lets a shopper change it. */}
               </motion.div>
 
+              {/* One decision, one button. This used to be two full-width
+                  buttons (Add to bag, Buy it now) over two caption lines and
+                  four more links — a menu where a decision should be. Buy is
+                  the path for a two-piece store; the bag is a text link for
+                  the few who want to keep browsing. Same label and action
+                  as the mobile sticky bar, so the page never disagrees with
+                  itself. */}
               <motion.button
                 ref={buyButtonRef}
                 className="btn_black !mt-[36px] disabled:cursor-not-allowed disabled:opacity-40"
-                onClick={() => addToBag('bag')}
+                onClick={() => addToBag('checkout')}
                 disabled={isAdding || !selectedVariant || isOutOfStock}
                 whileHover={
                   isOutOfStock
@@ -688,73 +688,39 @@ export default function ProductPageClient({
                 {isOutOfStock
                   ? 'Sold out'
                   : isAdding
-                    ? 'Adding...'
-                    : 'Add to bag'}
+                    ? 'One sec…'
+                    : `Buy it now · ${formatPrice(currentPrice)}`}
               </motion.button>
-
-              {/* Straight to the order summary for someone who has already
-                  decided. Skips the bag entirely: two taps become one. */}
-              <motion.button
-                className="btn_outline disabled:cursor-not-allowed disabled:opacity-40"
-                onClick={() => addToBag('checkout')}
-                disabled={isAdding || !selectedVariant || isOutOfStock}
-                whileHover={isOutOfStock ? {} : { scale: 1.02 }}
-                whileTap={isOutOfStock ? {} : { scale: 0.97 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-              >
-                Buy it now
-              </motion.button>
+              {!isOutOfStock && (
+                <button
+                  type="button"
+                  onClick={() => addToBag('bag')}
+                  disabled={isAdding || !selectedVariant}
+                  className="mt-3 w-full text-center text-[12px] text-[#8E8E93] underline underline-offset-4 hover:text-[#121212] disabled:opacity-40"
+                >
+                  or add to bag and keep browsing
+                </button>
+              )}
 
               {/* Checkout confidence — factual, quiet, right where doubt lives.
                   Leads with FREE delivery because that's the promise every live
                   ad makes: a shopper weighing ₦90-150k is silently adding an
                   imagined delivery fee on this exact screen, and "ships across
                   Nigeria" never told them the answer is zero. */}
-              <p className="mt-3 text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-                Free delivery, worldwide&ensp;·&ensp;7-day
-                exchange&ensp;·&ensp;Secure checkout
-              </p>
-              {/* A human before the money. Sizing, fabric, delivery to
-                  their city — a ₦90–150k decision gets asked out loud, and
-                  the answer arriving from a person is the trust a stranger
-                  has no other way to get from a store with no history. */}
-              <p className="mt-[10px] mb-[32px] text-center text-[11px] tracking-[0.12em] uppercase">
+              {/* One line under the button: the two facts that answer the
+                  two hesitations, and a human to ask. WhatsApp is a link in
+                  the line, not a second call to action. */}
+              <p className="mt-4 mb-[56px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
+                Free delivery&ensp;·&ensp;7-day exchange&ensp;·&ensp;
                 <a
                   href={whatsappUrl(`Hi Soise, asking about the ${product.name}`)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold text-[#B3101C] underline-offset-4 hover:underline"
+                  className="text-[#121212] underline underline-offset-4 hover:text-[#B3101C]"
                 >
-                  Ask on WhatsApp →
+                  Questions? WhatsApp
                 </a>
               </p>
-
-              <motion.button
-                type="button"
-                onClick={handleAddToWishlist}
-                disabled={wishlistPending || saved}
-                className="flex w-full items-center justify-center gap-x-2 text-[13px] font-medium uppercase text-[#121212] disabled:opacity-60"
-                whileHover={saved ? {} : { scale: 1.02 }}
-                whileTap={saved ? {} : { scale: 0.97 }}
-              >
-                {saved ? <LikeIconSolid /> : <LikeIcon />}
-                {saved
-                  ? 'Saved to wishlist'
-                  : wishlistPending
-                    ? 'Saving...'
-                    : 'Save to wishlist'}
-              </motion.button>
-
-              <motion.button
-                type="button"
-                onClick={handleShare}
-                className="mb-[56px] flex w-full items-center justify-center gap-x-2 text-[13px] font-medium uppercase text-[#121212]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                <ShareIconOutline />
-                Share
-              </motion.button>
             </motion.div>
           </div>
         </div>
