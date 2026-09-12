@@ -4,6 +4,28 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+  async redirects() {
+    return [
+      // Product slugs are derived from the product name by the
+      // set_product_slug DB event, so renaming a product silently moves its
+      // URL. On 2026-09-12 the redundant "swaz" prefix came off both product
+      // names; these keep every old link alive — Google's index, the merchant
+      // feed's last crawl, TikTok/Instagram bios and anything already shared.
+      // Permanent so search engines transfer the old URL's standing. Query
+      // strings (utm_*, fbclid, ttclid) pass through, so attribution survives.
+      // If a product is ever renamed again, add its old slug here too.
+      {
+        source: '/shop/product-listing/swaz-motion-tracksuit',
+        destination: '/shop/product-listing/motion-tracksuit',
+        permanent: true,
+      },
+      {
+        source: '/shop/product-listing/swaz-motion-layered-jersey',
+        destination: '/shop/product-listing/motion-layered-jersey',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
