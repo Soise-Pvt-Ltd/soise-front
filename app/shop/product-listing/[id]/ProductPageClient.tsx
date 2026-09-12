@@ -17,6 +17,7 @@ import { withImageTransform, isTransformable } from '@/lib/images';
  */
 const MAIN_IMAGE_WIDTHS = [400, 640, 828, 1200] as const;
 import { addToBag as addToBagAction } from './actions';
+import { transferAvailabilityAction } from '@/app/shop/order-summary/actions';
 import { addToWishlist as addToWishlistAction } from '@/app/shop/wishlist/actions';
 import { notifyCartChanged } from '@/lib/cart-events';
 import { trackViewContent, trackAddToCart } from '@/lib/tracking-client';
@@ -216,6 +217,24 @@ export default function ProductPageClient({
     setSelectedVariant(match);
     setSelectedImageIndex(0);
   }, [selectedColor, selectedSize, variants]);
+
+  // Whether the bank-transfer door is open, so the buy column can say so
+  // BEFORE the shopper commits to checkout. A first-time buyer deciding on a
+  // ₦150k piece from a brand they just met is asking "do I have to hand a
+  // stranger my card?" on this screen, not two pages later — and today the
+  // answer only appears inside checkout. Read from the same public
+  // availability endpoint checkout uses, so emptying the bank details in
+  // /dashboard/bank-transfer silently retracts the promise here too.
+  const [transferEnabled, setTransferEnabled] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    transferAvailabilityAction().then((on) => {
+      if (!cancelled) setTransferEnabled(on);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Initialize selection
   useEffect(() => {
@@ -711,7 +730,9 @@ export default function ProductPageClient({
                   two hesitations, and a human to ask. WhatsApp is a link in
                   the line, not a second call to action. */}
               <p className="mt-4 mb-[56px] text-center text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase">
-                Free delivery&ensp;·&ensp;7-day exchange&ensp;·&ensp;
+                Free delivery&ensp;·&ensp;
+                {transferEnabled && <>Pay by transfer&ensp;·&ensp;</>}
+                7-day exchange&ensp;·&ensp;
                 <a
                   href={whatsappUrl(`Hi Soise, asking about the ${product.name}`)}
                   target="_blank"
