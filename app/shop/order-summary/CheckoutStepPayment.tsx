@@ -15,6 +15,9 @@ interface CheckoutStepPaymentProps {
   /** Second door: the admin-set bank account. Hidden until the rail is switched on. */
   transferEnabled?: boolean;
   onTransfer?: (formData: FormData) => void;
+  /** Controlled email, shared with the bag-stage field above the item list. */
+  email?: string;
+  onEmailChange?: (value: string) => void;
 }
 
 /**
@@ -36,6 +39,8 @@ export default function CheckoutStepPayment({
   onSubmit,
   transferEnabled = false,
   onTransfer,
+  email,
+  onEmailChange,
 }: CheckoutStepPaymentProps) {
   // One button. The rail is a two-way choice above it, not a second button
   // below it: two full-height buttons with a caption each read as a menu
@@ -80,8 +85,15 @@ export default function CheckoutStepPayment({
                 className="brut-input"
                 autoComplete="email"
                 required
-                // Real-time capture for abandoned cart recovery
+                {...(onEmailChange ? { value: email ?? '' } : {})}
+                // Real-time capture for abandoned cart recovery. When the
+                // parent owns the value (bag-stage field), it also owns the
+                // capture — otherwise fire it from here.
                 onChange={(e) => {
+                  if (onEmailChange) {
+                    onEmailChange(e.target.value);
+                    return;
+                  }
                   const value = e.target.value.trim();
                   if (value.includes('@')) {
                     void captureCartEmailAction(value);

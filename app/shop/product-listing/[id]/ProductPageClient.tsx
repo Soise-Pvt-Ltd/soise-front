@@ -133,6 +133,23 @@ export default function ProductPageClient({
   );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
+
+  // Has the shopper actually chosen a size? `selectedSize` is pre-filled with
+  // variants[0] above so the images render on the server (see the note
+  // there), which means a bare tap on "Buy it now" used to add whatever came
+  // first. The 13–16 Sep TikTok test made that visible: 8 of 9 stranger carts
+  // held the same default variant, Azure Blue L, and none reached payment. A
+  // cart nobody sized is not a buying signal, and the ad group optimising on
+  // AddToCart was learning from those taps. So the default drives the
+  // pictures only; buying requires a size the shopper picked, and the buy
+  // button asks for one instead of adding the default.
+  const [sizeChosen, setSizeChosen] = useState(false);
+  const [sizeHint, setSizeHint] = useState(false);
+  const sizeRowRef = useRef<HTMLDivElement>(null);
+  const askForSize = () => {
+    setSizeHint(true);
+    sizeRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
   const [wishlistPending, setWishlistPending] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -246,9 +263,11 @@ export default function ProductPageClient({
 
   const handleColorSelect = (color: string) => {
     setSelectedColor(color);
-    // Auto-select first available size for this color
+    // Auto-select first available size for this color — for the images. The
+    // shopper still has to confirm a size before buying.
     const firstSize = variants.find((v) => v.color === color)?.size ?? null;
     setSelectedSize(firstSize);
+    setSizeChosen(false);
   };
 
   // Images for the currently selected variant. The backend already resolves
@@ -384,6 +403,10 @@ export default function ProductPageClient({
   };
 
   const addToBag = async (then: 'bag' | 'checkout' = 'bag') => {
+    if (!sizeChosen) {
+      askForSize();
+      return;
+    }
     if (!selectedVariant) {
       showToast.error('Please select a variant before adding to bag.');
       return;
@@ -640,10 +663,16 @@ export default function ProductPageClient({
 
                 {/* Size Selector */}
                 {availableSizes.length > 0 && (
-                  <div>
+                  <div ref={sizeRowRef}>
                     <div className="mb-2 text-[11px] text-[#AEAEB2] uppercase">
                       Size
-                      {typeof selectedVariant?.stock === 'number' &&
+                      {sizeHint && !sizeChosen && (
+                        <span className="ml-3 font-bold tracking-[0.15em] text-[#B3101C]">
+                          Pick your size to continue
+                        </span>
+                      )}
+                      {sizeChosen &&
+                        typeof selectedVariant?.stock === 'number' &&
                         selectedVariant.stock > 0 &&
                         selectedVariant.stock <= 5 && (
                           <span className="ml-3 font-bold tracking-[0.15em] text-[#B3101C]">
@@ -653,12 +682,17 @@ export default function ProductPageClient({
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {availableSizes.map((v) => {
-                        const isSelected = selectedSize === v.size;
+                        const isSelected = sizeChosen && selectedSize === v.size;
                         const soldOut = isVariantSoldOut(v);
                         return (
                           <motion.button
                             key={v.size}
-                            onClick={() => !soldOut && setSelectedSize(v.size)}
+                            onClick={() => {
+                              if (soldOut) return;
+                              setSelectedSize(v.size);
+                              setSizeChosen(true);
+                              setSizeHint(false);
+                            }}
                             disabled={soldOut}
                             title={soldOut ? 'Sold out' : undefined}
                             className={`flex h-9 min-w-[40px] items-center justify-center rounded-[2px] border px-2 text-[11px] uppercase transition-colors duration-200 ${
@@ -666,7 +700,9 @@ export default function ProductPageClient({
                                 ? 'cursor-not-allowed border-[#E5E5E5] bg-[#FAFAFA] text-[#C7C7CC] line-through'
                                 : isSelected
                                   ? 'border-black bg-black text-white'
-                                  : 'border-[#8E8E93] bg-[#F5F5F5] hover:border-black'
+                                  : sizeHint
+                                    ? 'border-[#B3101C] bg-[#F5F5F5] hover:border-black'
+                                    : 'border-[#8E8E93] bg-[#F5F5F5] hover:border-black'
                             }`}
                             whileHover={soldOut ? {} : { scale: 1.05 }}
                             whileTap={soldOut ? {} : { scale: 0.95 }}
@@ -708,7 +744,9 @@ export default function ProductPageClient({
                   ? 'Sold out'
                   : isAdding
                     ? 'One sec…'
-                    : `Buy it now · ${formatPrice(currentPrice)}`}
+                    : sizeChosen
+                      ? `Buy it now · ${formatPrice(currentPrice)}`
+                      : `Choose a size · ${formatPrice(currentPrice)}`}
               </motion.button>
               {!isOutOfStock && (
                 <button
@@ -827,7 +865,7 @@ export default function ProductPageClient({
                 disabled={isAdding || !selectedVariant || isOutOfStock}
                 className="h-[46px] shrink-0 cursor-pointer rounded-[10px] bg-[#121212] px-6 text-[12px] font-bold text-white uppercase transition-all duration-300 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {isOutOfStock ? 'Sold out' : isAdding ? 'One sec…' : 'Buy now'}
+                {isOutOfStock ? 'Sold out' : isAdding ? 'One sec…' : sizeChosen ? 'Buy now' : 'Choose a size'}
               </button>
             </div>
           </motion.div>

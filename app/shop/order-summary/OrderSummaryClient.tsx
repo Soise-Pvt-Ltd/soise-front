@@ -15,6 +15,7 @@ import {
   updateOrderShippingAction,
   startTransferAction,
   transferAvailabilityAction,
+  captureCartEmailAction,
   type TransferDetails,
 } from './actions';
 import { TransferInstructions } from './TransferInstructions';
@@ -110,6 +111,26 @@ export default function OrderSummaryClient({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
+
+  // Bag-stage email, asked FIRST. The 13–16 Sep TikTok test put 11 stranger
+  // carts on this page and captured zero emails: the only email field sat
+  // inside the pay form, below the item list, the code field, the referral
+  // links and the totals — off-screen on every phone. A shopper who leaves
+  // from above the fold is unrecoverable. This field sits directly under the
+  // header, saves on every keystroke that looks like an address, and feeds
+  // the same value into the pay form so nobody types it twice.
+  const [bagEmail, setBagEmail] = useState('');
+  const [bagEmailSaved, setBagEmailSaved] = useState(false);
+  const bagEmailTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveBagEmail = (value: string) => {
+    setBagEmail(value);
+    if (bagEmailTimer.current) clearTimeout(bagEmailTimer.current);
+    const clean = value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) return;
+    bagEmailTimer.current = setTimeout(() => {
+      void captureCartEmailAction(clean).then(() => setBagEmailSaved(true));
+    }, 600);
+  };
   const [removingId, setRemovingId] = useState<string | null>(null);
   // A pending order whose payment redirect never landed. When set, we surface
   // a "Complete your payment" banner so the shopper can resume without the cart
@@ -929,6 +950,33 @@ export default function OrderSummaryClient({
             </AnimatePresence>
           </motion.div>
 
+          {!isLoggedIn && cart.length > 0 && checkoutStep === 'payment' && !transfer && (
+            <div className="px-[20px] pt-[18px]">
+              <label
+                htmlFor="bag-email"
+                className="block text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase"
+              >
+                Your email
+                <span className="ml-2 normal-case tracking-normal">
+                  {bagEmailSaved
+                    ? '— saved, we will hold this bag for you'
+                    : '— so we can hold this bag and send your receipt'}
+                </span>
+              </label>
+              <input
+                id="bag-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                enterKeyHint="done"
+                className="brut-input mt-[8px]"
+                placeholder="you@example.com"
+                value={bagEmail}
+                onChange={(e) => saveBagEmail(e.target.value)}
+              />
+            </div>
+          )}
+
           <AnimatePresence>
             {show && (
               <motion.div
@@ -1257,6 +1305,8 @@ export default function OrderSummaryClient({
                 error={error}
                 cartEmpty={cart.length === 0}
                 payLabel={`Pay ${formatPrice(totalAfterCredit)}`}
+                email={bagEmail}
+                onEmailChange={saveBagEmail}
                 onSubmit={handleSubmit}
                 transferEnabled={transferEnabled && chargeCurrency === 'NGN'}
                 onTransfer={handleTransferSubmit}
