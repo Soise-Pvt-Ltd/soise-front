@@ -182,7 +182,7 @@ export default function FooterClient({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled={submitting}
-                    className="h-[44px] w-full rounded-[2px] border-2 border-[#121212] bg-white pr-[46px] pl-[12px] transition-shadow duration-150 focus:border-[#121212] focus:shadow-[4px_4px_0_#B3101C] focus:outline-none disabled:opacity-60"
+                    className="brut-input brut-input-sm pr-[46px]"
                     placeholder="EMAIL"
                   />
                   <motion.button

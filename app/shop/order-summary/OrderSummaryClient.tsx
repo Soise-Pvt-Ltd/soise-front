@@ -1134,7 +1134,7 @@ export default function OrderSummaryClient({
                 >
                   <input
                     type="text"
-                    className="outlined w-full uppercase focus:border-gray-500 focus:ring-[#AEAEB2] md:w-fit"
+                    className="brut-input brut-input-sm w-full uppercase md:w-fit"
                     placeholder="Code"
                     value={discountCode}
                     onChange={(e) =>

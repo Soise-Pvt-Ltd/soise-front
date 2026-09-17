@@ -305,15 +305,58 @@ input[type='number'].adminsolid,
   @apply flex h-[58px] w-full cursor-pointer items-center justify-center rounded-[2px] border-2 border-[#121212] bg-white text-[13px] font-bold tracking-[0.1em] text-[#121212] uppercase disabled:cursor-not-allowed disabled:opacity-40;
 }
 
-/* Inputs: honest boxes. The focus state trades the shadow to crimson so the
-   active field is the loudest thing on the page exactly while it's in use. */
+/* Inputs: plates you can type into.
+
+   A separator in this register is ONE flat 2px ink line. An empty input used
+   to be four of the same line around white — on a white plate, its bottom
+   edge and a `brut-rule` were indistinguishable, and a shopper could not tell
+   "type here" from "section ends here". So a field is now something a line
+   can never be: it has DEPTH (a hard 3px ink shadow at rest, the same plate
+   physics as the buttons) and a FILL (bone inside, not paper). Rules stay
+   flat and unfilled. Focus trades the shadow to crimson and lifts the plate
+   1px, so the active field is the loudest thing on the page exactly while it
+   is in use. Disabled fields go flat and dim: an inert box never looks live.
+
+   Every text-like control on a Pressed Ink page uses this class — no
+   hand-rolled `border-2 border-[#121212]` boxes; the moment one exists the
+   two vocabularies drift apart again. `brut-input-sm` is the compact size for
+   inline uses (bag panel, footer, code field). */
 input.brut-input,
 select.brut-input,
+textarea.brut-input,
 .brut-input {
-  @apply h-[56px] w-full appearance-none rounded-[2px] border-2 border-[#121212] bg-white px-[16px] text-[15px] text-[#121212] transition-shadow duration-150 placeholder:text-[#AEAEB2] focus:border-[#121212] focus:ring-0 focus:outline-none;
+  @apply h-[56px] w-full appearance-none rounded-[2px] border-2 border-[#121212] bg-[#F5F0E8] px-[16px] text-[15px] text-[#121212] placeholder:text-[#8E8E93] focus:border-[#121212] focus:ring-0 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 read-only:opacity-60;
+  box-shadow: 3px 3px 0 var(--brut-ink);
+  transition:
+    transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+textarea.brut-input {
+  @apply h-auto min-h-[120px] resize-y py-[14px];
 }
 .brut-input:focus {
+  transform: translate(-1px, -1px);
   box-shadow: 4px 4px 0 var(--brut-crimson);
+}
+.brut-input:disabled,
+.brut-input[readonly] {
+  transform: none;
+  box-shadow: none;
+}
+/* Compact field for inline placements. Same grammar, smaller plate. */
+.brut-input-sm {
+  @apply h-[44px] px-[12px] text-[13px];
+  box-shadow: 2px 2px 0 var(--brut-ink);
+}
+.brut-input-sm:focus {
+  box-shadow: 3px 3px 0 var(--brut-crimson);
+}
+@media (prefers-reduced-motion: reduce) {
+  .brut-input,
+  .brut-input:focus {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* Micro-label — the Soise uppercase eyebrow, pressed harder. */

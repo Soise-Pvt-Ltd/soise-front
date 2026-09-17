@@ -862,7 +862,7 @@ export default function NavClient({ collections = [] }: NavClientProps) {
                           placeholder="Email — we'll save your bag"
                           value={bagEmail}
                           onChange={(e) => saveBagEmail(e.target.value)}
-                          className="h-[42px] w-full rounded-[2px] border-2 border-[#121212]/25 bg-white px-[12px] text-[13px] text-[#121212] placeholder:text-[#AEAEB2] focus:border-[#121212] focus:ring-0 focus:outline-none"
+                          className="brut-input brut-input-sm"
                         />
                         <p className="mt-[6px] text-center text-[10px] tracking-[0.1em] text-[#8E8E93] uppercase">
                           {bagEmailSaved ? 'Saved — your bag is safe' : 'Optional · one email, no spam'}

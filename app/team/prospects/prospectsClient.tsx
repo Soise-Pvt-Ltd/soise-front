@@ -430,7 +430,7 @@ export default function ProspectsClient({
                 <select
                   value={p.stage}
                   onChange={(e) => changeStage(p, e.target.value)}
-                  className="h-9 w-full max-w-[150px] cursor-pointer appearance-none rounded-[2px] border-2 border-[#121212] bg-white px-2 text-[12px] font-medium text-[#121212] capitalize outline-none focus:ring-0"
+                  className="brut-input brut-input-sm w-full max-w-[150px] cursor-pointer font-medium capitalize outline-none focus:ring-0"
                 >
                   {STAGES.map((s) => (
                     <option key={s} value={s} className="capitalize">
