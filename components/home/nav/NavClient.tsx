@@ -29,6 +29,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCurrency } from '@/lib/currency-context';
 import { ProductPrice } from '@/components/ProductPrice';
 import { captureCartEmailAction } from '@/app/shop/order-summary/actions';
+import { looksLikeEmail } from '@/lib/email';
 import { showToast } from '@/lib/toast-utils';
 import SwiperCarouselClient from '@/components/caurosel';
 import {
@@ -113,6 +114,13 @@ export default function NavClient({ collections = [] }: NavClientProps) {
     });
     // Don't clobber optimistic cart edits that are still in flight.
     if (pendingMutations.current === 0) setCart(data.cart ?? []);
+    // An email already on the cart (typed here earlier, or on the order
+    // summary) shows as saved — never re-asked. Only fill an empty field so
+    // a half-typed address is not overwritten by a refresh.
+    if (data.cartEmail) {
+      setBagEmail((current) => (current === '' ? data.cartEmail! : current));
+      setBagEmailSaved(true);
+    }
   };
   const [openMenu, setOpenMenu] = useState<
     null | 'menu' | 'search' | 'bag' | 'wishlist' | 'user'
@@ -136,10 +144,12 @@ export default function NavClient({ collections = [] }: NavClientProps) {
   const saveBagEmail = (value: string) => {
     setBagEmail(value);
     if (bagEmailTimer.current) clearTimeout(bagEmailTimer.current);
-    const clean = value.trim();
-    if (!clean.includes('@') || !clean.includes('.')) return;
+    if (!looksLikeEmail(value)) {
+      setBagEmailSaved(false);
+      return;
+    }
     bagEmailTimer.current = setTimeout(() => {
-      void captureCartEmailAction(clean).then(() => setBagEmailSaved(true));
+      void captureCartEmailAction(value.trim()).then(() => setBagEmailSaved(true));
     }, 600);
   };
 

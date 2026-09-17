@@ -19,6 +19,7 @@ import {
   type TransferDetails,
 } from './actions';
 import { TransferInstructions } from './TransferInstructions';
+import { looksLikeEmail } from '@/lib/email';
 import { siteConfig, whatsappUrl } from '@/lib/site-config';
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -89,6 +90,9 @@ interface OrderSummaryClientProps {
   // Only set when the backend actually charges shipping. Shown as its own line
   // so the total here matches what Bachs collects.
   shippingFee?: number | null;
+  // Email already captured on this cart (bag panel or an earlier visit).
+  // Prefilled, shown as saved, never asked for again.
+  savedEmail?: string | null;
 }
 
 export default function OrderSummaryClient({
@@ -103,6 +107,7 @@ export default function OrderSummaryClient({
   prefillLastName = '',
   prefillPhone = '',
   cartLoadFailed = false,
+  savedEmail = null,
   shippingFee = null,
 }: OrderSummaryClientProps) {
   const { formatPrice, chargeCurrency } = useCurrency();
@@ -112,24 +117,45 @@ export default function OrderSummaryClient({
   const [error, setError] = useState<string | null>(null);
   const [show, setShow] = useState(true);
 
-  // Bag-stage email, asked FIRST. The 13–16 Sep TikTok test put 11 stranger
-  // carts on this page and captured zero emails: the only email field sat
-  // inside the pay form, below the item list, the code field, the referral
-  // links and the totals — off-screen on every phone. A shopper who leaves
-  // from above the fold is unrecoverable. This field sits directly under the
-  // header, saves on every keystroke that looks like an address, and feeds
-  // the same value into the pay form so nobody types it twice.
-  const [bagEmail, setBagEmail] = useState('');
-  const [bagEmailSaved, setBagEmailSaved] = useState(false);
+  // THE guest email field for this page — the only one. One fact, asked once,
+  // at the earliest point it is useful, then read by everything downstream.
+  //
+  // History, because the page broke this rule twice: the email first lived
+  // inside the pay form (below items, code, referral links and totals — off
+  // screen on every phone, so 11 stranger carts in the 13–16 Sep TikTok test
+  // captured zero emails). A second field was then added up here and kept in
+  // sync with the first, which put two email inputs on one page. The pay form
+  // now carries the value as a hidden input and renders no field of its own.
+  // The bag panel in the Nav asks the same fact even earlier; whatever it
+  // captured arrives as `savedEmail` and is shown here as already saved.
+  const [bagEmail, setBagEmail] = useState(savedEmail ?? '');
+  const [bagEmailSaved, setBagEmailSaved] = useState(!!savedEmail);
+  const [bagEmailError, setBagEmailError] = useState<string | null>(null);
+  const bagEmailRef = useRef<HTMLInputElement>(null);
   const bagEmailTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveBagEmail = (value: string) => {
     setBagEmail(value);
+    setBagEmailError(null);
     if (bagEmailTimer.current) clearTimeout(bagEmailTimer.current);
-    const clean = value.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) return;
+    if (!looksLikeEmail(value)) {
+      setBagEmailSaved(false);
+      return;
+    }
     bagEmailTimer.current = setTimeout(() => {
-      void captureCartEmailAction(clean).then(() => setBagEmailSaved(true));
+      void captureCartEmailAction(value.trim()).then(() => setBagEmailSaved(true));
     }, 600);
+  };
+  // The pay form has no email field of its own any more, so the guard that
+  // `required` used to provide lives here: a guest who reaches the pay button
+  // without a usable email is sent back up to the one field, not shown a
+  // second one.
+  const requireGuestEmail = (): boolean => {
+    if (isLoggedIn) return true;
+    if (looksLikeEmail(bagEmail)) return true;
+    setBagEmailError('Add your email first — it is where the receipt goes.');
+    bagEmailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    bagEmailRef.current?.focus();
+    return false;
   };
   const [removingId, setRemovingId] = useState<string | null>(null);
   // A pending order whose payment redirect never landed. When set, we surface
@@ -369,6 +395,7 @@ export default function OrderSummaryClient({
   // the shipping address is collected in Step 2 (handleAddressSubmit) after
   // payment is underway, so any address fields are stripped from the payload.
   async function handleSubmit(formData: FormData) {
+    if (!requireGuestEmail()) return;
     // Re-entrancy guard: block a second submit firing before `pending` renders,
     // preventing duplicate orders / duplicate /cart/checkout POSTs.
     if (submittingRef.current) return;
@@ -603,6 +630,7 @@ export default function OrderSummaryClient({
   // field above is what both need), then instead of opening the Bachs
   // overlay, open a transfer attempt and show the account details in place.
   async function handleTransferSubmit(formData: FormData) {
+    if (!requireGuestEmail()) return;
     if (submittingRef.current) return;
     submittingRef.current = true;
     setPending(true);
@@ -953,7 +981,7 @@ export default function OrderSummaryClient({
           {!isLoggedIn && cart.length > 0 && checkoutStep === 'payment' && !transfer && (
             <div className="px-[20px] pt-[18px]">
               <label
-                htmlFor="bag-email"
+                htmlFor="checkout-email"
                 className="block text-[11px] tracking-[0.12em] text-[#8E8E93] uppercase"
               >
                 Your email
@@ -964,16 +992,25 @@ export default function OrderSummaryClient({
                 </span>
               </label>
               <input
-                id="bag-email"
+                ref={bagEmailRef}
+                id="checkout-email"
                 type="email"
                 inputMode="email"
                 autoComplete="email"
                 enterKeyHint="done"
+                required
+                aria-invalid={bagEmailError ? true : undefined}
+                aria-describedby={bagEmailError ? 'checkout-email-error' : undefined}
                 className="brut-input mt-[8px]"
                 placeholder="you@example.com"
                 value={bagEmail}
                 onChange={(e) => saveBagEmail(e.target.value)}
               />
+              {bagEmailError && (
+                <p id="checkout-email-error" className="mt-[6px] text-[12px] text-[#B3101C]">
+                  {bagEmailError}
+                </p>
+              )}
             </div>
           )}
 

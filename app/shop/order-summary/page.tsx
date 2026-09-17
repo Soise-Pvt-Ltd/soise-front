@@ -146,6 +146,12 @@ export default async function OrderHistoryPage() {
   // more reconstructing this from /products' sample_variants, which was
   // capped at 3 variants per product and silently missed anything outside
   // that cap.
+  // The email this guest already gave us, if any. Asked once, in whichever
+  // surface came first; every later surface prefills from here instead of
+  // asking again.
+  const savedEmail: string | null =
+    typeof cartData?.meta?.guest_email === 'string' ? cartData.meta.guest_email : null;
+
   const enrichedCart: EnrichedCartItem[] = Array.isArray(cartData?.data)
     ? cartData.data.map((item: CartItem & { variant_details?: ProductVariant }) => ({
         ...item,
@@ -169,6 +175,7 @@ export default async function OrderHistoryPage() {
         prefillPhone={prefillPhone}
         cartLoadFailed={cartLoadFailed}
         shippingFee={shippingFee}
+        savedEmail={savedEmail}
       />
     </>
   );

@@ -17,6 +17,9 @@ export interface NavSession {
   email: string | null;
   avatar: string | null;
   cart: EnrichedCartItem[];
+  // Email already captured on a guest cart — the bag field prefills from it
+  // and shows "saved" instead of asking again.
+  cartEmail: string | null;
 }
 
 /**
@@ -36,6 +39,7 @@ export async function getNavSession(): Promise<NavSession> {
     email: null,
     avatar: null,
     cart: [],
+    cartEmail: null,
   };
 
   const cookieStore = await cookies();
@@ -63,7 +67,7 @@ export async function getNavSession(): Promise<NavSession> {
     ]);
 
     let productsData: { data: Product[] } = { data: [] };
-    let cartData: { data: CartItem[] } = { data: [] };
+    let cartData: { data: CartItem[]; meta?: { guest_email?: string } } = { data: [] };
     if (productsRes.ok) productsData = await productsRes.json();
     if (cartRes.ok) cartData = await cartRes.json();
 
@@ -118,7 +122,9 @@ export async function getNavSession(): Promise<NavSession> {
       }
     }
 
-    return { isLoggedIn, admin, storeCredit, firstName, lastName, email, avatar, cart };
+    const cartEmail =
+      typeof cartData.meta?.guest_email === 'string' ? cartData.meta.guest_email : null;
+    return { isLoggedIn, admin, storeCredit, firstName, lastName, email, avatar, cart, cartEmail };
   } catch (error) {
     console.error('getNavSession failed:', error);
     return { ...empty, isLoggedIn };

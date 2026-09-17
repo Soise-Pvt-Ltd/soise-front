@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Field } from './Field';
 import { captureCartEmailAction } from './actions';
+import { looksLikeEmail } from '@/lib/email';
 
 interface CheckoutStepPaymentProps {
   isLoggedIn: boolean;
@@ -15,7 +16,11 @@ interface CheckoutStepPaymentProps {
   /** Second door: the admin-set bank account. Hidden until the rail is switched on. */
   transferEnabled?: boolean;
   onTransfer?: (formData: FormData) => void;
-  /** Controlled email, shared with the bag-stage field above the item list. */
+  /**
+   * When the page owns the email (the single field under the header), pass it
+   * here and this form renders NO email input of its own — only a hidden
+   * field so the value still travels with the submit. One fact, one field.
+   */
   email?: string;
   onEmailChange?: (value: string) => void;
 }
@@ -72,7 +77,11 @@ export default function CheckoutStepPayment({
         )}
 
         <div className="mt-[20px] mb-[20px]">
-          {!isLoggedIn && (
+          {!isLoggedIn && onEmailChange ? (
+            // The page already asked. Carry the answer, don't ask again.
+            <input type="hidden" name="email" value={email ?? ''} />
+          ) : !isLoggedIn ? (
+            // Standalone use (no page-level field): this is the one field.
             <Field
               label="Email address"
               htmlFor="email"
@@ -85,23 +94,16 @@ export default function CheckoutStepPayment({
                 className="brut-input"
                 autoComplete="email"
                 required
-                {...(onEmailChange ? { value: email ?? '' } : {})}
-                // Real-time capture for abandoned cart recovery. When the
-                // parent owns the value (bag-stage field), it also owns the
-                // capture — otherwise fire it from here.
+                // Real-time capture for abandoned cart recovery.
                 onChange={(e) => {
-                  if (onEmailChange) {
-                    onEmailChange(e.target.value);
-                    return;
-                  }
                   const value = e.target.value.trim();
-                  if (value.includes('@')) {
+                  if (looksLikeEmail(value)) {
                     void captureCartEmailAction(value);
                   }
                 }}
               />
             </Field>
-          )}
+          ) : null}
         </div>
 
         {transferEnabled && onTransfer && (
