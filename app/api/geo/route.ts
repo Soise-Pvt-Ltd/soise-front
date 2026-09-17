@@ -9,7 +9,17 @@ export const runtime = 'edge';
  * with no saved preference, to pick a sensible default currency.
  */
 export async function GET(request: Request) {
-  const country = request.headers.get('x-vercel-ip-country') ?? '';
+  // soise.ng is proxied through Cloudflare, so the IP Vercel geolocates is
+  // the Cloudflare edge node's, not the shopper's. Nigerian ISPs route to
+  // Amsterdam and London, so x-vercel-ip-country said NL and a Lagos visitor
+  // was priced in euros. Cloudflare stamps the real client's country in
+  // cf-ipcountry before forwarding; read that first. 'XX' / 'T1' are
+  // Cloudflare's "unknown" / Tor markers, treated as unreadable.
+  const cf = request.headers.get('cf-ipcountry') ?? '';
+  const country =
+    cf && cf !== 'XX' && cf !== 'T1'
+      ? cf
+      : request.headers.get('x-vercel-ip-country') ?? '';
   // One line into the function logs so "are internationals arriving?" is
   // answerable from `vercel logs` without touching any dashboard. The geo
   // endpoint only fires for first-visit browsers, so each line is a NEW
