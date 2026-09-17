@@ -8,7 +8,9 @@ import { siteConfig } from '@/lib/site-config';
 import { showToast } from '@/lib/toast-utils';
 import { subscribeNewsletter } from './newsletter-actions';
 
-export default function FooterClient() {
+export default function FooterClient({
+  newsletter = true,
+}: { newsletter?: boolean } = {}) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.15 });
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -128,7 +130,11 @@ export default function FooterClient() {
                     href: siteConfig.social.tiktok,
                     label: 'SOISE on TikTok',
                   },
-                  { Icon: XIcon, href: siteConfig.social.x, label: 'SOISE on X' },
+                  {
+                    Icon: XIcon,
+                    href: siteConfig.social.x,
+                    label: 'SOISE on X',
+                  },
                 ].map(({ Icon, href, label }, i) => (
                   <motion.a
                     key={i}
@@ -163,59 +169,65 @@ export default function FooterClient() {
               ease: [0.22, 1, 0.36, 1],
             }}
           >
-            <form onSubmit={handleSubscribe} className="space-y-[24px]" noValidate>
-              <div className="relative flex items-center">
-                <input
-                  type="email"
-                  aria-label="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={submitting}
-                  className="h-[44px] w-full rounded-[2px] border-2 border-[#121212] bg-white pr-[46px] pl-[12px] transition-shadow duration-150 focus:border-[#121212] focus:shadow-[4px_4px_0_#B3101C] focus:outline-none disabled:opacity-60"
-                  placeholder="EMAIL"
-                />
-                <motion.button
-                  type="submit"
-                  disabled={submitting}
-                  aria-label="Subscribe to the mailing list"
-                  className="absolute top-1/2 right-[6px] flex size-[32px] -translate-y-1/2 items-center justify-center rounded-[2px] bg-[#121212] disabled:opacity-60"
-                  whileHover={{
-                    scale: 1.1,
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                  }}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 400,
-                    damping: 17,
-                  }}
-                >
-                  {submitting ? (
-                    <span
-                      className="size-[14px] animate-spin rounded-full border-2 border-white/40 border-t-white"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <ChevronRightIcon className="size-[14px]" />
-                  )}
-                </motion.button>
-              </div>
-
-              <div className="flex gap-x-[10px]">
-                <input
-                  type="checkbox"
-                  aria-label="I consent to the processing of my personal data for marketing purposes"
-                  checked={consent}
-                  onChange={(e) => setConsent(e.target.checked)}
-                  className="form-checkbox size-[17px]"
-                />
-                <div className="text-[13px] leading-[18px] text-[#2F2F2F]">
-                  I have read the Privacy Policy and consent to the processing of
-                  my personal data for marketing purposes (Newsletters, News and
-                  Promotions)
+            {newsletter && (
+              <form
+                onSubmit={handleSubscribe}
+                className="space-y-[24px]"
+                noValidate
+              >
+                <div className="relative flex items-center">
+                  <input
+                    type="email"
+                    aria-label="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={submitting}
+                    className="h-[44px] w-full rounded-[2px] border-2 border-[#121212] bg-white pr-[46px] pl-[12px] transition-shadow duration-150 focus:border-[#121212] focus:shadow-[4px_4px_0_#B3101C] focus:outline-none disabled:opacity-60"
+                    placeholder="EMAIL"
+                  />
+                  <motion.button
+                    type="submit"
+                    disabled={submitting}
+                    aria-label="Subscribe to the mailing list"
+                    className="absolute top-1/2 right-[6px] flex size-[32px] -translate-y-1/2 items-center justify-center rounded-[2px] bg-[#121212] disabled:opacity-60"
+                    whileHover={{
+                      scale: 1.1,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                    }}
+                    whileTap={{ scale: 0.9 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 400,
+                      damping: 17,
+                    }}
+                  >
+                    {submitting ? (
+                      <span
+                        className="size-[14px] animate-spin rounded-full border-2 border-white/40 border-t-white"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <ChevronRightIcon className="size-[14px]" />
+                    )}
+                  </motion.button>
                 </div>
-              </div>
-            </form>
+
+                <div className="flex gap-x-[10px]">
+                  <input
+                    type="checkbox"
+                    aria-label="I consent to the processing of my personal data for marketing purposes"
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="form-checkbox size-[17px]"
+                  />
+                  <div className="text-[13px] leading-[18px] text-[#2F2F2F]">
+                    I have read the Privacy Policy and consent to the processing
+                    of my personal data for marketing purposes (Newsletters,
+                    News and Promotions)
+                  </div>
+                </div>
+              </form>
+            )}
           </motion.div>
         </div>
       </div>
@@ -231,24 +243,42 @@ export default function FooterClient() {
       >
         <div className="container px-[24px] pt-[24px] pb-[40px] text-[13px] text-[#2F2F2F] md:px-[48px]">
           <nav className="mb-[18px] flex flex-wrap gap-x-6 gap-y-2 text-[12px] tracking-wide uppercase">
-            <Link href="/about" className="transition-colors hover:text-[#121212]">
+            <Link
+              href="/about"
+              className="transition-colors hover:text-[#121212]"
+            >
               About
             </Link>
             {/* Sitewide link so the editorial page targeting the "Nigerian
                 streetwear" query family is crawled from every page. */}
-            <Link href="/nigerian-streetwear" className="transition-colors hover:text-[#121212]">
+            <Link
+              href="/nigerian-streetwear"
+              className="transition-colors hover:text-[#121212]"
+            >
               Nigerian Streetwear
             </Link>
-            <Link href="/creators" className="transition-colors hover:text-[#121212]">
+            <Link
+              href="/creators"
+              className="transition-colors hover:text-[#121212]"
+            >
               Creators
             </Link>
-            <Link href="/swaz-loop" className="transition-colors hover:text-[#121212]">
+            <Link
+              href="/swaz-loop"
+              className="transition-colors hover:text-[#121212]"
+            >
               The Swaz Loop
             </Link>
-            <Link href="/contact" className="transition-colors hover:text-[#121212]">
+            <Link
+              href="/contact"
+              className="transition-colors hover:text-[#121212]"
+            >
               Contact
             </Link>
-            <Link href="/returns" className="transition-colors hover:text-[#121212]">
+            <Link
+              href="/returns"
+              className="transition-colors hover:text-[#121212]"
+            >
               Returns
             </Link>
           </nav>

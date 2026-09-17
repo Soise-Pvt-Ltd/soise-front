@@ -1428,7 +1428,10 @@ export default function OrderSummaryClient({
           </div>
         )}
       </div>
-      <Footer />
+      {/* The page already asked for the shopper's email at the top; the
+          footer's mailing-list form would be a second field for the same
+          fact. */}
+      <Footer newsletter={false} />
     </>
   );
 }
