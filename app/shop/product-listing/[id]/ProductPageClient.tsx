@@ -133,6 +133,7 @@ export default function ProductPageClient({
   );
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isAdding, setIsAdding] = useState(false);
+  const baggedVariantsRef = useRef<Set<string>>(new Set());
 
   // Has the shopper actually chosen a size? `selectedSize` is pre-filled with
   // variants[0] above so the images render on the server (see the note
@@ -415,11 +416,21 @@ export default function ProductPageClient({
       showToast.error('This item is sold out.');
       return;
     }
+    // "Add to bag" then "Buy it now" is one purchase, not two. A shopper did
+    // exactly that on 2026-09-18 and met a ₦300,000 summary for one tracksuit;
+    // they came back four hours later, saw it again, and left. If this variant
+    // already went into the bag from this page, Buy it now only navigates.
+    if (then === 'checkout' && baggedVariantsRef.current.has(selectedVariant.id)) {
+      setIsAdding(true);
+      window.location.assign('/shop/order-summary');
+      return;
+    }
     setIsAdding(true);
     const toastId = showToast.loading(`Adding ${quantity} item${quantity > 1 ? 's' : ''} to bag...`);
     const result = await addToBagAction(selectedVariant.id, quantity);
     showToast.dismiss(toastId);
     if (result.success) {
+      baggedVariantsRef.current.add(selectedVariant.id);
       if (product) {
         trackAddToCart({
           productId: product.id,
