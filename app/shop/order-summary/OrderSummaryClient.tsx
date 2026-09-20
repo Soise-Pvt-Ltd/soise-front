@@ -20,7 +20,7 @@ import {
 } from './actions';
 import { TransferInstructions } from './TransferInstructions';
 import { looksLikeEmail } from '@/lib/email';
-import { siteConfig, whatsappUrl } from '@/lib/site-config';
+import { whatsappUrl } from '@/lib/site-config';
 import { removeFromCart } from '@/components/home/nav/actions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { showToast, validateField } from '@/lib/toast-utils';
@@ -1406,21 +1406,6 @@ export default function OrderSummaryClient({
                     >
                       Certificate →
                     </a>
-                  </p>
-                </div>
-                <div>
-                  <p className="brut-label">A human answers</p>
-                  <p className="mt-[3px] text-[12px] leading-relaxed text-[#5C544A]">
-                    Questions before you pay?{' '}
-                    <a
-                      href={whatsappUrl('Hi Soise, a question before I pay')}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-[#B3101C] underline-offset-2 hover:underline"
-                    >
-                      WhatsApp us
-                    </a>{' '}
-                    — {siteConfig.hours.replace(' · ', ', ')}.
                   </p>
                 </div>
               </div>
