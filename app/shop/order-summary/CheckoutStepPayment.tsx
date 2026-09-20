@@ -156,7 +156,7 @@ export default function CheckoutStepPayment({
             without a word. The promise and the human sit where the doubt is,
             not a scroll below it. */}
         <p className="mt-3 text-center text-[12px] leading-relaxed text-[#5C544A]">
-          Made in Lagos · delivered in {siteConfig.estimatedDelivery.replace('-', '–')} across
+          Shipped from Port-Harcourt · delivered in {siteConfig.estimatedDelivery.replace('-', '–')} across
           Nigeria by GIG Logistics, free.
         </p>
         <a
