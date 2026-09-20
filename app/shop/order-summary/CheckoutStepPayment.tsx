@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Field } from './Field';
 import { captureCartEmailAction } from './actions';
 import { looksLikeEmail } from '@/lib/email';
+import { siteConfig, whatsappUrl } from '@/lib/site-config';
 
 interface CheckoutStepPaymentProps {
   isLoggedIn: boolean;
@@ -150,6 +151,22 @@ export default function CheckoutStepPayment({
             ? 'Account details next · confirmed the same day'
             : 'Secure card payment · address asked after'}
         </p>
+
+        {/* Four of the first five strangers to reach this button left here
+            without a word. The promise and the human sit where the doubt is,
+            not a scroll below it. */}
+        <p className="mt-3 text-center text-[12px] leading-relaxed text-[#5C544A]">
+          Made in Lagos · delivered in {siteConfig.estimatedDelivery.replace('-', '–')} across
+          Nigeria by GIG Logistics, free.
+        </p>
+        <a
+          href={whatsappUrl('Hi Soise, a question before I pay')}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 block text-center text-[12px] font-bold tracking-[0.08em] text-[#B3101C] uppercase underline underline-offset-4"
+        >
+          Not sure yet? Chat with us on WhatsApp
+        </a>
       </div>
     </form>
   );
