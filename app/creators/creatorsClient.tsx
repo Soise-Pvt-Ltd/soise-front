@@ -47,7 +47,12 @@ const FIT = [
   'You want to be paid for the influence you already have, not chase a brand deal for it.',
 ];
 
-export default function CreatorsApplicationClient() {
+export default function CreatorsApplicationClient({
+  invite,
+}: {
+  /** Resolved creator-to-creator invite, when the applicant arrived on one. */
+  invite?: { code: string; recruiterName: string } | null;
+}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -74,6 +79,7 @@ export default function CreatorsApplicationClient() {
     payload.append('portfolioUrl', formData.portfolioUrl);
     payload.append('bio', formData.bio);
     payload.append('niche', formData.niche);
+    if (invite?.code) payload.append('inviteCode', invite.code);
 
     const result = await submitCreatorApplication(payload);
     setIsLoading(false);
@@ -280,6 +286,25 @@ export default function CreatorsApplicationClient() {
                   </Link>
                   .
                 </p>
+
+                {invite && (
+                  /* The door was opened by another creator. Named once, quietly:
+                     the chip is the only trace of the override loop on this
+                     page, and the applicant needs nothing from it. */
+                  <div className="mt-6 flex items-center gap-3 rounded-[12px] border border-[#2A2A2D] bg-[#121214] px-4 py-3">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#C4AA6E] text-[12px] font-semibold text-[#C4AA6E]">
+                      {invite.recruiterName.slice(0, 1).toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium tracking-[0.18em] text-[#C4AA6E] uppercase">
+                        Invited by
+                      </p>
+                      <p className="truncate text-[14px] text-[#F4F1EA]">
+                        {invite.recruiterName}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-8 space-y-6">
                   <div>

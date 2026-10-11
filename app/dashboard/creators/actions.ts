@@ -134,6 +134,7 @@ export async function createTier(formData: FormData) {
       level: Number(formData.get('level')),
       base_rate: Number(formData.get('base_rate') || '10'),
       max_rate: Number(formData.get('max_rate') || '20'),
+      override_rate: Number(formData.get('override_rate') || '2'),
     }),
   });
 
@@ -219,6 +220,31 @@ export async function changeCreatorCodeAdmin(userId: string, customCode?: string
  * Strip a creator of their code and creator status. They keep any wallet
  * balance already earned, and can apply again from scratch with no cooldown.
  */
+/**
+ * Set or clear who recruited a creator (override loop). `inviteCode` is the
+ * recruiter's creator code; null clears. Self-serve sets this once at
+ * application time — this is the admin correction path.
+ */
+export async function setCreatorRecruiterAdmin(userId: string, inviteCode: string | null) {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token')?.value;
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
+
+  const res = await fetch(`${BASE_URL}/admin/creators/${userId}/recruiter`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: {
+      Cookie: `access_token=${accessToken}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({ invite_code: inviteCode }),
+  });
+  const json = await res.json();
+  if (!res.ok) return { success: false, error: json.message || 'Could not update recruiter' };
+  return { success: true, data: json.data };
+}
+
 export async function revokeCreatorAdmin(userId: string, reason?: string) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
@@ -263,6 +289,7 @@ export async function updateTier(formData: FormData) {
   if (formData.get('description')) payload.description = formData.get('description');
   if (formData.get('base_rate')) payload.base_rate = Number(formData.get('base_rate'));
   if (formData.get('max_rate')) payload.max_rate = Number(formData.get('max_rate'));
+  if (formData.get('override_rate')) payload.override_rate = Number(formData.get('override_rate'));
 
   const res = await fetch(`${BASE_URL}/tiers/admin/tiers/${id}`, {
     method: 'PUT',

@@ -60,6 +60,13 @@ export default function CreatorDashboard({
     0;
   const balance = dashboard.earnings?.current_balance || 0;
   const summaryTotal = dashboard.earnings?.summary_total || 0;
+  // Override loop: what creators THIS creator recruited have earned them.
+  // total_earnings now carries commission + override (both land in the same
+  // wallet), so the commission card reads the split-out figure when present.
+  const commissionEarnings =
+    dashboard.earnings?.commission_earnings ?? totalEarnings;
+  const overrideEarnings = dashboard.earnings?.override_earnings || 0;
+  const recruitsCount = dashboard.network?.recruits_count || 0;
 
   const hasActivity =
     totalReferrals > 0 || salesGenerated > 0 || totalEarnings > 0;
@@ -231,7 +238,13 @@ export default function CreatorDashboard({
     checkPayoutAccount();
   }, [balance, summaryTotal]);
 
-  const stats = [
+  const stats: Array<{
+    icon: React.ReactNode;
+    label: string;
+    hint: string;
+    value: string;
+    href?: string;
+  }> = [
     {
       icon: <ChainIcon />,
       label: 'Orders placed',
@@ -251,7 +264,17 @@ export default function CreatorDashboard({
       // not — this is lifetime commission credited, before any withdrawals.
       // The available balance is stated separately, below the chart.
       hint: 'Lifetime, before withdrawals',
-      value: naira(totalEarnings),
+      value: naira(commissionEarnings),
+    },
+    {
+      icon: <ChainIcon />,
+      label: 'Override earned',
+      hint:
+        recruitsCount > 0
+          ? `From ${recruitsCount} creator${recruitsCount === 1 ? '' : 's'} you brought in`
+          : 'Invite a creator, earn on their sales',
+      value: naira(overrideEarnings),
+      href: '/creators/dashboard/network',
     },
   ];
 
@@ -390,9 +413,16 @@ export default function CreatorDashboard({
         )}
 
         {/* Performance KPIs */}
-        <div className="grid grid-cols-1 gap-[20px] sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-[20px] sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat, index) => (
-            <div key={index} className="rounded-[16px] bg-[#121214] p-[22px]">
+            <div key={index} className="relative rounded-[16px] bg-[#121214] p-[22px]">
+              {stat.href && (
+                <Link
+                  href={stat.href}
+                  aria-label={stat.label}
+                  className="absolute inset-0 rounded-[16px] focus-visible:ring-2 focus-visible:ring-[#C4AA6E] focus-visible:outline-none"
+                />
+              )}
               <div className="mb-[16px] w-fit rounded-full border border-[#3A3A3D] p-[10px]">
                 {stat.icon}
               </div>

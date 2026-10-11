@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { pageMetadata } from '@/lib/seo';
+import { lookupInvite, pendingInviteCode } from '@/lib/creator-invite';
 
 export const metadata: Metadata = pageMetadata({
   title: 'Become a Creator · Swaz Creator Program',
@@ -82,9 +83,9 @@ function StatusScreen({
 export default async function creatorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reason?: string }>;
+  searchParams: Promise<{ reason?: string; invite?: string }>;
 }) {
-  const { reason } = await searchParams;
+  const { reason, invite } = await searchParams;
   const cookieStore = await cookies();
   const accessToken = cookieStore.get('access_token')?.value;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -173,6 +174,11 @@ export default async function creatorsPage({
     );
   }
 
+  // Creator-to-creator invite: from the URL or the cookie RefCapture set on an
+  // earlier page. Resolved to a name here so the form can show who invited
+  // them; the code itself travels with the application.
+  const inviteInfo = await lookupInvite(await pendingInviteCode(invite));
+
   // No application yet → show the apply form (with a reason banner if the user
   // was redirected here for lacking creator access).
   return (
@@ -183,7 +189,7 @@ export default async function creatorsPage({
           apply below to get started.
         </div>
       )}
-      <CreatorsApplicationClient />
+      <CreatorsApplicationClient invite={inviteInfo} />
     </>
   );
 }

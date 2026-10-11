@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import StatueWatermark from '@/components/brand/StatueWatermark';
 import { NOINDEX } from '@/lib/seo';
+import { lookupInvite } from '@/lib/creator-invite';
 
 // A private invite landing page that duplicates the public /creators pitch.
 // Indexing it would split ranking signals between two near-identical pages and
@@ -37,9 +38,15 @@ const BENEFITS = [
 export default async function JoinPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ref?: string }>;
+  searchParams: Promise<{ ref?: string; invite?: string }>;
 }) {
-  const { ref } = await searchParams;
+  const { ref, invite } = await searchParams;
+
+  // A creator-to-creator invite. RefCapture (in the Providers tree) has already
+  // stored it in the `creator_invite` cookie on this page load; here we only
+  // resolve the name so the page can say who opened the door. The code also
+  // rides on the register URL so the cookie isn't the only carrier.
+  const inviteInfo = await lookupInvite(invite);
 
   // A signed-in visitor already has an account, so sending them to the register
   // form asked them to create a second one — the invitation dead-ended for the
@@ -50,11 +57,14 @@ export default async function JoinPage({
   // gating, and a stale token simply lands on its login redirect.
   const isSignedIn = Boolean((await cookies()).get('access_token')?.value);
 
+  const creatorsPath = inviteInfo
+    ? `/creators?invite=${encodeURIComponent(inviteInfo.code)}`
+    : '/creators';
   const applyHref = isSignedIn
-    ? '/creators'
-    : `/auth/register?callbackUrl=${encodeURIComponent('/creators')}${
+    ? creatorsPath
+    : `/auth/register?callbackUrl=${encodeURIComponent(creatorsPath)}${
         ref ? `&ref=${encodeURIComponent(ref)}` : ''
-      }`;
+      }${inviteInfo ? `&invite=${encodeURIComponent(inviteInfo.code)}` : ''}`;
   const signInHref = `/auth/login?callbackUrl=${encodeURIComponent('/creators')}`;
 
   return (
@@ -85,7 +95,11 @@ export default async function JoinPage({
             style={{ filter: 'invert(1)' }}
           />
           <p className="text-[12px] font-medium uppercase tracking-[0.32em] text-[#C4AA6E]">
-            {ref ? 'Your invitation is verified' : 'By invitation'}
+            {inviteInfo
+              ? `Invited by ${inviteInfo.recruiterName}`
+              : ref
+                ? 'Your invitation is verified'
+                : 'By invitation'}
           </p>
           <h1
             className="mx-auto mt-6 max-w-[640px] text-[40px] font-medium leading-[1.08] tracking-tight sm:text-[58px]"

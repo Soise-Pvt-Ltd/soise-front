@@ -21,6 +21,7 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { name: 'Dashboard', href: '/creators/dashboard' },
+  { name: 'Network', href: '/creators/dashboard/network' },
   { name: 'Request Payout', href: '/creators/dashboard/request-payout' },
   { name: 'Payout Account', href: '/creators/dashboard/withdrawal-bank' },
   { name: 'Tier Upgrade', href: '/creators/dashboard/tier-upgrade' },

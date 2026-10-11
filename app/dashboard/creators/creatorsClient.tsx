@@ -22,6 +22,7 @@ import {
   assignTierToCreator,
   changeCreatorCodeAdmin,
   revokeCreatorAdmin,
+  setCreatorRecruiterAdmin,
 } from './actions';
 import { showToast } from '../toast';
 import { totalRows } from '@/lib/pagination';
@@ -40,6 +41,10 @@ type Creator = {
   email: string;
   sales_generated: number;
   created_at: string;
+  recruited_by_name?: string | null;
+  recruited_by_id?: string | null;
+  recruits_count?: number;
+  override_earned?: number;
 };
 
 interface CreatorsPageProps {
@@ -93,6 +98,8 @@ export default function CreatorsClient({
   const [tierDescription, setTierDescription] = useState('');
   const [tierBaseRate, setTierBaseRate] = useState('');
   const [tierMaxRate, setTierMaxRate] = useState('');
+  // Override paid to a creator on their recruits' orders (% of subtotal).
+  const [tierOverrideRate, setTierOverrideRate] = useState('');
   const [editingTierId, setEditingTierId] = useState<string | null>(null);
   const [tierBusyId, setTierBusyId] = useState<string | null>(null);
 
@@ -111,6 +118,37 @@ export default function CreatorsClient({
   const [revokingCreator, setRevokingCreator] = useState<Creator | null>(null);
   const [revokeReason, setRevokeReason] = useState('');
   const [isRevoking, setIsRevoking] = useState(false);
+
+  // Set / clear who recruited a creator (override loop). Self-serve sets this
+  // once at application time; this is the correction path.
+  const [recruiterCreator, setRecruiterCreator] = useState<Creator | null>(null);
+  const [recruiterCode, setRecruiterCode] = useState('');
+  const [isSavingRecruiter, setIsSavingRecruiter] = useState(false);
+
+  const submitRecruiter = async (clear: boolean) => {
+    if (!recruiterCreator || isSavingRecruiter) return;
+    const code = clear ? null : recruiterCode.trim().toUpperCase();
+    if (!clear && !code) {
+      showToast('error', 'Enter the recruiter\'s creator code');
+      return;
+    }
+    setIsSavingRecruiter(true);
+    const res = await setCreatorRecruiterAdmin(recruiterCreator.id, code);
+    setIsSavingRecruiter(false);
+    if (res.success) {
+      showToast(
+        'success',
+        clear
+          ? `${recruiterCreator.full_name || 'Creator'} no longer has a recruiter`
+          : `${res.data?.recruited_by?.name ?? code} now earns override on ${recruiterCreator.full_name || 'this creator'}`,
+      );
+      setRecruiterCreator(null);
+      setRecruiterCode('');
+      refresh();
+    } else {
+      showToast('error', res.error || 'Could not update recruiter');
+    }
+  };
 
   const submitRevoke = async () => {
     if (!revokingCreator || isRevoking) return;
@@ -360,6 +398,7 @@ export default function CreatorsClient({
       formData.append('description', tierDescription);
       formData.append('base_rate', tierBaseRate || '10');
       formData.append('max_rate', tierMaxRate || '20');
+      formData.append('override_rate', tierOverrideRate || '2');
       const result = await createTier(formData);
 
       if (result.success) {
@@ -387,6 +426,7 @@ export default function CreatorsClient({
       if (tierDescription) formData.append('description', tierDescription);
       if (tierBaseRate) formData.append('base_rate', tierBaseRate);
       if (tierMaxRate) formData.append('max_rate', tierMaxRate);
+      if (tierOverrideRate) formData.append('override_rate', tierOverrideRate);
       const result = await updateTier(formData);
 
       if (result.success) {
@@ -449,6 +489,9 @@ export default function CreatorsClient({
             </th>
             <th scope="col" className="thead whitespace-nowrap">
               Sales Generated
+            </th>
+            <th scope="col" className="thead whitespace-nowrap">
+              Recruited by
             </th>
             <th scope="col" className="thead">
               Actions
@@ -522,6 +565,21 @@ export default function CreatorsClient({
                 <td className="td">{creator.email}</td>
                 <td className="td">₦{creator.sales_generated}</td>
                 <td className="td">
+                  {creator.recruited_by_name ? (
+                    <span>{creator.recruited_by_name}</span>
+                  ) : (
+                    <span className="text-[#5C544A]">—</span>
+                  )}
+                  {(creator.recruits_count ?? 0) > 0 && (
+                    <span
+                      className="ml-2 rounded-full bg-[#EFEBE1] px-2 py-0.5 text-[11px] font-medium text-[#5C544A]"
+                      title={`Recruited ${creator.recruits_count} creator${creator.recruits_count === 1 ? '' : 's'} · ₦${creator.override_earned ?? 0} override earned`}
+                    >
+                      +{creator.recruits_count}
+                    </span>
+                  )}
+                </td>
+                <td className="td">
                   <div className="relative">
                     <button
                       onClick={(e) => {
@@ -565,6 +623,16 @@ export default function CreatorsClient({
                         }}
                       >
                         {creator.creator_code_id ? 'Change code' : 'Assign code'}
+                      </button>
+                      <button
+                        className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#3F3830] hover:bg-[#EFEAE0]"
+                        onClick={() => {
+                          setRecruiterCreator(creator);
+                          setRecruiterCode('');
+                          setActiveActionMenuId(null);
+                        }}
+                      >
+                        {creator.recruited_by_name ? 'Change recruiter' : 'Set recruiter'}
                       </button>
                       <button
                         className="block w-full cursor-pointer px-4 py-2 text-left text-sm text-[#8C3A2B] hover:bg-[#F2E1DB]"
@@ -835,6 +903,76 @@ export default function CreatorsClient({
         </div>
       )}
 
+      {recruiterCreator && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="w-full max-w-sm rounded-[14px] border border-[#E2DBCC] bg-[#FBF9F4] p-[24px] shadow-[0_30px_80px_-30px_rgba(20,17,14,0.5)]">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="suite-display text-[20px] text-[#14110E]">
+                {recruiterCreator.recruited_by_name ? 'Change recruiter' : 'Set recruiter'}
+              </h2>
+              <button
+                onClick={() => setRecruiterCreator(null)}
+                aria-label="Close"
+                className="text-[#5C544A] hover:text-[#14110E]"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="mb-3 text-[13px] text-[#5C544A]">
+              The recruiter earns their tier&rsquo;s override on every order{' '}
+              <span className="font-medium text-[#14110E]">
+                {recruiterCreator.full_name}
+              </span>
+              &rsquo;s code drives from now on. Past orders are not re-credited.
+              {recruiterCreator.recruited_by_name && (
+                <>
+                  {' '}
+                  Currently:{' '}
+                  <span className="font-medium text-[#14110E]">
+                    {recruiterCreator.recruited_by_name}
+                  </span>
+                  .
+                </>
+              )}
+            </p>
+            <input
+              value={recruiterCode}
+              onChange={(e) => setRecruiterCode(e.target.value)}
+              placeholder="Recruiter's creator code, e.g. SWAZ-ABBY"
+              className="mb-4 w-full rounded-[10px] border border-[#DFD7C6] px-3 py-2 font-mono text-[14px] uppercase outline-none focus:border-[#9C6F2E]"
+            />
+            <div className="flex gap-3">
+              {recruiterCreator.recruited_by_name && (
+                <button
+                  onClick={() => submitRecruiter(true)}
+                  disabled={isSavingRecruiter}
+                  className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2.5 text-[14px] font-medium text-[#8C3A2B] hover:bg-[#F2E1DB] disabled:opacity-40"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                onClick={() => setRecruiterCreator(null)}
+                className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2.5 text-[14px] font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => submitRecruiter(false)}
+                disabled={isSavingRecruiter}
+                className="flex-1 rounded-full bg-[#14110E] px-4 py-2.5 text-[14px] font-medium text-[#F4F1EA] hover:bg-[#2A251F] disabled:opacity-40"
+              >
+                {isSavingRecruiter ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {revokingCreator && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#0E0E10]/60 backdrop-blur-sm"
@@ -1059,6 +1197,7 @@ export default function CreatorsClient({
                             setTierDescription(tier.description || '');
                             setTierBaseRate(tier.base_rate?.toString() || '');
                             setTierMaxRate(tier.max_rate?.toString() || '');
+                            setTierOverrideRate(tier.override_rate?.toString() || '');
                             setTierView('edit');
                           }}
                           className="text-sm text-[#9C6F2E] hover:opacity-70"
@@ -1099,7 +1238,10 @@ export default function CreatorsClient({
                       setTierDescription('');
                       setTierBaseRate('');
                       setTierMaxRate('');
+                      setTierOverrideRate('');
+    setTierOverrideRate('');
                       setTierView('create');
+                      setTierOverrideRate('');
                     }}
                     className="btn_creators_solid w-full justify-center"
                   >
@@ -1164,6 +1306,20 @@ export default function CreatorsClient({
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="adminsolidlabel mb-2 block">Override Rate (%)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={tierOverrideRate}
+                    onChange={(e) => setTierOverrideRate(e.target.value)}
+                    className="adminsolid w-full"
+                    placeholder="2"
+                  />
+                  <p className="mt-1 text-[12px] text-[#8C8377]">
+                    Paid to a creator on this tier for every order a creator they recruited drives.
+                  </p>
+                </div>
                 <div className="flex gap-3 pt-2">
                   <button
                     onClick={() => {
@@ -1173,6 +1329,8 @@ export default function CreatorsClient({
                       setTierDescription('');
                       setTierBaseRate('');
                       setTierMaxRate('');
+                      setTierOverrideRate('');
+    setTierOverrideRate('');
                     }}
                     className="flex-1 rounded-[10px] border border-[#DFD7C6] px-4 py-2 text-sm font-medium text-[#3F3830] hover:bg-[#EFEBE1]"
                   >
