@@ -67,9 +67,12 @@ export async function generateMetadata(props: {
   const image = product.primary_image || product.sample_variants?.[0]?.media?.[0]?.url;
   const price = product.base_price;
   const collectionName = product.collection?.name;
+  // The root layout's title template already appends ` | SOISE`; adding it
+  // here too rendered "motion? Tracksuit — motion? | SOISE | SOISE" in the
+  // tab and in Google's result title.
   const title = collectionName
-    ? `${product.name} — ${collectionName} | ${SITE_NAME}`
-    : `${product.name} | ${SITE_NAME}`;
+    ? `${product.name} — ${collectionName}`
+    : product.name;
   // `snippet` collapses the CMS copy's \r\n paragraph breaks and cuts on a word
   // boundary — a raw 155-char slice was ending snippets mid-word ("…from ligh").
   const description = product.description
